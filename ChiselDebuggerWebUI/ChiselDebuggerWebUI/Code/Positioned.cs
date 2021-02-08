@@ -6,10 +6,10 @@ using ChiselDebug;
 
 namespace ChiselDebuggerWebUI.Code
 {
-    public class Positioned<T>
+    public readonly struct Positioned<T>
     {
-        public Point Position;
-        public T Value;
+        public readonly Point Position;
+        public readonly T Value;
 
         public Positioned(Point position, T value)
         {

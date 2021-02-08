@@ -1,9 +1,12 @@
 ﻿.muxShape {
-    position: absolute;
-    display: inline-block;
     border-left: 50px solid #555;
     border-top: 25px solid transparent;
     border-bottom: 25px solid transparent;
     height: 100px;
     width: 0;
+}
+
+.muxContainer {
+    position: absolute;
+    display: inline-block;
 }

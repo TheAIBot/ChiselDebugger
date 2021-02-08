@@ -24,8 +24,8 @@ namespace ChiselDebuggerWebUI.Components
 
         private Point PreviousSize = new Point(0, 0);
         protected ElementReference SizeWatcher;
-        protected List<Positioned<Input>> InputPoses = new List<Positioned<Input>>();
-        protected List<Positioned<Output>> OutputPoses = new List<Positioned<Output>>();
+        protected List<Positioned<Input>> InputOffsets = new List<Positioned<Input>>();
+        protected List<Positioned<Output>> OutputOffsets = new List<Positioned<Output>>();
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
@@ -50,25 +50,26 @@ namespace ChiselDebuggerWebUI.Components
 
         protected virtual void OnResize(int width, int height)
         {
-            Point size = new Point(width, height);
-            List<Positioned<Input>> inputOffsets = OnMakeInputs(size.X, size.Y);
-            List<Positioned<Output>> outputOffsets = OnMakeOutputs(size.X, size.Y);
+            InputOffsets = OnMakeInputs(width, height);
+            OutputOffsets = OnMakeOutputs(width, height);
+
+            List<Positioned<Input>> inputPoses = new List<Positioned<Input>>(InputOffsets.Count);
+            List<Positioned<Output>> outputPoses = new List<Positioned<Output>>(OutputOffsets.Count);
 
             //Convert relative positions to absolute positions
-            for (int i = 0; i < inputOffsets.Count; i++)
+            for (int i = 0; i < InputOffsets.Count; i++)
             {
-                inputOffsets[i].Position += Position;
+                Positioned<Input> input = InputOffsets[i];
+                inputPoses.Add(new Positioned<Input>(input.Position + Position, input.Value));
             }
-            for (int i = 0; i < outputOffsets.Count; i++)
+            for (int i = 0; i < OutputOffsets.Count; i++)
             {
-                outputOffsets[i].Position += Position;
+                Positioned<Output> output = OutputOffsets[i];
+                outputPoses.Add(new Positioned<Output>(output.Position + Position, output.Value));
             }
 
-            InputPoses = inputOffsets;
-            OutputPoses = outputOffsets;
-
-            OnComponentResized.InvokeAsync(new Rectangle(Position, size.X, size.Y));
-            OnIOChangedPosition.InvokeAsync(new IOPositions(InputPoses, OutputPoses));
+            OnComponentResized.InvokeAsync(new Rectangle(Position, width, height));
+            OnIOChangedPosition.InvokeAsync(new IOPositions(inputPoses, outputPoses));
 
             StateHasChanged();
         }

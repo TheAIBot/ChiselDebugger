@@ -15,17 +15,17 @@
             </tr>
         </table>
     </div>
+
+    @foreach (var input in InputOffsets)
+    {
+        <IOPortUI Position="@input.Position"></IOPortUI>
+    }
+
+    @foreach (var output in OutputOffsets)
+    {
+        <IOPortUI Position="@output.Position"></IOPortUI>
+    }
 </div>
-
-@foreach (var input in InputPoses)
-{
-    <IOPortUI Position="@input.Position"></IOPortUI>
-}
-
-@foreach (var output in OutputPoses)
-{
-    <IOPortUI Position="@output.Position"></IOPortUI>
-}
 
 @code
 {

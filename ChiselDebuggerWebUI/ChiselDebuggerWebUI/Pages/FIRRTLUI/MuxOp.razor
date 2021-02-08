@@ -1,16 +1,20 @@
 ﻿@inherits FIRBase
 
-<div class="muxShape" @ref=SizeWatcher style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();"></div>
+<div class="muxContainer" @ref=SizeWatcher style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();">
+    <div class="muxShape"></div>
 
-@foreach (var input in InputPoses)
-{
-    <IOPortUI Position="@input.Position"></IOPortUI>
-}
+    @foreach (var input in InputOffsets)
+    {
+        <IOPortUI Position="@input.Position"></IOPortUI>
+    }
 
-@foreach (var output in OutputPoses)
-{
-    <IOPortUI Position="@output.Position"></IOPortUI>
-}
+    @foreach (var output in OutputOffsets)
+    {
+        <IOPortUI Position="@output.Position"></IOPortUI>
+    }
+</div>
+
+
 
 
 @code
