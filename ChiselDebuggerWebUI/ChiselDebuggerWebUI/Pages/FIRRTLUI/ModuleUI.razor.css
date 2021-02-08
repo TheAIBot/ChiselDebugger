@@ -1,0 +1,15 @@
+﻿.module {
+    position: absolute;
+    display: inline-block;
+    border: solid black;
+}
+
+.moduleHeader {
+    width: 100%;
+    border-bottom: solid black;
+    text-align: center;
+}
+
+.moduleContent {
+    position: relative;
+}

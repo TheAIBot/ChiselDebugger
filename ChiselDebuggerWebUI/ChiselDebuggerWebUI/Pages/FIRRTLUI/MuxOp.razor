@@ -1,0 +1,60 @@
+﻿@inherits FIRRTLUIBase
+
+<div class="muxShape" @ref=MainBody style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();">
+
+
+</div>
+
+@foreach (var input in InputPoses)
+{
+    <IOPortUI Position="@input.Position"></IOPortUI>
+}
+
+@foreach (var output in OutputPoses)
+{
+    <IOPortUI Position="@output.Position"></IOPortUI>
+}
+
+
+@code
+{
+    [Parameter]
+    public Mux Operation { get; set; }
+
+    private const int HEIGHT = 100;
+    private const int WIDTH = 50;
+    private const int INDENT = 25;
+    private const int USABLE_CHOISE_HEIGHT = 50;
+
+    protected override List<Positioned<Input>> OnMakeInputs(int width, int height)
+    {
+        List<Positioned<Input>> inputs = new List<Positioned<Input>>();
+
+        //Add chose input
+        Point deciderOffset = new Point(WIDTH / 2, INDENT / 2);
+        inputs.Add(new Positioned<Input>(deciderOffset, Operation.Decider));
+
+        //Add choise inputs
+        int yChoiseOffset = (HEIGHT - USABLE_CHOISE_HEIGHT) / 2;
+        int yChoiseDistance = USABLE_CHOISE_HEIGHT / (Operation.Choises.Count - 1);
+        for (int i = 0; i < Operation.Choises.Count; i++)
+        {
+            Point choiseOffset = new Point(0, yChoiseOffset + yChoiseDistance * i);
+            inputs.Add(new Positioned<Input>(choiseOffset, Operation.Choises[i]));
+        }
+
+        return inputs;
+    }
+
+    protected override List<Positioned<Output>> OnMakeOutputs(int width, int height)
+    {
+        List<Positioned<Output>> outputs = new List<Positioned<Output>>();
+
+        //Add output
+        Point outputOffset = new Point(WIDTH, HEIGHT / 2);
+        outputs.Add(new Positioned<Output>(outputOffset, Operation.Result));
+
+        return outputs;
+    }
+
+}

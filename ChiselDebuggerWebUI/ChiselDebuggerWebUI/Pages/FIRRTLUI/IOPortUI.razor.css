@@ -1,0 +1,8 @@
+﻿.ioDot {
+    position: absolute;
+    height: 6px;
+    width: 6px;
+    background-color: #aaa;
+    border-radius: 50%;
+    z-index: 1;
+}

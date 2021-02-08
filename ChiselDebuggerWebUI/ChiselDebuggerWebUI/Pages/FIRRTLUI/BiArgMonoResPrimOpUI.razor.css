@@ -1,0 +1,23 @@
+﻿.primOp {
+    position: absolute;
+    display: inline-block;
+    border: solid black;
+    font-family: monospace;
+    line-height: 1;
+}
+
+.primOp tr {
+    text-align: right;
+}
+
+.primOp tr:last-of-type td {
+    text-decoration: overline;
+}
+
+.primOpSymbol {
+    text-align: center;
+    font-size: 2em;
+    line-height: 1;
+}
+
+

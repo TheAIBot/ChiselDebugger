@@ -1,0 +1,68 @@
+﻿@inherits FIRRTLUIBase
+
+<div class="primOp" @ref="MainBody" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();">
+    <div style="padding:@ContentPadding.ToPixels();">
+        <table>
+            <tr>
+                <td class="primOpSymbol" rowspan="2" colspan="2">@PrimOp.OpName</td>
+                <td>@PrimOp.A.Con.Value.ToBinaryString()</td>
+            </tr>
+            <tr>
+                <td>@PrimOp.B.Con.Value.ToBinaryString()</td>
+            </tr>
+            <tr>
+                <td colspan="3">@PrimOp.Result.Con.Value.ToBinaryString()</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+@foreach (var input in InputPoses)
+{
+    <IOPortUI Position="@input.Position"></IOPortUI>
+}
+
+@foreach (var output in OutputPoses)
+{
+    <IOPortUI Position="@output.Position"></IOPortUI>
+}
+
+@code
+{
+    [Parameter]
+    public BiArgMonoResPrimOp PrimOp { get; set; }
+
+    private const int ContentPadding = 5;
+
+    protected override List<Positioned<Input>> OnMakeInputs(int width, int height)
+    {
+        List<Positioned<Input>> inputs = new List<Positioned<Input>>();
+
+        int contentHeight = height - ContentPadding * 2;
+        int ioYStart = (contentHeight / 6) + ContentPadding;
+        int ioYDistance = contentHeight / 3;
+
+        Point aInputPos = new Point(0, ioYStart);
+        inputs.Add(new Positioned<Input>(aInputPos, PrimOp.A));
+
+        Point bInputPos = new Point(0, ioYStart + ioYDistance);
+        inputs.Add(new Positioned<Input>(bInputPos, PrimOp.B));
+
+        return inputs;
+    }
+
+    protected override List<Positioned<Output>> OnMakeOutputs(int width, int height)
+    {
+        List<Positioned<Output>> outputs = new List<Positioned<Output>>();
+
+        int contentHeight = height - ContentPadding * 2;
+        int ioYStart = (contentHeight / 6) + ContentPadding;
+        int ioYDistance = contentHeight / 3;
+
+        Point outputPos = new Point(width, ioYStart + ioYDistance * 2);
+        outputs.Add(new Positioned<Output>(outputPos, PrimOp.Result));
+
+        return outputs;
+    }
+
+}

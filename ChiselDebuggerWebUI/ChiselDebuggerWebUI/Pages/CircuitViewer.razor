@@ -1,0 +1,72 @@
+﻿@page "/circuitviewer"
+@page "/"
+
+<div class="Circuit">
+    @foreach (var modulePos in ModulePositions)
+    {
+        <ModuleUI Mod="@modulePos.Value" Position="@modulePos.Position"></ModuleUI>
+    }
+</div>
+
+
+
+@code
+{
+    private List<Positioned<Module>> ModulePositions = new List<Positioned<Module>>();
+
+    protected override void OnInitialized()
+    {
+        Module module1 = new Module("module 1");
+        module1.AddExternalInput("A");
+        module1.AddExternalInput("B");
+        module1.AddExternalInput("C");
+
+        module1.AddExternalOutput("T1");
+
+        FIRAdd add1 = new FIRAdd("t1");
+        FIRAdd add2 = new FIRAdd("t3");
+
+        Mux mux1 = new Mux("t2");
+        mux1.Choises.Add(new Input("a"));
+        mux1.Choises.Add(new Input("b"));
+
+
+        module1.AddPrimOp(add1);
+        module1.AddPrimOp(add2);
+        module1.AddPrimOp(mux1);
+
+        module1.Connect(new[] { "B", "C" }, add1);
+        module1.Connect(new[] { "B", "C" }, add2);
+        module1.Connect(new[] { "A", "t3", "t1" }, mux1);
+
+        module1.Connect(new[] { "t2" }, new[] { "T1" });
+
+        add1.A.Con.Value = new ChiselDebug.ValueType(new BigInteger(32), new SizedType(GroundType.UInt, 10));
+        add1.B.Con.Value = new ChiselDebug.ValueType(new BigInteger(54), new SizedType(GroundType.UInt, 10));
+        add1.Result.Con.Value = new ChiselDebug.ValueType(new BigInteger(32 + 54), new SizedType(GroundType.UInt, 11));
+        add2.Result.Con.Value = new ChiselDebug.ValueType(new BigInteger(32 + 54), new SizedType(GroundType.UInt, 11));
+
+        ModulePositions.Add(new Positioned<Module>(new Point(0, 0), module1));
+
+
+        //Module module1 = new Module("module 1");
+        //module1.AddExternalInput("A");
+        //module1.AddExternalInput("B");
+
+        //module1.AddExternalOutput("T1");
+
+        //FIRAdd add1 = new FIRAdd("t1");
+
+        //module1.AddPrimOp(add1);
+
+        //module1.Connect(new[] { "A", "B" }, add1);
+
+        //module1.Connect(new[] { "t1" }, new[] { "T1" });
+
+        //add1.A.Con.Value = new ChiselDebug.ValueType(new BigInteger(32), new SizedType(GroundType.UInt, 10));
+        //add1.B.Con.Value = new ChiselDebug.ValueType(new BigInteger(54), new SizedType(GroundType.UInt, 10));
+        //add1.Result.Con.Value = new ChiselDebug.ValueType(new BigInteger(32 + 54), new SizedType(GroundType.UInt, 11));
+
+        //ModulePositions.Add(new Positioned<Module>(new Point(0, 0), module1));
+    }
+}
