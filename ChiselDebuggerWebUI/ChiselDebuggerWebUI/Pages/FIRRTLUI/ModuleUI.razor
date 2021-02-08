@@ -10,11 +10,11 @@
             {
                 @if (posOp.Value is Mux mux)
                 {
-                    <MuxOp Position="@posOp.Position" Operation="@mux" OnComponentResized="@UpdateModuleSize" OnInputsChangedPosition="UpdateInputPositions" OnOutputsChangedPosition="UpdateOutputPositions"></MuxOp>
+                    <MuxOp Position="@posOp.Position" Operation="@mux" OnComponentResized="@UpdateModuleSize" OnIOChangedPosition="@UpdatePrimOpIOPositions"></MuxOp>
                 }
                 else if (posOp.Value is BiArgMonoResPrimOp biArg)
                 {
-                    <BiArgMonoResPrimOpUI Position="@posOp.Position" PrimOp="@biArg" OnComponentResized="@UpdateModuleSize" OnInputsChangedPosition="UpdateInputPositions" OnOutputsChangedPosition="UpdateOutputPositions"></BiArgMonoResPrimOpUI>
+                    <BiArgMonoResPrimOpUI Position="@posOp.Position" PrimOp="@biArg" OnComponentResized="@UpdateModuleSize" OnIOChangedPosition="@UpdatePrimOpIOPositions"></BiArgMonoResPrimOpUI>
                 }
             }
 
@@ -180,17 +180,10 @@
         }
     }
 
-    private void UpdateInputPositions(List<Positioned<Input>> inputPoses)
+    private void UpdatePrimOpIOPositions(IOPositions io)
     {
-        ConHandler.UpdateInputPos(inputPoses);
-
-        ModuleConnections = ConHandler.GetAllConnectionLines();
-        StateHasChanged();
-    }
-
-    private void UpdateOutputPositions(List<Positioned<Output>> outputPoses)
-    {
-        ConHandler.UpdateOutputPos(outputPoses);
+        ConHandler.UpdateInputPos(io.Inputs);
+        ConHandler.UpdateOutputPos(io.Outputs);
 
         ModuleConnections = ConHandler.GetAllConnectionLines();
         StateHasChanged();

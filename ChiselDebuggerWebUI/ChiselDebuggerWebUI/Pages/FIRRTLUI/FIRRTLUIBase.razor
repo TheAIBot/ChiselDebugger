@@ -7,10 +7,7 @@
     [Parameter]
     public EventCallback<Rectangle> OnComponentResized { get; set; }
     [Parameter]
-    public EventCallback<List<Positioned<Input>>> OnInputsChangedPosition { get; set; }
-    [Parameter]
-    public EventCallback<List<Positioned<Output>>> OnOutputsChangedPosition { get; set; }
-
+    public EventCallback<IOPositions> OnIOChangedPosition { get; set; }
 
     protected ElementReference MainBody;
 
@@ -54,8 +51,7 @@
         OutputPoses = outputOffsets;
 
         OnComponentResized.InvokeAsync(new Rectangle(Position, size.X, size.Y));
-        OnInputsChangedPosition.InvokeAsync(InputPoses);
-        OnOutputsChangedPosition.InvokeAsync(OutputPoses);
+        OnIOChangedPosition.InvokeAsync(new IOPositions(InputPoses, OutputPoses));
 
         StateHasChanged();
     }
