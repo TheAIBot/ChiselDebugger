@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ChiselDebuggerWebUI.Components
 {
-    public class FIRBase : ComponentBase
+    public abstract class FIRBase : ComponentBase
     {
         [Inject]
         private IJSRuntime JS { get; set; }
@@ -22,34 +22,31 @@ namespace ChiselDebuggerWebUI.Components
         [Parameter]
         public EventCallback<IOPositions> OnIOChangedPosition { get; set; }
 
-        private Point MainBodySize = new Point();
-        protected ElementReference MainBody;
+        private Point PreviousSize = new Point(0, 0);
+        protected ElementReference SizeWatcher;
         protected List<Positioned<Input>> InputPoses = new List<Positioned<Input>>();
         protected List<Positioned<Output>> OutputPoses = new List<Positioned<Output>>();
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            ElemWH elemWH = await JS.InvokeAsync<ElemWH>("JSUtils.getElementSize", MainBody);
-            Point size = new Point((int)elemWH.Width, (int)elemWH.Height);
+            ElemWH elemWH = await JS.InvokeAsync<ElemWH>("JSUtils.getElementSize", SizeWatcher);
+            Point newSize = new Point((int)elemWH.Width, (int)elemWH.Height);
 
             if (firstRender)
             {
-                OnAfterFirstRenderAsync(size);
+                OnAfterFirstRenderAsync(newSize.X, newSize.Y);
             }
-            else
+
+            if (PreviousSize != newSize)
             {
-                //if resized then remake IO
+                OnResize(newSize.X, newSize.Y);
             }
 
-            OnAfterFirstRenderAsync(size);
-
-            //return base.OnAfterRenderAsync(firstRender);
+            PreviousSize = newSize;
         }
 
-        protected virtual void OnAfterFirstRenderAsync(Point size)
-        {
-            OnResize(size.X, size.Y);
-        }
+        protected virtual void OnAfterFirstRenderAsync(int width, int height)
+        { }
 
         protected virtual void OnResize(int width, int height)
         {
