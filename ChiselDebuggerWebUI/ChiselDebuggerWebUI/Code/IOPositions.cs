@@ -6,13 +6,15 @@ using System.Threading.Tasks;
 
 namespace ChiselDebuggerWebUI.Code
 {
-    public readonly struct IOPositions
+    public class IOPositionUpdate
     {
+        public readonly FIRRTLNode Node;
         public readonly List<Positioned<Input>> Inputs;
         public readonly List<Positioned<Output>> Outputs;
 
-        public IOPositions(List<Positioned<Input>> inputs, List<Positioned<Output>> outputs)
+        public IOPositionUpdate(FIRRTLNode node, List<Positioned<Input>> inputs, List<Positioned<Output>> outputs)
         {
+            this.Node = node;
             this.Inputs = inputs;
             this.Outputs = outputs;
         }

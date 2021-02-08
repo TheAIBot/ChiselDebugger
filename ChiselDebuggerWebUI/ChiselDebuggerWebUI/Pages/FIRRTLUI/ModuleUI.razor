@@ -1,8 +1,8 @@
-﻿@inherits FIRBase
+﻿@inherits FIRBase<Module>
 
 <div class="module" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();">
     <div class="moduleHeader">
-        <h2>@Mod.Name</h2>
+        <h2>@Operation.Name</h2>
     </div>
     <div style="padding:@ContentPadding.ToPixels();">
         <div class="moduleContent" @ref="SizeWatcher" style="width:@GetCurrentSize().X.ToPixels();height:@GetCurrentSize().Y.ToPixels();min-width:@MinContentSize.X;min-height:@MinContentSize.Y">
@@ -10,11 +10,11 @@
             {
                 @if (posOp.Value is Mux mux)
                 {
-                    <MuxOp Position="@posOp.Position" Operation="@mux" OnComponentResized="@UpdateModuleSize" OnIOChangedPosition="@UpdatePrimOpIOPositions"></MuxOp>
+                    <MuxOp PosOp="@(new Positioned<Mux>(posOp.Position, mux))" OnComponentResized="@UpdateModuleSize" OnIOChangedPosition="@UpdatePrimOpIOPositions"></MuxOp>
                 }
                 else if (posOp.Value is BiArgMonoResPrimOp biArg)
                 {
-                    <BiArgMonoResPrimOpUI Position="@posOp.Position" PrimOp="@biArg" OnComponentResized="@UpdateModuleSize" OnIOChangedPosition="@UpdatePrimOpIOPositions"></BiArgMonoResPrimOpUI>
+                    <BiArgMonoResPrimOpUI PosOp="@(new Positioned<BiArgMonoResPrimOp>(posOp.Position, biArg))" OnComponentResized="@UpdateModuleSize" OnIOChangedPosition="@UpdatePrimOpIOPositions"></BiArgMonoResPrimOpUI>
                 }
             }
 
@@ -40,9 +40,6 @@
 
 @code
 {
-    [Parameter]
-    public Module Mod { get; set; }
-
     private const int ContentPadding = 20;
     private Point MinContentSize;
     private List<Positioned<FIRRTLNode>> ModuleOpPoses = new List<Positioned<FIRRTLNode>>();
@@ -57,8 +54,12 @@
     protected override Task OnParametersSetAsync()
     {
         MinContentSize = GetMinSizeForIO();
-        ModuleOpPoses = PositionModuleComponents(Mod);
-        ConHandler = new ConnectionsHandler(Mod.GetAllModuleConnections());
+        ModuleOpPoses = PositionModuleComponents(Operation);
+
+        List<FIRRTLNode> nodes = new List<FIRRTLNode>(Operation.PrimOps);
+        nodes.Add(Operation);
+        ConHandler = new ConnectionsHandler(Operation.GetAllModuleConnections(), nodes);
+        ConHandler.OnHasIOFromAllNodes += UpdateConnections;
 
         return base.OnParametersSetAsync();
     }
@@ -67,8 +68,7 @@
     {
         base.OnResize(width, height);
 
-        ConHandler.UpdateInputPos(ToAbsolutePositions(InputOffsets));
-        ConHandler.UpdateOutputPos(ToAbsolutePositions(OutputOffsets));
+        ConHandler.UpdateIOFromNode(Operation, ToAbsolutePositions(InputOffsets), ToAbsolutePositions(OutputOffsets));
     }
 
     private List<Positioned<FIRRTLNode>> PositionModuleComponents(Module module)
@@ -90,7 +90,7 @@
     {
         int requiredWidth = 0;
 
-        int maxIO = Math.Max(Mod.ExternalInputs.Count, Mod.ExternalOutputs.Count);
+        int maxIO = Math.Max(Operation.ExternalInputs.Count, Operation.ExternalOutputs.Count);
 
         int requiredIOMargin = MarginForIO * 2;
         int requiredHeight = requiredIOMargin + (maxIO - 1) * MinSpaceBetweenIO;
@@ -101,16 +101,17 @@
     private void UpdateConnections()
     {
         ModuleConnections = ConHandler.GetAllConnectionLines();
+        StateHasChanged();
     }
 
     protected override List<Positioned<Input>> OnMakeInputs(int width, int height)
     {
-        return PositionIO<Input>(width, height, Mod.InternalInputs, width + ContentPadding);
+        return PositionIO<Input>(width, height, Operation.InternalInputs, width + ContentPadding);
     }
 
     protected override List<Positioned<Output>> OnMakeOutputs(int width, int height)
     {
-        return PositionIO<Output>(width, height, Mod.InternalOutputs, -ContentPadding);
+        return PositionIO<Output>(width, height, Operation.InternalOutputs, -ContentPadding);
     }
 
     private List<Positioned<T>> PositionIO<T>(int width, int height, List<T> io, int x)
@@ -156,17 +157,11 @@
             currentSize.Y = Math.Max(currentSize.Y, componentShape.BottomY);
 
             SetCurrentSize(currentSize);
-
-            UpdateConnections();
         }
     }
 
-    private void UpdatePrimOpIOPositions(IOPositions io)
+    private void UpdatePrimOpIOPositions(IOPositionUpdate io)
     {
-        ConHandler.UpdateInputPos(io.Inputs);
-        ConHandler.UpdateOutputPos(io.Outputs);
-
-        ModuleConnections = ConHandler.GetAllConnectionLines();
-        StateHasChanged();
+        ConHandler.UpdateIOFromNode(io.Node, io.Inputs, io.Outputs);
     }
 }

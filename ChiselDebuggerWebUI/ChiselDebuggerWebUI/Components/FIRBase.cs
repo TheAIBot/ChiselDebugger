@@ -9,18 +9,21 @@ using System.Threading.Tasks;
 
 namespace ChiselDebuggerWebUI.Components
 {
-    public abstract class FIRBase : ComponentBase
+    public abstract class FIRBase<T> : ComponentBase where T : FIRRTLNode
     {
         [Inject]
         private IJSRuntime JS { get; set; }
 
         [Parameter]
-        public Point Position { get; set; }
+        public Positioned<T> PosOp { get; set; }
 
         [Parameter]
         public EventCallback<Rectangle> OnComponentResized { get; set; }
         [Parameter]
-        public EventCallback<IOPositions> OnIOChangedPosition { get; set; }
+        public EventCallback<IOPositionUpdate> OnIOChangedPosition { get; set; }
+
+        protected Point Position => PosOp.Position;
+        protected T Operation => PosOp.Value;
 
         private Point PreviousSize = new Point(0, 0);
         protected ElementReference SizeWatcher;
@@ -69,16 +72,16 @@ namespace ChiselDebuggerWebUI.Components
             List<Positioned<Output>> outputPoses = ToAbsolutePositions(OutputOffsets);
 
             OnComponentResized.InvokeAsync(new Rectangle(Position, width, height));
-            OnIOChangedPosition.InvokeAsync(new IOPositions(inputPoses, outputPoses));
+            OnIOChangedPosition.InvokeAsync(new IOPositionUpdate(Operation, inputPoses, outputPoses));
         }
 
-        protected List<Positioned<T>> ToAbsolutePositions<T>(List<Positioned<T>> positions)
+        protected List<Positioned<U>> ToAbsolutePositions<U>(List<Positioned<U>> positions)
         {
-            List<Positioned<T>> absoPoses = new List<Positioned<T>>(positions.Count);
+            List<Positioned<U>> absoPoses = new List<Positioned<U>>(positions.Count);
             for (int i = 0; i < positions.Count; i++)
             {
-                Positioned<T> value = positions[i];
-                absoPoses.Add(new Positioned<T>(value.Position + Position, value.Value));
+                Positioned<U> value = positions[i];
+                absoPoses.Add(new Positioned<U>(value.Position + Position, value.Value));
             }
 
             return absoPoses;

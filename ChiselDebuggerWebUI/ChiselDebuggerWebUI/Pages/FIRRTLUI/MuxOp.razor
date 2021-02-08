@@ -1,4 +1,4 @@
-﻿@inherits FIRBase
+﻿@inherits FIRBase<Mux>
 
 <div class="muxContainer" @ref=SizeWatcher style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();">
     <div class="muxShape"></div>
@@ -19,9 +19,6 @@
 
 @code
 {
-    [Parameter]
-    public Mux Operation { get; set; }
-
     private const int HEIGHT = 100;
     private const int WIDTH = 50;
     private const int INDENT = 25;

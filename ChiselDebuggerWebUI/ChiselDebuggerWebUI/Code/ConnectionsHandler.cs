@@ -11,37 +11,33 @@ namespace ChiselDebuggerWebUI.Code
         private readonly List<Connection> UsedModuleConnections;
         private readonly Dictionary<Input, Point> InputPositions = new Dictionary<Input, Point>();
         private readonly Dictionary<Output, Point> OutputPositions = new Dictionary<Output, Point>();
-        
+        private readonly HashSet<FIRRTLNode> MissingIOFromNodes;
 
-        public ConnectionsHandler(List<Connection> usedModuleConnections)
+        public delegate void HasIOFromAllNodesHandler();
+        public event HasIOFromAllNodesHandler OnHasIOFromAllNodes;
+
+        public ConnectionsHandler(List<Connection> usedModuleConnections, List<FIRRTLNode> ioNodes)
         {
             this.UsedModuleConnections = usedModuleConnections;
+            this.MissingIOFromNodes = new HashSet<FIRRTLNode>(ioNodes);
         }
 
-        public void UpdateInputPos(List<Positioned<Input>> inputPoses)
+        public void UpdateIOFromNode(FIRRTLNode node, List<Positioned<Input>> inputPoses, List<Positioned<Output>> outputPoses)
         {
             foreach (var inputPos in inputPoses)
             {
-                UpdateInputPos(inputPos);
+                InputPositions[inputPos.Value] = inputPos.Position;
             }
-        }
-
-        public void UpdateOutputPos(List<Positioned<Output>> outputPoses)
-        {
             foreach (var outputPos in outputPoses)
             {
-                UpdateOutputPos(outputPos);
+                OutputPositions[outputPos.Value] = outputPos.Position;
             }
-        }
 
-        public void UpdateInputPos(Positioned<Input> inputPos)
-        {
-            InputPositions[inputPos.Value] = inputPos.Position;
-        }
-
-        public void UpdateOutputPos(Positioned<Output> outputPos)
-        {
-            OutputPositions[outputPos.Value] = outputPos.Position;
+            MissingIOFromNodes.Remove(node);
+            if (MissingIOFromNodes.Count == 0)
+            {
+                OnHasIOFromAllNodes?.Invoke();
+            }
         }
 
         public List<(Point start, Point end)> GetAllConnectionLines()

@@ -1,17 +1,17 @@
-﻿@inherits FIRBase
+﻿@inherits FIRBase<BiArgMonoResPrimOp>
 
 <div class="primOp" @ref="SizeWatcher" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();">
     <div style="padding:@ContentPadding.ToPixels();">
         <table>
             <tr>
-                <td class="primOpSymbol" rowspan="2" colspan="2">@PrimOp.OpName</td>
-                <td>@PrimOp.A.Con.Value.ToBinaryString()</td>
+                <td class="primOpSymbol" rowspan="2" colspan="2">@Operation.OpName</td>
+                <td>@Operation.A.Con.Value.ToBinaryString()</td>
             </tr>
             <tr>
-                <td>@PrimOp.B.Con.Value.ToBinaryString()</td>
+                <td>@Operation.B.Con.Value.ToBinaryString()</td>
             </tr>
             <tr>
-                <td colspan="3">@PrimOp.Result.Con.Value.ToBinaryString()</td>
+                <td colspan="3">@Operation.Result.Con.Value.ToBinaryString()</td>
             </tr>
         </table>
     </div>
@@ -29,9 +29,6 @@
 
 @code
 {
-    [Parameter]
-    public BiArgMonoResPrimOp PrimOp { get; set; }
-
     private const int ContentPadding = 5;
 
     protected override List<Positioned<Input>> OnMakeInputs(int width, int height)
@@ -43,10 +40,10 @@
         int ioYDistance = contentHeight / 3;
 
         Point aInputPos = new Point(0, ioYStart);
-        inputs.Add(new Positioned<Input>(aInputPos, PrimOp.A));
+        inputs.Add(new Positioned<Input>(aInputPos, Operation.A));
 
         Point bInputPos = new Point(0, ioYStart + ioYDistance);
-        inputs.Add(new Positioned<Input>(bInputPos, PrimOp.B));
+        inputs.Add(new Positioned<Input>(bInputPos, Operation.B));
 
         return inputs;
     }
@@ -60,7 +57,7 @@
         int ioYDistance = contentHeight / 3;
 
         Point outputPos = new Point(width, ioYStart + ioYDistance * 2);
-        outputs.Add(new Positioned<Output>(outputPos, PrimOp.Result));
+        outputs.Add(new Positioned<Output>(outputPos, Operation.Result));
 
         return outputs;
     }
