@@ -38,7 +38,23 @@ namespace ChiselDebug
     {
         public FIRAdd(string outputName) : base("+", outputName)
         { }
+    }
 
+    public class FIRSub : BiArgMonoResPrimOp
+    {
+        public FIRSub(string outputName) : base("-", outputName)
+        { }
+    }
 
+    public class FIRMul : BiArgMonoResPrimOp
+    {
+        public FIRMul(string outputName) : base("*", outputName)
+        { }
+    }
+
+    public class FIRDiv : BiArgMonoResPrimOp
+    {
+        public FIRDiv(string outputName) : base("/", outputName)
+        { }
     }
 }
