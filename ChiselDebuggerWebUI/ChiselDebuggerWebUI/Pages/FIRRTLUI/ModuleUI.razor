@@ -1,4 +1,4 @@
-﻿@inherits FIRRTLUIBase
+﻿@inherits FIRBase
 
 <div class="module" @ref="MainBody" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();">
     <div class="moduleHeader">
@@ -38,7 +38,7 @@
     </div>
 </div>
 
-@code 
+@code
 {
     [Parameter]
     public Module Mod { get; set; }
