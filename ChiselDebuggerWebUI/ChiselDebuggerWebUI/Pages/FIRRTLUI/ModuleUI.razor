@@ -1,11 +1,11 @@
 ﻿@inherits FIRBase
 
-<div class="module" @ref="SizeWatcher" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();">
+<div class="module" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();">
     <div class="moduleHeader">
         <h2>@Mod.Name</h2>
     </div>
     <div style="padding:@ContentPadding.ToPixels();">
-        <div class="moduleContent" style="width:@ContentSize.X.ToPixels();height:@ContentSize.Y.ToPixels();">
+        <div class="moduleContent" @ref="SizeWatcher" style="width:@GetCurrentSize().X.ToPixels();height:@GetCurrentSize().Y.ToPixels();min-width:@MinContentSize.X;min-height:@MinContentSize.Y">
             @foreach (var posOp in ModuleOpPoses)
             {
                 @if (posOp.Value is Mux mux)
@@ -18,17 +18,17 @@
                 }
             }
 
-            @foreach (var posInput in ModuleInputs)
+            @foreach (var input in InputOffsets)
             {
-                <IOPortUI Position="@posInput.Position"></IOPortUI>
+                <IOPortUI Position="@input.Position"></IOPortUI>
             }
 
-            @foreach (var posOutput in ModuleOutputs)
+            @foreach (var output in OutputOffsets)
             {
-                <IOPortUI Position="@posOutput.Position"></IOPortUI>
+                <IOPortUI Position="@output.Position"></IOPortUI>
             }
 
-            <svg style="position: absolute;overflow:visible;top: 0;left: 0;width: @ContentSize.X.ToPixels();height: @ContentSize.Y.ToPixels();">
+            <svg style="position: absolute;overflow:visible;top: 0;left: 0;width: @GetCurrentSize().X.ToPixels();height: @GetCurrentSize().Y.ToPixels();">
                 @foreach (var wire in ModuleConnections)
                 {
                     <line x1="@wire.start.X" y1="@wire.start.Y" x2="@wire.end.X" y2="@wire.end.Y" style="stroke:black;stroke-width:2" />
@@ -44,41 +44,31 @@
     public Module Mod { get; set; }
 
     private const int ContentPadding = 20;
-    private Point ContentSize = new Point(0, 0);
+    private Point MinContentSize;
     private List<Positioned<FIRRTLNode>> ModuleOpPoses = new List<Positioned<FIRRTLNode>>();
 
     private const int MarginForIO = 20;
     private const int MinSpaceBetweenIO = 15;
     private const int MaxSpaceBetweenIO = 40;
-    private List<Positioned<Input>> ModuleInputs = new List<Positioned<Input>>();
-    private List<Positioned<Output>> ModuleOutputs = new List<Positioned<Output>>();
     private List<(Point start, Point end)> ModuleConnections = new List<(Point start, Point end)>();
 
     private ConnectionsHandler ConHandler;
 
     protected override Task OnParametersSetAsync()
     {
-        ContentSize = GetMinSizeForIO();
+        MinContentSize = GetMinSizeForIO();
+        ModuleOpPoses = PositionModuleComponents(Mod);
         ConHandler = new ConnectionsHandler(Mod.GetAllModuleConnections());
 
         return base.OnParametersSetAsync();
     }
 
-    protected override Task OnAfterRenderAsync(bool firstRender)
+    protected override void OnResize(int width, int height)
     {
-        if (firstRender)
-        {
-            ModuleOpPoses = PositionModuleComponents(Mod);
+        base.OnResize(width, height);
 
-            UpdateIOPositions();
-
-            ConHandler.UpdateInputPos(ModuleInputs);
-            ConHandler.UpdateOutputPos(ModuleOutputs);
-
-            StateHasChanged();
-        }
-
-        return base.OnAfterRenderAsync(firstRender);
+        ConHandler.UpdateInputPos(ToAbsolutePositions(InputOffsets));
+        ConHandler.UpdateOutputPos(ToAbsolutePositions(OutputOffsets));
     }
 
     private List<Positioned<FIRRTLNode>> PositionModuleComponents(Module module)
@@ -108,33 +98,24 @@
         return new Point(requiredWidth, requiredHeight);
     }
 
-    private void UpdateIOPositions()
-    {
-        ModuleInputs = MakeInputs();
-        ModuleOutputs = MakeOutputs();
-    }
-
     private void UpdateConnections()
     {
-        ConHandler.UpdateInputPos(ModuleInputs);
-        ConHandler.UpdateOutputPos(ModuleOutputs);
-
         ModuleConnections = ConHandler.GetAllConnectionLines();
     }
 
-    private List<Positioned<Input>> MakeInputs()
+    protected override List<Positioned<Input>> OnMakeInputs(int width, int height)
     {
-        return PositionIO<Input>(Mod.InternalInputs, ContentSize.X + ContentPadding);
+        return PositionIO<Input>(width, height, Mod.InternalInputs, width + ContentPadding);
     }
 
-    private List<Positioned<Output>> MakeOutputs()
+    protected override List<Positioned<Output>> OnMakeOutputs(int width, int height)
     {
-        return PositionIO<Output>(Mod.InternalOutputs, -ContentPadding);
+        return PositionIO<Output>(width, height, Mod.InternalOutputs, -ContentPadding);
     }
 
-    private List<Positioned<T>> PositionIO<T>(List<T> io, int x)
+    private List<Positioned<T>> PositionIO<T>(int width, int height, List<T> io, int x)
     {
-        int usableSpace = ContentSize.Y - MarginForIO * 2;
+        int usableSpace = height - MarginForIO * 2;
 
         int yStart = MarginForIO;
         int spaceBetweenIO;
@@ -167,16 +148,16 @@
 
     private void UpdateModuleSize(Rectangle componentShape)
     {
-        if (ContentSize.X < componentShape.RightX ||
-            ContentSize.Y < componentShape.BottomY)
+        Point currentSize = GetCurrentSize();
+        if (currentSize.X < componentShape.RightX ||
+            currentSize.Y < componentShape.BottomY)
         {
-            ContentSize.X = Math.Max(ContentSize.X, componentShape.RightX);
-            ContentSize.Y = Math.Max(ContentSize.Y, componentShape.BottomY);
+            currentSize.X = Math.Max(currentSize.X, componentShape.RightX);
+            currentSize.Y = Math.Max(currentSize.Y, componentShape.BottomY);
 
-            UpdateIOPositions();
+            SetCurrentSize(currentSize);
+
             UpdateConnections();
-
-            StateHasChanged();
         }
     }
 
