@@ -40,9 +40,9 @@ namespace ChiselDebuggerWebUI.Code
             }
         }
 
-        public List<(Point start, Point end)> GetAllConnectionLines()
+        public List<Line> GetAllConnectionLines()
         {
-            List<(Point, Point)> lines = new List<(Point, Point)>();
+            List<Line> lines = new List<Line>();
             foreach (var connection in UsedModuleConnections)
             {
                 if (!OutputPositions.ContainsKey(connection.From))
@@ -59,7 +59,7 @@ namespace ChiselDebuggerWebUI.Code
                     }
 
                     Point end = InputPositions[input];
-                    lines.Add((start, end));
+                    lines.Add(new Line(start, end));
                 }
             }
 

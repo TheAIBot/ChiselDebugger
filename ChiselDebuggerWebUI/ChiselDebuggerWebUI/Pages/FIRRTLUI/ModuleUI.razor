@@ -31,7 +31,7 @@
             <svg style="position: absolute;overflow:visible;top: 0;left: 0;width: @GetCurrentSize().X.ToPixels();height: @GetCurrentSize().Y.ToPixels();">
                 @foreach (var wire in ModuleConnections)
                 {
-                    <line x1="@wire.start.X" y1="@wire.start.Y" x2="@wire.end.X" y2="@wire.end.Y" style="stroke:black;stroke-width:2" />
+                    <line x1="@wire.Start.X" y1="@wire.Start.Y" x2="@wire.End.X" y2="@wire.End.Y" style="stroke:black;stroke-width:2" />
                 }
             </svg>
         </div>
@@ -47,7 +47,7 @@
     private const int MarginForIO = 20;
     private const int MinSpaceBetweenIO = 15;
     private const int MaxSpaceBetweenIO = 40;
-    private List<(Point start, Point end)> ModuleConnections = new List<(Point start, Point end)>();
+    private List<Line> ModuleConnections = new List<Line>();
 
     private ConnectionsHandler ConHandler;
 
