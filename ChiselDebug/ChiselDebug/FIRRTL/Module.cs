@@ -103,5 +103,16 @@ namespace ChiselDebug.FIRRTL
 
             return connestions;
         }
+
+        public FIRRTLNode[] GetAllNodes()
+        {
+            FIRRTLNode[] nodes = new FIRRTLNode[PrimOps.Count];
+            for (int i = 0; i < PrimOps.Count; i++)
+            {
+                nodes[i] = PrimOps[i];
+            }
+
+            return nodes;
+        }
     }
 }
