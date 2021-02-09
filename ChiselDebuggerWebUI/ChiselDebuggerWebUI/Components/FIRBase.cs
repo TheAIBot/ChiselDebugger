@@ -30,6 +30,7 @@ namespace ChiselDebuggerWebUI.Components
         private Point PreviousSize = new Point(0, 0);
         private Point PreviousPos = new Point(0, 0);
         private bool HasUpdatedIOPosThisRender = false;
+        private bool HasToRender = true;
         private int RenderCounter = 0;
         protected ElementReference SizeWatcher;
         protected List<Positioned<Input>> InputOffsets = new List<Positioned<Input>>();
@@ -47,6 +48,7 @@ namespace ChiselDebuggerWebUI.Components
                 return;
             }
 
+            HasToRender = true;
             PreviousSize = size;
             OnResize(PreviousSize.X, PreviousSize.Y);
         }
@@ -66,6 +68,7 @@ namespace ChiselDebuggerWebUI.Components
             PreviousSize = newSize;
             if (sizeChanged)
             {
+                StateHasChanged();
                 OnResize(newSize.X, newSize.Y);
             }
 
@@ -73,10 +76,24 @@ namespace ChiselDebuggerWebUI.Components
             PreviousPos = Position;
             if (hasMoved)
             {
+                StateHasChanged();
                 OnMove(Position);
             }
 
             Debug.WriteLine($"Render: {typeof(T)} sizeChange: {sizeChanged}, posChange: {hasMoved}, Count: {RenderCounter++}");
+        }
+
+        protected override bool ShouldRender()
+        {
+            bool doRender = HasToRender;
+            HasToRender = false;
+            return doRender;
+        }
+
+        protected new void StateHasChanged()
+        {
+            HasToRender = true;
+            base.StateHasChanged();
         }
 
         protected virtual void OnAfterFirstRenderAsync(int width, int height)
