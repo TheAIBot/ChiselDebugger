@@ -18,10 +18,11 @@ namespace ChiselDebug
 
         public int BottomY => Pos.Y + Height;
 
+        public Point Size => new Point(Width, Height);
+
 
         public Rectangle(int x, int y, int width, int height) : this(new Point(x, y), width, height)
-        {
-        }
+        { }
 
         public Rectangle(Point pos, int width, int height)
         {
@@ -29,6 +30,9 @@ namespace ChiselDebug
             this.Width = width;
             this.Height = height;
         }
+
+        public Rectangle(Point pos, Point size) : this(pos, size.X, size.Y)
+        { }
 
         public override bool Equals(object obj)
         {
