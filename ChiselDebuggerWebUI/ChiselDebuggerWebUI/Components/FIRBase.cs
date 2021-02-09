@@ -42,6 +42,11 @@ namespace ChiselDebuggerWebUI.Components
 
         protected void SetCurrentSize(Point size)
         {
+            if (PreviousSize == size)
+            {
+                return;
+            }
+
             PreviousSize = size;
             OnResize(PreviousSize.X, PreviousSize.Y);
         }
