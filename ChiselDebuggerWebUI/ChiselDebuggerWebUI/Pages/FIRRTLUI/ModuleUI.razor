@@ -50,11 +50,15 @@
     private List<Line> ModuleConnections = new List<Line>();
 
     private ConnectionsHandler ConHandler;
+    private Placer NodePlacer;
 
     protected override Task OnParametersSetAsync()
     {
         MinContentSize = GetMinSizeForIO();
-        ModuleOpPoses = PositionModuleComponents(Operation);
+
+        NodePlacer = new Placer(Operation);
+        NodePlacer.OnPlacedNodes += UpdatePlacement;
+        ModuleOpPoses = Operation.GetAllNodes().Select(x => new Positioned<FIRRTLNode>(new Point(0, 0), x)).ToList();
 
         List<FIRRTLNode> nodes = new List<FIRRTLNode>(Operation.PrimOps);
         nodes.Add(Operation);
@@ -71,21 +75,6 @@
         ConHandler.UpdateIOFromNode(Operation, ToAbsolutePositions(InputOffsets), ToAbsolutePositions(OutputOffsets));
     }
 
-    private List<Positioned<FIRRTLNode>> PositionModuleComponents(Module module)
-    {
-        int x = 30;
-        List<Positioned<FIRRTLNode>> positions = new List<Positioned<FIRRTLNode>>();
-        foreach (var op in module.PrimOps)
-        {
-            Point pos = new Point(x, 0);
-            positions.Add(new Positioned<FIRRTLNode>(pos, op));
-
-            x += 200;
-        }
-
-        return positions;
-    }
-
     private Point GetMinSizeForIO()
     {
         int requiredWidth = 0;
@@ -96,6 +85,15 @@
         int requiredHeight = requiredIOMargin + (maxIO - 1) * MinSpaceBetweenIO;
 
         return new Point(requiredWidth, requiredHeight);
+    }
+
+    private void UpdatePlacement(PlacementInfo placements)
+    {
+        ModuleOpPoses = placements.NodePositions;
+
+        SetCurrentSize(placements.SpaceNeeded);
+
+        StateHasChanged();
     }
 
     private void UpdateConnections()
@@ -147,17 +145,9 @@
         return posIO;
     }
 
-    private void UpdateModuleSize(Rectangle componentShape)
+    private void UpdateModuleSize(SizeUpdate size)
     {
-        Point currentSize = GetCurrentSize();
-        if (currentSize.X < componentShape.RightX ||
-            currentSize.Y < componentShape.BottomY)
-        {
-            currentSize.X = Math.Max(currentSize.X, componentShape.RightX);
-            currentSize.Y = Math.Max(currentSize.Y, componentShape.BottomY);
-
-            SetCurrentSize(currentSize);
-        }
+        NodePlacer.SetNodeSize(size.Node, size.Size);
     }
 
     private void UpdatePrimOpIOPositions(IOPositionUpdate io)
