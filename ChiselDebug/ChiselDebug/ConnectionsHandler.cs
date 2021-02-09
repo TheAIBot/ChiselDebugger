@@ -16,10 +16,11 @@ namespace ChiselDebug
         public delegate void HasIOFromAllNodesHandler();
         public event HasIOFromAllNodesHandler OnHasIOFromAllNodes;
 
-        public ConnectionsHandler(List<Connection> usedModuleConnections, List<FIRRTLNode> ioNodes)
+        public ConnectionsHandler(Module mod)
         {
-            this.UsedModuleConnections = usedModuleConnections;
-            this.MissingIOFromNodes = new HashSet<FIRRTLNode>(ioNodes);
+            this.UsedModuleConnections = mod.GetAllModuleConnections();
+            this.MissingIOFromNodes = new HashSet<FIRRTLNode>(mod.GetAllNodes());
+            MissingIOFromNodes.Add(mod);
         }
 
         public void UpdateIOFromNode(FIRRTLNode node, List<Positioned<Input>> inputPoses, List<Positioned<Output>> outputPoses)

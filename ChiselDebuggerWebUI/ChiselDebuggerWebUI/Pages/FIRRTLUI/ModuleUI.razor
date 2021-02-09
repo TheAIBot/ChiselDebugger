@@ -60,9 +60,7 @@
         NodePlacer.OnPlacedNodes += UpdatePlacement;
         ModuleOpPoses = Operation.GetAllNodes().Select(x => new Positioned<FIRRTLNode>(new Point(0, 0), x)).ToList();
 
-        List<FIRRTLNode> nodes = new List<FIRRTLNode>(Operation.PrimOps);
-        nodes.Add(Operation);
-        ConHandler = new ConnectionsHandler(Operation.GetAllModuleConnections(), nodes);
+        ConHandler = new ConnectionsHandler(Operation);
         ConHandler.OnHasIOFromAllNodes += UpdateConnections;
 
         return base.OnParametersSetAsync();
