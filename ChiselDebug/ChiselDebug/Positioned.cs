@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ChiselDebug;
 
-namespace ChiselDebuggerWebUI.Code
+namespace ChiselDebug
 {
     public readonly struct Positioned<T>
     {
