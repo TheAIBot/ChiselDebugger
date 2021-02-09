@@ -29,6 +29,7 @@ namespace ChiselDebuggerWebUI.Components
         private Point PreviousPos = new Point(0, 0);
         private bool HasToRender = true;
         private int RenderCounter = 0;
+        private bool IsFirstSetParametersEvent = true;
         protected ElementReference SizeWatcher;
         protected List<Positioned<Input>> InputOffsets = new List<Positioned<Input>>();
         protected List<Positioned<Output>> OutputOffsets = new List<Positioned<Output>>();
@@ -49,6 +50,20 @@ namespace ChiselDebuggerWebUI.Components
             PreviousSize = size;
             OnResize(PreviousSize.X, PreviousSize.Y);
         }
+
+        protected override Task OnParametersSetAsync()
+        {
+            if (IsFirstSetParametersEvent)
+            {
+                IsFirstSetParametersEvent = false;
+
+                OnFirstParametersSetAsync();
+            }
+            return base.OnParametersSetAsync();
+        }
+
+        protected virtual void OnFirstParametersSetAsync()
+        { }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {

@@ -10,11 +10,11 @@
             {
                 @if (posOp.Value is Mux)
                 {
-                    <MuxOp PosOp="@(posOp.Cast<Mux>())" OnComponentResized="@UpdateModuleSize" OnIOChangedPosition="@UpdatePrimOpIOPositions"></MuxOp>
+                    <MuxOp PosOp="@(posOp.Cast<Mux>())" OnComponentUpdate="@UpdateComponentInfo"></MuxOp>
                 }
                 else if (posOp.Value is BiArgMonoResPrimOp)
                 {
-                    <BiArgMonoResPrimOpUI PosOp="@(posOp.Cast<BiArgMonoResPrimOp>())" OnComponentResized="@UpdateModuleSize" OnIOChangedPosition="@UpdatePrimOpIOPositions"></BiArgMonoResPrimOpUI>
+                    <BiArgMonoResPrimOpUI PosOp="@(posOp.Cast<BiArgMonoResPrimOp>())" OnComponentUpdate="@UpdateComponentInfo"></BiArgMonoResPrimOpUI>
                 }
             }
 
@@ -52,7 +52,7 @@
     private ConnectionsHandler ConHandler;
     private Placer NodePlacer;
 
-    protected override Task OnParametersSetAsync()
+    protected override void OnFirstParametersSetAsync()
     {
         MinContentSize = GetMinSizeForIO();
 
@@ -61,8 +61,6 @@
         ModuleOpPoses = Operation.GetAllNodes().Select(x => new Positioned<FIRRTLNode>(new Point(0, 0), x)).ToList();
 
         ConHandler = new ConnectionsHandler(Operation);
-
-        return base.OnParametersSetAsync();
     }
 
     protected override bool OnResize(int width, int height)
@@ -143,6 +141,7 @@
 
     private void UpdateComponentInfo(FIRComponentUpdate updateData)
     {
-        ConHandler.UpdateIOFromNode(io.Node, io.Inputs, io.Outputs);
+        ConHandler.UpdateIOFromNode(updateData.Node, updateData.InputOffsets, updateData.OutputOffsets);
+        NodePlacer.SetNodeSize(updateData.Node, updateData.Size);
     }
 }
