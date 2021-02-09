@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace ChiselDebug
+namespace ChiselDebug.FIRRTL
 {
     public class FIRRTLContainer : FIRRTLNode
     {

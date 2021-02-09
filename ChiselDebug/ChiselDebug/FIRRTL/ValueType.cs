@@ -3,7 +3,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 
-namespace ChiselDebug
+namespace ChiselDebug.FIRRTL
 {
     public struct ValueType
     {

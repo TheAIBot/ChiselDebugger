@@ -1,4 +1,4 @@
-﻿namespace ChiselDebug
+﻿namespace ChiselDebug.FIRRTL
 {
     public readonly struct SizedType
     {

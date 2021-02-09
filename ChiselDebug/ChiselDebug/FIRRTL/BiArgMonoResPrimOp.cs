@@ -1,8 +1,7 @@
 ﻿using System;
 
-namespace ChiselDebug
+namespace ChiselDebug.FIRRTL
 {
-
     public abstract class BiArgMonoResPrimOp : FIRRTLPrimOP
     {
         public readonly string OpName;

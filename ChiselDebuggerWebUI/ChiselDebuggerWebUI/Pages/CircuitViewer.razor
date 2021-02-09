@@ -41,10 +41,10 @@
 
         module1.Connect(new[] { "t2" }, new[] { "T1" });
 
-        add1.A.Con.Value = new ChiselDebug.ValueType(new BigInteger(32), new SizedType(GroundType.UInt, 10));
-        add1.B.Con.Value = new ChiselDebug.ValueType(new BigInteger(54), new SizedType(GroundType.UInt, 10));
-        add1.Result.Con.Value = new ChiselDebug.ValueType(new BigInteger(32 + 54), new SizedType(GroundType.UInt, 11));
-        sub1.Result.Con.Value = new ChiselDebug.ValueType(new BigInteger(32 + 54), new SizedType(GroundType.UInt, 11));
+        add1.A.Con.Value = new ChiselDebug.FIRRTL.ValueType(new BigInteger(32), new SizedType(GroundType.UInt, 10));
+        add1.B.Con.Value = new ChiselDebug.FIRRTL.ValueType(new BigInteger(54), new SizedType(GroundType.UInt, 10));
+        add1.Result.Con.Value = new ChiselDebug.FIRRTL.ValueType(new BigInteger(32 + 54), new SizedType(GroundType.UInt, 11));
+        sub1.Result.Con.Value = new ChiselDebug.FIRRTL.ValueType(new BigInteger(32 + 54), new SizedType(GroundType.UInt, 11));
 
         ModulePositions.Add(new Positioned<Module>(new Point(0, 0), module1));
 

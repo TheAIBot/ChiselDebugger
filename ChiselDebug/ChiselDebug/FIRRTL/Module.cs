@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ChiselDebug
+namespace ChiselDebug.FIRRTL
 {
     public class Module : FIRRTLContainer
     {
