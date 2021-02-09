@@ -20,9 +20,7 @@ namespace ChiselDebuggerWebUI.Components
         public Positioned<T> PosOp { get; set; }
 
         [Parameter]
-        public EventCallback<SizeUpdate> OnComponentResized { get; set; }
-        [Parameter]
-        public EventCallback<IOPositionUpdate> OnIOChangedPosition { get; set; }
+        public EventCallback<FIRComponentUpdate> OnComponentUpdate { get; set; }
 
         protected Point Position => PosOp.Position;
         protected T Operation => PosOp.Value;
@@ -106,8 +104,7 @@ namespace ChiselDebuggerWebUI.Components
             InputOffsets = OnMakeInputs(width, height);
             OutputOffsets = OnMakeOutputs(width, height);
 
-            OnIOChangedPosition.InvokeAsync(new IOPositionUpdate(Operation, InputOffsets, OutputOffsets));
-            OnComponentResized.InvokeAsync(new SizeUpdate(Operation, new Point(width, height)));
+            OnComponentUpdate.InvokeAsync(new FIRComponentUpdate(Operation, new Point(width, height), InputOffsets, OutputOffsets));
 
             return true;
         }

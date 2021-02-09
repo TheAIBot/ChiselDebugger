@@ -141,12 +141,7 @@
         return posIO;
     }
 
-    private void UpdateModuleSize(SizeUpdate size)
-    {
-        NodePlacer.SetNodeSize(size.Node, size.Size);
-    }
-
-    private void UpdatePrimOpIOPositions(IOPositionUpdate io)
+    private void UpdateComponentInfo(FIRComponentUpdate updateData)
     {
         ConHandler.UpdateIOFromNode(io.Node, io.Inputs, io.Outputs);
     }
