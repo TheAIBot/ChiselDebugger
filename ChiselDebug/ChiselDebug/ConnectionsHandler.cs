@@ -8,19 +8,20 @@ namespace ChiselDebug
 {
     public class ConnectionsHandler
     {
+        private readonly Module Mod;
         private readonly List<Connection> UsedModuleConnections;
         private readonly Dictionary<Input, Point> InputPositions = new Dictionary<Input, Point>();
         private readonly Dictionary<Output, Point> OutputPositions = new Dictionary<Output, Point>();
-        private readonly HashSet<FIRRTLNode> MissingIOFromNodes;
+        private readonly HashSet<FIRRTLNode> MissingIOFromNodes = new HashSet<FIRRTLNode>();
 
         public delegate void HasIOFromAllNodesHandler();
         public event HasIOFromAllNodesHandler OnHasIOFromAllNodes;
 
         public ConnectionsHandler(Module mod)
         {
-            this.UsedModuleConnections = mod.GetAllModuleConnections();
-            this.MissingIOFromNodes = new HashSet<FIRRTLNode>(mod.GetAllNodes());
-            MissingIOFromNodes.Add(mod);
+            this.Mod = mod;
+            this.UsedModuleConnections = Mod.GetAllModuleConnections();
+            ResetMissingNodes();
         }
 
         public void UpdateIOFromNode(FIRRTLNode node, List<Positioned<Input>> inputPoses, List<Positioned<Output>> outputPoses)
@@ -65,6 +66,16 @@ namespace ChiselDebug
             }
 
             return lines;
+        }
+
+        public void ResetMissingNodes()
+        {
+            MissingIOFromNodes.Clear();
+            foreach (var node in Mod.GetAllNodes())
+            {
+                MissingIOFromNodes.Add(node);
+            }
+            MissingIOFromNodes.Add(Mod);
         }
     }
 }
