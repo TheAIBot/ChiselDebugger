@@ -17,9 +17,21 @@ namespace ChiselDebuggerWebUI.Code
             this.Value = value;
         }
 
+        public Positioned<U> Cast<U>()
+        {
+            if (Value is U casted)
+            {
+                return new Positioned<U>(Position, casted);
+            }
+            else
+            {
+                throw new InvalidCastException($"Failed to cast from {typeof(T)} to {typeof(U)}.");
+            }
+        }
+
         public override string ToString()
         {
-            return $"{Position.ToString()} {Value.ToString()}";
+            return $"{Position} {Value}";
         }
     }
 }

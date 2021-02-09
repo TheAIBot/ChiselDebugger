@@ -8,13 +8,13 @@
         <div class="moduleContent" @ref="SizeWatcher" style="width:@GetCurrentSize().X.ToPixels();height:@GetCurrentSize().Y.ToPixels();min-width:@MinContentSize.X;min-height:@MinContentSize.Y">
             @foreach (var posOp in ModuleOpPoses)
             {
-                @if (posOp.Value is Mux mux)
+                @if (posOp.Value is Mux)
                 {
-                    <MuxOp PosOp="@(new Positioned<Mux>(posOp.Position, mux))" OnComponentResized="@UpdateModuleSize" OnIOChangedPosition="@UpdatePrimOpIOPositions"></MuxOp>
+                    <MuxOp PosOp="@(posOp.Cast<Mux>())" OnComponentResized="@UpdateModuleSize" OnIOChangedPosition="@UpdatePrimOpIOPositions"></MuxOp>
                 }
-                else if (posOp.Value is BiArgMonoResPrimOp biArg)
+                else if (posOp.Value is BiArgMonoResPrimOp)
                 {
-                    <BiArgMonoResPrimOpUI PosOp="@(new Positioned<BiArgMonoResPrimOp>(posOp.Position, biArg))" OnComponentResized="@UpdateModuleSize" OnIOChangedPosition="@UpdatePrimOpIOPositions"></BiArgMonoResPrimOpUI>
+                    <BiArgMonoResPrimOpUI PosOp="@(posOp.Cast<BiArgMonoResPrimOp>())" OnComponentResized="@UpdateModuleSize" OnIOChangedPosition="@UpdatePrimOpIOPositions"></BiArgMonoResPrimOpUI>
                 }
             }
 
@@ -73,7 +73,7 @@
 
     private List<Positioned<FIRRTLNode>> PositionModuleComponents(Module module)
     {
-        int x = 0;
+        int x = 30;
         List<Positioned<FIRRTLNode>> positions = new List<Positioned<FIRRTLNode>>();
         foreach (var op in module.PrimOps)
         {

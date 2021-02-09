@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ChiselDebuggerWebUI
+namespace ChiselDebuggerWebUI.Code
 {
     public static class Extensions
     {
