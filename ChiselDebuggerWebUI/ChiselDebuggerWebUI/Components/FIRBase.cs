@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -29,6 +30,7 @@ namespace ChiselDebuggerWebUI.Components
         private Point PreviousSize = new Point(0, 0);
         private Point PreviousPos = new Point(0, 0);
         private bool HasUpdatedIOPosThisRender = false;
+        private int RenderCounter = 0;
         protected ElementReference SizeWatcher;
         protected List<Positioned<Input>> InputOffsets = new List<Positioned<Input>>();
         protected List<Positioned<Output>> OutputOffsets = new List<Positioned<Output>>();
@@ -68,6 +70,8 @@ namespace ChiselDebuggerWebUI.Components
             {
                 OnMove(Position);
             }
+
+            Debug.WriteLine($"Render: {typeof(T)} sizeChange: {sizeChanged}, posChange: {hasMoved}, Count: {RenderCounter++}");
         }
 
         protected virtual void OnAfterFirstRenderAsync(int width, int height)
