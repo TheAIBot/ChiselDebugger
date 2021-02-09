@@ -61,16 +61,17 @@
         ModuleOpPoses = Operation.GetAllNodes().Select(x => new Positioned<FIRRTLNode>(new Point(0, 0), x)).ToList();
 
         ConHandler = new ConnectionsHandler(Operation);
-        ConHandler.OnHasIOFromAllNodes += UpdateConnections;
 
         return base.OnParametersSetAsync();
     }
 
-    protected override void OnResize(int width, int height)
+    protected override bool OnResize(int width, int height)
     {
         base.OnResize(width, height);
 
-        ConHandler.UpdateIOFromNode(Operation, ToAbsolutePositions(InputOffsets), ToAbsolutePositions(OutputOffsets));
+        ConHandler.UpdateIOFromNode(Operation, InputOffsets, OutputOffsets);
+
+        return true;
     }
 
     private Point GetMinSizeForIO()
@@ -89,15 +90,11 @@
     {
         ModuleOpPoses = placements.NodePositions;
 
-        ConHandler.ResetMissingNodes();
         SetCurrentSize(placements.SpaceNeeded);
+        ModuleConnections = ConHandler.GetAllConnectionLines(placements);
 
-        StateHasChanged();
-    }
 
-    private void UpdateConnections()
-    {
-        ModuleConnections = ConHandler.GetAllConnectionLines();
+
         StateHasChanged();
     }
 

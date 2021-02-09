@@ -8,74 +8,71 @@ namespace ChiselDebug
 {
     public class ConnectionsHandler
     {
+        private readonly struct IOInfo
+        {
+            internal readonly Point Position;
+            internal readonly FIRRTLNode Node;
+
+            public IOInfo(Point pos, FIRRTLNode node)
+            {
+                this.Position = pos;
+                this.Node = node;
+            }
+        }
+
         private readonly Module Mod;
         private readonly List<Connection> UsedModuleConnections;
-        private readonly Dictionary<Input, Point> InputPositions = new Dictionary<Input, Point>();
-        private readonly Dictionary<Output, Point> OutputPositions = new Dictionary<Output, Point>();
-        private readonly HashSet<FIRRTLNode> MissingIOFromNodes = new HashSet<FIRRTLNode>();
-
-        public delegate void HasIOFromAllNodesHandler();
-        public event HasIOFromAllNodesHandler OnHasIOFromAllNodes;
+        private readonly Dictionary<Input, IOInfo> InputOffsets = new Dictionary<Input, IOInfo>();
+        private readonly Dictionary<Output, IOInfo> OutputOffsets = new Dictionary<Output, IOInfo>();
 
         public ConnectionsHandler(Module mod)
         {
             this.Mod = mod;
             this.UsedModuleConnections = Mod.GetAllModuleConnections();
-            ResetMissingNodes();
         }
 
-        public void UpdateIOFromNode(FIRRTLNode node, List<Positioned<Input>> inputPoses, List<Positioned<Output>> outputPoses)
+        public void UpdateIOFromNode(FIRRTLNode node, List<Positioned<Input>> inputOffsets, List<Positioned<Output>> outputOffsets)
         {
-            foreach (var inputPos in inputPoses)
+            foreach (var inputPos in inputOffsets)
             {
-                InputPositions[inputPos.Value] = inputPos.Position;
+                InputOffsets[inputPos.Value] = new IOInfo(inputPos.Position, node);
             }
-            foreach (var outputPos in outputPoses)
+            foreach (var outputPos in outputOffsets)
             {
-                OutputPositions[outputPos.Value] = outputPos.Position;
-            }
-
-            MissingIOFromNodes.Remove(node);
-            if (MissingIOFromNodes.Count == 0)
-            {
-                OnHasIOFromAllNodes?.Invoke();
+                OutputOffsets[outputPos.Value] = new IOInfo(outputPos.Position, node);
             }
         }
 
-        public List<Line> GetAllConnectionLines()
+        public List<Line> GetAllConnectionLines(PlacementInfo placements)
         {
+            Dictionary<FIRRTLNode, Point> nodePoses = new Dictionary<FIRRTLNode, Point>();
+            foreach (var nodePos in placements.NodePositions)
+            {
+                nodePoses.Add(nodePos.Value, nodePos.Position);
+            }
+            nodePoses.Add(Mod, new Point(0, 0));
+
             List<Line> lines = new List<Line>();
             foreach (var connection in UsedModuleConnections)
             {
-                if (!OutputPositions.ContainsKey(connection.From))
+                if (OutputOffsets.TryGetValue(connection.From, out IOInfo outputInfo))
                 {
-                    continue;
-                }
-
-                Point start = OutputPositions[connection.From];
-                foreach (var input in connection.To)
-                {
-                    if (!InputPositions.ContainsKey(input))
+                    foreach (var input in connection.To)
                     {
-                        continue;
-                    }
+                        if (InputOffsets.TryGetValue(input, out IOInfo inputInfo))
+                        {
+                            Point startOffset = nodePoses[outputInfo.Node];
+                            Point endOffset = nodePoses[inputInfo.Node];
 
-                    Point end = InputPositions[input];
-                    lines.Add(new Line(start, end));
+                            Point start = startOffset + outputInfo.Position;
+                            Point end = endOffset + inputInfo.Position;
+                            lines.Add(new Line(start, end));
+                        }
+                    }
                 }
             }
 
             return lines;
-        }
-
-        public void ResetMissingNodes()
-        {
-            MissingIOFromNodes.Clear();
-            foreach (var node in Mod.GetAllNodes())
-            {
-                MissingIOFromNodes.Add(node);
-            }
-            MissingIOFromNodes.Add(Mod);
         }
     }
 }

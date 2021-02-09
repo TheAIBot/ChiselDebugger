@@ -29,7 +29,6 @@ namespace ChiselDebuggerWebUI.Components
 
         private Point PreviousSize = new Point(0, 0);
         private Point PreviousPos = new Point(0, 0);
-        private bool HasUpdatedIOPosThisRender = false;
         private bool HasToRender = true;
         private int RenderCounter = 0;
         protected ElementReference SizeWatcher;
@@ -55,7 +54,6 @@ namespace ChiselDebuggerWebUI.Components
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            HasUpdatedIOPosThisRender = false;
             ElemWH elemWH = await JS.InvokeAsync<ElemWH>("JSUtils.getElementSize", SizeWatcher);
             Point newSize = new Point((int)elemWH.Width, (int)elemWH.Height);
 
@@ -68,16 +66,20 @@ namespace ChiselDebuggerWebUI.Components
             PreviousSize = newSize;
             if (sizeChanged)
             {
-                StateHasChanged();
-                OnResize(newSize.X, newSize.Y);
+                if (OnResize(newSize.X, newSize.Y))
+                {
+                    StateHasChanged();
+                }
             }
 
             bool hasMoved = PreviousPos != Position;
             PreviousPos = Position;
             if (hasMoved)
             {
-                StateHasChanged();
-                OnMove(Position);
+                if (OnMove(Position))
+                {
+                    StateHasChanged();
+                }
             }
 
             Debug.WriteLine($"Render: {typeof(T)} sizeChange: {sizeChanged}, posChange: {hasMoved}, Count: {RenderCounter++}");
@@ -99,47 +101,20 @@ namespace ChiselDebuggerWebUI.Components
         protected virtual void OnAfterFirstRenderAsync(int width, int height)
         { }
 
-        protected virtual void OnResize(int width, int height)
+        protected virtual bool OnResize(int width, int height)
         {
-            OnComponentResized.InvokeAsync(new SizeUpdate(Operation, new Point(width, height)));
-
             InputOffsets = OnMakeInputs(width, height);
             OutputOffsets = OnMakeOutputs(width, height);
 
-            if (!HasUpdatedIOPosThisRender)
-            {
-                HasUpdatedIOPosThisRender = true;
+            OnIOChangedPosition.InvokeAsync(new IOPositionUpdate(Operation, InputOffsets, OutputOffsets));
+            OnComponentResized.InvokeAsync(new SizeUpdate(Operation, new Point(width, height)));
 
-                List<Positioned<Input>> inputPoses = ToAbsolutePositions(InputOffsets);
-                List<Positioned<Output>> outputPoses = ToAbsolutePositions(OutputOffsets);
-
-                OnIOChangedPosition.InvokeAsync(new IOPositionUpdate(Operation, inputPoses, outputPoses));
-            }
+            return true;
         }
 
-        protected virtual void OnMove(Point newPos)
+        protected virtual bool OnMove(Point newPos)
         {
-            if (!HasUpdatedIOPosThisRender)
-            {
-                HasUpdatedIOPosThisRender = true;
-
-                List<Positioned<Input>> inputPoses = ToAbsolutePositions(InputOffsets);
-                List<Positioned<Output>> outputPoses = ToAbsolutePositions(OutputOffsets);
-
-                OnIOChangedPosition.InvokeAsync(new IOPositionUpdate(Operation, inputPoses, outputPoses));
-            }
-        }
-
-        protected List<Positioned<U>> ToAbsolutePositions<U>(List<Positioned<U>> positions)
-        {
-            List<Positioned<U>> absoPoses = new List<Positioned<U>>(positions.Count);
-            for (int i = 0; i < positions.Count; i++)
-            {
-                Positioned<U> value = positions[i];
-                absoPoses.Add(new Positioned<U>(value.Position + Position, value.Value));
-            }
-
-            return absoPoses;
+            return true;
         }
 
         protected abstract List<Positioned<Input>> OnMakeInputs(int width, int height);
