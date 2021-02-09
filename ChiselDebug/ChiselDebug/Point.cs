@@ -52,5 +52,10 @@ namespace ChiselDebug
         {
             return !(left == right);
         }
+
+        public static Point Max(Point a, Point b)
+        {
+            return new Point(Math.Max(a.X, b.X), Math.Max(a.Y, b.Y));
+        }
     }
 }
