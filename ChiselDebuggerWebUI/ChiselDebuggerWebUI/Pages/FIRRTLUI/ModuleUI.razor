@@ -28,10 +28,10 @@
                 <IOPortUI Position="@output.Position"></IOPortUI>
             }
 
-            <svg style="position: absolute;overflow:visible;top: 0;left: 0;width: @GetCurrentSize().X.ToPixels();height: @GetCurrentSize().Y.ToPixels();">
+            <svg class="moduleWires" style="width: @GetCurrentSize().X.ToPixels();height: @GetCurrentSize().Y.ToPixels();">
                 @foreach (var wire in ModuleConnections)
                 {
-                    <line x1="@wire.Start.X" y1="@wire.Start.Y" x2="@wire.End.X" y2="@wire.End.Y" style="stroke:black;stroke-width:2" />
+                    <line class="wire" x1="@wire.Start.X" y1="@wire.Start.Y" x2="@wire.End.X" y2="@wire.End.Y" />
                 }
             </svg>
         </div>
