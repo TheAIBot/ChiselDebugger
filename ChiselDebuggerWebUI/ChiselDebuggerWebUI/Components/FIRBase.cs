@@ -46,7 +46,6 @@ namespace ChiselDebuggerWebUI.Components
                 return;
             }
 
-            HasToRender = true;
             PreviousSize = size;
             OnResize(PreviousSize.X, PreviousSize.Y);
         }
