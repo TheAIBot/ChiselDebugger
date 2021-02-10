@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace ChiselDebug.Routing
 {
@@ -44,6 +45,36 @@ namespace ChiselDebug.Routing
                 Point pathPosRel = board.GetRelativeBoardPos(pathPos);
                 board.RemoveAllIncommingMoves(pathPosRel);
             }
+        }
+
+        public Point GetEndPos()
+        {
+            return Path[^1];
+        }
+
+        public string ToSVGPathString()
+        {
+            StringBuilder sBuilder = new StringBuilder();
+
+            Point start = Path[0];
+            sBuilder.AppendFormat("M {0} {1}", start.X, start.Y);
+
+            for (int i = 1; i < Path.Count; i++)
+            {
+                //sBuilder.AppendFormat(" L {0} {1}", Path[i].X, Path[i].Y);
+                sBuilder.Append(' ');
+                if (start.X == Path[i].X)
+                {
+                    sBuilder.AppendFormat("V {0}", Path[i].Y);
+                }
+                else
+                {
+                    sBuilder.AppendFormat("H {0}", Path[i].X);
+                }
+                start = Path[i];
+            }
+
+            return sBuilder.ToString();
         }
     }
 }

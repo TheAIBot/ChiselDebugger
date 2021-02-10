@@ -28,12 +28,16 @@
                 <IOPortUI Position="@output.Position"></IOPortUI>
             }
 
-            <svg class="moduleWires" style="width: @GetCurrentSize().X.ToPixels();height: @GetCurrentSize().Y.ToPixels();">
-                @foreach (var wire in ModuleConnections)
+        <svg class="moduleWires" style="width: @GetCurrentSize().X.ToPixels();height: @GetCurrentSize().Y.ToPixels();">
+            @foreach (var wire in ModuleConnections)
+            {
+                <path class="wire" d="@wire.ToSVGPathString()" fill="none"/>
+                @if (wire.StartsFromWire)
                 {
-                    <line class="wire" x1="@wire.Start.X" y1="@wire.Start.Y" x2="@wire.End.X" y2="@wire.End.Y" />
+                    <circle cx="@wire.GetEndPos().X" cy="@wire.GetEndPos().Y" r="3"/>
                 }
-            </svg>
+            }
+        </svg>
         </div>
     </div>
 </div>
@@ -47,7 +51,7 @@
     private const int MarginForIO = 20;
     private const int MinSpaceBetweenIO = 15;
     private const int MaxSpaceBetweenIO = 40;
-    private List<Line> ModuleConnections = new List<Line>();
+    private List<WirePath> ModuleConnections = new List<WirePath>();
 
     private ConnectionsHandler ConHandler;
     private Placer NodePlacer;
@@ -89,20 +93,7 @@
         ModuleOpPoses = placements.NodePositions;
 
         SetCurrentSize(placements.SpaceNeeded);
-        List<WirePath> paths = ConHandler.PathLines(placements);
-
-        ModuleConnections = new List<Line>();
-        foreach (var path in paths)
-        {
-            Point start = path.Path[0];
-            for (int i = 1; i < path.Path.Count; i++)
-            {
-                ModuleConnections.Add(new Line(start, path.Path[i]));
-                start = path.Path[i];
-            }
-        }
-
-
+        ModuleConnections = ConHandler.PathLines(placements);
 
         StateHasChanged();
     }
