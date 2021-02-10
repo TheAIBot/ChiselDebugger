@@ -206,33 +206,11 @@ namespace ChiselDebug
 
                 foreach (var wirePath in keyValue.Value)
                 {
-                    Point wireStart = board.GetRelativeBoardPos(wirePath.Path[0]);
-                    for (int i = 1; i < wirePath.Path.Count; i++)
-                    {
-                        Point wireEnd = board.GetRelativeBoardPos(wirePath.Path[i]);
-                        int wireStartX = Math.Min(wireStart.X, wireEnd.X);
-                        int wireStartY = Math.Min(wireStart.Y, wireEnd.Y);
-
-                        int wireEndX = Math.Max(wireStart.X, wireEnd.X);
-                        int wireEndY = Math.Max(wireStart.Y, wireEnd.Y);
-                        for (int y = wireStartY; y <= wireEndY; y++)
-                        {
-                            for (int x = wireStartX; x <= wireEndX; x++)
-                            {
-                                board.AddCellAllowedMoves(new Point(x, y), wireType);
-                            }
-                        }
-
-                        wireStart = wireEnd;
-                    }
+                    wirePath.PlaceOnBoard(board, wireType);
 
                     if (wireType == MoveDirs.EnemyWire)
                     {
-                        foreach (var pathPos in wirePath.Path)
-                        {
-                            Point pathPosRel = board.GetRelativeBoardPos(pathPos);
-                            board.RemoveAllIncommingMoves(pathPosRel);
-                        }
+                        wirePath.PlaceCornersOnBoard(board);
                     }
                 }
             }
