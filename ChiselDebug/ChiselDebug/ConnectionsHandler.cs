@@ -210,7 +210,7 @@ namespace ChiselDebug
 
                     if (wireType == MoveDirs.EnemyWire)
                     {
-                        wirePath.PlaceCornersOnBoard(board);
+                        wirePath.RemoveCornersFromBoard(board);
                     }
                 }
             }

@@ -38,7 +38,7 @@ namespace ChiselDebug.Routing
             }
         }
 
-        internal void PlaceCornersOnBoard(RouterBoard board)
+        internal void RemoveCornersFromBoard(RouterBoard board)
         {
             foreach (var pathPos in Path)
             {
