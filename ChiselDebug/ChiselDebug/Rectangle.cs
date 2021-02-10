@@ -34,6 +34,18 @@ namespace ChiselDebug
         public Rectangle(Point pos, Point size) : this(pos, size.X, size.Y)
         { }
 
+        public bool Within(Point pos)
+        {
+            return LeftX <= pos.X && pos.X <= RightX &&
+                   TopY <= pos.Y && pos.Y <= BottomY;
+        }
+
+        public bool WithinButExcludeRectEdge(Point pos)
+        {
+            return LeftX < pos.X && pos.X < RightX &&
+                   TopY < pos.Y && pos.Y < BottomY;
+        }
+
         public override bool Equals(object obj)
         {
             return obj is Rectangle rectangle &&

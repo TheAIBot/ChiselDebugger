@@ -89,7 +89,18 @@
         ModuleOpPoses = placements.NodePositions;
 
         SetCurrentSize(placements.SpaceNeeded);
-        ModuleConnections = ConHandler.GetAllConnectionLines(placements);
+        List<List<Point>> paths = ConHandler.PathLines(placements);
+
+        ModuleConnections = new List<Line>();
+        foreach (var path in paths)
+        {
+            Point start = path[0];
+            for (int i = 1; i < path.Count; i++)
+            {
+                ModuleConnections.Add(new Line(start, path[i]));
+                start = path[i];
+            }
+        }
 
 
 

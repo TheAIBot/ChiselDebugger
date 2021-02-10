@@ -15,5 +15,11 @@ namespace ChiselDebug
             this.Start = start;
             this.End = end;
         }
+
+        public int GetManhattanDistance()
+        {
+            Point diff = (End - Start).Abs();
+            return diff.X + diff.Y;
+        }
     }
 }
