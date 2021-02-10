@@ -80,46 +80,27 @@ namespace ChiselDebug.Routing
                 CellAllowedDirs[CellIndex(CellsWide - 1, y)] &= MoveDirs.None;
             }
 
-            //for (int x = 0; x < CellsWide; x++)
-            //{
-            //    CellAllowedDirs[CellIndex(x, 0)] &= MoveDirs.ExceptUp;
-            //    CellAllowedDirs[CellIndex(x, CellsHigh - 1)] &= MoveDirs.ExceptDown;
-            //}
-            //for (int y = 0; y < CellsHigh; y++)
-            //{
-            //    CellAllowedDirs[CellIndex(0, y)] &= MoveDirs.ExceptLeft;
-            //    CellAllowedDirs[CellIndex(CellsWide - 1, y)] &= MoveDirs.ExceptRight;
-            //}
-
             //Moves that go into used space are not allowed.
             //Moves inside used space are not removed because
             //they shouldn't be reachable.
             for (int i = 0; i < usedSpace.Count; i++)
             {
-                Rectangle space = usedSpace[i];
-                Point spaceTopLeft = space.Pos - TopLeft;
-                Point spaceBottomRight = space.Pos + space.Size - TopLeft;
+                Rectangle spaceRel = GetRelativeBoard(usedSpace[i]);
 
                 //Need to remove moves not at the edge of the used space
                 //but at the outer neighbors to the uses space. That's
-                //why is subtracts 1 for the start coords and adds 1
-                //to the end coords. Min/Max is used to keep the coords
-                //inside the board after the subtraction/addition.
-                int startX = Math.Max(0, (spaceTopLeft.X / CellSize) - 1);
-                int startY = Math.Max(0, (spaceTopLeft.Y / CellSize) - 1);
-
-                int endX = Math.Min(CellsWide - 1, CeilDiv(spaceBottomRight.X, CellSize) + 1);
-                int endY = Math.Min(CellsHigh - 1, CeilDiv(spaceBottomRight.Y, CellSize) + 1);
-
-                for (int x = startX + 1; x < endX; x++)
+                //why the rectangle is made 1 larger on all sides.
+                Point one = new Point(1, 1);
+                Rectangle spaceCellEdge = new Rectangle(spaceRel.Pos - one, spaceRel.Size + one);
+                for (int x = spaceCellEdge.LeftX + 1; x < spaceCellEdge.RightX; x++)
                 {
-                    CellAllowedDirs[CellIndex(x, startY)] &= MoveDirs.ExceptDown;
-                    CellAllowedDirs[CellIndex(x, endY)] &= MoveDirs.ExceptUp;
+                    CellAllowedDirs[CellIndex(x, spaceCellEdge.TopY)] &= MoveDirs.ExceptDown;
+                    CellAllowedDirs[CellIndex(x, spaceCellEdge.BottomY)] &= MoveDirs.ExceptUp;
                 }
-                for (int y = startY + 1; y < endY; y++)
+                for (int y = spaceCellEdge.TopY + 1; y < spaceCellEdge.BottomY; y++)
                 {
-                    CellAllowedDirs[CellIndex(startX, y)] &= MoveDirs.ExceptRight;
-                    CellAllowedDirs[CellIndex(endX, y)] &= MoveDirs.ExceptLeft;
+                    CellAllowedDirs[CellIndex(spaceCellEdge.LeftX, y)] &= MoveDirs.ExceptRight;
+                    CellAllowedDirs[CellIndex(spaceCellEdge.RightX, y)] &= MoveDirs.ExceptLeft;
                 }
             }
         }
@@ -127,14 +108,13 @@ namespace ChiselDebug.Routing
         internal Rectangle GetRelativeBoard(Rectangle rect)
         {
             Point spaceTopLeft = rect.Pos - TopLeft;
-            Point spaceBottomRight = rect.Pos + rect.Size - TopLeft;
             return new Rectangle(
                 new Point(
                     spaceTopLeft.X / CellSize,
                     spaceTopLeft.Y / CellSize),
                 new Point(
-                    CeilDiv(spaceBottomRight.X, CellSize),
-                    CeilDiv(spaceBottomRight.Y, CellSize)));
+                    CeilDiv(rect.Size.X, CellSize),
+                    CeilDiv(rect.Size.Y, CellSize)));
         }
 
         internal void CreateCheckpoint()
