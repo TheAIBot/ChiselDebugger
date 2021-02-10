@@ -322,5 +322,41 @@ namespace ChiselDebug.Routing
 
             return sBuilder.ToString();
         }
+
+        internal string BoardAllowedMovesToString()
+        {   
+            //Right Left Down Right
+            string[] mas = new string[((int)MoveDirs.All) + 1];
+            mas[0b0000] = " ";
+            mas[0b0001] = "╹";
+            mas[0b0010] = "╻";
+            mas[0b0011] = "┃";
+            mas[0b0100] = "╸";
+            mas[0b0101] = "┛";
+            mas[0b0110] = "┓";
+            mas[0b0111] = "┫";
+            mas[0b1000] = "╺";
+            mas[0b1001] = "┗";
+            mas[0b1010] = "┏";
+            mas[0b1011] = "┣";
+            mas[0b1100] = "━";
+            mas[0b1101] = "┻";
+            mas[0b1110] = "┳";
+            mas[0b1111] = "╋";
+
+            StringBuilder sBuilder = new StringBuilder();
+            for (int y = 0; y < CellsHigh; y++)
+            {
+                for (int x = 0; x < CellsWide; x++)
+                {
+                    Point pos = new Point(x, y);
+                    MoveDirs allowedDirs = GetCellMoves(pos);
+                    sBuilder.Append(mas[(int)(allowedDirs & MoveDirs.All)]);
+                }
+                sBuilder.AppendLine();
+            }
+
+            return sBuilder.ToString();
+        }
     }
 }
