@@ -141,6 +141,10 @@ namespace ChiselDebug
             Point relativeStart = board.GetRelativeBoardPos(end.DirIO.Position);
             Point relativeEnd = board.GetRelativeBoardPos(start.DirIO.Position);
 
+            //Start position may lie inside the component rectangle
+            //and therefore the is no way to reach it.
+            //This here makes a straight path out of the component
+            //so it's possible to find a path.
             if (endRect.HasValue)
             {
                 Rectangle endRectRelative = board.GetRelativeBoard(endRect.Value);
@@ -151,15 +155,12 @@ namespace ChiselDebug
                     board.SetCellAllowedMoves(endGo, allowedDir);
                     endGo = allowedDir.MovePoint(endGo);
                 } while (endRectRelative.Within(endGo));
-                //board.SetCellAllowedMoves(endGo, allowedDir);
             }
-
-
-
-            //board.SetAllOutgoingMoves(relativeStart);
             board.SetCellAllowedMoves(relativeStart, end.DirIO.InitialDir.Reverse());
+
+            //Only allow connection from the correct direction
+            board.RemoveAllIncommingMoves(relativeEnd);
             board.AddCellAllowedMoves(relativeEnd + start.DirIO.InitialDir.MovePoint(new Point(0, 0)), start.DirIO.InitialDir.Reverse());
-            //board.SetAllIncommingMoves(relativeEnd);
 
             foreach (var keyValue in allPaths)
             {
