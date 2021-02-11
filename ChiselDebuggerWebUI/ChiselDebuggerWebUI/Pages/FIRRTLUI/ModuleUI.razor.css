@@ -1,7 +1,7 @@
 ﻿.module {
     position: absolute;
     display: inline-block;
-    border: solid black;
+    border: 2px solid black;
 }
 
 .moduleHeader {

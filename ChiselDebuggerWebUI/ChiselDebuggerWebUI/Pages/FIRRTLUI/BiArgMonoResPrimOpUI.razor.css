@@ -1,7 +1,7 @@
 ﻿.primOp {
     position: absolute;
     display: inline-block;
-    border: solid black;
+    border: 2px solid black;
     font-family: monospace;
     line-height: 1;
 }
