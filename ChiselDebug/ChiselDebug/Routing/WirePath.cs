@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ChiselDebug.FIRRTL;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,11 +7,15 @@ namespace ChiselDebug.Routing
 {
     public class WirePath
     {
+        private readonly IOInfo StartIO;
+        private readonly IOInfo EndIO;
         private readonly List<Point> Path = new List<Point>();
         public readonly bool StartsFromWire;
 
-        public WirePath(List<Point> path, bool startsFromWire)
+        internal WirePath(IOInfo startIO, IOInfo endIO, List<Point> path, bool startsFromWire)
         {
+            this.StartIO = startIO;
+            this.EndIO = endIO;
             this.Path = path;
             this.StartsFromWire = startsFromWire;
         }
@@ -50,6 +55,11 @@ namespace ChiselDebug.Routing
         public Point GetEndPos()
         {
             return Path[^1];
+        }
+
+        public FIRIO GetEndIO()
+        {
+            return EndIO.DirIO.IO;
         }
 
         public string ToSVGPathString()

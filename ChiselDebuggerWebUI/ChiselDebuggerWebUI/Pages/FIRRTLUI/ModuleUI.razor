@@ -28,16 +28,7 @@
                 <IOPortUI Position="@output.Position"></IOPortUI>
             }
 
-        <svg class="moduleWires" style="width: @GetCurrentSize().X.ToPixels();height: @GetCurrentSize().Y.ToPixels();">
-            @foreach (var wire in ModuleConnections)
-            {
-                <path class="wire" d="@wire.ToSVGPathString()" fill="none"/>
-                @if (wire.StartsFromWire)
-                {
-                    <circle cx="@wire.GetEndPos().X" cy="@wire.GetEndPos().Y" r="3"/>
-                }
-            }
-        </svg>
+            <WiresUI Paths="@ModuleConnections"></WiresUI>
         </div>
     </div>
 </div>
@@ -55,6 +46,7 @@
 
     private ConnectionsHandler ConHandler;
     private Placer NodePlacer;
+    private SimpleRouter WireRouter;
 
     protected override void OnFirstParametersSetAsync()
     {
@@ -65,6 +57,7 @@
         ModuleOpPoses = Operation.GetAllNodes().Select(x => new Positioned<FIRRTLNode>(new Point(0, 0), x)).ToList();
 
         ConHandler = new ConnectionsHandler(Operation);
+        WireRouter = new SimpleRouter(ConHandler);
     }
 
     protected override bool OnResize(int width, int height)
@@ -93,7 +86,7 @@
         ModuleOpPoses = placements.NodePositions;
 
         SetCurrentSize(placements.SpaceNeeded);
-        ModuleConnections = ConHandler.PathLines(placements);
+        ModuleConnections = WireRouter.PathLines(placements);
 
         StateHasChanged();
     }

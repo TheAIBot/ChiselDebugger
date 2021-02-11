@@ -1,7 +1,8 @@
 ﻿.module {
     position: absolute;
     display: inline-block;
-    border: solid black;
+    outline: 2px solid black;
+    outline-offset: -1px;
 }
 
 .moduleHeader {
@@ -12,16 +13,4 @@
 
 .moduleContent {
     position: relative;
-}
-
-.moduleWires {
-    position: absolute;
-    overflow: visible;
-    top: 0;
-    left: 0;
-}
-
-.wire {
-    stroke: black;
-    stroke-width: 2;
 }
