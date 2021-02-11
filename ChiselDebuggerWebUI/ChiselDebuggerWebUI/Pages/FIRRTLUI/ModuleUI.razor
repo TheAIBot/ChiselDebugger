@@ -55,6 +55,7 @@
 
     private ConnectionsHandler ConHandler;
     private Placer NodePlacer;
+    private SimpleRouter WireRouter;
 
     protected override void OnFirstParametersSetAsync()
     {
@@ -65,6 +66,7 @@
         ModuleOpPoses = Operation.GetAllNodes().Select(x => new Positioned<FIRRTLNode>(new Point(0, 0), x)).ToList();
 
         ConHandler = new ConnectionsHandler(Operation);
+        WireRouter = new SimpleRouter(ConHandler);
     }
 
     protected override bool OnResize(int width, int height)
@@ -93,7 +95,7 @@
         ModuleOpPoses = placements.NodePositions;
 
         SetCurrentSize(placements.SpaceNeeded);
-        ModuleConnections = ConHandler.PathLines(placements);
+        ModuleConnections = WireRouter.PathLines(placements);
 
         StateHasChanged();
     }
