@@ -141,7 +141,7 @@ namespace ChiselDebug.Routing
                 if (current == relativeEnd)
                 {
                     Debug.WriteLine(board.BoardStateToString(relativeStart, relativeEnd));
-                    return board.GetPath(relativeStart, relativeEnd, end.DirIO.Position, start.DirIO.Position, false);
+                    return board.GetPath(relativeStart, relativeEnd, end, start, false);
                 }
 
                 ScorePath currentScorePath = board.GetCellScorePath(current);
@@ -150,7 +150,7 @@ namespace ChiselDebug.Routing
                 if (allowedMoves.HasFlag(MoveDirs.FriendWire))
                 {
                     Debug.WriteLine(board.BoardStateToString(relativeStart, relativeEnd));
-                    return board.GetPath(relativeStart, current, end.DirIO.Position, start.DirIO.Position, true);
+                    return board.GetPath(relativeStart, current, end, start, true);
                 }
 
                 bool onEnemyWire = allowedMoves.HasFlag(MoveDirs.EnemyWire);

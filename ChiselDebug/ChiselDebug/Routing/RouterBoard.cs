@@ -217,7 +217,7 @@ namespace ChiselDebug.Routing
             }
         }
 
-        internal WirePath GetPath(Point start, Point end, Point actualStart, Point actualEnd, bool pathToWire)
+        internal WirePath GetPath(Point start, Point end, IOInfo startIO, IOInfo endIO, bool pathToWire)
         {
             List<Point> pathAsTurns = new List<Point>();
 
@@ -244,13 +244,13 @@ namespace ChiselDebug.Routing
             {
                 if (pathAsTurns[0].Y == pathAsTurns[1].Y)
                 {
-                    pathAsTurns[0] = new Point(pathAsTurns[0].X, actualStart.Y);
-                    pathAsTurns[1] = new Point(pathAsTurns[1].X, actualStart.Y);
+                    pathAsTurns[0] = new Point(pathAsTurns[0].X, startIO.DirIO.Position.Y);
+                    pathAsTurns[1] = new Point(pathAsTurns[1].X, startIO.DirIO.Position.Y);
                 }
                 else
                 {
-                    pathAsTurns[0] = new Point(actualStart.X, pathAsTurns[0].Y);
-                    pathAsTurns[1] = new Point(actualStart.X, pathAsTurns[1].Y);
+                    pathAsTurns[0] = new Point(startIO.DirIO.Position.X, pathAsTurns[0].Y);
+                    pathAsTurns[1] = new Point(startIO.DirIO.Position.X, pathAsTurns[1].Y);
                 }
             }
 
@@ -260,18 +260,18 @@ namespace ChiselDebug.Routing
                 {
                     if (pathAsTurns[^1].Y == pathAsTurns[^2].Y)
                     {
-                        pathAsTurns[^1] = new Point(pathAsTurns[^1].X, actualEnd.Y);
-                        pathAsTurns[^2] = new Point(pathAsTurns[^2].X, actualEnd.Y);
+                        pathAsTurns[^1] = new Point(pathAsTurns[^1].X, endIO.DirIO.Position.Y);
+                        pathAsTurns[^2] = new Point(pathAsTurns[^2].X, endIO.DirIO.Position.Y);
                     }
                     else
                     {
-                        pathAsTurns[^1] = new Point(actualEnd.X, pathAsTurns[^1].Y);
-                        pathAsTurns[^2] = new Point(actualEnd.X, pathAsTurns[^2].Y);
+                        pathAsTurns[^1] = new Point(endIO.DirIO.Position.X, pathAsTurns[^1].Y);
+                        pathAsTurns[^2] = new Point(endIO.DirIO.Position.X, pathAsTurns[^2].Y);
                     }
                 }
             }
 
-            return new WirePath(pathAsTurns, pathToWire);
+            return new WirePath(startIO, endIO, pathAsTurns, pathToWire);
         }
 
         internal string BoardStateToString(Point start, Point end)

@@ -29,13 +29,21 @@
             }
 
         <svg class="moduleWires" style="width: @GetCurrentSize().X.ToPixels();height: @GetCurrentSize().Y.ToPixels();">
-            @foreach (var wire in ModuleConnections)
+            @foreach (var wireGroup in ModuleConnections.GroupBy(x => x.GetEndIO()))
             {
-                <path class="wire" d="@wire.ToSVGPathString()" fill="none"/>
-                @if (wire.StartsFromWire)
+            <g>
+                @foreach (var wire in wireGroup)
                 {
-                    <circle cx="@wire.GetEndPos().X" cy="@wire.GetEndPos().Y" r="3"/>
+                    <path class="wireHoverArea" d="@wire.ToSVGPathString()" fill="none" />
+                    <path class="wireElement wire" d="@wire.ToSVGPathString()" fill="none" />
+
+                    @if (wire.StartsFromWire)
+                    {
+                        <line class="wireElement wireConnection" x1="@wire.GetEndPos().X" y1="@wire.GetEndPos().Y" x2="@wire.GetEndPos().X" y2="@wire.GetEndPos().Y" />
+                    }
                 }
+
+            </g>
             }
         </svg>
         </div>
