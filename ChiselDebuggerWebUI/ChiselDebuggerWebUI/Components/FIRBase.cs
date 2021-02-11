@@ -67,7 +67,7 @@ namespace ChiselDebuggerWebUI.Components
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             ElemWH elemWH = await JS.InvokeAsync<ElemWH>("JSUtils.getElementSize", SizeWatcher);
-            Point newSize = new Point((int)elemWH.Width, (int)elemWH.Height);
+            Point newSize = elemWH.ToPoint();
 
             if (firstRender)
             {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ChiselDebug;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,5 +10,10 @@ namespace ChiselDebuggerWebUI.Code
     {
         public double Width { get; set; }
         public double Height { get; set; }
+
+        public Point ToPoint()
+        {
+            return new Point((int)Width, (int)Height);
+        }
     }
 }
