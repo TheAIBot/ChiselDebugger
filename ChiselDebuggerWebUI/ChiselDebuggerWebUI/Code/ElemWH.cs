@@ -13,7 +13,7 @@ namespace ChiselDebuggerWebUI.Code
 
         public Point ToPoint()
         {
-            return new Point((int)Width, (int)Height);
+            return new Point((int)Math.Round(Width), (int)Math.Round(Height));
         }
     }
 }
