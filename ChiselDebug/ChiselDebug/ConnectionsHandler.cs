@@ -11,17 +11,6 @@ namespace ChiselDebug
 {
     public class ConnectionsHandler
     {
-        private readonly struct IOInfo
-        {
-            internal readonly FIRRTLNode Node;
-            internal readonly DirectedIO DirIO;
-
-            public IOInfo(FIRRTLNode node, DirectedIO dirIO)
-            {
-                this.Node = node;
-                this.DirIO = dirIO;
-            }
-        }
 
         private readonly Module Mod;
         private readonly List<Connection> UsedModuleConnections;
