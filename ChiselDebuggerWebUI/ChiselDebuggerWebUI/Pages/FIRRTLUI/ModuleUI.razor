@@ -28,24 +28,7 @@
                 <IOPortUI Position="@output.Position"></IOPortUI>
             }
 
-        <svg class="moduleWires" style="width: @GetCurrentSize().X.ToPixels();height: @GetCurrentSize().Y.ToPixels();">
-            @foreach (var wireGroup in ModuleConnections.GroupBy(x => x.GetEndIO()))
-            {
-            <g>
-                @foreach (var wire in wireGroup)
-                {
-                    <path class="wireHoverArea" d="@wire.ToSVGPathString()" fill="none" />
-                    <path class="wireElement wire" d="@wire.ToSVGPathString()" fill="none" />
-
-                    @if (wire.StartsFromWire)
-                    {
-                        <line class="wireElement wireConnection" x1="@wire.GetEndPos().X" y1="@wire.GetEndPos().Y" x2="@wire.GetEndPos().X" y2="@wire.GetEndPos().Y" />
-                    }
-                }
-
-            </g>
-            }
-        </svg>
+            <WiresUI Paths="@ModuleConnections"></WiresUI>
         </div>
     </div>
 </div>

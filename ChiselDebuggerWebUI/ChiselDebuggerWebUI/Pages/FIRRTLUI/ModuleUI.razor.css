@@ -14,33 +14,3 @@
 .moduleContent {
     position: relative;
 }
-
-.moduleWires {
-    position: absolute;
-    overflow: visible;
-    top: 0;
-    left: 0;
-}
-
-.wire {
-    stroke-width: 2;
-}
-
-.wireHoverArea {
-    stroke: white;
-    stroke-opacity: 0.01;
-    stroke-width: 10;
-}
-
-.wireConnection {
-    stroke-width: 4;
-    stroke-linecap: round;
-}
-
-.wireElement {
-    stroke: black;
-}
-
-g:hover > .wireElement {
-    stroke: orange;
-}
