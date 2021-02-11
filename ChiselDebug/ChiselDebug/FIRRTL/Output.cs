@@ -1,6 +1,6 @@
 ﻿namespace ChiselDebug.FIRRTL
 {
-    public class Output
+    public class Output : FIRIO
     {
         public readonly string Name;
         public readonly Connection Con;

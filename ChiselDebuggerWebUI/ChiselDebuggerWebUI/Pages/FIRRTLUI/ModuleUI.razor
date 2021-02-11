@@ -98,17 +98,17 @@
         StateHasChanged();
     }
 
-    protected override List<Positioned<Input>> OnMakeInputs(int width, int height)
+    protected override List<DirectedIO> OnMakeInputs(int width, int height)
     {
         return PositionIO<Input>(width, height, Operation.InternalInputs, width + ContentPadding);
     }
 
-    protected override List<Positioned<Output>> OnMakeOutputs(int width, int height)
+    protected override List<DirectedIO> OnMakeOutputs(int width, int height)
     {
         return PositionIO<Output>(width, height, Operation.InternalOutputs, -ContentPadding);
     }
 
-    private List<Positioned<T>> PositionIO<T>(int width, int height, List<T> io, int x)
+    private List<DirectedIO> PositionIO<T>(int width, int height, List<T> io, int x) where T : FIRIO
     {
         int usableSpace = height - MarginForIO * 2;
 
@@ -129,13 +129,13 @@
             yStart += (usableSpace - usedSpace) / 2;
         }
 
-        List<Positioned<T>> posIO = new List<Positioned<T>>();
+        List<DirectedIO> posIO = new List<DirectedIO>();
         for (int i = 0; i < io.Count; i++)
         {
             int y = yStart + spaceBetweenIO * i;
 
             Point pos = new Point(x, y);
-            posIO.Add(new Positioned<T>(pos, io[i]));
+            posIO.Add(new DirectedIO(io[i], pos, MoveDirs.Right));
         }
 
         return posIO;

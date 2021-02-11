@@ -11,10 +11,10 @@ namespace ChiselDebuggerWebUI.Code
     {
         public readonly FIRRTLNode Node;
         public readonly Point Size;
-        public readonly List<Positioned<Input>> InputOffsets;
-        public readonly List<Positioned<Output>> OutputOffsets;
+        public readonly List<DirectedIO> InputOffsets;
+        public readonly List<DirectedIO> OutputOffsets;
 
-        public FIRComponentUpdate(FIRRTLNode node, Point size, List<Positioned<Input>> inputOffsets, List<Positioned<Output>> outputOffsets)
+        public FIRComponentUpdate(FIRRTLNode node, Point size, List<DirectedIO> inputOffsets, List<DirectedIO> outputOffsets)
         {
             this.Node = node;
             this.Size = size;

@@ -31,33 +31,33 @@
 {
     private const int ContentPadding = 5;
 
-    protected override List<Positioned<Input>> OnMakeInputs(int width, int height)
+    protected override List<DirectedIO> OnMakeInputs(int width, int height)
     {
-        List<Positioned<Input>> inputs = new List<Positioned<Input>>();
+        List<DirectedIO> inputs = new List<DirectedIO>();
 
         int contentHeight = height - ContentPadding * 2;
         int ioYStart = (contentHeight / 6) + ContentPadding;
         int ioYDistance = contentHeight / 3;
 
         Point aInputPos = new Point(0, ioYStart);
-        inputs.Add(new Positioned<Input>(aInputPos, Operation.A));
+        inputs.Add(new DirectedIO(Operation.A, aInputPos, MoveDirs.Right));
 
         Point bInputPos = new Point(0, ioYStart + ioYDistance);
-        inputs.Add(new Positioned<Input>(bInputPos, Operation.B));
+        inputs.Add(new DirectedIO(Operation.B, bInputPos, MoveDirs.Right));
 
         return inputs;
     }
 
-    protected override List<Positioned<Output>> OnMakeOutputs(int width, int height)
+    protected override List<DirectedIO> OnMakeOutputs(int width, int height)
     {
-        List<Positioned<Output>> outputs = new List<Positioned<Output>>();
+        List<DirectedIO> outputs = new List<DirectedIO>();
 
         int contentHeight = height - ContentPadding * 2;
         int ioYStart = (contentHeight / 6) + ContentPadding;
         int ioYDistance = contentHeight / 3;
 
         Point outputPos = new Point(width, ioYStart + ioYDistance * 2);
-        outputs.Add(new Positioned<Output>(outputPos, Operation.Result));
+        outputs.Add(new DirectedIO(Operation.Result, outputPos, MoveDirs.Right));
 
         return outputs;
     }

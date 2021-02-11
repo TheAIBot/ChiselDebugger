@@ -31,8 +31,8 @@ namespace ChiselDebuggerWebUI.Components
         private int RenderCounter = 0;
         private bool IsFirstSetParametersEvent = true;
         protected ElementReference SizeWatcher;
-        protected List<Positioned<Input>> InputOffsets = new List<Positioned<Input>>();
-        protected List<Positioned<Output>> OutputOffsets = new List<Positioned<Output>>();
+        protected List<DirectedIO> InputOffsets = new List<DirectedIO>();
+        protected List<DirectedIO> OutputOffsets = new List<DirectedIO>();
 
         protected Point GetCurrentSize()
         {
@@ -128,7 +128,7 @@ namespace ChiselDebuggerWebUI.Components
             return true;
         }
 
-        protected abstract List<Positioned<Input>> OnMakeInputs(int width, int height);
-        protected abstract List<Positioned<Output>> OnMakeOutputs(int width, int height);
+        protected abstract List<DirectedIO> OnMakeInputs(int width, int height);
+        protected abstract List<DirectedIO> OnMakeOutputs(int width, int height);
     }
 }

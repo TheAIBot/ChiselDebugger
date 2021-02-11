@@ -1,9 +1,9 @@
 ﻿using System;
 
-namespace ChiselDebug.Routing
+namespace ChiselDebug
 {
     [Flags]
-    internal enum MoveDirs : byte
+    public enum MoveDirs : byte
     {
         None = 0b0000,
         Up = 0b0001,

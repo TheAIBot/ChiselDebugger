@@ -24,13 +24,13 @@
     private const int INDENT = 25;
     private const int USABLE_CHOISE_HEIGHT = 50;
 
-    protected override List<Positioned<Input>> OnMakeInputs(int width, int height)
+    protected override List<DirectedIO> OnMakeInputs(int width, int height)
     {
-        List<Positioned<Input>> inputs = new List<Positioned<Input>>();
+        List<DirectedIO> inputs = new List<DirectedIO>();
 
         //Add chose input
         Point deciderOffset = new Point(WIDTH / 2, INDENT / 2);
-        inputs.Add(new Positioned<Input>(deciderOffset, Operation.Decider));
+        inputs.Add(new DirectedIO(Operation.Decider, deciderOffset, MoveDirs.Down));
 
         //Add choise inputs
         int yChoiseOffset = (HEIGHT - USABLE_CHOISE_HEIGHT) / 2;
@@ -38,19 +38,19 @@
         for (int i = 0; i < Operation.Choises.Count; i++)
         {
             Point choiseOffset = new Point(0, yChoiseOffset + yChoiseDistance * i);
-            inputs.Add(new Positioned<Input>(choiseOffset, Operation.Choises[i]));
+            inputs.Add(new DirectedIO(Operation.Choises[i], choiseOffset, MoveDirs.Right));
         }
 
         return inputs;
     }
 
-    protected override List<Positioned<Output>> OnMakeOutputs(int width, int height)
+    protected override List<DirectedIO> OnMakeOutputs(int width, int height)
     {
-        List<Positioned<Output>> outputs = new List<Positioned<Output>>();
+        List<DirectedIO> outputs = new List<DirectedIO>();
 
         //Add output
         Point outputOffset = new Point(WIDTH, HEIGHT / 2);
-        outputs.Add(new Positioned<Output>(outputOffset, Operation.Result));
+        outputs.Add(new DirectedIO(Operation.Result, outputOffset, MoveDirs.Right));
 
         return outputs;
     }

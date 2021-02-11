@@ -13,20 +13,19 @@ namespace ChiselDebug
     {
         private readonly struct IOInfo
         {
-            internal readonly Point Position;
             internal readonly FIRRTLNode Node;
+            internal readonly DirectedIO DirIO;
 
-            public IOInfo(Point pos, FIRRTLNode node)
+            public IOInfo(FIRRTLNode node, DirectedIO dirIO)
             {
-                this.Position = pos;
                 this.Node = node;
+                this.DirIO = dirIO;
             }
         }
 
         private readonly Module Mod;
         private readonly List<Connection> UsedModuleConnections;
-        private readonly Dictionary<Input, IOInfo> InputOffsets = new Dictionary<Input, IOInfo>();
-        private readonly Dictionary<Output, IOInfo> OutputOffsets = new Dictionary<Output, IOInfo>();
+        private readonly Dictionary<FIRIO, IOInfo> IOInfos = new Dictionary<FIRIO, IOInfo>();
 
         public ConnectionsHandler(Module mod)
         {
@@ -34,19 +33,19 @@ namespace ChiselDebug
             this.UsedModuleConnections = Mod.GetAllModuleConnections();
         }
 
-        public void UpdateIOFromNode(FIRRTLNode node, List<Positioned<Input>> inputOffsets, List<Positioned<Output>> outputOffsets)
+        public void UpdateIOFromNode(FIRRTLNode node, List<DirectedIO> inputOffsets, List<DirectedIO> outputOffsets)
         {
             foreach (var inputPos in inputOffsets)
             {
-                InputOffsets[inputPos.Value] = new IOInfo(inputPos.Position, node);
+                IOInfos[inputPos.IO] = new IOInfo(node, inputPos);
             }
-            foreach (var outputPos in outputOffsets)
+            foreach (var inputPos in outputOffsets)
             {
-                OutputOffsets[outputPos.Value] = new IOInfo(outputPos.Position, node);
+                IOInfos[inputPos.IO] = new IOInfo(node, inputPos);
             }
         }
 
-        private List<Line> GetAllConnectionLines(PlacementInfo placements)
+        private List<(IOInfo start, IOInfo end)> GetAllConnectionLines(PlacementInfo placements)
         {
             Dictionary<FIRRTLNode, Point> nodePoses = new Dictionary<FIRRTLNode, Point>();
             foreach (var nodePos in placements.NodePositions)
@@ -55,21 +54,22 @@ namespace ChiselDebug
             }
             nodePoses.Add(Mod, new Point(0, 0));
 
-            List<Line> lines = new List<Line>();
+            List<(IOInfo start, IOInfo end)> lines = new List<(IOInfo start, IOInfo end)>();
             foreach (var connection in UsedModuleConnections)
             {
-                if (OutputOffsets.TryGetValue(connection.From, out IOInfo outputInfo))
+                if (IOInfos.TryGetValue(connection.From, out IOInfo outputInfo))
                 {
                     foreach (var input in connection.To)
                     {
-                        if (InputOffsets.TryGetValue(input, out IOInfo inputInfo))
+                        if (IOInfos.TryGetValue(input, out IOInfo inputInfo))
                         {
                             Point startOffset = nodePoses[outputInfo.Node];
                             Point endOffset = nodePoses[inputInfo.Node];
 
-                            Point start = startOffset + outputInfo.Position;
-                            Point end = endOffset + inputInfo.Position;
-                            lines.Add(new Line(start, end));
+                            IOInfo offsetStartIO = new IOInfo(outputInfo.Node, outputInfo.DirIO.WithOffsetPosition(startOffset));
+                            IOInfo offsetEndIO = new IOInfo(inputInfo.Node, inputInfo.DirIO.WithOffsetPosition(endOffset));
+
+                            lines.Add((offsetStartIO, offsetEndIO));
                         }
                     }
                 }
@@ -82,65 +82,36 @@ namespace ChiselDebug
         {
             try
             {
-                List<Line> lines = GetAllConnectionLines(placements);
-                lines.Sort((x, y) => y.GetManhattanDistance() - x.GetManhattanDistance());
+                List<(IOInfo start, IOInfo end)> lines = GetAllConnectionLines(placements);
+                lines.Sort((x, y) => new Line(y.start.DirIO.Position, y.end.DirIO.Position).GetManhattanDistance() - new Line(x.start.DirIO.Position, x.end.DirIO.Position).GetManhattanDistance());
 
                 RouterBoard board = new RouterBoard(placements.SpaceNeeded);
-                board.PrepareBoard(placements.UsedSpace);
+                board.PrepareBoard(placements.UsedSpace.Values.ToList());
                 board.CreateCheckpoint();
 
                 Dictionary<Point, List<WirePath>> startPosPaths = new Dictionary<Point, List<WirePath>>();
                 List<WirePath> paths = new List<WirePath>();
                 for (int i = 0; i < lines.Count; i++)
                 {
-                    Line line = lines[i];
-                    MoveDirs outDir = MoveDirs.None;
-                    Rectangle endRect = new Rectangle();
-                    bool isWithin = false;
-                    foreach (var usedSpace in placements.UsedSpace)
+                    (IOInfo start, IOInfo end) = lines[i];
+
+                    Rectangle? startRect = null;
+                    Rectangle? endRect = null;
+                    if (placements.UsedSpace.ContainsKey(start.Node))
                     {
-                        if (usedSpace.WithinButExcludeRectEdge(line.End))
-                        {
-                            outDir = MoveDirs.Up;
-                            endRect = usedSpace;
-                            isWithin = true;
-                            break;
-                        }
-                        if (line.End.X == usedSpace.LeftX)
-                        {
-                            outDir = MoveDirs.Left;
-                            break;
-                        }
-                        else if (line.End.X == usedSpace.RightX)
-                        {
-                            outDir = MoveDirs.Right;
-                            break;
-                        }
-                        else if (line.End.Y == usedSpace.TopY)
-                        {
-                            outDir = MoveDirs.Up;
-                            break;
-                        }
-                        else if (line.End.Y == usedSpace.BottomY)
-                        {
-                            outDir = MoveDirs.Down;
-                            break;
-                        }
+                        startRect = placements.UsedSpace[start.Node];
                     }
-                    if (outDir == MoveDirs.None && line.Start.X < 0)
+                    if (placements.UsedSpace.ContainsKey(end.Node))
                     {
-                        outDir = MoveDirs.Right;
-                    }
-                    else if (outDir == MoveDirs.None)
-                    {
-                        outDir = MoveDirs.Left;
+                        endRect = placements.UsedSpace[end.Node];
                     }
 
 
-                    WirePath path = PathLine(board, lines[i], outDir, endRect, isWithin, startPosPaths);
+
+                    WirePath path = PathLine(board, start, end, startRect, endRect, startPosPaths);
                     paths.Add(path);
 
-                    if (startPosPaths.TryGetValue(line.Start, out List<WirePath> startPaths))
+                    if (startPosPaths.TryGetValue(start.DirIO.Position, out List<WirePath> startPaths))
                     {
                         startPaths.Add(path);
                     }
@@ -148,13 +119,8 @@ namespace ChiselDebug
                     {
                         List<WirePath> startPdwaaths = new List<WirePath>();
                         startPdwaaths.Add(path);
-                        startPosPaths.Add(line.Start, startPdwaaths);
+                        startPosPaths.Add(start.DirIO.Position, startPdwaaths);
                     }
-
-                    //for (int z = 1; z < path.Count - 1; z++)
-                    //{
-                    //    board.SetCheckpointCellMoves(path[z], Move)
-                    //}
                 }
 
                 return paths;
@@ -168,34 +134,37 @@ namespace ChiselDebug
 
         }
 
-        private WirePath PathLine(RouterBoard board, Line line, MoveDirs outDir, Rectangle endRect, bool endsWithin, Dictionary<Point, List<WirePath>> allPaths)
+        private WirePath PathLine(RouterBoard board, IOInfo start, IOInfo end, Rectangle? startRect, Rectangle? endRect, Dictionary<Point, List<WirePath>> allPaths)
         {
             board.PrepareForSearchFromCheckpoint();
 
-            Point relativeStart = board.GetRelativeBoardPos(line.End);
-            Point relativeEnd = board.GetRelativeBoardPos(line.Start);
+            Point relativeStart = board.GetRelativeBoardPos(end.DirIO.Position);
+            Point relativeEnd = board.GetRelativeBoardPos(start.DirIO.Position);
 
-            if (endsWithin)
+            if (endRect.HasValue)
             {
-                Rectangle endRectRelative = board.GetRelativeBoard(endRect);
+                Rectangle endRectRelative = board.GetRelativeBoard(endRect.Value);
                 Point endGo = relativeStart;
+                MoveDirs allowedDir = end.DirIO.InitialDir.Reverse();
                 do
                 {
-                    board.SetCellAllowedMoves(endGo, MoveDirs.Up);
-                    endGo = MoveDirs.Up.MovePoint(endGo);
+                    board.SetCellAllowedMoves(endGo, allowedDir);
+                    endGo = allowedDir.MovePoint(endGo);
                 } while (endRectRelative.Within(endGo));
+                //board.SetCellAllowedMoves(endGo, allowedDir);
             }
 
 
 
             //board.SetAllOutgoingMoves(relativeStart);
-            board.SetCellAllowedMoves(relativeStart, outDir);
-            board.SetAllIncommingMoves(relativeEnd);
+            board.SetCellAllowedMoves(relativeStart, end.DirIO.InitialDir.Reverse());
+            board.AddCellAllowedMoves(relativeEnd + start.DirIO.InitialDir.MovePoint(new Point(0, 0)), start.DirIO.InitialDir.Reverse());
+            //board.SetAllIncommingMoves(relativeEnd);
 
             foreach (var keyValue in allPaths)
             {
                 MoveDirs wireType;
-                if (keyValue.Key == line.Start)
+                if (keyValue.Key == start.DirIO.Position)
                 {
                     wireType = MoveDirs.FriendWire;
                 }
@@ -223,13 +192,16 @@ namespace ChiselDebug
 
             MoveDirs[] moves = new MoveDirs[] { MoveDirs.Up, MoveDirs.Down, MoveDirs.Left, MoveDirs.Right };
 
+            Debug.WriteLine(board.BoardAllowedMovesToString());
+
             while (toSee.Count > 0)
             {
                 Point current = toSee.Dequeue();
 
                 if (current == relativeEnd)
                 {
-                    return board.GetPath(relativeStart, relativeEnd, line.End, line.Start, false);
+                    Debug.WriteLine(board.BoardStateToString(relativeStart, relativeEnd));
+                    return board.GetPath(relativeStart, relativeEnd, end.DirIO.Position, start.DirIO.Position, false);
                 }
 
                 ScorePath currentScorePath = board.GetCellScorePath(current);
@@ -237,8 +209,8 @@ namespace ChiselDebug
 
                 if (allowedMoves.HasFlag(MoveDirs.FriendWire))
                 {
-                    //Debug.WriteLine(board.BoardStateToString(relativeStart, relativeEnd));
-                    return board.GetPath(relativeStart, current, line.End, line.Start, true);
+                    Debug.WriteLine(board.BoardStateToString(relativeStart, relativeEnd));
+                    return board.GetPath(relativeStart, current, end.DirIO.Position, start.DirIO.Position, true);
                 }
 
                 bool onEnemyWire = allowedMoves.HasFlag(MoveDirs.EnemyWire);
