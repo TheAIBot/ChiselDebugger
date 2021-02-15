@@ -1,0 +1,689 @@
+﻿using Antlr4.Runtime;
+using Antlr4.Runtime.Misc;
+using Antlr4.Runtime.Tree;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Numerics;
+using System.Text;
+using System.Text.RegularExpressions;
+
+namespace FIRRTL
+{
+    public interface FirrtlNode { }
+    public interface IInfo { };
+    public record NoInfo() : IInfo;
+
+    public enum Dir
+    {
+        Input,
+        Output
+    }
+
+    public enum MPortDir
+    {
+        MInfer,
+        MRead,
+        MWrite,
+        MReadWrite
+    }
+
+    public enum Orientation
+    {
+        Normal,
+        Flipped
+    }
+
+    public enum ReadUnderWrite
+    {
+        Undefined,
+        Old,
+        New
+    }
+
+    public enum Formal
+    {
+        Assert,
+        Assume,
+        Cover
+    }
+
+    public enum KindType
+    {
+        Wire,
+        Position,
+        Reg,
+        Instance,
+        Port,
+        Node,
+        Mem,
+        Exp,
+        Unknown
+    }
+
+    public enum FlowType
+    {
+        Source,
+        Sink,
+        Duplex,
+        Unknown
+    }
+
+    public interface IFIRType { }
+    public record UnknownType() : IFIRType;
+    public record GroundType(int Width) : IFIRType
+    {
+        public const int UnknownWidth = -1;
+        public bool IsWidthKnown => Width != -1;
+    }
+    public record UIntType(int Width) : GroundType(Width);
+    public record SIntType(int Width) : GroundType(Width);
+    public record FixedType(int Width, int Point) : GroundType(Width);
+
+
+    public record ClockType() : GroundType(1);
+    public record AsyncResetType() : GroundType(1);
+    public record ResetType() : GroundType(1);
+    public record AnalogType(int Width) : GroundType(Width);
+
+    public record AggregateType() : IFIRType;
+    public record Field(string Name, Orientation Flip, IFIRType Type);
+    public record BundleType(List<Field> Fields) : AggregateType;
+    public record VectorType(IFIRType Type, int Size) : AggregateType;
+
+    public record StringLit(string Str) : FirrtlNode;
+
+    public record Param(string Name) : FirrtlNode;
+    public record IntParam(string Name, BigInteger Value) : Param(Name);
+    public record StringParam(string Name, StringLit Value) : Param(Name);
+    public record DoubleParam(string Name, double Value) : Param(Name);
+    public record RawStringParam(string Name, string Value) : Param(Name);
+
+    public record DefMemory(
+        IInfo Info,
+        string Name,
+        IFIRType Type,
+        BigInteger Depth,
+        int WriteLatency,
+        int ReadLatency,
+        List<string> Readers,
+        List<string> Writers,
+        List<string> ReadWriters,
+        ReadUnderWrite Ruw) : Statement;
+
+    public record Expression() : FirrtlNode;
+    public record Reference(string Name, IFIRType Type, KindType Kind, FlowType Flow) : Expression;
+    public record SubField(Expression Expr, string Name, IFIRType Type, FlowType Flow) : Expression;
+    public record SubIndex(Expression Expr, int Value, IFIRType Type, FlowType Flow) : Expression;
+    public record SubAccess(Expression Expr, Expression Index, IFIRType Type, FlowType Flow) : Expression;
+
+    public record Literal(BigInteger Value, int Width) : Expression;
+    public record UIntLiteral(BigInteger Value, int Width) : Literal(Value, Width);
+
+    public record Statement() : FirrtlNode;
+    public record EmptyStmt() : Statement;
+    public record Block(List<Statement> Statements) : Statement;
+    public record Conditionally(IInfo Info,  Expression Pred, Statement WhenTrue, Statement Alt) : Statement;
+    public record DefWire(IInfo Info, string Name, IFIRType Type) : Statement;
+    public record DefRegister(IInfo Info, string Name, IFIRType Type, Expression Clock, Expression Reset, Expression init) : Statement;
+    public record CDefMemory(IInfo Info, string Name, IFIRType Type, BigInteger Size, bool Sequence, ReadUnderWrite Ruw) : Statement;
+    public record DefInstance(IInfo Info, string Name, string Module, IFIRType Type) : Statement;
+    public record DefNode(IInfo Info, string Name, Expression Value) : Statement;
+    public record Stop(IInfo Info, int Ret, Expression Clk, Expression Enabled) : Statement;
+    public record Attach(IInfo Info, List<Expression> Exprs) : Statement;
+    public record Print(IInfo Info, StringLit MsgFormat, List<Expression> Args, Expression Clk, Expression Enabled) : Statement;
+    public record Verification(Formal Op, IInfo Info, Expression Clk, Expression Pred, Expression Enabled, StringLit MsgFormat) : Statement;
+    public record Connect(IInfo Info, Expression Loc, Expression Expr) : Statement;
+    public record PartialConnect(IInfo Info, Expression Loc, Expression Expr) : Statement;
+    public record IsInvalid(IInfo Info, Expression Expr) : Statement;
+
+
+
+    public record DefModule() : FirrtlNode;
+    public record Port(IInfo Info, string Name, Dir Direction, IFIRType Type);
+    public record Module(IInfo Info, string Name, List<Port> Ports, Statement Body) : DefModule;
+    public record ExtModule(IInfo Info, string Name, List<Port> Ports, string DefName, List<Param> Params) : DefModule;
+    public record Circuit(IInfo Info, List<DefModule> Modules, string Main) : FirrtlNode;
+
+    internal class Visitor
+    {
+        private const string HexPattern = "\"*h([+-]?[a-zA-Z0-9]+)\"*";
+        private const string OctalPattern = "\"*o([+-]?[0-7]+)\"*";
+        private const string BinaryPattern = "\"*b([+-]?[01]+)\"*";
+        private const string DecPattern = @"([+\-]?[1-9]\d*)";
+        private const string ZeroPattern = "0";
+        private const string DecimalPattern = @"([+-]?[0-9]\d*\.[0-9]\d*)";
+
+        private string RemoveSurroundingQuotes(string str)
+        {
+            return str.Length switch
+            {
+                0 => str,
+                1 => string.Empty,
+                2 => string.Empty,
+                _ => str.Substring(1, str.Length - 2)
+            };
+        }
+
+        private BigInteger StringToBigInteger(string str)
+        {
+            if (Regex.IsMatch(str, ZeroPattern, RegexOptions.Compiled))
+            {
+                return new BigInteger(0);
+            }
+            else if (Regex.IsMatch(str, HexPattern, RegexOptions.Compiled))
+            {
+                return BigInteger.Parse(str, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+            }
+            else if (Regex.IsMatch(str, OctalPattern, RegexOptions.Compiled))
+            {
+                throw new NotImplementedException("Parsing octal numbers is not supported yet.");
+            }
+            else if (Regex.IsMatch(str, BinaryPattern, RegexOptions.Compiled))
+            {
+                throw new NotImplementedException("Parsing binary numbers is not supported yet.");
+            }
+            else if (Regex.IsMatch(str, DecPattern, RegexOptions.Compiled))
+            {
+                return BigInteger.Parse(str, CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                throw new Exception($"Invalid String for conversion to BigInteger: {str}");
+            }
+        }
+
+        private int StringToInt(string str)
+        {
+            return (int)StringToBigInteger(str);
+        }
+
+        public FirrtlNode Visit([NotNull] IParseTree tree)
+        {
+            throw new NotImplementedException();
+        }
+
+        public FirrtlNode VisitBoundValue([NotNull] FIRRTLParser.BoundValueContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        public FirrtlNode VisitChildren([NotNull] IRuleNode node)
+        {
+            throw new NotImplementedException();
+        }
+
+        private IInfo VisitInfo(FIRRTLParser.InfoContext context, ParserRuleContext parentContext)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Circuit VisitCircuit([NotNull] FIRRTLParser.CircuitContext context)
+        {
+            IInfo info = VisitInfo(context.info(), context);
+            List<DefModule> modules = context.module().Select(VisitModule).ToList();
+            string name = context.id().GetText();
+
+            return new Circuit(info, modules, name);
+        }
+
+        private DefModule VisitModule([NotNull] FIRRTLParser.ModuleContext context)
+        {
+            IInfo info = VisitInfo(context.info(), context);
+            if (context.GetChild(0).GetText() == "module")
+            {
+                string name = context.id().GetText();
+                List<Port> ports = context.port().Select(VisitPort).ToList();
+                Statement body = VisitBlock(context.moduleBlock());
+
+                return new Module(info, name, ports, body);
+            }
+            else if (context.GetChild(0).GetText() == "extmodule")
+            {
+                string name = context.id().GetText();
+                List<Port> ports = context.port().Select(VisitPort).ToList();
+                string defName = context.defname().id().GetText() ?? name;
+                List<Param> parameters = context.parameter().Select(VisitParameter).ToList();
+
+                return new ExtModule(info, name, ports, defName, parameters);
+            }
+            else
+            {
+                throw new Exception("Invalid module type.");
+            }
+        }
+
+        private Port VisitPort([NotNull] FIRRTLParser.PortContext context)
+        {
+            IInfo info = VisitInfo(context.info(), context);
+            string name = context.id().GetText();
+            Dir direction = VisitDir(context.dir());
+            IFIRType type = VisitType(context.type());
+
+            return new Port(info, name, direction, type);
+        }
+
+        private Param VisitParameter([NotNull] FIRRTLParser.ParameterContext context)
+        {
+            string name = context.id().GetText();
+
+            return (context.intLit(), context.StringLit(), context.DoubleLit(), context.RawString()) switch
+            {
+                (var intLit, null, null, null) => new IntParam(name, StringToBigInteger(intLit.GetText())),
+                (null, var str, null, null) => new StringParam(name, VisitStringLit(str)),
+                (null, null, var dbl, null) => new DoubleParam(name, double.Parse(dbl.GetText())),
+                (null, null, null, var raw) => new RawStringParam(name, RemoveSurroundingQuotes(raw.GetText()).Replace("\\", "'")),
+                _ => throw new Exception($"Invalid parameter: {context.GetText()}")
+            };
+        }
+
+        private Dir VisitDir([NotNull] FIRRTLParser.DirContext context)
+        {
+            return context.GetText() switch
+            {
+                "input" => Dir.Input,
+                "output" => Dir.Output,
+                var dir => throw new Exception($"Invalid direction: {dir}")
+            };
+        }
+
+        private MPortDir VisitMdir([NotNull] FIRRTLParser.MdirContext context)
+        {
+            return context.GetText() switch
+            {
+                "infer" => MPortDir.MInfer,
+                "read" => MPortDir.MRead,
+                "write" => MPortDir.MWrite,
+                "rdwr" => MPortDir.MReadWrite,
+                var dir => throw new Exception($"Invalid memory port direction: {dir}")
+            };
+        }
+
+        private IFIRType VisitType([NotNull] FIRRTLParser.TypeContext context)
+        {
+            int GetWidth(FIRRTLParser.IntLitContext lit)
+            {
+                return int.Parse(lit.GetText(), CultureInfo.InvariantCulture);
+            }
+
+            if (context.GetChild(0) is ITerminalNode term)
+            {
+                return term.GetText() switch
+                {
+                    "UInt" when context.ChildCount > 1 => new UIntType(GetWidth(context.intLit(0))),
+                    "UInt" => new UIntType(GroundType.UnknownWidth),
+                    "SInt" when context.ChildCount > 1 => new SIntType(GetWidth(context.intLit(0))),
+                    "SInt" => new SIntType(GroundType.UnknownWidth),
+                    "Fixed" => context.intLit().Length switch
+                    {
+                        0 => new FixedType(GroundType.UnknownWidth, GroundType.UnknownWidth),
+                        1 => context.GetChild(2).GetText() switch
+                        {
+                            "<" => new FixedType(GroundType.UnknownWidth, GetWidth(context.intLit(0))),
+                            _ => new FixedType(GetWidth(context.intLit(0)), GroundType.UnknownWidth)
+                        },
+                        2 => new FixedType(GetWidth(context.intLit(0)), GetWidth(context.intLit(1))),
+                        _ => throw new Exception("Invalid Fixed type.")
+                    },
+                    "Interval" => throw new NotImplementedException("Intervals are currently not supported"),
+                    "Clock" => new ClockType(),
+                    "AsyncReset" => new AsyncResetType(),
+                    "Reset" => new ResetType(),
+                    "Analog" when context.ChildCount > 1 => new AnalogType(GetWidth(context.intLit(0))),
+                    "Analog" => new AnalogType(GroundType.UnknownWidth),
+                    "{" => new BundleType(context.field().Select(VisitField).ToList()),
+                    _ => throw new Exception($"Uknown type: {term.GetText()}")
+                };
+            }
+            else if (context.GetChild(0) is FIRRTLParser.TypeContext typeContext)
+            {
+                return new VectorType(VisitType(context.type()), GetWidth(context.intLit(0)));
+            }
+            else
+            {
+                throw new Exception($"Uknown type: {context.GetText()}");
+            }
+        }
+
+        private (IFIRType Type, BigInteger Size) VisitCMemType([NotNull] FIRRTLParser.TypeContext context)
+        {
+            if (context.GetChild(0) is FIRRTLParser.TypeContext typeContext)
+            {
+                IFIRType type = VisitType(context.type());
+                BigInteger size = StringToBigInteger(context.intLit(0).GetText());
+
+                return (type, size);
+            }
+            else
+            {
+                throw new Exception($"Invalid memory type: {context.GetText()}");
+            }
+        }
+
+        private Field VisitField([NotNull] FIRRTLParser.FieldContext context)
+        {
+            string name = context.fieldId().GetText();
+            Orientation orien = context.GetChild(0).GetText() == "flip" ? Orientation.Flipped : Orientation.Normal;
+            IFIRType type = VisitType(context.type());
+
+            return new Field(name, orien, type);
+        }
+
+        private Statement VisitBlock(FIRRTLParser.ModuleBlockContext context)
+        {
+            if (context == null)
+            {
+                return new EmptyStmt();
+            }
+
+            List<Statement> statements = context.simple_stmt()
+                .Select(x => x.stmt())
+                .Where(x => x != null)
+                .Select(VisitStmt).ToList();
+
+            return new Block(statements);
+        }
+
+        private Statement VisitSuite([NotNull] FIRRTLParser.SuiteContext context)
+        {
+            List<Statement> statements = context.simple_stmt()
+                .Select(x => x.stmt())
+                .Where(x => x != null)
+                .Select(VisitStmt).ToList();
+
+            return new Block(statements);
+        }
+
+        private ReadUnderWrite VisitRuw(FIRRTLParser.RuwContext context)
+        {
+            if (context == null)
+            {
+                return ReadUnderWrite.Undefined;
+            }
+
+            return context.GetText() switch
+            {
+                "undefined" => ReadUnderWrite.Undefined,
+                "old" => ReadUnderWrite.Old,
+                "new" => ReadUnderWrite.New,
+                _ => throw new Exception($"Invalid ruw: {context.GetText()}")
+            };
+        }
+
+        private Statement VisitMem([NotNull] FIRRTLParser.StmtContext context)
+        {
+            List<string> readers = new List<string>();
+            List<string> writers = new List<string>();
+            List<string> readWriters = new List<string>();
+            var fieldMap = new Dictionary<string, (IFIRType Type, int? Lit, ReadUnderWrite Ruv, bool Unique)>();
+            string memName = context.id(0).GetText();
+            IInfo info = VisitInfo(context.info(), context);
+
+            foreach (var field in context.memField())
+            {
+                string fieldName = field.GetChild(0).GetText();
+                switch (fieldName)
+                {
+                    case "reader":
+                        readers.AddRange(field.id().Select(x => x.GetText()));
+                        continue;
+                    case "writer":
+                        writers.AddRange(field.id().Select(x => x.GetText()));
+                        continue;
+                    case "readwriter":
+                        readWriters.AddRange(field.id().Select(x => x.GetText()));
+                        continue;
+                    default:
+                        break;
+                }
+
+                if (fieldMap.ContainsKey(fieldName))
+                {
+                    throw new Exception($"Redefinition of {fieldName} in FIRRTL line: {field.start.Line}");
+                }
+
+                fieldMap.Add(fieldName, fieldName switch
+                {
+                    "data-type" => (VisitType(field.type()), null, ReadUnderWrite.Undefined, true),
+                    "read-under-write" => (null, null, VisitRuw(field.ruw()), true),
+                    _ => (null, int.Parse(field.intLit().GetText(), CultureInfo.InvariantCulture), ReadUnderWrite.Undefined, true)
+                });
+            }
+
+            string[] requiredFields = new string[]
+            {
+                "data-type",
+                "depth",
+                "read-latency",
+                "write-latency"
+            };
+
+            foreach (var required in requiredFields)
+            {
+                if (!fieldMap.ContainsKey(required))
+                {
+                    throw new Exception($"Required mem field {required} not found.");
+                }
+            }
+
+            ReadUnderWrite ruw = fieldMap.TryGetValue("read-under-write", out var fieldInfo) ? fieldInfo.Ruv : ReadUnderWrite.Undefined;
+
+            return new DefMemory(
+                info,
+                memName,
+                fieldMap["data-type"].Type,
+                fieldMap["depth"].Lit.Value,
+                fieldMap["write-latency"].Lit.Value,
+                fieldMap["read-latency"].Lit.Value,
+                readers,
+                writers,
+                readWriters,
+                ruw);
+        }
+
+        private StringLit VisitStringLit(ITerminalNode node)
+        {
+            return new StringLit(RemoveSurroundingQuotes(node.GetText()));
+        }
+
+        private Statement VisitWhen([NotNull] FIRRTLParser.WhenContext context)
+        {
+            IInfo info = VisitInfo(context.info(0), context);
+
+            Statement alt;
+            if (context.when() != null)
+            {
+                alt = VisitWhen(context.when());
+            }
+            else if (context.suite().Length > 1)
+            {
+                alt = VisitSuite(context.suite(1));
+            }
+            else
+            {
+                alt = new EmptyStmt();
+            }
+
+            return new Conditionally(info, VisitExp(context.exp()), VisitSuite(context.suite(0)), alt);
+        }
+
+        public Statement VisitStmt([NotNull] FIRRTLParser.StmtContext context)
+        {
+            FIRRTLParser.ExpContext[] contextExprs = context.exp();
+            IInfo info = VisitInfo(context.info(), context);
+
+            if (context.GetChild(0) is FIRRTLParser.WhenContext when)
+            {
+                return VisitWhen(when);
+            }
+            else if (context.GetChild(0) is ITerminalNode term)
+            {
+                switch (term.GetText())
+                {
+                    case "wire":
+                        return new DefWire(info, context.id(0).GetText(), VisitType(context.type()));
+                    case "reg":
+                        {
+                            string name = context.id(0).GetText();
+                            IFIRType type = VisitType(context.type());
+                            Expression clock = VisitExp(contextExprs[0]);
+
+                            var rb = context.reset_block();
+                            if (rb != null)
+                            {
+                                var sr = rb.simple_reset().simple_reset0();
+                                IInfo innerInfo = info is NoInfo ? VisitInfo(rb.info(), context) : info;
+                                Expression reset = VisitExp(sr.exp(0));
+                                Expression init = VisitExp(sr.exp(1));
+
+                                return new DefRegister(innerInfo, name, type, clock, reset, init);
+                            }
+                            else
+                            {
+                                Expression reset = new UIntLiteral(new BigInteger(0), 1);
+                                Expression init = new Reference(name, type, KindType.Unknown, FlowType.Unknown); ;
+                                return new DefRegister(info, name, type, clock, reset, init);
+                            }
+                        }
+                    case "mem":
+                        return VisitMem(context);
+                    case "cmem":
+                        {
+                            var cMemType = VisitCMemType(context.type());
+                            return new CDefMemory(info, context.id(0).GetText(), cMemType.Type, cMemType.Size, false, ReadUnderWrite.Undefined);
+                        }
+                    case "smem":
+                        {
+                            var cMemType = VisitCMemType(context.type());
+                            return new CDefMemory(info, context.id(0).GetText(), cMemType.Type, cMemType.Size, true, VisitRuw(context.ruw()));
+                        }
+                    case "inst":
+                        return new DefInstance(info, context.id(0).GetText(), context.id(1).GetText(), new UnknownType());
+                    case "node":
+                        return new DefNode(info, context.id(0).GetText(), VisitExp(contextExprs[0]));
+                    case "stop(":
+                        return new Stop(info, StringToInt(context.intLit().GetText()), VisitExp(contextExprs[0]), VisitExp(contextExprs[1]));
+                    case "attach":
+                        return new Attach(info, contextExprs.Select(VisitExp).ToList());
+                    case "printf(":
+                        {
+                            StringLit msg = VisitStringLit(context.StringLit());
+                            var exprs = contextExprs.Select(VisitExp).ToList();
+                            return new Print(info, msg, exprs.Skip(2).ToList(), exprs[0], exprs[1]);
+                        }
+                    case "assert":
+                        {
+                            StringLit msg = VisitStringLit(context.StringLit());
+                            var exprs = contextExprs.Select(VisitExp).ToList();
+                            return new Verification(Formal.Assert, info, exprs[0], exprs[1], exprs[2], msg);
+                        }
+                    case "assume":
+                        {
+                            StringLit msg = VisitStringLit(context.StringLit());
+                            var exprs = contextExprs.Select(VisitExp).ToList();
+                            return new Verification(Formal.Assume, info, exprs[0], exprs[1], exprs[2], msg);
+                        }
+                    case "cover":
+                        {
+                            StringLit msg = VisitStringLit(context.StringLit());
+                            var exprs = contextExprs.Select(VisitExp).ToList();
+                            return new Verification(Formal.Cover, info, exprs[0], exprs[1], exprs[2], msg);
+                        }
+                    case "skip":
+                        return new EmptyStmt();
+                    default:
+                        throw new Exception($"Invalid statement: {context.GetText()}");
+                }
+            }
+            else
+            {
+
+            }
+        }
+
+        public FirrtlNode VisitDefname([NotNull] FIRRTLParser.DefnameContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+
+
+        public FirrtlNode VisitErrorNode([NotNull] IErrorNode node)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Expression VisitExp([NotNull] FIRRTLParser.ExpContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        public FirrtlNode VisitFieldId([NotNull] FIRRTLParser.FieldIdContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        public FirrtlNode VisitId([NotNull] FIRRTLParser.IdContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        public FirrtlNode VisitIntLit([NotNull] FIRRTLParser.IntLitContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        public FirrtlNode VisitKeywordAsId([NotNull] FIRRTLParser.KeywordAsIdContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        public FirrtlNode VisitLowerBound([NotNull] FIRRTLParser.LowerBoundContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        public FirrtlNode VisitMemField([NotNull] FIRRTLParser.MemFieldContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+
+
+        public FirrtlNode VisitPrimop([NotNull] FIRRTLParser.PrimopContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        public FirrtlNode VisitReset_block([NotNull] FIRRTLParser.Reset_blockContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        public FirrtlNode VisitSimple_reset([NotNull] FIRRTLParser.Simple_resetContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        public FirrtlNode VisitSimple_reset0([NotNull] FIRRTLParser.Simple_reset0Context context)
+        {
+            throw new NotImplementedException();
+        }
+
+        public FirrtlNode VisitSimple_stmt([NotNull] FIRRTLParser.Simple_stmtContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        public FirrtlNode VisitTerminal([NotNull] ITerminalNode node)
+        {
+            throw new NotImplementedException();
+        }
+
+        public FirrtlNode VisitUpperBound([NotNull] FIRRTLParser.UpperBoundContext context)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}
