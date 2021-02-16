@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
@@ -14,8 +14,7 @@
 
   <ItemGroup>
     <Antlr4 Update="Parsing\FIRRTL.g4">
-      <DefaultCustomToolNamespace>$([MSBuild]::ValueOrDefault('$(RootNamespace).%(DefaultCustomToolNamespace)', '').TrimEnd('.'))</DefaultCustomToolNamespace>
-      <CustomToolNamespace>$([MSBuild]::ValueOrDefault(%(CustomToolNamespace), %(DefaultCustomToolNamespace)))</CustomToolNamespace>
+      <CustomToolNamespace>FIRRTL.Parsing</CustomToolNamespace>
       <Listener>false</Listener>
       <Visitor>false</Visitor>
     </Antlr4>
