@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PriorityQueue", "..\..\Prio
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FIRRTL", "..\FIRRTL\FIRRTL.csproj", "{90122FC7-4E5E-4D5C-80CB-795AEDC2823A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FIRRTLTests", "..\FIRRTLTests\FIRRTLTests.csproj", "{841A0FCE-3EA3-4E54-BA58-EB3D03062A7C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{90122FC7-4E5E-4D5C-80CB-795AEDC2823A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90122FC7-4E5E-4D5C-80CB-795AEDC2823A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90122FC7-4E5E-4D5C-80CB-795AEDC2823A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{841A0FCE-3EA3-4E54-BA58-EB3D03062A7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{841A0FCE-3EA3-4E54-BA58-EB3D03062A7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{841A0FCE-3EA3-4E54-BA58-EB3D03062A7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{841A0FCE-3EA3-4E54-BA58-EB3D03062A7C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
