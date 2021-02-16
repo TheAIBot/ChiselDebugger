@@ -159,13 +159,15 @@ namespace FIRRTL
     public record Clip() : PrimOp("clip");
 
     public record Expression() : FirrtlNode;
-    public record Reference(string Name, IFIRType Type, KindType Kind, FlowType Flow) : Expression;
-    public record SubField(Expression Expr, string Name, IFIRType Type, FlowType Flow) : Expression;
-    public record SubIndex(Expression Expr, int Value, IFIRType Type, FlowType Flow) : Expression;
-    public record SubAccess(Expression Expr, Expression Index, IFIRType Type, FlowType Flow) : Expression;
     public record DoPrim(PrimOp Op, List<Expression> Args, List<BigInteger> Consts, IFIRType Type) : Expression;
     public record ValidIf(Expression Cond, Expression Value, IFIRType Type) : Expression;
     public record Mux(Expression Cond, Expression TrueValue, Expression FalseValue, IFIRType Type) : Expression;
+
+    public interface RefLikeExpression { }
+    public record Reference(string Name, IFIRType Type, KindType Kind, FlowType Flow) : Expression, RefLikeExpression;
+    public record SubField(Expression Expr, string Name, IFIRType Type, FlowType Flow) : Expression, RefLikeExpression;
+    public record SubIndex(Expression Expr, int Value, IFIRType Type, FlowType Flow) : Expression, RefLikeExpression;
+    public record SubAccess(Expression Expr, Expression Index, IFIRType Type, FlowType Flow) : Expression, RefLikeExpression;
 
     public record Literal(BigInteger Value, int Width) : Expression;
     public record UIntLiteral(BigInteger Value, int Width) : Literal(Value, Width);
@@ -175,11 +177,7 @@ namespace FIRRTL
     public record EmptyStmt() : Statement;
     public record Block(List<Statement> Statements) : Statement;
     public record Conditionally(IInfo Info,  Expression Pred, Statement WhenTrue, Statement Alt) : Statement;
-    public record DefWire(IInfo Info, string Name, IFIRType Type) : Statement;
-    public record DefRegister(IInfo Info, string Name, IFIRType Type, Expression Clock, Expression Reset, Expression init) : Statement;
-    public record CDefMemory(IInfo Info, string Name, IFIRType Type, BigInteger Size, bool Sequence, ReadUnderWrite Ruw) : Statement;
-    public record DefInstance(IInfo Info, string Name, string Module, IFIRType Type) : Statement;
-    public record DefNode(IInfo Info, string Name, Expression Value) : Statement;
+
     public record Stop(IInfo Info, int Ret, Expression Clk, Expression Enabled) : Statement;
     public record Attach(IInfo Info, List<Expression> Exprs) : Statement;
     public record Print(IInfo Info, StringLit MsgFormat, List<Expression> Args, Expression Clk, Expression Enabled) : Statement;
@@ -187,7 +185,14 @@ namespace FIRRTL
     public record Connect(IInfo Info, Expression Loc, Expression Expr) : Statement;
     public record PartialConnect(IInfo Info, Expression Loc, Expression Expr) : Statement;
     public record IsInvalid(IInfo Info, Expression Expr) : Statement;
+    public record CDefMemory(IInfo Info, string Name, IFIRType Type, BigInteger Size, bool Sequence, ReadUnderWrite Ruw) : Statement;
     public record CDefMPort(IInfo Info, string Name, IFIRType Type, string Mem, List<Expression> Exps, MPortDir Direction) : Statement;
+
+    public interface IsDeclaration { }
+    public record DefWire(IInfo Info, string Name, IFIRType Type) : Statement, IsDeclaration;
+    public record DefRegister(IInfo Info, string Name, IFIRType Type, Expression Clock, Expression Reset, Expression init) : Statement, IsDeclaration;
+    public record DefInstance(IInfo Info, string Name, string Module, IFIRType Type) : Statement, IsDeclaration;
+    public record DefNode(IInfo Info, string Name, Expression Value) : Statement, IsDeclaration;
     public record DefMemory(
         IInfo Info,
         string Name,
@@ -198,12 +203,12 @@ namespace FIRRTL
         List<string> Readers,
         List<string> Writers,
         List<string> ReadWriters,
-        ReadUnderWrite Ruw) : Statement;
+        ReadUnderWrite Ruw) : Statement, IsDeclaration;
 
 
 
-    public record DefModule() : FirrtlNode;
-    public record Port(IInfo Info, string Name, Dir Direction, IFIRType Type);
+    public record DefModule() : FirrtlNode, IsDeclaration;
+    public record Port(IInfo Info, string Name, Dir Direction, IFIRType Type) : FirrtlNode, IsDeclaration;
     public record Module(IInfo Info, string Name, List<Port> Ports, Statement Body) : DefModule;
     public record ExtModule(IInfo Info, string Name, List<Port> Ports, string DefName, List<Param> Params) : DefModule;
     public record Circuit(IInfo Info, List<DefModule> Modules, string Main) : FirrtlNode;
