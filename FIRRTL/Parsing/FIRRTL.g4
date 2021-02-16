@@ -4,12 +4,38 @@ grammar FIRRTL;
 
 tokens { INDENT, DEDENT }
 
-@lexer::members {
-  private readonly Parsing.LexerHelper denter = new Parsing.LexerHelperDenter();
+@lexer::header {
+using System;
+}
 
-  public override IToken NextToken() {
-    return denter.NextToken();
-  }
+@lexer::members {
+	private class LexerHelperDenter : Parsing.LexerHelper
+	{
+		private Func<IToken> Lexer;
+
+		public LexerHelperDenter(Func<IToken> lexer)
+		{
+			this.Lexer = lexer;
+		}
+
+		internal override IToken PullToken()
+		{
+			return Lexer();
+		}
+	}
+
+	private readonly Parsing.LexerHelper denter;
+
+	public FIRRTLLexer(ICharStream input, bool hacky)
+		: this(input)
+	{
+		denter = new LexerHelperDenter(base.NextToken);
+	}
+
+	public override IToken NextToken() 
+	{
+		return denter.NextToken();
+	}
 }
 
 /*------------------------------------------------------------------

@@ -198,12 +198,4 @@ namespace FIRRTL.Parsing
             return TokenBuffer.Dequeue();
         }
     }
-
-    internal class LexerHelperDenter : LexerHelper
-    {
-        internal override IToken PullToken()
-        {
-            return base.NextToken();
-        }
-    }
 }
