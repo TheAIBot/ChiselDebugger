@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\PriorityQueue\PriorityQueue\PriorityQueue.csproj" />
+    <ProjectReference Include="..\..\FIRRTL\FIRRTL.csproj" />
   </ItemGroup>
 
 </Project>

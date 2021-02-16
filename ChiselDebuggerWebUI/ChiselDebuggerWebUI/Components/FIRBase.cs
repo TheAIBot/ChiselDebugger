@@ -1,5 +1,5 @@
 ﻿using ChiselDebug;
-using ChiselDebug.FIRRTL;
+using ChiselDebug.GraphFIR;
 using ChiselDebuggerWebUI.Code;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;

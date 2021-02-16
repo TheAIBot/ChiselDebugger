@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ChiselDebug.FIRRTL
+namespace ChiselDebug.GraphFIR
 {
     public abstract class FIRRTLPrimOP : FIRRTLNode
     {

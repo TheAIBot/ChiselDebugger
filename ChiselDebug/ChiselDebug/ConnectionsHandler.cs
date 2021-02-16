@@ -1,4 +1,4 @@
-﻿using ChiselDebug.FIRRTL;
+﻿using ChiselDebug.GraphFIR;
 using ChiselDebug.Routing;
 using PriorityQueue;
 using System;

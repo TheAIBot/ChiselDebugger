@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ChiselDebug.FIRRTL
+namespace ChiselDebug.GraphFIR
 {
     public interface FIRIO
     {

@@ -1,4 +1,4 @@
-﻿namespace ChiselDebug.FIRRTL
+﻿namespace ChiselDebug.GraphFIR
 {
     public readonly struct SizedType
     {
