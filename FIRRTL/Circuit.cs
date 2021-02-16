@@ -851,7 +851,7 @@ namespace FIRRTL
 
         private PrimOp VisitPrimop([NotNull] FIRRTLParser.PrimopContext context)
         {
-            return StringToPrimOp[context.GetText().TrimStart('(')];
+            return StringToPrimOp[context.GetText().TrimEnd('(')];
         }
 
         /*
