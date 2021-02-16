@@ -4,6 +4,7 @@ using Antlr4.Runtime.Tree;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -14,6 +15,14 @@ namespace FIRRTL
     public interface FirrtlNode { }
     public interface IInfo { };
     public record NoInfo() : IInfo;
+    public record FileInfo(string Info) : IInfo;
+    public record MultiInfo(List<IInfo> Infos) : IInfo;
+
+    public abstract record InfoMode;
+    public record IgnoreInfo() : InfoMode;
+    public record UseInfo() : InfoMode;
+    public record GenInfo(string Filename) : InfoMode;
+    public record AppendInfo(string Filename) : InfoMode;
 
     public enum Dir
     {
@@ -100,26 +109,67 @@ namespace FIRRTL
     public record DoubleParam(string Name, double Value) : Param(Name);
     public record RawStringParam(string Name, string Value) : Param(Name);
 
-    public record DefMemory(
-        IInfo Info,
-        string Name,
-        IFIRType Type,
-        BigInteger Depth,
-        int WriteLatency,
-        int ReadLatency,
-        List<string> Readers,
-        List<string> Writers,
-        List<string> ReadWriters,
-        ReadUnderWrite Ruw) : Statement;
+    public record PrimOp(string Name) : FirrtlNode
+    {
+        public override string ToString()
+        {
+            return Name;
+        }
+    }
+    public record Add() : PrimOp("add");
+    public record Sub() : PrimOp("sub");
+    public record Mul() : PrimOp("mul");
+    public record Div() : PrimOp("div");
+    public record Rem() : PrimOp("rem");
+    public record Lt() : PrimOp("lt");
+    public record Leq() : PrimOp("leq");
+    public record Gt() : PrimOp("gt");
+    public record Geq() : PrimOp("geq");
+    public record Eq() : PrimOp("eq");
+    public record Neq() : PrimOp("neq");
+    public record Pad() : PrimOp("pad");
+    public record Shl() : PrimOp("shl");
+    public record Shr() : PrimOp("shr");
+    public record Dshl() : PrimOp("dshl");
+    public record Dshr() : PrimOp("dshr");
+    public record Cvt() : PrimOp("cvt");
+    public record Neg() : PrimOp("neg");
+    public record Not() : PrimOp("not");
+    public record And() : PrimOp("and");
+    public record Or() : PrimOp("or");
+    public record Xor() : PrimOp("xor");
+    public record Andr() : PrimOp("andr");
+    public record Orr() : PrimOp("orr");
+    public record Xorr() : PrimOp("xorr");
+    public record Cat() : PrimOp("cat");
+    public record Bits() : PrimOp("bits");
+    public record Head() : PrimOp("head");
+    public record Tail() : PrimOp("tail");
+    public record IncP() : PrimOp("incp");
+    public record DecP() : PrimOp("decp");
+    public record SetP() : PrimOp("setp");
+    public record AsUInt() : PrimOp("asUInt");
+    public record AsSInt() : PrimOp("asSInt");
+    public record AsClock() : PrimOp("asClock");
+    public record AsAsyncReset() : PrimOp("asAsyncReset");
+    public record AsFixedPoint() : PrimOp("asFixedPoint");
+    public record AsInterval() : PrimOp("asInterval");
+    public record Squeeze() : PrimOp("squz");
+    public record Wrap() : PrimOp("wrap");
+    public record Clip() : PrimOp("clip");
 
     public record Expression() : FirrtlNode;
     public record Reference(string Name, IFIRType Type, KindType Kind, FlowType Flow) : Expression;
     public record SubField(Expression Expr, string Name, IFIRType Type, FlowType Flow) : Expression;
     public record SubIndex(Expression Expr, int Value, IFIRType Type, FlowType Flow) : Expression;
     public record SubAccess(Expression Expr, Expression Index, IFIRType Type, FlowType Flow) : Expression;
+    public record DoPrim(PrimOp Op, List<Expression> Args, List<BigInteger> Consts, IFIRType Type) : Expression;
+    public record ValidIf(Expression Cond, Expression Value, IFIRType Type) : Expression;
+    public record Mux(Expression Cond, Expression TrueValue, Expression FalseValue, IFIRType Type) : Expression;
 
     public record Literal(BigInteger Value, int Width) : Expression;
     public record UIntLiteral(BigInteger Value, int Width) : Literal(Value, Width);
+    public record SIntLiteral(BigInteger Value, int Width) : Literal(Value, Width);
 
     public record Statement() : FirrtlNode;
     public record EmptyStmt() : Statement;
@@ -137,6 +187,18 @@ namespace FIRRTL
     public record Connect(IInfo Info, Expression Loc, Expression Expr) : Statement;
     public record PartialConnect(IInfo Info, Expression Loc, Expression Expr) : Statement;
     public record IsInvalid(IInfo Info, Expression Expr) : Statement;
+    public record CDefMPort(IInfo Info, string Name, IFIRType Type, string Mem, List<Expression> Exps, MPortDir Direction) : Statement;
+    public record DefMemory(
+        IInfo Info,
+        string Name,
+        IFIRType Type,
+        BigInteger Depth,
+        int WriteLatency,
+        int ReadLatency,
+        List<string> Readers,
+        List<string> Writers,
+        List<string> ReadWriters,
+        ReadUnderWrite Ruw) : Statement;
 
 
 
@@ -154,6 +216,42 @@ namespace FIRRTL
         private const string DecPattern = @"([+\-]?[1-9]\d*)";
         private const string ZeroPattern = "0";
         private const string DecimalPattern = @"([+-]?[0-9]\d*\.[0-9]\d*)";
+        private static readonly Dictionary<string, PrimOp> StringToPrimOp;
+
+        private InfoMode InfoM;
+
+        static Visitor()
+        {
+            PrimOp[] allPrimOps = new PrimOp[]
+            {
+                new Add(), new  Sub(), new  Mul(), 
+                new  Div(), new  Rem(), new  Lt(), 
+                new  Leq(), new  Gt(), new  Geq(), 
+                new  Eq(), new  Neq(), new  Pad(), 
+                new  AsUInt(), new  AsSInt(), 
+                new  AsInterval(), new  AsClock(), 
+                new AsAsyncReset(), new  Shl(), 
+                new  Shr(), new  Dshl(), new  Dshr(), 
+                new  Neg(), new  Cvt(), new  Not(), 
+                new  And(), new  Or(), new  Xor(), 
+                new  Andr(), new  Orr(), new  Xorr(), 
+                new  Cat(), new  Bits(), new Head(), 
+                new  Tail(), new  AsFixedPoint(), 
+                new  IncP(), new  DecP(), new  SetP(), 
+                new  Wrap(), new  Clip(), new  Squeeze()
+            };
+
+            StringToPrimOp = new Dictionary<string, PrimOp>();
+            foreach (var primOp in allPrimOps)
+            {
+                StringToPrimOp.Add(primOp.Name, primOp);
+            }
+        }
+
+        internal Visitor(InfoMode infoMode)
+        {
+            this.InfoM = infoMode;
+        }
 
         private string RemoveSurroundingQuotes(string str)
         {
@@ -199,24 +297,70 @@ namespace FIRRTL
             return (int)StringToBigInteger(str);
         }
 
-        public FirrtlNode Visit([NotNull] IParseTree tree)
+        private bool LegalID(string id)
         {
-            throw new NotImplementedException();
+            const string idPattern = "[A-Za-z0-9_$]+";
+            return Regex.IsMatch(id, idPattern, RegexOptions.Compiled);
         }
 
-        public FirrtlNode VisitBoundValue([NotNull] FIRRTLParser.BoundValueContext context)
-        {
-            throw new NotImplementedException();
-        }
+        //public FirrtlNode Visit([NotNull] IParseTree tree)
+        //{
+        //    throw new NotImplementedException();
+        //}
 
-        public FirrtlNode VisitChildren([NotNull] IRuleNode node)
-        {
-            throw new NotImplementedException();
-        }
+        //public FirrtlNode VisitBoundValue([NotNull] FIRRTLParser.BoundValueContext context)
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        //public FirrtlNode VisitChildren([NotNull] IRuleNode node)
+        //{
+        //    throw new NotImplementedException();
+        //}
 
         private IInfo VisitInfo(FIRRTLParser.InfoContext context, ParserRuleContext parentContext)
         {
-            throw new NotImplementedException();
+            string GenInfo(string filename)
+            {
+                return $"{Path.GetFileName(filename)} {parentContext.Start.Line}:{parentContext.Start.Column}";
+            }
+
+            string useInfo = context == null ? string.Empty : new string(context.GetText().Skip(2).SkipLast(1).ToArray());
+
+            if (InfoM is UseInfo)
+            {
+                if (useInfo.Length == 0)
+                {
+                    return new NoInfo();
+                }
+                else
+                {
+                    return new FileInfo(useInfo);
+                }
+            }
+            else if (InfoM is AppendInfo aInfo)
+            {
+                if (useInfo.Length == 0)
+                {
+                    return new FileInfo(GenInfo(aInfo.Filename));
+                }
+                else
+                {
+                    return new MultiInfo(new List<IInfo>() { new FileInfo(useInfo), new FileInfo(GenInfo(aInfo.Filename)) });
+                }
+            }
+            else if (InfoM is GenInfo gInfo)
+            {
+                return new FileInfo(GenInfo(gInfo.Filename));
+            }
+            else if (InfoM is IgnoreInfo)
+            {
+                return new NoInfo;
+            }
+            else
+            {
+                throw new Exception("Unhandled info type.");
+            }
         }
 
         public Circuit VisitCircuit([NotNull] FIRRTLParser.CircuitContext context)
@@ -508,7 +652,7 @@ namespace FIRRTL
             return new Conditionally(info, VisitExp(context.exp()), VisitSuite(context.suite(0)), alt);
         }
 
-        public Statement VisitStmt([NotNull] FIRRTLParser.StmtContext context)
+        private Statement VisitStmt([NotNull] FIRRTLParser.StmtContext context)
         {
             FIRRTLParser.ExpContext[] contextExprs = context.exp();
             IInfo info = VisitInfo(context.info(), context);
@@ -598,10 +742,119 @@ namespace FIRRTL
             }
             else
             {
-
+                switch (context.GetChild(1).GetText())
+                {
+                    case "<=":
+                        return new Connect(info, VisitExp(contextExprs[0]), VisitExp(contextExprs[1]));
+                    case "<-":
+                        return new PartialConnect(info, VisitExp(contextExprs[0]), VisitExp(contextExprs[1]));
+                    case "is":
+                        return new IsInvalid(info, VisitExp(contextExprs[0]));
+                    case "mport":
+                        return new CDefMPort(info, context.id(0).GetText(), new UnknownType(), context.id(1).GetText(), new List<Expression>() { VisitExp(contextExprs[0]), VisitExp(contextExprs[1]) }, VisitMdir(context.mdir()));
+                    default:
+                        throw new Exception($"Invalid statement: {context.GetText()}");
+                }
             }
         }
 
+        private Expression VisitExp([NotNull] FIRRTLParser.ExpContext context)
+        {
+            FIRRTLParser.ExpContext[] contextExprs = context.exp();
+
+            if (context.GetChild(0) is FIRRTLParser.IdContext)
+            {
+                return new Reference(context.GetText(), new UnknownType(), KindType.Unknown, FlowType.Unknown);
+            }
+            else if (context.GetChild(0) is FIRRTLParser.ExpContext)
+            {
+                if (context.GetChild(1).GetText() == ".")
+                {
+                    Expression expr1 = VisitExp(contextExprs[0]);
+                    if (context.fieldId() == null)
+                    {
+                        string[] ids = context.DoubleLit().GetText().Split('.');
+                        if (ids.Length != 2 || !LegalID(ids[0]) || !LegalID(ids[1]))
+                        {
+                            throw new Exception($"Invalid expression: {context.GetText()}");
+                        }
+
+                        SubField inner = new SubField(expr1, ids[0], new UnknownType(), FlowType.Unknown);
+                        return new SubField(inner, ids[1], new UnknownType(), FlowType.Unknown);
+                    }
+                    else
+                    {
+                        return new SubField(expr1, context.fieldId().GetText(), new UnknownType(), FlowType.Unknown);
+                    }
+                }
+                else if (context.GetChild(1).GetText() == "[")
+                {
+                    if (context.exp(1) == null)
+                    {
+                        return new SubIndex(VisitExp(contextExprs[0]), StringToInt(context.intLit(0).GetText()), new UnknownType(), FlowType.Unknown);
+                    }
+                    else
+                    {
+                        return new SubAccess(VisitExp(contextExprs[0]), VisitExp(contextExprs[1]), new UnknownType(), FlowType.Unknown);
+                    }
+                }
+                else
+                {
+                    throw new Exception($"Invalid expression: {context.GetText()}");
+                }
+            }
+            else if (context.GetChild(0) is FIRRTLParser.PrimopContext)
+            {
+                return new DoPrim(VisitPrimop(context.primop()), contextExprs.Select(VisitExp).ToList(), context.intLit().Select(x => StringToBigInteger(x.GetText())).ToList(), new UnknownType());
+            }
+            else
+            {
+                string exprStr = context.GetChild(0).GetText();
+                if (exprStr == "UInt" || exprStr == "SInt")
+                {
+                    int width;
+                    BigInteger value;
+                    if (context.ChildCount > 4)
+                    {
+                        width = StringToInt(context.intLit(0).GetText());
+                        value = StringToBigInteger(context.intLit(1).GetText());
+                    }
+                    else
+                    {
+                        width = GroundType.UnknownWidth;
+                        value = StringToBigInteger(context.intLit(0).GetText());
+                    }
+
+                    if (exprStr == "UInt")
+                    {
+                        return new UIntLiteral(value, width);
+                    }
+                    else
+                    {
+                        return new SIntLiteral(value, width);
+                    }
+                }
+                else if (exprStr == "validif(")
+                {
+                    return new ValidIf(VisitExp(contextExprs[0]), VisitExp(contextExprs[1]), new UnknownType());
+                }
+                else if (exprStr == "mux(")
+                {
+                    return new Mux(VisitExp(contextExprs[0]), VisitExp(contextExprs[1]), VisitExp(contextExprs[2]), new UnknownType());
+                }
+                else
+                {
+                    throw new Exception($"Invalid expression: {context.GetText()}");
+                }
+            }
+        }
+
+        private PrimOp VisitPrimop([NotNull] FIRRTLParser.PrimopContext context)
+        {
+            return StringToPrimOp[context.GetText().TrimStart('(')];
+        }
+
+        /*
         public FirrtlNode VisitDefname([NotNull] FIRRTLParser.DefnameContext context)
         {
             throw new NotImplementedException();
@@ -610,11 +863,6 @@ namespace FIRRTL
 
 
         public FirrtlNode VisitErrorNode([NotNull] IErrorNode node)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Expression VisitExp([NotNull] FIRRTLParser.ExpContext context)
         {
             throw new NotImplementedException();
         }
@@ -649,13 +897,6 @@ namespace FIRRTL
             throw new NotImplementedException();
         }
 
-
-
-        public FirrtlNode VisitPrimop([NotNull] FIRRTLParser.PrimopContext context)
-        {
-            throw new NotImplementedException();
-        }
-
         public FirrtlNode VisitReset_block([NotNull] FIRRTLParser.Reset_blockContext context)
         {
             throw new NotImplementedException();
@@ -685,5 +926,6 @@ namespace FIRRTL
         {
             throw new NotImplementedException();
         }
+        */
     }
 }
