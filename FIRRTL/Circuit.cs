@@ -303,21 +303,6 @@ namespace FIRRTL
             return Regex.IsMatch(id, idPattern, RegexOptions.Compiled);
         }
 
-        //public FirrtlNode Visit([NotNull] IParseTree tree)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public FirrtlNode VisitBoundValue([NotNull] FIRRTLParser.BoundValueContext context)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public FirrtlNode VisitChildren([NotNull] IRuleNode node)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
         private IInfo VisitInfo(FIRRTLParser.InfoContext context, ParserRuleContext parentContext)
         {
             string GenInfo(string filename)
@@ -853,79 +838,5 @@ namespace FIRRTL
         {
             return StringToPrimOp[context.GetText().TrimEnd('(')];
         }
-
-        /*
-        public FirrtlNode VisitDefname([NotNull] FIRRTLParser.DefnameContext context)
-        {
-            throw new NotImplementedException();
-        }
-
-
-
-        public FirrtlNode VisitErrorNode([NotNull] IErrorNode node)
-        {
-            throw new NotImplementedException();
-        }
-
-        public FirrtlNode VisitFieldId([NotNull] FIRRTLParser.FieldIdContext context)
-        {
-            throw new NotImplementedException();
-        }
-
-        public FirrtlNode VisitId([NotNull] FIRRTLParser.IdContext context)
-        {
-            throw new NotImplementedException();
-        }
-
-        public FirrtlNode VisitIntLit([NotNull] FIRRTLParser.IntLitContext context)
-        {
-            throw new NotImplementedException();
-        }
-
-        public FirrtlNode VisitKeywordAsId([NotNull] FIRRTLParser.KeywordAsIdContext context)
-        {
-            throw new NotImplementedException();
-        }
-
-        public FirrtlNode VisitLowerBound([NotNull] FIRRTLParser.LowerBoundContext context)
-        {
-            throw new NotImplementedException();
-        }
-
-        public FirrtlNode VisitMemField([NotNull] FIRRTLParser.MemFieldContext context)
-        {
-            throw new NotImplementedException();
-        }
-
-        public FirrtlNode VisitReset_block([NotNull] FIRRTLParser.Reset_blockContext context)
-        {
-            throw new NotImplementedException();
-        }
-
-        public FirrtlNode VisitSimple_reset([NotNull] FIRRTLParser.Simple_resetContext context)
-        {
-            throw new NotImplementedException();
-        }
-
-        public FirrtlNode VisitSimple_reset0([NotNull] FIRRTLParser.Simple_reset0Context context)
-        {
-            throw new NotImplementedException();
-        }
-
-        public FirrtlNode VisitSimple_stmt([NotNull] FIRRTLParser.Simple_stmtContext context)
-        {
-            throw new NotImplementedException();
-        }
-
-        public FirrtlNode VisitTerminal([NotNull] ITerminalNode node)
-        {
-            throw new NotImplementedException();
-        }
-
-        public FirrtlNode VisitUpperBound([NotNull] FIRRTLParser.UpperBoundContext context)
-        {
-            throw new NotImplementedException();
-        }
-        */
     }
 }
