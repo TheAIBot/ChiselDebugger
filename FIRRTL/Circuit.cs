@@ -355,7 +355,7 @@ namespace FIRRTL
             }
             else if (InfoM is IgnoreInfo)
             {
-                return new NoInfo;
+                return new NoInfo();
             }
             else
             {
