@@ -85,9 +85,16 @@
     {
         ModuleOpPoses = placements.NodePositions;
 
-        SetCurrentSize(placements.SpaceNeeded);
+        Point moduleSize = Point.Max(MinContentSize, placements.SpaceNeeded);
+
+        //With new module size, the io positions need to be updated
+        InputOffsets = OnMakeInputs(moduleSize.X, moduleSize.Y);
+        OutputOffsets = OnMakeOutputs(moduleSize.X, moduleSize.Y);
+        ConHandler.UpdateIOFromNode(Operation, InputOffsets, OutputOffsets);
+
         ModuleConnections = WireRouter.PathLines(placements);
 
+        SetCurrentSize(moduleSize);
         StateHasChanged();
     }
 

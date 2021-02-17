@@ -47,7 +47,6 @@ namespace ChiselDebuggerWebUI.Components
             }
 
             PreviousSize = size;
-            OnResize(PreviousSize.X, PreviousSize.Y);
         }
 
         protected override Task OnParametersSetAsync()
