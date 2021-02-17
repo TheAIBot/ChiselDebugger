@@ -11,6 +11,9 @@ namespace ChiselDebug.GraphFIR
         public Input()
         { }
 
+        public Input(IFIRType type) : this(string.Empty, type)
+        { }
+
         public Input(string name, IFIRType type)
         {
             this.Name = name;

@@ -203,6 +203,21 @@ namespace ChiselDebug
                 module.AddNode(nodePrim);
                 return (nodePrim, nodePrim.Result);
             }
+            else if (exp is FIRRTL.Mux mux)
+            {
+                var cond = VisitExp(outToNode, nameToOutput, module, mux.Cond);
+                var ifTrue = VisitExp(outToNode, nameToOutput, module, mux.TrueValue);
+                var ifFalse = VisitExp(outToNode, nameToOutput, module, mux.FalseValue);
+
+                GraphFIR.Mux node = new GraphFIR.Mux(new List<FIRRTL.IFIRType>() { ifTrue.output.Type, ifFalse.output.Type }, mux.Type);
+                cond.output.ConnectToInput(node.Decider);
+                ifTrue.output.ConnectToInput(node.Choises[0]);
+                ifFalse.output.ConnectToInput(node.Choises[1]);
+
+                outToNode.Add(node.Result, node);
+                module.AddNode(node);
+                return (node, node.Result);
+            }
             else if (exp is FIRRTL.Reference reference)
             {
                 GraphFIR.Output output = nameToOutput[reference.Name];
