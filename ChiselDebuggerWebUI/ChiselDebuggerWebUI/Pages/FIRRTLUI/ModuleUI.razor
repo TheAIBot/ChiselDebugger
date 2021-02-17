@@ -5,7 +5,7 @@
         <h2>@Operation.Name</h2>
     </div>
     <div style="padding:@ContentPadding.ToPixels();">
-        <div class="moduleContent" @ref="SizeWatcher" style="width:@GetCurrentSize().X.ToPixels();height:@GetCurrentSize().Y.ToPixels();min-width:@MinContentSize.X;min-height:@MinContentSize.Y">
+        <div class="moduleContent" @ref="SizeWatcher" style="width:@GetCurrentSize().X.ToPixels();height:@GetCurrentSize().Y.ToPixels();min-width:@MinContentSize.X.ToPixels();min-height:@MinContentSize.Y.ToPixels()">
             @foreach (var posOp in ModuleOpPoses)
             {
                 @if (posOp.Value is Mux)
