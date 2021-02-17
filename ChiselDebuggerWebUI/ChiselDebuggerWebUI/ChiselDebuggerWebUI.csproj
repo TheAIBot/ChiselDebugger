@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\ChiselDebug\ChiselDebug\ChiselDebug.csproj" />
+    <ProjectReference Include="..\..\FIRRTL\FIRRTL.csproj" />
   </ItemGroup>
 
   <ItemGroup>
