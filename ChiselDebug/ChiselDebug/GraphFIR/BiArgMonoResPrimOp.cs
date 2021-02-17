@@ -16,6 +16,11 @@ namespace ChiselDebug.GraphFIR
             this.A = new Input("a", aType);
             this.B = new Input("b", bType);
         }
+
+        public override Input[] GetInputs()
+        {
+            return new Input[] { A, B };
+        }
     }
 
     public class FIRAdd : BiArgMonoResPrimOp

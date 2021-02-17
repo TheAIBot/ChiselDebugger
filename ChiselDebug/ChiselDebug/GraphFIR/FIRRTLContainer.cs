@@ -36,6 +36,11 @@ namespace ChiselDebug.GraphFIR
             }
         }
 
+        public override Input[] GetInputs()
+        {
+            return ExternalInputs.ToArray();
+        }
+
         public override Output[] GetOutputs()
         {
             return ExternalOutputs.ToArray();
