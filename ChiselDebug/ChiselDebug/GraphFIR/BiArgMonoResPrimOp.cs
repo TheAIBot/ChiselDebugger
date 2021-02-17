@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FIRRTL;
+using System;
 
 namespace ChiselDebug.GraphFIR
 {
@@ -9,51 +10,47 @@ namespace ChiselDebug.GraphFIR
         public readonly Input B;
 
 
-        public BiArgMonoResPrimOp(string opName, string outputName) : base(outputName)
+        public BiArgMonoResPrimOp(string opName, IFIRType aType, IFIRType bType, IFIRType outType) : base(outType)
         {
             this.OpName = opName;
-            this.A = new Input("a");
-            this.B = new Input("b");
-        }
-
-        public void ConnectFrom(Output a, Output b)
-        {
-            a.ConnectToInput(A);
-            b.ConnectToInput(B);
-        }
-
-        public override void ConnectFrom(Span<Output> outputs)
-        {
-            if (outputs.Length != 2)
-            {
-                throw new ArgumentException($"Must connect all 2 inputs at once.", nameof(outputs));
-            }
-
-            ConnectFrom(outputs[0], outputs[1]);
+            this.A = new Input("a", aType);
+            this.B = new Input("b", bType);
         }
     }
 
     public class FIRAdd : BiArgMonoResPrimOp
     {
-        public FIRAdd(string outputName) : base("+", outputName)
-        { }
+        public FIRAdd(Output aIn, Output bIn, IFIRType outType) : base("+", aIn.Type, bIn.Type, outType)
+        {
+            aIn.ConnectToInput(A);
+            bIn.ConnectToInput(B);
+        }
     }
 
     public class FIRSub : BiArgMonoResPrimOp
     {
-        public FIRSub(string outputName) : base("-", outputName)
-        { }
+        public FIRSub(Output aIn, Output bIn, IFIRType outType) : base("-", aIn.Type, bIn.Type, outType)
+        {
+            aIn.ConnectToInput(A);
+            bIn.ConnectToInput(B);
+        }
     }
 
     public class FIRMul : BiArgMonoResPrimOp
     {
-        public FIRMul(string outputName) : base("*", outputName)
-        { }
+        public FIRMul(Output aIn, Output bIn, IFIRType outType) : base("*", aIn.Type, bIn.Type, outType)
+        {
+            aIn.ConnectToInput(A);
+            bIn.ConnectToInput(B);
+        }
     }
 
     public class FIRDiv : BiArgMonoResPrimOp
     {
-        public FIRDiv(string outputName) : base("/", outputName)
-        { }
+        public FIRDiv(Output aIn, Output bIn, IFIRType outType) : base("/", aIn.Type, bIn.Type, outType)
+        {
+            aIn.ConnectToInput(A);
+            bIn.ConnectToInput(B);
+        }
     }
 }

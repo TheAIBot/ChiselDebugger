@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using FIRRTL;
+using System.Collections.Generic;
 
 namespace ChiselDebug.GraphFIR
 {
@@ -10,16 +11,16 @@ namespace ChiselDebug.GraphFIR
         public readonly List<Input> InternalInputs = new List<Input>();
         public readonly List<Output> InternalOutputs = new List<Output>();       
 
-        public void AddExternalInput(string inputName)
+        public void AddExternalInput(string inputName, IFIRType type)
         {
-            ExternalInputs.Add(new Input(inputName));
-            InternalOutputs.Add(new Output(inputName));
+            ExternalInputs.Add(new Input(inputName, type));
+            InternalOutputs.Add(new Output(inputName, type));
         }
 
-        public void AddExternalOutput(string outputName)
+        public void AddExternalOutput(string outputName, IFIRType type)
         {
-            ExternalOutputs.Add(new Output(outputName));
-            InternalInputs.Add(new Input(outputName));
+            ExternalOutputs.Add(new Output(outputName, type));
+            InternalInputs.Add(new Input(outputName, type));
         }
 
         public void PropagateSignals()
@@ -33,6 +34,11 @@ namespace ChiselDebug.GraphFIR
             {
                 ExternalOutputs[i].Con.Value = InternalInputs[i].Con.Value;
             }
+        }
+
+        public override Output[] GetOutputs()
+        {
+            return ExternalOutputs.ToArray();
         }
     }
 }
