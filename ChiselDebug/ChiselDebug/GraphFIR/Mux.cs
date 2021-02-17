@@ -14,5 +14,13 @@ namespace ChiselDebug.GraphFIR
         {
             Choises = choiseTypes.Select(x => new Input(x)).ToList();
         }
+
+        public override Input[] GetInputs()
+        {
+            List<Input> inputs = new List<Input>();
+            inputs.AddRange(Choises);
+            inputs.Add(Decider);
+            return inputs.ToArray();
+        }
     }
 }

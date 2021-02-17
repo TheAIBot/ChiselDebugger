@@ -2,6 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ChiselDebug.Graphing;
+using System.Linq;
+using System.Diagnostics;
 
 namespace ChiselDebug
 {
@@ -22,20 +25,143 @@ namespace ChiselDebug
 
         private PlacementInfo PositionModuleComponents()
         {
-            PlacementInfo placments = new PlacementInfo();
-
-            int x = 30;
-            foreach (var node in Mod.GetAllNodes())
+            try
             {
-                Point size = NodeSizes[node];
-                Point pos = new Point(x, 0);
+                PlacementInfo placments = new PlacementInfo();
 
-                placments.AddNodePlacement(node, new Rectangle(pos, size));
+                Graph<FIRRTLNode> graph = new Graph<FIRRTLNode>();
 
-                x += 200;
+                //Add nodes to graph
+                Dictionary<FIRRTLNode, Node<FIRRTLNode>> firNodeToNode = new Dictionary<FIRRTLNode, Node<FIRRTLNode>>();
+                foreach (var firNode in NodeSizes.Keys)
+                {
+                    var node = new Node<FIRRTLNode>(firNode);
+                    graph.AddNode(node);
+                    firNodeToNode.Add(firNode, node);
+                }
+
+                //Relate io to FIRRTLNode
+                Dictionary<Input, FIRRTLNode> inputToFirNode = new Dictionary<Input, FIRRTLNode>();
+                Dictionary<Output, FIRRTLNode> outputToFirNode = new Dictionary<Output, FIRRTLNode>();
+                foreach (var firNode in NodeSizes.Keys)
+                {
+                    if (firNode == Mod)
+                    {
+                        continue;
+                    }
+                    foreach (var input in firNode.GetInputs())
+                    {
+                        inputToFirNode.Add(input, firNode);
+                    }
+                    foreach (var output in firNode.GetOutputs())
+                    {
+                        outputToFirNode.Add(output, firNode);
+                    }
+                }
+
+                Dictionary<Input, Node<FIRRTLNode>> inputToNode = new Dictionary<Input, Node<FIRRTLNode>>();
+                Dictionary<Output, Node<FIRRTLNode>> outputToNode = new Dictionary<Output, Node<FIRRTLNode>>();
+                foreach (var keyValue in inputToFirNode)
+                {
+                    inputToNode.Add(keyValue.Key, firNodeToNode[keyValue.Value]);
+                }
+                foreach (var keyValue in outputToFirNode)
+                {
+                    outputToNode.Add(keyValue.Key, firNodeToNode[keyValue.Value]);
+                }
+
+                Node<FIRRTLNode> modInputNode = new Node<FIRRTLNode>(Mod);
+                graph.AddNode(modInputNode);
+                foreach (var input in Mod.InternalInputs)
+                {
+                    inputToNode.Add(input, modInputNode);
+                }
+
+                Node<FIRRTLNode> modOutputNode = new Node<FIRRTLNode>(Mod);
+                graph.AddNode(modOutputNode);
+                foreach (var output in Mod.InternalOutputs)
+                {
+                    outputToNode.Add(output, modOutputNode);
+                }
+
+
+                //Make edges
+                foreach (var output in outputToNode.Keys)
+                {
+                    if (!output.Con.IsUsed())
+                    {
+                        continue;
+                    }
+                    var from = outputToNode[output];
+                    foreach (var input in output.Con.To)
+                    {
+                        var to = inputToNode[input];
+                        graph.AddEdge(from, to);
+                    }
+                }
+
+                Dictionary<Node<FIRRTLNode>, int> xOrdering = graph.TopologicalSort();
+                xOrdering.Remove(modInputNode);
+                xOrdering.Remove(modOutputNode);
+                graph.RemoveNode(modInputNode);
+                graph.RemoveNode(modOutputNode);
+
+                Dictionary<Node<FIRRTLNode>, int> yOrdering = new Dictionary<Node<FIRRTLNode>, int>();
+                var xGroups = xOrdering.GroupBy(x => x.Value).Select(x => x.Select(y => y.Key).ToArray()).ToArray();
+                foreach (var group in xGroups)
+                {
+                    int y = 0;
+                    foreach (var node in group)
+                    {
+                        yOrdering.Add(node, y++);
+                    }
+                }
+
+                const int iterations = 4;
+                for (int i = 0; i < iterations; i++)
+                {
+                    foreach (var group in xGroups)
+                    {
+                        Dictionary<Node<FIRRTLNode>, float> newPosition = new Dictionary<Node<FIRRTLNode>, float>();
+                        foreach (var node in group)
+                        {
+                            float parentSum = node.Incomming.Sum(x => yOrdering[x]);
+                            float childSum = node.Outgoing.Sum(x => yOrdering[x]);
+                            float mean = (parentSum + childSum) / (node.Incomming.Count + node.Outgoing.Count);
+
+                            newPosition.Add(node, mean);
+                        }
+
+                        int minY = 0;
+                        foreach (var node in newPosition.OrderBy(x => x.Value))
+                        {
+                            int newY = (int)MathF.Round(MathF.Max((float)minY, node.Value));
+                            yOrdering[node.Key] = newY;
+                            minY = newY + 1;
+                        }
+                    }
+                }
+
+                int minXOrdering = xOrdering.Values.Min();
+                int minYOrdering = yOrdering.Values.Min();
+                foreach (var node in xOrdering.Keys)
+                {
+                    Point size = NodeSizes[node.Value];
+                    int xOrder = xOrdering[node] - minXOrdering;
+                    int yOrder = yOrdering[node] - minYOrdering;
+
+                    Point pos = new Point(30 + xOrder * 200, yOrder * 80);
+                    placments.AddNodePlacement(node.Value, new Rectangle(pos, size));
+                }
+
+                return placments;
             }
-
-            return placments;
+            catch(Exception e)
+            {
+                Debug.WriteLine(e.Message);
+                Debug.WriteLine(e.StackTrace);
+                throw;
+            }
         }
 
         public void SetNodeSize(FIRRTLNode node, Point size)
