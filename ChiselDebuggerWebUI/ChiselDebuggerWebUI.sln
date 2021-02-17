@@ -9,9 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChiselDebug", "..\ChiselDeb
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PriorityQueue", "..\..\PriorityQueue\PriorityQueue\PriorityQueue.csproj", "{62CC3E52-D9E6-4EBE-8E20-D3F391CA11F4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FIRRTL", "..\FIRRTL\FIRRTL.csproj", "{90122FC7-4E5E-4D5C-80CB-795AEDC2823A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FIRRTL", "..\FIRRTL\FIRRTL.csproj", "{90122FC7-4E5E-4D5C-80CB-795AEDC2823A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FIRRTLTests", "..\FIRRTLTests\FIRRTLTests.csproj", "{841A0FCE-3EA3-4E54-BA58-EB3D03062A7C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FIRRTLTests", "..\FIRRTLTests\FIRRTLTests.csproj", "{841A0FCE-3EA3-4E54-BA58-EB3D03062A7C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

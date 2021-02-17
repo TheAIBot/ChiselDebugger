@@ -16,6 +16,10 @@
                 {
                     <BiArgMonoResPrimOpUI PosOp="@(posOp.Cast<BiArgMonoResPrimOp>())" OnComponentUpdate="@UpdateComponentInfo"></BiArgMonoResPrimOpUI>
                 }
+                else if (posOp.Value is ConstBitRange)
+                {
+                    <ConstBitRangeUI PosOp="@(posOp.Cast<ConstBitRange>())" OnComponentUpdate="@UpdateComponentInfo"></ConstBitRangeUI>
+                }
             }
 
             @foreach (var input in InputOffsets)
