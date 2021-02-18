@@ -20,6 +20,7 @@ namespace ChiselDebug
         {
             this.Mod = mod;
             this.UsedModuleConnections = Mod.GetAllModuleConnections();
+            UsedModuleConnections.RemoveAll(x => x is INoPlaceAndRoute);
         }
 
         public void UpdateIOFromNode(FIRRTLNode node, List<DirectedIO> inputOffsets, List<DirectedIO> outputOffsets)

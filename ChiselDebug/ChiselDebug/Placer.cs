@@ -21,6 +21,7 @@ namespace ChiselDebug
         {
             this.Mod = mod;
             this.MissingNodeDims = new HashSet<FIRRTLNode>(Mod.GetAllNodes());
+            MissingNodeDims.RemoveWhere(x => x is INoPlaceAndRoute);
         }
 
         private PlacementInfo PositionModuleComponents()

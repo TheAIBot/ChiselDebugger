@@ -2,7 +2,7 @@
 
 namespace ChiselDebug.GraphFIR
 {
-    public class ConstValue : FIRRTLNode
+    public class ConstValue : FIRRTLNode, INoPlaceAndRoute
     {
         public readonly FIRRTL.Literal Value;
         public readonly Output Result;
