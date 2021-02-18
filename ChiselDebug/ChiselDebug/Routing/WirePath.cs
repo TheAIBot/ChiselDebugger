@@ -10,13 +10,17 @@ namespace ChiselDebug.Routing
         internal readonly IOInfo StartIO;
         internal readonly IOInfo EndIO;
         private readonly List<Point> Path = new List<Point>();
+        private readonly List<Point> BoardPositions = new List<Point>();
+        private readonly List<Point> BoardPosTurns = new List<Point>();
         public readonly bool StartsFromWire;
 
-        internal WirePath(IOInfo startIO, IOInfo endIO, List<Point> path, bool startsFromWire)
+        internal WirePath(IOInfo startIO, IOInfo endIO, List<Point> path, List<Point> boardPositions, List<Point> boardPosTurns, bool startsFromWire)
         {
             this.StartIO = startIO;
             this.EndIO = endIO;
             this.Path = path;
+            this.BoardPositions = boardPositions;
+            this.BoardPosTurns = boardPosTurns;
             this.StartsFromWire = startsFromWire;
         }
 
@@ -81,8 +85,8 @@ namespace ChiselDebug.Routing
 
         internal bool CanCoexist(WirePath other)
         {
-            HashSet<Point> ownCorners = new HashSet<Point>(Path);
-            if (ownCorners.Overlaps(other.Path))
+            HashSet<Point> ownCorners = new HashSet<Point>(BoardPositions);
+            if (ownCorners.Overlaps(other.BoardPosTurns))
             {
                 return false;
             }

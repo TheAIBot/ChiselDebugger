@@ -219,6 +219,8 @@ namespace ChiselDebug.Routing
         internal WirePath GetPath(Point start, Point end, IOInfo startIO, IOInfo endIO, bool pathToWire)
         {
             List<Point> pathAsTurns = new List<Point>();
+            List<Point> allBoardPoses = new List<Point>();
+            List<Point> boardPosTurns = new List<Point>();
 
             Point zero = new Point(0, 0);
             MoveDirs prevDir = MoveDirs.None;
@@ -226,20 +228,25 @@ namespace ChiselDebug.Routing
             Point actualPos = end * CellSize + TopLeft;
             while (boardPos != start)
             {
+                allBoardPoses.Add(boardPos);
+
                 ScorePath path = GetCellScorePath(boardPos);
                 if (path.DirFrom != prevDir)
                 {
                     pathAsTurns.Add(actualPos);
+                    boardPosTurns.Add(boardPos);
                 }
                 prevDir = path.DirFrom;
                 boardPos = path.DirFrom.MovePoint(boardPos);
                 actualPos = actualPos + path.DirFrom.MovePoint(zero) * CellSize;
             }
 
+            allBoardPoses.Add(start);
+            boardPosTurns.Add(start);
             pathAsTurns.Add(actualPos);
             pathAsTurns.Reverse();
 
-            return new WirePath(startIO, endIO, pathAsTurns, pathToWire);
+            return new WirePath(startIO, endIO, pathAsTurns, allBoardPoses, boardPosTurns, pathToWire);
         }
 
         internal string BoardStateToString(Point start, Point end)
