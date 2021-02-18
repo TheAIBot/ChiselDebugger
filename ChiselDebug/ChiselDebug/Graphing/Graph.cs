@@ -58,83 +58,62 @@ namespace ChiselDebug.Graphing
             }
         }
 
-        private class TopologicalData
-        {
-            public int Ordering = 0;
-            public int ParentsNotDone = 0;
-            public bool IsDone = false;
-        }
-
         /// <summary>
         /// Able to sort cyclic graphs
         /// </summary>
         /// <returns></returns>
         public Dictionary<Node<T>, int> TopologicalSort()
         {
-            List<Node<T>> remaining = new List<Node<T>>();
-            var nodeData = new Dictionary<Node<T>, TopologicalData>();
-
-            //Make extra data for each node
+            Dictionary<Node<T>, int> nodeOrders = new Dictionary<Node<T>, int>();
             foreach (var node in Nodes)
             {
-                remaining.Add(node);
-                nodeData.Add(node, new TopologicalData());
+                nodeOrders.Add(node, int.MaxValue);
             }
 
-            //For each node count how many of its parents
-            //aren't ready
-            foreach (var node in remaining)
+            HashSet<Node<T>> inPath = new HashSet<Node<T>>();
+            Stack<(Node<T> node, int depth)> path = new Stack<(Node<T> node, int depth)>();
+
+            foreach (var noParents in Nodes.Where(x => x.Outgoing.Count == 0))
             {
-                foreach (var childNode in node.Outgoing)
-                {
-                    nodeData[childNode].ParentsNotDone++;
-                }
-            }
+                path.Push((noParents, 0));
 
-            while (remaining.Count > 0)
-            {
-                remaining.Sort((x, y) => nodeData[x].ParentsNotDone - nodeData[y].ParentsNotDone);
+                while (path.Count > 0)
+                {
+                    (Node<T> node, int depth) = path.Peek();
+                    nodeOrders[node] = depth;
 
-                Node<T> mostReady;
-                //Due to cyclic graph, it may be the case that there are nodes left
-                //but none have all their parent ready.
-                int firstNodeParentsNotDone = nodeData[remaining.First()].ParentsNotDone;
-                if (firstNodeParentsNotDone == 0)
-                {
-                    mostReady = remaining.First();
-                    remaining.RemoveAt(0);
-                }
-                else
-                {
-                    //Chose from one of the nodes that are most prepared.
-                    //Chose from one of the nodes who has a parent with the lowest
-                    //ordering value.
-                    mostReady = remaining
-                        .Where(x => nodeData[x].ParentsNotDone == firstNodeParentsNotDone)
-                        .OrderBy(x => x.Incomming.Min(x => nodeData[x].Ordering)).First();
-                    remaining.Remove(mostReady);
-                }
+                    
 
-                int ordering = 0;
-                if (mostReady.Incomming.Count > 0)
-                {
-                    //int sumParentsOrder = mostReady.Incomming.Sum(x => nodeData[x].Ordering);
-                    //float meanParentOrder = sumParentsOrder / (float)mostReady.Incomming.Count;
-                    //ordering = (int)MathF.Round(meanParentOrder + 0.25f) + 1;
-                    ordering = mostReady.Incomming.Max(x => nodeData[x].Ordering) + 1;
-                }
+                    bool newChild = false;
+                    foreach (var child in node.Incomming)
+                    {
+                        //No loops in search
+                        if (inPath.Contains(child))
+                        {
+                            continue;
+                        }
 
-                nodeData[mostReady].Ordering = ordering;
-                foreach (var childNode in mostReady.Outgoing)
-                {
-                    nodeData[childNode].ParentsNotDone--;
+                        if (nodeOrders[child] <= depth + 1)
+                        {
+                            continue;
+                        }
+
+                        newChild = true;
+                        path.Push((child, depth + 1));
+                        inPath.Add(child);
+                    }
+
+                    if (!newChild)
+                    {
+                        inPath.Remove(path.Pop().node);
+                    }
                 }
             }
 
-            Dictionary<Node<T>, int> nodeOrders = new Dictionary<Node<T>, int>();
-            foreach (var keyValue in nodeData)
+            int maxOrder = nodeOrders.Values.Max();
+            foreach (var node in nodeOrders.Keys)
             {
-                nodeOrders.Add(keyValue.Key, keyValue.Value.Ordering);
+                nodeOrders[node] = maxOrder - nodeOrders[node];
             }
 
             return nodeOrders;
