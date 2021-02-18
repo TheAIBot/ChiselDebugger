@@ -58,4 +58,13 @@ namespace ChiselDebug.GraphFIR
             bIn.ConnectToInput(B);
         }
     }
+
+    public class FIREq : BiArgMonoResPrimOp
+    {
+        public FIREq(Output aIn, Output bIn, IFIRType outType) : base("=", aIn.Type, bIn.Type, outType)
+        {
+            aIn.ConnectToInput(A);
+            bIn.ConnectToInput(B);
+        }
+    }
 }
