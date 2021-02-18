@@ -20,6 +20,10 @@
                 {
                     <ConstBitRangeUI PosOp="@(posOp.Cast<ConstBitRange>())" OnComponentUpdate="@UpdateComponentInfo"></ConstBitRangeUI>
                 }
+                else if (posOp.Value is Register)
+                {
+                    <RegisterUI PosOp="@(posOp.Cast<Register>())" OnComponentUpdate="@UpdateComponentInfo"></RegisterUI>
+                }
             }
 
             @foreach (var input in InputOffsets)

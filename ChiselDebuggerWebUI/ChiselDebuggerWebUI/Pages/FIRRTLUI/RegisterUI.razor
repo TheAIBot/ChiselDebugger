@@ -1,0 +1,41 @@
+﻿@inherits FIRBase<Register>
+
+<div class="register" @ref="SizeWatcher" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();min-width:@HEIGHT.ToPixels();min-height;@WIDTH.ToPixels();">
+    <div style="padding:5px;">@Operation.Name</div>
+
+    @foreach (var input in InputOffsets)
+    {
+        <IOPortUI Position="@input.Position"></IOPortUI>
+    }
+
+    @foreach (var output in OutputOffsets)
+    {
+        <IOPortUI Position="@output.Position"></IOPortUI>
+    }
+</div>
+
+@code {
+    private const int HEIGHT = 20;
+    private const int WIDTH = 40;
+
+    protected override List<DirectedIO> OnMakeInputs(int width, int height)
+    {
+        List<DirectedIO> inputs = new List<DirectedIO>();
+
+        Point inputOffset = new Point(0, height / 2);
+        inputs.Add(new DirectedIO(Operation.In, inputOffset, MoveDirs.Right));
+
+        return inputs;
+    }
+
+    protected override List<DirectedIO> OnMakeOutputs(int width, int height)
+    {
+        List<DirectedIO> outputs = new List<DirectedIO>();
+
+        //Add output
+        Point outputOffset = new Point(width, height / 2);
+        outputs.Add(new DirectedIO(Operation.Result, outputOffset, MoveDirs.Right));
+
+        return outputs;
+    }
+}

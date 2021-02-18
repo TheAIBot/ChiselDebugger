@@ -182,7 +182,7 @@ namespace FIRRTL
 
     public interface IsDeclaration { }
     public record DefWire(IInfo Info, string Name, IFIRType Type) : Statement, IsDeclaration;
-    public record DefRegister(IInfo Info, string Name, IFIRType Type, Expression Clock, Expression Reset, Expression init) : Statement, IsDeclaration;
+    public record DefRegister(IInfo Info, string Name, IFIRType Type, Expression Clock, Expression Reset, Expression Init) : Statement, IsDeclaration;
     public record DefInstance(IInfo Info, string Name, string Module, IFIRType Type) : Statement, IsDeclaration;
     public record DefNode(IInfo Info, string Name, Expression Value) : Statement, IsDeclaration;
     public record DefMemory(

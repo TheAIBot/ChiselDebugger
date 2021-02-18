@@ -116,7 +116,10 @@ namespace ChiselDebug
                 var nodeOut = VisitExp(outToNode, nameToOutput, module, connect.Expr);
                 string name = ((FIRRTL.Reference)connect.Loc).Name;
                 nodeOut.output.SetName(name);
-                nameToOutput.Add(name, nodeOut.output);
+                if (!nameToOutput.ContainsKey(name))
+                {
+                    nameToOutput.Add(name, nodeOut.output);
+                }
                 var input = nameToInput[name];
                 nodeOut.output.ConnectToInput(input);
             }
@@ -142,7 +145,25 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.DefRegister reg)
             {
-                throw new NotImplementedException();
+                var clock = VisitExp(outToNode, nameToOutput, module, reg.Clock);
+                GraphFIR.Register register;
+
+                //if it has no reset then it also has no init value
+                if (reg.Reset is FIRRTL.UIntLiteral res && res.Value == 0)
+                {
+                    register = new GraphFIR.Register(reg.Name, clock.output, null, null, reg.Type);
+                }
+                else
+                {
+                    var reset = VisitExp(outToNode, nameToOutput, module, reg.Reset);
+                    var initValue = VisitExp(outToNode, nameToOutput, module, reg.Init);
+                    register = new GraphFIR.Register(reg.Name, clock.output, reset.output, initValue.output, reg.Type);
+                }
+
+                module.AddNode(register);
+                outToNode.Add(register.Result, register);
+                nameToInput.Add(register.Name, register.In);
+                nameToOutput.Add(register.Name, register.Result);
             }
             else if (statement is FIRRTL.DefInstance)
             {
