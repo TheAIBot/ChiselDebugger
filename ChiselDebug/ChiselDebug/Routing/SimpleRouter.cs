@@ -62,6 +62,11 @@ namespace ChiselDebug.Routing
                     }
                 }
 
+                foreach (var path in paths)
+                {
+                    path.RefineWireStartAndEnd();
+                }
+
                 return paths;
             }
             catch (Exception e)
