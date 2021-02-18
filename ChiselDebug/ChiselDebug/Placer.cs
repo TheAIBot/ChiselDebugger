@@ -143,6 +143,21 @@ namespace ChiselDebug
                     }
                 }
 
+                int maxYOrdering = yOrdering.Values.Max();
+                var yGroups = yOrdering.GroupBy(x => x.Value).Select(x => x.ToArray()).ToArray();
+                int unusedYCount = 0;
+                int prevY = -1;
+                foreach (var group in yGroups)
+                {
+                    unusedYCount += (group[0].Value - prevY) - 1;
+                    prevY = group[0].Value;
+                    foreach (var node in group)
+                    {
+                        yOrdering[node.Key] = node.Value - unusedYCount;
+                    }
+                }
+
+
                 int minXOrdering = xOrdering.Values.Min();
                 int minYOrdering = yOrdering.Values.Min();
                 foreach (var node in xOrdering.Keys)
