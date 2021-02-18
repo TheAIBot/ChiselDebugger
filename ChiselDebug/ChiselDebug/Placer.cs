@@ -118,7 +118,7 @@ namespace ChiselDebug
                     }
                 }
 
-                const int iterations = 4;
+                const int iterations = 40;
                 for (int i = 0; i < iterations; i++)
                 {
                     foreach (var group in xGroups)
