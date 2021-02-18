@@ -1,0 +1,7 @@
+﻿.bitRange {
+    position: absolute;
+    display: inline-block;
+    outline: 2px solid black;
+    outline-offset: -1px;
+    text-align: center;
+}

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FIRRTL;
+using System;
 
 namespace ChiselDebug.GraphFIR
 {
@@ -6,21 +7,14 @@ namespace ChiselDebug.GraphFIR
     {
         public readonly Output Result;
 
-        public FIRRTLPrimOP(string outputName)
+        public FIRRTLPrimOP(IFIRType type)
         {
-            this.Result = new Output(outputName);
+            this.Result = new Output(type);
         }
 
-        public void ConnectTo(Input input)
+        public override Output[] GetOutputs()
         {
-            if (input.IsConnected())
-            {
-                throw new ArgumentException("Not allowed to connect two ouputs to one input.", nameof(input));
-            }
-
-            Result.ConnectToInput(input);
+            return new Output[] { Result };
         }
-
-        public abstract void ConnectFrom(Span<Output> outputs);
     }
 }

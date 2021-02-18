@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FIRRTL;
+using System;
 using System.Collections.Generic;
 
 namespace ChiselDebug.GraphFIR
@@ -12,6 +13,7 @@ namespace ChiselDebug.GraphFIR
         public Connection(Output from)
         {
             this.From = from;
+            this.Value = new ValueType(0, new SizedType(GroundType.UInt, 1));
         }
 
         public void ConnectToInput(Input input)

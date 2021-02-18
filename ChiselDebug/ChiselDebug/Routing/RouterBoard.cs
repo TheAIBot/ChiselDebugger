@@ -240,37 +240,6 @@ namespace ChiselDebug.Routing
             pathAsTurns.Add(actualPos);
             pathAsTurns.Reverse();
 
-            if (pathAsTurns.Count > 0)
-            {
-                if (pathAsTurns[0].Y == pathAsTurns[1].Y)
-                {
-                    pathAsTurns[0] = new Point(pathAsTurns[0].X, startIO.DirIO.Position.Y);
-                    pathAsTurns[1] = new Point(pathAsTurns[1].X, startIO.DirIO.Position.Y);
-                }
-                else
-                {
-                    pathAsTurns[0] = new Point(startIO.DirIO.Position.X, pathAsTurns[0].Y);
-                    pathAsTurns[1] = new Point(startIO.DirIO.Position.X, pathAsTurns[1].Y);
-                }
-            }
-
-            if (!pathToWire)
-            {
-                if (pathAsTurns.Count > 0)
-                {
-                    if (pathAsTurns[^1].Y == pathAsTurns[^2].Y)
-                    {
-                        pathAsTurns[^1] = new Point(pathAsTurns[^1].X, endIO.DirIO.Position.Y);
-                        pathAsTurns[^2] = new Point(pathAsTurns[^2].X, endIO.DirIO.Position.Y);
-                    }
-                    else
-                    {
-                        pathAsTurns[^1] = new Point(endIO.DirIO.Position.X, pathAsTurns[^1].Y);
-                        pathAsTurns[^2] = new Point(endIO.DirIO.Position.X, pathAsTurns[^2].Y);
-                    }
-                }
-            }
-
             return new WirePath(startIO, endIO, pathAsTurns, pathToWire);
         }
 
@@ -323,7 +292,7 @@ namespace ChiselDebug.Routing
             return sBuilder.ToString();
         }
 
-        internal string BoardAllowedMovesToString()
+        internal string BoardAllowedMovesToString(Point start, Point end)
         {   
             //Right Left Down Right
             string[] mas = new string[((int)MoveDirs.All) + 1];
@@ -350,8 +319,19 @@ namespace ChiselDebug.Routing
                 for (int x = 0; x < CellsWide; x++)
                 {
                     Point pos = new Point(x, y);
-                    MoveDirs allowedDirs = GetCellMoves(pos);
-                    sBuilder.Append(mas[(int)(allowedDirs & MoveDirs.All)]);
+                    if (pos == start)
+                    {
+                        sBuilder.Append('S');
+                    }
+                    else if (pos == end)
+                    {
+                        sBuilder.Append('E');
+                    }
+                    else
+                    {
+                        MoveDirs allowedDirs = GetCellMoves(pos);
+                        sBuilder.Append(mas[(int)(allowedDirs & MoveDirs.All)]);
+                    }
                 }
                 sBuilder.AppendLine();
             }

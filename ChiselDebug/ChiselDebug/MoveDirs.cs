@@ -16,6 +16,7 @@ namespace ChiselDebug
         ExceptLeft = unchecked((byte)~Left),
         ExceptRight = unchecked((byte)~Right),
         FriendWire = 0b0001_0000,
-        EnemyWire  = 0b0010_0000
+        EnemyWire  = 0b0010_0000,
+        WireCorner = 0b0100_0000
     }
 }

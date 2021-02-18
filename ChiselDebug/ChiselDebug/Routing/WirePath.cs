@@ -7,8 +7,8 @@ namespace ChiselDebug.Routing
 {
     public class WirePath
     {
-        private readonly IOInfo StartIO;
-        private readonly IOInfo EndIO;
+        internal readonly IOInfo StartIO;
+        internal readonly IOInfo EndIO;
         private readonly List<Point> Path = new List<Point>();
         public readonly bool StartsFromWire;
 
@@ -48,8 +48,46 @@ namespace ChiselDebug.Routing
             foreach (var pathPos in Path)
             {
                 Point pathPosRel = board.GetRelativeBoardPos(pathPos);
-                board.RemoveAllIncommingMoves(pathPosRel);
+                //board.RemoveAllIncommingMoves(pathPosRel);
+                board.AddCellAllowedMoves(pathPosRel, MoveDirs.WireCorner);
             }
+        }
+
+        internal void RefineWireStartAndEnd()
+        {
+            if (Path[0].Y == Path[1].Y)
+            {
+                Path[1] = new Point(Path[1].X, StartIO.DirIO.Position.Y);
+            }
+            else
+            {
+                Path[1] = new Point(StartIO.DirIO.Position.X, Path[1].Y);
+            }
+            Path[0] = StartIO.DirIO.Position;
+
+            if (!StartsFromWire)
+            {
+                if (Path[^1].Y == Path[^2].Y)
+                {
+                    Path[^2] = new Point(Path[^2].X, EndIO.DirIO.Position.Y);
+                }
+                else
+                {
+                    Path[^2] = new Point(EndIO.DirIO.Position.X, Path[^2].Y);
+                }
+                Path[^1] = EndIO.DirIO.Position;
+            }
+        }
+
+        internal bool CanCoexist(WirePath other)
+        {
+            HashSet<Point> ownCorners = new HashSet<Point>(Path);
+            if (ownCorners.Overlaps(other.Path))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public Point GetEndPos()

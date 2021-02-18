@@ -17,12 +17,24 @@ namespace ChiselDebug.Routing
             this.Connections = connections;
         }
 
+        private record LineInfo(IOInfo Start, IOInfo End)
+        {
+            public int GetScore()
+            {
+                return new Line(Start.DirIO.Position, End.DirIO.Position).GetManhattanDistance();
+            }
+        }
+
         public List<WirePath> PathLines(PlacementInfo placements)
         {
             try
             {
-                List<(IOInfo start, IOInfo end)> lines = Connections.GetAllConnectionLines(placements);
-                lines.Sort((x, y) => new Line(y.start.DirIO.Position, y.end.DirIO.Position).GetManhattanDistance() - new Line(x.start.DirIO.Position, x.end.DirIO.Position).GetManhattanDistance());
+                PriorityQueue<LineInfo, int> linesPriority = new PriorityQueue<LineInfo, int>();
+                foreach ((IOInfo start, IOInfo end) in Connections.GetAllConnectionLines(placements))
+                {
+                    LineInfo line = new LineInfo(start, end);
+                    linesPriority.Enqueue(line, line.GetScore());
+                }
 
                 RouterBoard board = new RouterBoard(placements.SpaceNeeded);
                 board.PrepareBoard(placements.UsedSpace.Values.ToList());
@@ -30,9 +42,10 @@ namespace ChiselDebug.Routing
 
                 Dictionary<Point, List<WirePath>> startPosPaths = new Dictionary<Point, List<WirePath>>();
                 List<WirePath> paths = new List<WirePath>();
-                for (int i = 0; i < lines.Count; i++)
+                while (linesPriority.Count > 0)
                 {
-                    (IOInfo start, IOInfo end) = lines[i];
+                    Debug.WriteLine(linesPriority.Count);
+                    (IOInfo start, IOInfo end) = linesPriority.Dequeue();
 
                     Rectangle? startRect = null;
                     Rectangle? endRect = null;
@@ -48,6 +61,27 @@ namespace ChiselDebug.Routing
 
 
                     WirePath path = PathLine(board, start, end, startRect, endRect, startPosPaths);
+
+                    List<WirePath> needsRepathing = new List<WirePath>();
+                    foreach (var oldPath in paths)
+                    {
+                        if (oldPath.EndIO.DirIO.Position == path.EndIO.DirIO.Position)
+                        {
+                            continue;
+                        }
+                        if (!path.CanCoexist(oldPath))
+                        {
+                            needsRepathing.Add(oldPath);
+                        }
+                    }
+                    foreach (var repath in needsRepathing)
+                    {
+                        paths.Remove(repath);
+                        startPosPaths[repath.EndIO.DirIO.Position].Remove(repath);
+
+                        LineInfo line = new LineInfo(repath.EndIO, repath.StartIO);
+                        linesPriority.Enqueue(line, line.GetScore());
+                    }
                     paths.Add(path);
 
                     if (startPosPaths.TryGetValue(start.DirIO.Position, out List<WirePath> startPaths))
@@ -62,6 +96,11 @@ namespace ChiselDebug.Routing
                     }
                 }
 
+                foreach (var path in paths)
+                {
+                    path.RefineWireStartAndEnd();
+                }
+
                 return paths;
             }
             catch (Exception e)
@@ -70,7 +109,6 @@ namespace ChiselDebug.Routing
                 Debug.WriteLine(e.StackTrace);
                 throw;
             }
-
         }
 
         private WirePath PathLine(RouterBoard board, IOInfo start, IOInfo end, Rectangle? startRect, Rectangle? endRect, Dictionary<Point, List<WirePath>> allPaths)
@@ -132,7 +170,7 @@ namespace ChiselDebug.Routing
 
             MoveDirs[] moves = new MoveDirs[] { MoveDirs.Up, MoveDirs.Down, MoveDirs.Left, MoveDirs.Right };
 
-            Debug.WriteLine(board.BoardAllowedMovesToString());
+            Debug.WriteLine(board.BoardAllowedMovesToString(relativeStart, relativeEnd));
 
             while (toSee.Count > 0)
             {
@@ -154,15 +192,14 @@ namespace ChiselDebug.Routing
                 }
 
                 bool onEnemyWire = allowedMoves.HasFlag(MoveDirs.EnemyWire);
+                bool onWireCorner = allowedMoves.HasFlag(MoveDirs.WireCorner);
                 foreach (var move in moves)
                 {
-                    if (onEnemyWire && currentScorePath.DirFrom != MoveDirs.None && move != currentScorePath.DirFrom.Reverse())
-                    {
-                        continue;
-                    }
+                    //Penalty for turning while on another wire
+                    bool isTurningOnEnemyWire = onEnemyWire && currentScorePath.DirFrom != MoveDirs.None && move != currentScorePath.DirFrom.Reverse();
                     if (allowedMoves.HasFlag(move))
                     {
-                        ScorePath neighborScoreFromCurrent = currentScorePath.Move(move, onEnemyWire);
+                        ScorePath neighborScoreFromCurrent = currentScorePath.Move(move, onEnemyWire, onWireCorner, isTurningOnEnemyWire);
 
                         Point neighborPos = move.MovePoint(current);
                         ref ScorePath neighborScore = ref board.GetCellScorePath(neighborPos);

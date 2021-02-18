@@ -1,28 +1,26 @@
-﻿using System;
+﻿using FIRRTL;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ChiselDebug.GraphFIR
 {
     public class Mux : FIRRTLPrimOP
     {
         public List<Input> Choises = new List<Input>();
-        public Input Decider = new Input("Selector");
+        public Input Decider = new Input("Selector", new FIRRTL.UIntType(1));
 
-        public Mux(string outputName) : base(outputName)
-        { }
-
-        public override void ConnectFrom(Span<Output> outputs)
+        public Mux(List<IFIRType> choiseTypes, IFIRType outType) : base(outType)
         {
-            if (outputs.Length != Choises.Count + 1)
-            {
-                throw new ArgumentException($"Must connect all {Choises.Count} inputs at once.", nameof(outputs));
-            }
+            Choises = choiseTypes.Select(x => new Input(x)).ToList();
+        }
 
-            outputs[0].ConnectToInput(Decider);
-            for (int i = 0; i < Choises.Count; i++)
-            {
-                outputs[i + 1].ConnectToInput(Choises[i]);
-            }
+        public override Input[] GetInputs()
+        {
+            List<Input> inputs = new List<Input>();
+            inputs.AddRange(Choises);
+            inputs.Add(Decider);
+            return inputs.ToArray();
         }
     }
 }

@@ -3,17 +3,17 @@
     internal readonly struct ScorePath
     {
         public readonly ushort TraveledDist;
-        public readonly byte TurnsTaken;
+        public readonly ushort TurnsTaken;
         public readonly MoveDirs DirFrom;
 
         public ScorePath(int travled, int turns, MoveDirs fromDir)
         {
             this.TraveledDist = (ushort)travled;
-            this.TurnsTaken = (byte)turns;
+            this.TurnsTaken = (ushort)turns;
             this.DirFrom = fromDir;
         }
 
-        public ScorePath Move(MoveDirs dir, bool onEnemyWire)
+        public ScorePath Move(MoveDirs dir, bool onEnemyWire, bool onWireCorner, bool isTurningOnEnemyWire)
         {
             //If the direction we are moving in is not the
             //opposite of the direction we came from,
@@ -25,6 +25,8 @@
             int turns = TurnsTaken;
             turns += isTurning ? 1 : 0;
             turns += onEnemyWire ? 1 : 0;
+            turns += onWireCorner ? 50 : 0;
+            turns += isTurningOnEnemyWire ? 50 : 0;
 
             return new ScorePath(TraveledDist + 1, turns, dir.Reverse());
         }
@@ -47,7 +49,7 @@
 
         public static ScorePath NotReachedYet()
         {
-            return new ScorePath(ushort.MaxValue, byte.MaxValue, MoveDirs.None);
+            return new ScorePath(ushort.MaxValue, ushort.MaxValue, MoveDirs.None);
         }
     }
 }

@@ -1,7 +1,8 @@
 ﻿namespace ChiselDebug.GraphFIR
 {
-    public class FIRRTLNode
+    public abstract class FIRRTLNode
     {
-
+        public abstract Input[] GetInputs();
+        public abstract Output[] GetOutputs();
     }
 }

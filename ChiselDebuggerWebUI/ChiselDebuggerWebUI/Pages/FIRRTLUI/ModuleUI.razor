@@ -5,7 +5,7 @@
         <h2>@Operation.Name</h2>
     </div>
     <div style="padding:@ContentPadding.ToPixels();">
-        <div class="moduleContent" @ref="SizeWatcher" style="width:@GetCurrentSize().X.ToPixels();height:@GetCurrentSize().Y.ToPixels();min-width:@MinContentSize.X;min-height:@MinContentSize.Y">
+        <div class="moduleContent" @ref="SizeWatcher" style="width:@GetCurrentSize().X.ToPixels();height:@GetCurrentSize().Y.ToPixels();min-width:@MinContentSize.X.ToPixels();min-height:@MinContentSize.Y.ToPixels()">
             @foreach (var posOp in ModuleOpPoses)
             {
                 @if (posOp.Value is Mux)
@@ -15,6 +15,10 @@
                 else if (posOp.Value is BiArgMonoResPrimOp)
                 {
                     <BiArgMonoResPrimOpUI PosOp="@(posOp.Cast<BiArgMonoResPrimOp>())" OnComponentUpdate="@UpdateComponentInfo"></BiArgMonoResPrimOpUI>
+                }
+                else if (posOp.Value is ConstBitRange)
+                {
+                    <ConstBitRangeUI PosOp="@(posOp.Cast<ConstBitRange>())" OnComponentUpdate="@UpdateComponentInfo"></ConstBitRangeUI>
                 }
             }
 
@@ -85,9 +89,16 @@
     {
         ModuleOpPoses = placements.NodePositions;
 
-        SetCurrentSize(placements.SpaceNeeded);
+        Point moduleSize = Point.Max(MinContentSize, placements.SpaceNeeded);
+
+        //With new module size, the io positions need to be updated
+        InputOffsets = OnMakeInputs(moduleSize.X, moduleSize.Y);
+        OutputOffsets = OnMakeOutputs(moduleSize.X, moduleSize.Y);
+        ConHandler.UpdateIOFromNode(Operation, InputOffsets, OutputOffsets);
+
         ModuleConnections = WireRouter.PathLines(placements);
 
+        SetCurrentSize(moduleSize);
         StateHasChanged();
     }
 
