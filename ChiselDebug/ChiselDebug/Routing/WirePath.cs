@@ -7,8 +7,8 @@ namespace ChiselDebug.Routing
 {
     public class WirePath
     {
-        private readonly IOInfo StartIO;
-        private readonly IOInfo EndIO;
+        internal readonly IOInfo StartIO;
+        internal readonly IOInfo EndIO;
         private readonly List<Point> Path = new List<Point>();
         public readonly bool StartsFromWire;
 
@@ -77,6 +77,17 @@ namespace ChiselDebug.Routing
                 }
                 Path[^1] = EndIO.DirIO.Position;
             }
+        }
+
+        internal bool CanCoexist(WirePath other)
+        {
+            HashSet<Point> ownCorners = new HashSet<Point>(Path);
+            if (ownCorners.Overlaps(other.Path))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public Point GetEndPos()
