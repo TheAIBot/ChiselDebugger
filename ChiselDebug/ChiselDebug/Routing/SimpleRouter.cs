@@ -170,15 +170,12 @@ namespace ChiselDebug.Routing
 
             MoveDirs[] moves = new MoveDirs[] { MoveDirs.Up, MoveDirs.Down, MoveDirs.Left, MoveDirs.Right };
 
-            Debug.WriteLine(board.BoardAllowedMovesToString(relativeStart, relativeEnd));
-
             while (toSee.Count > 0)
             {
                 Point current = toSee.Dequeue();
 
                 if (current == relativeEnd)
                 {
-                    Debug.WriteLine(board.BoardStateToString(relativeStart, relativeEnd));
                     return board.GetPath(relativeStart, relativeEnd, end, start, false);
                 }
 
@@ -187,7 +184,6 @@ namespace ChiselDebug.Routing
 
                 if (allowedMoves.HasFlag(MoveDirs.FriendWire))
                 {
-                    Debug.WriteLine(board.BoardStateToString(relativeStart, relativeEnd));
                     return board.GetPath(relativeStart, current, end, start, true);
                 }
 
@@ -213,6 +209,7 @@ namespace ChiselDebug.Routing
                 }
             }
 
+            Debug.WriteLine(board.BoardAllowedMovesToString(relativeStart, relativeEnd));
             Debug.WriteLine(board.BoardStateToString(relativeStart, relativeEnd));
             throw new Exception("Failed to find a path.");
         }
