@@ -3,13 +3,13 @@
     internal readonly struct ScorePath
     {
         public readonly ushort TraveledDist;
-        public readonly byte TurnsTaken;
+        public readonly ushort TurnsTaken;
         public readonly MoveDirs DirFrom;
 
         public ScorePath(int travled, int turns, MoveDirs fromDir)
         {
             this.TraveledDist = (ushort)travled;
-            this.TurnsTaken = (byte)turns;
+            this.TurnsTaken = (ushort)turns;
             this.DirFrom = fromDir;
         }
 
@@ -47,7 +47,7 @@
 
         public static ScorePath NotReachedYet()
         {
-            return new ScorePath(ushort.MaxValue, byte.MaxValue, MoveDirs.None);
+            return new ScorePath(ushort.MaxValue, ushort.MaxValue, MoveDirs.None);
         }
     }
 }
