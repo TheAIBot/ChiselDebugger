@@ -1,7 +1,7 @@
 ﻿@inherits FIRBase<ConstBitRange>
 
-<div class="bitRange" @ref="SizeWatcher" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();width:@HEIGHT.ToPixels();height;@WIDTH.ToPixels();">
-    Range
+<div class="bitRange" @ref="SizeWatcher" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();min-width:@HEIGHT.ToPixels();min-height;@WIDTH.ToPixels();">
+    <div style="padding:5px;">@Operation.OpName</div>
 
     @foreach (var input in InputOffsets)
     {
@@ -22,7 +22,7 @@
     {
         List<DirectedIO> inputs = new List<DirectedIO>();
 
-        Point inputOffset = new Point(0, HEIGHT / 2);
+        Point inputOffset = new Point(0, height / 2);
         inputs.Add(new DirectedIO(Operation.In, inputOffset, MoveDirs.Right));
 
         return inputs;
@@ -33,7 +33,7 @@
         List<DirectedIO> outputs = new List<DirectedIO>();
 
         //Add output
-        Point outputOffset = new Point(WIDTH, HEIGHT / 2);
+        Point outputOffset = new Point(width, height / 2);
         outputs.Add(new DirectedIO(Operation.Result, outputOffset, MoveDirs.Right));
 
         return outputs;
