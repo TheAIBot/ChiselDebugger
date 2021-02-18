@@ -159,15 +159,14 @@ namespace ChiselDebug.Routing
                 }
 
                 bool onEnemyWire = allowedMoves.HasFlag(MoveDirs.EnemyWire);
+                bool onWireCorner = allowedMoves.HasFlag(MoveDirs.WireCorner);
                 foreach (var move in moves)
                 {
-                    if (onEnemyWire && currentScorePath.DirFrom != MoveDirs.None && move != currentScorePath.DirFrom.Reverse())
-                    {
-                        continue;
-                    }
+                    //Penalty for turning while on another wire
+                    bool isTurningOnEnemyWire = onEnemyWire && currentScorePath.DirFrom != MoveDirs.None && move != currentScorePath.DirFrom.Reverse();
                     if (allowedMoves.HasFlag(move))
                     {
-                        ScorePath neighborScoreFromCurrent = currentScorePath.Move(move, onEnemyWire);
+                        ScorePath neighborScoreFromCurrent = currentScorePath.Move(move, onEnemyWire, onWireCorner, isTurningOnEnemyWire);
 
                         Point neighborPos = move.MovePoint(current);
                         ref ScorePath neighborScore = ref board.GetCellScorePath(neighborPos);
