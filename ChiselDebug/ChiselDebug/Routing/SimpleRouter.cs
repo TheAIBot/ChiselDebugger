@@ -137,7 +137,7 @@ namespace ChiselDebug.Routing
 
             MoveDirs[] moves = new MoveDirs[] { MoveDirs.Up, MoveDirs.Down, MoveDirs.Left, MoveDirs.Right };
 
-            Debug.WriteLine(board.BoardAllowedMovesToString());
+            Debug.WriteLine(board.BoardAllowedMovesToString(relativeStart, relativeEnd));
 
             while (toSee.Count > 0)
             {
