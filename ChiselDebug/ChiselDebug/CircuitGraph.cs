@@ -196,15 +196,15 @@ namespace ChiselDebug
                 }
                 else if (prim.Op is FIRRTL.Head)
                 {
-                    nodePrim = new GraphFIR.ConstBitRange(args[0].output, prim.Type);
+                    nodePrim = new GraphFIR.Head(args[0].output, prim.Type, (int)prim.Consts[0]);
                 }
                 else if (prim.Op is FIRRTL.Tail)
                 {
-                    nodePrim = new GraphFIR.ConstBitRange(args[0].output, prim.Type);
+                    nodePrim = new GraphFIR.Tail(args[0].output, prim.Type, (int)prim.Consts[0]);
                 }
-                else if (prim.Op is FIRRTL.Bits b)
+                else if (prim.Op is FIRRTL.Bits)
                 {
-                    nodePrim = new GraphFIR.ConstBitRange(args[0].output, prim.Type);
+                    nodePrim = new GraphFIR.BitExtract(args[0].output, prim.Type, (int)prim.Consts[0], (int)prim.Consts[1]);
                 }
                 else
                 {
