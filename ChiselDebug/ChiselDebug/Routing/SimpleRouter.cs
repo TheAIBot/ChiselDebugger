@@ -134,9 +134,17 @@ namespace ChiselDebug.Routing
                 } while (endRectRelative.Within(endGo));
             }
 
-            //Only allow connection from the correct direction
-            board.RemoveAllIncommingMoves(relativeEnd);
-            board.AddCellAllowedMoves(relativeEnd + start.DirIO.InitialDir.MovePoint(new Point(0, 0)), start.DirIO.InitialDir.Reverse());
+            if (startRect.HasValue)
+            {
+                Rectangle endRectRelative = board.GetRelativeBoard(startRect.Value).ResizeCentered(1);
+                Point endGo = relativeEnd;
+                MoveDirs allowedDir = start.DirIO.InitialDir.Reverse();
+                do
+                {
+                    board.SetCellAllowedMoves(endGo, allowedDir);
+                    endGo = allowedDir.Reverse().MovePoint(endGo);
+                } while (endRectRelative.Within(endGo));
+            }
 
             foreach (var keyValue in allPaths)
             {
