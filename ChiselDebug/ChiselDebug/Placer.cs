@@ -151,7 +151,7 @@ namespace ChiselDebug
                     int xOrder = xOrdering[node] - minXOrdering;
                     int yOrder = yOrdering[node] - minYOrdering;
 
-                    Point pos = new Point(30 + xOrder * 200, yOrder * 80);
+                    Point pos = new Point(50 + xOrder * 100, yOrder * 150);
                     placments.AddNodePlacement(node.Value, new Rectangle(pos, size));
                 }
 
