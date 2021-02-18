@@ -75,7 +75,9 @@ namespace FIRRTL.Parsing
             }
             else if (Regex.IsMatch(str, HexPattern, RegexOptions.Compiled))
             {
-                return BigInteger.Parse(str, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+                string withoutQuotes = RemoveSurroundingQuotes(str);
+                string withoutHexPrefix = withoutQuotes.Substring(1);
+                return BigInteger.Parse(withoutHexPrefix, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
             }
             else if (Regex.IsMatch(str, OctalPattern, RegexOptions.Compiled))
             {
