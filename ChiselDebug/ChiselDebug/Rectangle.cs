@@ -46,6 +46,12 @@ namespace ChiselDebug
                    TopY < pos.Y && pos.Y < BottomY;
         }
 
+        public Rectangle ResizeCentered(int extra)
+        {
+            Point extraXY = new Point(extra, extra);
+            return new Rectangle(Pos - extraXY, Size + extraXY + extraXY);
+        }
+
         public override bool Equals(object obj)
         {
             return obj is Rectangle rectangle &&

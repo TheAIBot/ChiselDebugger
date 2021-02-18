@@ -90,8 +90,7 @@ namespace ChiselDebug.Routing
                 //Need to remove moves not at the edge of the used space
                 //but at the outer neighbors to the uses space. That's
                 //why the rectangle is made 1 larger on all sides.
-                Point one = new Point(1, 1);
-                Rectangle spaceCellEdge = new Rectangle(spaceRel.Pos - one, spaceRel.Size + one);
+                Rectangle spaceCellEdge = spaceRel.ResizeCentered(1);
                 for (int x = spaceCellEdge.LeftX + 1; x < spaceCellEdge.RightX; x++)
                 {
                     CellAllowedDirs[CellIndex(x, spaceCellEdge.TopY)] &= MoveDirs.ExceptDown;
