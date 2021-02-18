@@ -155,6 +155,7 @@ namespace ChiselDebug
                     placments.AddNodePlacement(node.Value, new Rectangle(pos, size));
                 }
 
+                placments.AddEndStuff();
                 return placments;
             }
             catch(Exception e)
@@ -189,6 +190,11 @@ namespace ChiselDebug
             SpaceNeeded = Point.Max(SpaceNeeded, new Point(shape.RightX, shape.BottomY));
 
             UsedSpace.Add(node, shape);
+        }
+
+        internal void AddEndStuff()
+        {
+            SpaceNeeded += new Point(50, 0);
         }
     }
 }
