@@ -118,9 +118,10 @@ namespace ChiselDebug.Graphing
                 int ordering = 0;
                 if (mostReady.Incomming.Count > 0)
                 {
-                    int sumParentsOrder = mostReady.Incomming.Sum(x => nodeData[x].Ordering);
-                    float meanParentOrder = sumParentsOrder / (float)mostReady.Incomming.Count;
-                    ordering = (int)MathF.Round(meanParentOrder + 0.25f) + 1;
+                    //int sumParentsOrder = mostReady.Incomming.Sum(x => nodeData[x].Ordering);
+                    //float meanParentOrder = sumParentsOrder / (float)mostReady.Incomming.Count;
+                    //ordering = (int)MathF.Round(meanParentOrder + 0.25f) + 1;
+                    ordering = mostReady.Incomming.Max(x => nodeData[x].Ordering) + 1;
                 }
 
                 nodeData[mostReady].Ordering = ordering;
