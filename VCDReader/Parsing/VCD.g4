@@ -1,4 +1,7 @@
-﻿grammar FIRRTL;
+﻿//IEEE 1800-2017 - IEEE Standard for SystemVerilog--Unified Hardware Design, Specification, and Verification Language
+//21.7.2.1 Syntax of 4-state VCD file
+
+grammar VCD;
 
 vcd 
 	: declCmd*
