@@ -9,14 +9,14 @@ vcd
 	;
 
 declCmd 
-	: '$comment' asciiString '$end'
-	| '$date' asciiString '$end'
+	: '$comment' AsciiString '$end'
+	| '$date' AsciiString '$end'
 	| '$enddefinitions' '$end'
 	| '$scope' scopeType scopeId '$end'
 	| '$timescale' timeNumber timeUnit '$end'
 	| '$upscope' '$end'
 	| '$var' varType size idCode ref '$end'
-	| '$version' asciiString systemTask '$end'
+	| '$version' AsciiString systemTask '$end'
 	;
 
 simCmd
@@ -24,7 +24,7 @@ simCmd
 	| '$dumpoff' valueChange* '$end'
 	| '$dumpon' valueChange* '$end'
 	| '$dumpvars' valueChange* '$end'
-	| '$comment' asciiString '$end'
+	| '$comment' AsciiString '$end'
 	| simTime
 	| valueChange
 	;
@@ -74,7 +74,7 @@ varType
 	;
 
 simTime
-	: '#' decimalNumber
+	: '#' DecimalNumber
 	;
 
 valueChange
@@ -98,22 +98,22 @@ value
 vectorValueChange
 	: 'b' binaryNumber ' ' idCode
 	| 'B' binaryNumber ' ' idCode
-	| 'r' realNumber ' ' idCode
-	| 'R' realNumber ' ' idCode
+	| 'r' RealNumber ' ' idCode
+	| 'R' RealNumber ' ' idCode
 	;
 
 size
-	: decimalNumber
+	: DecimalNumber
 	;
 
 ref
 	: id
-	| id '[' decimalNumber ']'
-	| id '[' decimalNumber ':' decimalNumber ']'
+	| id '[' DecimalNumber ']'
+	| id '[' DecimalNumber ':' DecimalNumber ']'
 	;
 
 systemTask
-	: '$' asciiString
+	: '$' AsciiString
 	;
 
 
@@ -127,11 +127,11 @@ scopeId
 	;
 
 id
-	: asciiChar+
+	: AsciiChar+
 	;
 
-decimalNumber
-	: ('+' | '-')? [1-9] [0-9]*
+DecimalNumber
+	: ('+'|'-')?([1-9][0-9]*|[0-9])
 	;
 
 binaryNumber
@@ -139,11 +139,11 @@ binaryNumber
 	;
 
 // Matches printf("%.16g")
-realNumber
+RealNumber
 	: ('+'|'-')?([1-9][0-9]*|[0-9])('.'[0-9]+('e+'[1-9][0-9]*)?)?
 	;
 
 fragment
-asciiChar : [!-~];
+AsciiChar : [!-~];
 
-asciiString : (asciiChar | [ \t\r\n])*;
+AsciiString : (AsciiChar | [ \t\r\n])*;
