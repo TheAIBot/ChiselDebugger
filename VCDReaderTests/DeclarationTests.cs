@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Generic;
 using VCDReader;
 
 namespace VCDReaderTests
@@ -19,7 +20,7 @@ $enddefinitions $end";
             Assert.IsTrue(vcd.Declarations[0] is Comment);
 
             var decl = vcd.Declarations[0] as Comment;
-            Assert.AreEqual(" test ", decl.Content);
+            Assert.AreEqual("test", decl.Content);
         }
 
         [TestMethod]
@@ -34,7 +35,7 @@ $enddefinitions $end";
             Assert.IsTrue(vcd.Declarations[0] is Date);
 
             var decl = vcd.Declarations[0] as Date;
-            Assert.AreEqual(" test ", decl.Content);
+            Assert.AreEqual("test", decl.Content);
         }
 
         [TestMethod]
@@ -49,8 +50,8 @@ $enddefinitions $end";
             Assert.IsTrue(vcd.Declarations[0] is VCDReader.Version);
 
             var decl = vcd.Declarations[0] as VCDReader.Version;
-            Assert.AreEqual(" test ", decl.VersionText);
-            Assert.AreEqual("$lol ", decl.SystemTask);
+            Assert.AreEqual("test", decl.VersionText);
+            Assert.AreEqual("$lol", decl.SystemTask);
         }
 
         [TestMethod]
@@ -74,20 +75,138 @@ $enddefinitions $end";
         }
 
         [TestMethod]
-        public void ParseScope()
+        public void ParseScopeOpen1Closed1()
+        {
+            foreach (ScopeType scopeType in Enum.GetValues(typeof(ScopeType)))
+            {
+                string vcdString = @$"
+$scope {scopeType.ToString().ToLower()} lol $end
+$upscope $end
+$enddefinitions $end";
+                VCD vcd = Parse.FromString(vcdString);
+
+                Assert.AreEqual(2, vcd.Declarations.Count);
+                Assert.IsTrue(vcd.Declarations[0] is Scope);
+                Assert.IsTrue(vcd.Declarations[1] is UpScope);
+
+                var decl = vcd.Declarations[0] as Scope;
+                Assert.AreEqual(scopeType, decl.Type);
+                Assert.AreEqual("lol", decl.Name);
+            }
+        }
+
+        [TestMethod]
+        public void ParseScopeNestedOpen2Closed2()
         {
             string vcdString = @"
 $scope module lol $end
+$scope module fish $end
+$upscope $end
 $upscope $end
 $enddefinitions $end";
             VCD vcd = Parse.FromString(vcdString);
 
-            Assert.AreEqual(1, vcd.Declarations.Count);
-            Assert.IsTrue(vcd.Declarations[0] is VCDReader.Version);
+            Assert.AreEqual(4, vcd.Declarations.Count);
+            Assert.IsTrue(vcd.Declarations[0] is Scope);
+            Assert.IsTrue(vcd.Declarations[1] is Scope);
+            Assert.IsTrue(vcd.Declarations[2] is UpScope);
+            Assert.IsTrue(vcd.Declarations[3] is UpScope);
 
-            var decl = vcd.Declarations[0] as VCDReader.Version;
-            Assert.AreEqual(" test ", decl.VersionText);
-            Assert.AreEqual("$lol ", decl.SystemTask);
+            var decl = vcd.Declarations[0] as Scope;
+            Assert.AreEqual(ScopeType.Module, decl.Type);
+            Assert.AreEqual("lol", decl.Name);
+
+            decl = vcd.Declarations[1] as Scope;
+            Assert.AreEqual(ScopeType.Module, decl.Type);
+            Assert.AreEqual("fish", decl.Name);
+        }
+
+        [TestMethod]
+        public void ParseScopeOpen2Closed2()
+        {
+            string vcdString = @"
+$scope module lol $end
+$upscope $end
+$scope module fish $end
+$upscope $end
+$enddefinitions $end";
+            VCD vcd = Parse.FromString(vcdString);
+
+            Assert.AreEqual(4, vcd.Declarations.Count);
+            Assert.IsTrue(vcd.Declarations[0] is Scope);
+            Assert.IsTrue(vcd.Declarations[1] is UpScope);
+            Assert.IsTrue(vcd.Declarations[2] is Scope);
+            Assert.IsTrue(vcd.Declarations[3] is UpScope);
+
+            var decl = vcd.Declarations[0] as Scope;
+            Assert.AreEqual(ScopeType.Module, decl.Type);
+            Assert.AreEqual("lol", decl.Name);
+
+            decl = vcd.Declarations[2] as Scope;
+            Assert.AreEqual(ScopeType.Module, decl.Type);
+            Assert.AreEqual("fish", decl.Name);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Exception))]
+        public void ParseScopeMismatchOpen1()
+        {
+            string vcdString = @"
+$scope module lol $end
+$enddefinitions $end";
+            VCD vcd = Parse.FromString(vcdString);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Exception))]
+        public void ParseScopeMismatchOpen2()
+        {
+            string vcdString = @"
+$scope module lol $end
+$scope module lol $end
+$enddefinitions $end";
+            VCD vcd = Parse.FromString(vcdString);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Exception))]
+        public void ParseScopeMismatchOpen2Closed1()
+        {
+            string vcdString = @"
+$scope module lol $end
+$upscope $end
+$scope module lol $end
+$enddefinitions $end";
+            VCD vcd = Parse.FromString(vcdString);
+        }
+
+        [TestMethod]
+        public void ParseVariable()
+        {
+            foreach (VarType varType in Enum.GetValues(typeof(VarType)))
+            {
+                IHeaderCmd[] expectedHeader = new IHeaderCmd[]
+                {
+                    new VarDef(VarType.Wire, 6, "!", "_T_4", Array.Empty<Scope>())
+                };
+
+                string vcdString = @$"
+$var wire 6 ! _T_4 $end
+$enddefinitions $end";
+                VCD vcd = Parse.FromString(vcdString);
+
+                VerifyHeader(expectedHeader, vcd.Declarations);
+            }
+        }
+
+        private void VerifyHeader(IHeaderCmd[] expected, List<IHeaderCmd> actual)
+        {
+            Assert.AreEqual(expected.Length, actual.Count, $"Not same amount of declarations.{Environment.NewLine}Expected: {expected.Length}{Environment.NewLine}Actual: {actual.Count}");
+
+            for (int i = 0; i < expected.Length; i++)
+            {
+                Assert.AreEqual(expected[i], actual[i]);
+            }
         }
     }
 }
