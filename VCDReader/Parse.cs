@@ -101,6 +101,17 @@ namespace VCDReader
         {
             return bit == BitState.Zero || bit == BitState.One;
         }
+
+        public static string BitsToString(this BitState[] bits)
+        {
+            StringBuilder sBuilder = new StringBuilder();
+            for (int i = 0; i < bits.Length; i++)
+            {
+                sBuilder.Append(bits[i].ToChar());
+            }
+
+            return sBuilder.ToString();
+        }
     }
 
     public class VCD
@@ -132,7 +143,7 @@ namespace VCDReader
             var currStream = SimStream;
             while (currStream != null)
             {
-                yield return Visitor.VisitSimCmd(currStream.simCmd());
+                yield return Visitor.VisitSimCmd(currStream.simCmd(), IDToVariable);
                 currStream = currStream.simCmdStream();
             }
         }
@@ -166,19 +177,13 @@ namespace VCDReader
             this.Bits = new BitState[variable.Size];
             this.Variable = variable;
 
-            Array.Fill(Bits, Bits[^1].LeftExtendWith());
-            bits.CopyTo(bits, 0);
+            Array.Fill(Bits, bits[^1].LeftExtendWith());
+            bits.CopyTo(Bits, 0);
         }
 
         public string BitsToString()
         {
-            StringBuilder sBuilder = new StringBuilder();
-            for (int i = 0; i < Bits.Length; i++)
-            {
-                sBuilder.Append(Bits[i].ToChar());
-            }
-
-            return sBuilder.ToString();
+            return Bits.BitsToString();
         }
 
         public bool IsValidBinary()
@@ -245,8 +250,8 @@ namespace VCDReader
                     }
                 case "$timescale":
                     {
-                        int scale = VisitTimeNumber(context.timeNumber());
-                        TimeUnit unit = VisitTimeUnit(context.timeUnit());
+                        int scale = VisitTimeNumber(context.AsciiString(0));
+                        TimeUnit unit = VisitTimeUnit(context.AsciiString(1));
 
                         return new TimeScale(scale, unit);
                     }
@@ -260,7 +265,10 @@ namespace VCDReader
                         string id = VisitId(context.AsciiString(1));
                         string reference = VisitId(context.AsciiString(2));
 
-                        return new VarDef(type, size, id, reference, scopes.ToArray());
+                        VarDef variable = new VarDef(type, size, id, reference, scopes.ToArray());
+                        idToVariable.Add(id, variable);
+
+                        return variable;
                     }
                 case "$version":
                     {
@@ -274,18 +282,18 @@ namespace VCDReader
             }
         }
 
-        public static ISimCmd VisitSimCmd([NotNull] VCDParser.SimCmdContext context)
+        public static ISimCmd VisitSimCmd([NotNull] VCDParser.SimCmdContext context, Dictionary<string, VarDef> idToVariable)
         {
             switch (context.GetChild(0).GetText())
             {
                 case "$dumpall":
-                    return new DumpAll(VisitValueChangeStream(context.valueChangeStream()));
+                    return new DumpAll(VisitValueChangeStream(context.valueChangeStream(), idToVariable));
                 case "$dumpoff":
                     return new DumpOff();
                 case "$dumpon":
                     return new DumpOn();
                 case "$dumpvars":
-                    return new DumpVars(VisitValueChangeStream(context.valueChangeStream()));
+                    return new DumpVars(VisitValueChangeStream(context.valueChangeStream(), idToVariable));
                 case "$comment":
                     return new Comment(VisitAsciiString(context.AsciiString()));                    
             }
@@ -296,7 +304,7 @@ namespace VCDReader
             }
             else if (context.valueChange() is var change && change != null)
             {
-                return VisitValueChange(change);
+                return VisitValueChange(change, idToVariable);
             }
             else
             {
@@ -304,23 +312,115 @@ namespace VCDReader
             }
         }
 
-        public static List<IValueChange> VisitValueChangeStream([NotNull] VCDParser.ValueChangeStreamContext context)
+        public static List<IValueChange> VisitValueChangeStream([NotNull] VCDParser.ValueChangeStreamContext context, Dictionary<string, VarDef> idToVariable)
         {
             List<IValueChange> changes = new List<IValueChange>();
             
             var currContext = context;
             while (currContext != null)
             {
-                changes.Add(VisitValueChange(currContext.valueChange()));
+                changes.Add(VisitValueChange(currContext.valueChange(), idToVariable));
                 currContext = currContext.valueChangeStream();
             }
 
             return changes;
         }
 
-        public static IValueChange VisitValueChange([NotNull] VCDParser.ValueChangeContext context)
+        public static IValueChange VisitValueChange([NotNull] VCDParser.ValueChangeContext context, Dictionary<string, VarDef> idToVariable)
         {
-            throw new NotImplementedException();
+            if (context.VectorValueChange() is var vecVC && vecVC != null)
+            {
+                if (vecVC.GetText().Length < 2)
+                {
+                    throw new Exception($"Invalid vector value change: {context.GetText()}");
+                }
+
+                char vectorID = char.ToLower(vecVC.GetText()[0]);
+                string valueText = vecVC.GetText().Substring(1);
+                if (vectorID == 'b')
+                {
+                    return VisitBinaryVectorValueChange(valueText, context.AsciiString(), idToVariable);
+                }
+                else if (vectorID == 'r')
+                {
+                    return VisitRealVectorValueChange(valueText, context.AsciiString(), idToVariable);
+                }
+                else
+                {
+                    throw new Exception($"Invalid vector value change: {context.GetText()}");
+                }
+            }
+            else
+            {
+                return VisitScalarValueChange(context.AsciiString(), idToVariable);
+            }
+        }
+
+        public static IValueChange VisitBinaryVectorValueChange([NotNull] string valueText, ITerminalNode idContext, Dictionary<string, VarDef> idToVariable)
+        {
+            BitState[] bits = valueText.Select(x => ToBitState(x)).ToArray();
+            string id = idContext.GetText();
+
+            if (idToVariable.TryGetValue(id, out VarDef variable))
+            {
+                return new BinaryChange(bits, variable);
+            }
+            else
+            {
+                throw new Exception($"Unknown variable identifier: {id}");
+            }
+        }
+
+        public static IValueChange VisitRealVectorValueChange([NotNull] string valueText, ITerminalNode idContext, Dictionary<string, VarDef> idToVariable)
+        {
+            double value = double.Parse(valueText, CultureInfo.InvariantCulture);
+            string id = idContext.GetText();
+
+            if (idToVariable.TryGetValue(id, out VarDef variable))
+            {
+                return new RealChange(value, variable);
+            }
+            else
+            {
+                throw new Exception($"Unknown variable identifier: {id}");
+            }
+        }
+
+        public static IValueChange VisitScalarValueChange([NotNull] ITerminalNode context, Dictionary<string, VarDef> idToVariable)
+        {
+            string text = context.GetText();
+            if (text.Length < 2)
+            {
+                throw new Exception($"Invalid scalar value change: {text}");
+            }
+
+            BitState bit = ToBitState(text[0]);
+            string id = text.Substring(1);
+
+            BitState[] bits = new BitState[] { bit };
+
+            if (idToVariable.TryGetValue(id, out VarDef variable))
+            {
+                return new BinaryChange(bits, variable);
+            }
+            else
+            {
+                throw new Exception($"Unknown variable identifier: {id}");
+            }
+        }
+
+        private static BitState ToBitState(char value)
+        {
+            return value switch
+            {
+                '0' => BitState.Zero,
+                '1' => BitState.One,
+                'x' => BitState.X,
+                'X' => BitState.X,
+                'z' => BitState.Z,
+                'Z' => BitState.Z,
+                var error => throw new Exception($"Invalid bit state: {error}")
+            };
         }
 
         private static string VisitAsciiString(ITerminalNode context)
@@ -391,7 +491,7 @@ namespace VCDReader
             throw new NotImplementedException();
         }
 
-        public static int VisitTimeNumber([NotNull] VCDParser.TimeNumberContext context)
+        public static int VisitTimeNumber([NotNull] ITerminalNode context)
         {
             return context.GetText() switch
             {
@@ -402,7 +502,7 @@ namespace VCDReader
             };
         }
 
-        public static TimeUnit VisitTimeUnit([NotNull] VCDParser.TimeUnitContext context)
+        public static TimeUnit VisitTimeUnit([NotNull] ITerminalNode context)
         {
             return context.GetText() switch
             {

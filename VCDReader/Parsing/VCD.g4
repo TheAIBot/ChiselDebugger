@@ -16,7 +16,7 @@ declCmd
 	: '$comment' AsciiString '$end'
 	| '$date' AsciiString '$end'
 	| '$scope' scopeType AsciiString '$end'
-	| '$timescale' timeNumber timeUnit '$end'
+	| '$timescale' AsciiString AsciiString '$end'
 	| '$upscope' '$end'
 	| '$var' varType AsciiString AsciiString AsciiString '$end'
 	| '$version' AsciiString systemTask '$end'
@@ -41,21 +41,6 @@ scopeType
 	| 'function'
 	| 'module'
 	| 'task'
-	;
-
-timeNumber
-	: '100'
-	| '10'
-	| '1'
-	;
-
-timeUnit
-	: 's'
-	| 'ms'
-	| 'us'
-	| 'ns'
-	| 'ps'
-	| 'fs'
 	;
 
 varType
@@ -84,12 +69,16 @@ valueChangeStream
 	;
 
 valueChange
-	: AsciiString
-	| AsciiString AsciiString
+	: VectorValueChange AsciiString
+	| AsciiString
 	;
 
 systemTask
 	: AsciiString
+	;
+
+VectorValueChange
+	: [bBrR] AsciiString
 	;
 
 WS
