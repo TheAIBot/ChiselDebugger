@@ -17,7 +17,7 @@
     <Antlr4 Update="Parsing\VCD.g4">
       <CustomToolNamespace>VCDReader.Parsing.Antlr</CustomToolNamespace>
       <Listener>false</Listener>
-      <Visitor>true</Visitor>
+      <Visitor>false</Visitor>
     </Antlr4>
   </ItemGroup>
 </Project>
