@@ -116,5 +116,53 @@ r{expectedValue.ToString(CultureInfo.InvariantCulture)} !";
             Assert.AreEqual(expectedValue, valueChange.Value);
             Assert.AreEqual(variable, valueChange.Variable);
         }
+
+        [TestMethod]
+        public void ParseDumpVars()
+        {
+            Scope scope = new Scope(ScopeType.Module, "tester1");
+            Scope[] scopes = { scope };
+
+            IDeclCmd[] expectedDecls = new IDeclCmd[]
+            {
+                scope,
+                new VarDef(VarType.Wire, 4, "'", "values_2/in", scopes),
+                new VarDef(VarType.Wire, 4, "(", "values_1", scopes),
+                new VarDef(VarType.Wire, 1, "-", "clock", scopes),
+                new VarDef(VarType.Wire, 4, ".", "values_0", scopes),
+                new UpScope()
+            };
+
+            ISimCmd[] expectedSimCmds = new ISimCmd[]
+            {
+                new DumpVars(new List<IValueChange>()
+                {
+                    new BinaryChange(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, (VarDef)expectedDecls[1]),
+                    new BinaryChange(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, (VarDef)expectedDecls[4]),
+                    new BinaryChange(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, (VarDef)expectedDecls[2]),
+                    new BinaryChange(new BitState[] { BitState.Zero }, (VarDef)expectedDecls[3])
+                })
+            };
+
+            string vcdString = @"
+$scope module tester1 $end
+$var wire 4 ' values_2/in $end
+$var wire 4 ( values_1 $end
+$var wire 1 - clock $end
+$var wire 4 . values_0 $end
+$upscope $end
+$enddefinitions $end
+$dumpvars
+b0000 '
+b0000 .
+b0000 (
+0-
+$end";
+
+            VCD vcd = Parse.FromString(vcdString);
+
+            TestTools.VerifyDeclarations(expectedDecls, vcd.Declarations);
+            TestTools.VerifySimCmds(expectedSimCmds, vcd.GetSimulationCommands().ToArray());
+        }
     }
 }
