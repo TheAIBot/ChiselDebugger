@@ -217,6 +217,11 @@ namespace VCDReader
                 currContext = currContext.declCmdStream();
             }
 
+            if (scopes.Count != 0)
+            {
+                throw new Exception("Not all declaration scopes were closed.");
+            }
+
             return (declarations, idToVariable);
         }
 
@@ -225,13 +230,13 @@ namespace VCDReader
             switch (context.GetChild(0).GetText())
             {
                 case "$comment":
-                    return new Comment(VisitAsciiString(context.AsciiString()));
+                    return new Comment(context.GetChild(1).GetText());
                 case "$date":
-                    return new Date(VisitAsciiString(context.AsciiString()));
+                    return new Date(context.GetChild(1).GetText());
                 case "$scope":
                     {
                         ScopeType type = VisitScopeType(context.scopeType());
-                        string id = VisitId(context.scopeId());
+                        string id = VisitId(context.AsciiString(0));
 
                         Scope scope = new Scope(type, id);
                         scopes.Push(scope);
@@ -240,9 +245,8 @@ namespace VCDReader
                     }
                 case "$timescale":
                     {
-                        string[] split = context.GetChild(1).GetText().Trim().Split(' ');
-                        int scale = VisitTimeNumber(split[0]);
-                        TimeUnit unit = VisitTimeUnit(split[1]);
+                        int scale = VisitTimeNumber(context.timeNumber());
+                        TimeUnit unit = VisitTimeUnit(context.timeUnit());
 
                         return new TimeScale(scale, unit);
                     }
@@ -252,16 +256,16 @@ namespace VCDReader
                 case "$var":
                     {
                         VarType type = VisitVarType(context.varType());
-                        int size = VisitSize(context.size());
-                        string id = VisitId(context.idCode());
-                        string reference = context.@ref().GetText();
+                        int size = VisitSize(context.AsciiString(0));
+                        string id = VisitId(context.AsciiString(1));
+                        string reference = VisitId(context.AsciiString(2));
 
                         return new VarDef(type, size, id, reference, scopes.ToArray());
                     }
                 case "$version":
                     {
-                        string versionTxt = VisitAsciiString(context.AsciiString());
-                        string systemTaskString = VisitSystemTask(context.systemTask());
+                        string versionTxt = context.GetChild(1).GetText();
+                        string systemTaskString = context.GetChild(2).GetText();
 
                         return new Version(versionTxt, systemTaskString);
                     }
@@ -286,9 +290,9 @@ namespace VCDReader
                     return new Comment(VisitAsciiString(context.AsciiString()));                    
             }
 
-            if (context.simTime() is var time && time != null)
+            if (context.GetChild(0).GetText().StartsWith('#'))
             {
-                return VisitSimTime(time);
+                return VisitSimTime(context.AsciiString());
             }
             else if (context.valueChange() is var change && change != null)
             {
@@ -329,11 +333,6 @@ namespace VCDReader
             throw new NotImplementedException();
         }
 
-        public static int VisitBinaryNumber([NotNull] VCDParser.BinaryNumberContext context)
-        {
-            throw new NotImplementedException();
-        }
-
         public static int VisitChildren([NotNull] IRuleNode node)
         {
             throw new NotImplementedException();
@@ -346,29 +345,9 @@ namespace VCDReader
             throw new NotImplementedException();
         }
 
-        public static string VisitId([NotNull] ParserRuleContext context)
+        public static string VisitId([NotNull] ITerminalNode context)
         {
             return context.GetText();
-        }
-
-        public static int VisitIdCode([NotNull] VCDParser.IdCodeContext context)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static int VisitRef([NotNull] VCDParser.RefContext context)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static int VisitScalarValueChange([NotNull] VCDParser.ScalarValueChangeContext context)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static int VisitScopeId([NotNull] VCDParser.ScopeIdContext context)
-        {
-            throw new NotImplementedException();
         }
 
         public static ScopeType VisitScopeType([NotNull] VCDParser.ScopeTypeContext context)
@@ -380,23 +359,31 @@ namespace VCDReader
                 "function" => ScopeType.Function,
                 "module" => ScopeType.Module,
                 "task" => ScopeType.Task,
-                _ => throw new Exception($"Invalid scope type: {context.GetText()}")
+                var error => throw new Exception($"Invalid scope type: {error}")
             };
         }
 
-        public static SimTime VisitSimTime([NotNull] VCDParser.SimTimeContext context)
+        public static SimTime VisitSimTime([NotNull] ITerminalNode context)
         {
-            return new SimTime(int.Parse(context.GetText(), CultureInfo.InvariantCulture));
+            if (!context.GetText().StartsWith('#'))
+            {
+                throw new Exception($"Invalid simulation time: {context.GetText()}");
+            }
+            return new SimTime(int.Parse(context.GetText().Substring(1), CultureInfo.InvariantCulture));
         }
 
-        public static int VisitSize([NotNull] VCDParser.SizeContext context)
+        public static int VisitSize([NotNull] ITerminalNode context)
         {
-            throw new NotImplementedException();
+            return int.Parse(context.GetText(), CultureInfo.InvariantCulture);
         }
 
         public static string VisitSystemTask([NotNull] VCDParser.SystemTaskContext context)
         {
-            return context.GetText();
+            if (!context.GetText().StartsWith('$'))
+            {
+                throw new Exception($"Invalid system task: {context.GetText()}");
+            }
+            return context.GetText().Substring(1);
         }
 
         public static int VisitTerminal([NotNull] ITerminalNode node)
@@ -404,20 +391,20 @@ namespace VCDReader
             throw new NotImplementedException();
         }
 
-        public static int VisitTimeNumber([NotNull] string text)
+        public static int VisitTimeNumber([NotNull] VCDParser.TimeNumberContext context)
         {
-            return text switch
+            return context.GetText() switch
             {
                 "1" => 1,
                 "10" => 10,
                 "100" => 100,
-                _ => throw new Exception($"Invalid time scale: {text}")
+                var error => throw new Exception($"Invalid time scale: {error}")
             };
         }
 
-        public static TimeUnit VisitTimeUnit([NotNull] string text)
+        public static TimeUnit VisitTimeUnit([NotNull] VCDParser.TimeUnitContext context)
         {
-            return text switch
+            return context.GetText() switch
             {
                 "s" => TimeUnit.S,
                 "ms" => TimeUnit.Ms,
@@ -425,13 +412,8 @@ namespace VCDReader
                 "ns" => TimeUnit.Ns,
                 "ps" => TimeUnit.Ps,
                 "fs" => TimeUnit.Fs,
-                _ => throw new Exception($"Invalid time unit: {text}")
+                var error => throw new Exception($"Invalid time unit: {error}")
             };
-        }
-
-        public static int VisitValue([NotNull] VCDParser.ValueContext context)
-        {
-            throw new NotImplementedException();
         }
 
         public static VarType VisitVarType([NotNull] VCDParser.VarTypeContext context)
@@ -458,11 +440,6 @@ namespace VCDReader
                 "wor" => VarType.Wor,
                 _ => throw new Exception($"Invalid variable type: {context.GetText()}")
             };
-        }
-
-        public static int VisitVectorValueChange([NotNull] VCDParser.VectorValueChangeContext context)
-        {
-            throw new NotImplementedException();
         }
     }
 }

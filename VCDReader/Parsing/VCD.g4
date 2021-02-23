@@ -15,10 +15,10 @@ declCmdStream
 declCmd 
 	: '$comment' AsciiString '$end'
 	| '$date' AsciiString '$end'
-	| '$scope' scopeType scopeId '$end'
+	| '$scope' scopeType AsciiString '$end'
 	| '$timescale' timeNumber timeUnit '$end'
 	| '$upscope' '$end'
-	| '$var' varType size idCode ref '$end'
+	| '$var' varType AsciiString AsciiString AsciiString '$end'
 	| '$version' AsciiString systemTask '$end'
 	;
 
@@ -32,7 +32,6 @@ simCmd
 	| '$dumpon' valueChangeStream '$end'
 	| '$dumpvars' valueChangeStream '$end'
 	| '$comment' AsciiString '$end'
-	| simTime
 	| valueChange
 	;
 
@@ -45,7 +44,9 @@ scopeType
 	;
 
 timeNumber
-	: DecimalNumber
+	: '100'
+	| '10'
+	| '1'
 	;
 
 timeUnit
@@ -78,97 +79,25 @@ varType
 	| 'wor'
 	;
 
-simTime
-	: '#' DecimalNumber
-	;
-
 valueChangeStream
 	: valueChange valueChangeStream?
 	;
 
 valueChange
-	: scalarValueChange
-	| vectorValueChange
-	;
-
-scalarValueChange
-	: value idCode
-	;
-
-value
-	: '0'
-	| '1'
-	| 'x'
-	| 'X'
-	| 'z'
-	| 'Z'
-	;
-
-vectorValueChange
-	: 'b' binaryNumber idCode
-	| 'B' binaryNumber idCode
-	| 'r' RealNumber idCode
-	| 'R' RealNumber idCode
-	;
-
-size
-	: DecimalNumber
-	;
-
-//Can't use normal Id here because it would also match the [
-ref
-	: RefId
-	| RefId '[' DecimalNumber ']'
-	| RefId '[' DecimalNumber ':' DecimalNumber ']'
+	: AsciiString
+	| AsciiString AsciiString
 	;
 
 systemTask
-	: '$' AsciiString
-	;
-
-
-
-idCode
-	: ID
-	;
-
-scopeId
-	: ID
-	;
-
-ID
-	: (AsciiChar|'$')+
-	;
-
-binaryNumber
-	: value+
-	;
-
-DecimalNumber
-	: ('+'|'-')?([1-9][0-9]*|[0-9])
-	;
-
-//Matches printf("%.16g")
-RealNumber
-	: ('+'|'-')?([1-9][0-9]*|[0-9])('.'[0-9]+('e+'[1-9][0-9]*)?)?
+	: AsciiString
 	;
 
 WS
 	: [ \r\t\n] -> skip
 	;
 
-
-RefId
-	: RefChar+
-	;
-
 AsciiString : AsciiChar+;
 
+//[!-~] except $ 
 fragment
-AsciiChar : (RefChar|'[');
-
-//[!-~] except $ and [
-fragment
-RefChar
-	: ('!'..'#'|'%'..'Z'|'\\'..'~')
-	;
+AsciiChar : [!-~];
