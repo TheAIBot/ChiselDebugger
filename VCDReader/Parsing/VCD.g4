@@ -45,9 +45,7 @@ scopeType
 	;
 
 timeNumber
-	: '100'
-	| '10'
-	| '1'
+	: DecimalNumber
 	;
 
 timeUnit
@@ -107,10 +105,10 @@ value
 	;
 
 vectorValueChange
-	: 'b' binaryNumber ' ' idCode
-	| 'B' binaryNumber ' ' idCode
-	| 'r' RealNumber ' ' idCode
-	| 'R' RealNumber ' ' idCode
+	: 'b' binaryNumber idCode
+	| 'B' binaryNumber idCode
+	| 'r' RealNumber idCode
+	| 'R' RealNumber idCode
 	;
 
 size
@@ -131,15 +129,15 @@ systemTask
 
 
 idCode
-	: id
+	: ID
 	;
 
 scopeId
-	: id
+	: ID
 	;
 
-id
-	: AsciiChar+
+ID
+	: (AsciiChar|'$')+
 	;
 
 binaryNumber
@@ -156,14 +154,21 @@ RealNumber
 	;
 
 WS
-	: [ \r\t\n]+ -> skip
+	: [ \r\t\n] -> skip
 	;
 
 
 RefId
-	: ~('$'|'[')+
+	: RefChar+
 	;
 
-AsciiString : ~'$'+;
+AsciiString : AsciiChar+;
 
-AsciiChar : [!-~];
+fragment
+AsciiChar : (RefChar|'[');
+
+//[!-~] except $ and [
+fragment
+RefChar
+	: ('!'..'#'|'%'..'Z'|'\\'..'~')
+	;
