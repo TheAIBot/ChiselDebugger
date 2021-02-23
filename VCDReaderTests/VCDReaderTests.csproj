@@ -17,4 +17,10 @@
     <ProjectReference Include="..\VCDReader\VCDReader.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="VCDTestFiles\vcd1.vcd">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
