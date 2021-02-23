@@ -29,14 +29,13 @@ namespace VCDReader
 
         public static VCD FromStream(TextReader stream)
         {
-            ICharStream charStream = new AntlrInputStream(stream);
+            ICharStream charStream = new UnbufferedCharStream(stream);
             VCDLexer lexer = new VCDLexer(charStream);
-            //lexer.TokenFactory = new CommonTokenFactory(true);
-            //ITokenStream tokenStream = new UnbufferedTokenStream(lexer);
-            CommonTokenStream tokenStream = new CommonTokenStream(lexer);
-            tokenStream.Fill();
-            var fe = tokenStream.GetTokens().ToList();
+            lexer.TokenFactory = new CommonTokenFactory(true);
+            ITokenStream tokenStream = new UnbufferedTokenStream(lexer);
             VCDParser parser = new VCDParser(tokenStream);
+            //parser.BuildParseTree = false;
+            //parser.TrimParseTree = true;
             return Visitor.VisitVcd(parser.vcd());
         }
     }
@@ -224,9 +223,9 @@ namespace VCDReader
             Stack<Scope> scopes = new Stack<Scope>();
 
             var currContext = context;
-            while (currContext != null && currContext.declCmd() != null)
+            while (currContext != null && currContext.declCmd() is var dCmd && dCmd != null)
             {
-                declarations.Add(VisitDeclCmd(currContext.declCmd(), idToVariable, scopes));
+                declarations.Add(VisitDeclCmd(dCmd, idToVariable, scopes));
                 currContext = currContext.declCmdStream();
             }
 
