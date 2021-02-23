@@ -6,7 +6,7 @@ using VCDReader;
 namespace VCDReaderTests
 {
     [TestClass]
-    public class DeclarationTests
+    public class DeclarationCmdTests
     {
         [TestMethod]
         public void ParseComment()
@@ -185,27 +185,17 @@ $enddefinitions $end";
         {
             foreach (VarType varType in Enum.GetValues(typeof(VarType)))
             {
-                IHeaderCmd[] expectedHeader = new IHeaderCmd[]
+                IDeclCmd[] expectedHeader = new IDeclCmd[]
                 {
-                    new VarDef(VarType.Wire, 6, "!", "_T_4", Array.Empty<Scope>())
+                    new VarDef(varType, 6, "!", "_T_4", Array.Empty<Scope>())
                 };
 
                 string vcdString = @$"
-$var wire 6 ! _T_4 $end
+$var {varType.ToString().ToLower()} 6 ! _T_4 $end
 $enddefinitions $end";
                 VCD vcd = Parse.FromString(vcdString);
 
-                VerifyHeader(expectedHeader, vcd.Declarations);
-            }
-        }
-
-        private void VerifyHeader(IHeaderCmd[] expected, List<IHeaderCmd> actual)
-        {
-            Assert.AreEqual(expected.Length, actual.Count, $"Not same amount of declarations.{Environment.NewLine}Expected: {expected.Length}{Environment.NewLine}Actual: {actual.Count}");
-
-            for (int i = 0; i < expected.Length; i++)
-            {
-                Assert.AreEqual(expected[i], actual[i]);
+                TestTools.VerifyDeclarations(expectedHeader, vcd.Declarations);
             }
         }
     }

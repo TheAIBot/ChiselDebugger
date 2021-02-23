@@ -105,7 +105,7 @@ namespace VCDReader
 
     public class VCD
     {
-        public readonly List<IHeaderCmd> Declarations;
+        public readonly List<IDeclCmd> Declarations;
         private readonly Dictionary<string, VarDef> IDToVariable;
 
         public readonly Date? Date;
@@ -116,7 +116,7 @@ namespace VCDReader
 
         public IEnumerable<VarDef> Variables => IDToVariable.Values;
 
-        internal VCD(List<IHeaderCmd> declarations, Dictionary<string, VarDef> idToVariable, Parsing.Antlr.VCDParser.SimCmdStreamContext simStream)
+        internal VCD(List<IDeclCmd> declarations, Dictionary<string, VarDef> idToVariable, Parsing.Antlr.VCDParser.SimCmdStreamContext simStream)
         {
             this.Declarations = declarations;
             this.IDToVariable = idToVariable;
@@ -138,14 +138,14 @@ namespace VCDReader
         }
     }
 
-    public interface IHeaderCmd { }
-    public record Comment(string Content) : IHeaderCmd, ISimCmd;
-    public record Date(string Content) : IHeaderCmd;
-    public record Scope(ScopeType Type, string Name) : IHeaderCmd;
-    public record TimeScale(int Scale, TimeUnit Unit) : IHeaderCmd;
-    public record UpScope() : IHeaderCmd;
-    public record VarDef(VarType Type, int Size, string ID, string Reference, Scope[] Scopes) : IHeaderCmd;
-    public record Version(string VersionText, string SystemTask) : IHeaderCmd;
+    public interface IDeclCmd { }
+    public record Comment(string Content) : IDeclCmd, ISimCmd;
+    public record Date(string Content) : IDeclCmd;
+    public record Scope(ScopeType Type, string Name) : IDeclCmd;
+    public record TimeScale(int Scale, TimeUnit Unit) : IDeclCmd;
+    public record UpScope() : IDeclCmd;
+    public record VarDef(VarType Type, int Size, string ID, string Reference, Scope[] Scopes) : IDeclCmd;
+    public record Version(string VersionText, string SystemTask) : IDeclCmd;
 
     public interface ISimCmd { }
     public record  DumpAll(List<IValueChange> Values) : ISimCmd;
@@ -204,9 +204,9 @@ namespace VCDReader
             return new VCD(declAndVarID.declarations, declAndVarID.idToVariable, context.simCmdStream());
         }
 
-        internal static (List<IHeaderCmd> declarations, Dictionary<string, VarDef> idToVariable) VisitDeclCmdStream([NotNull] VCDParser.DeclCmdStreamContext context)
+        internal static (List<IDeclCmd> declarations, Dictionary<string, VarDef> idToVariable) VisitDeclCmdStream([NotNull] VCDParser.DeclCmdStreamContext context)
         {
-            List<IHeaderCmd> declarations = new List<IHeaderCmd>();
+            List<IDeclCmd> declarations = new List<IDeclCmd>();
             Dictionary<string, VarDef> idToVariable = new Dictionary<string, VarDef>();
             Stack<Scope> scopes = new Stack<Scope>();
 
@@ -225,7 +225,7 @@ namespace VCDReader
             return (declarations, idToVariable);
         }
 
-        public static IHeaderCmd VisitDeclCmd([NotNull] VCDParser.DeclCmdContext context, Dictionary<string, VarDef> idToVariable, Stack<Scope> scopes)
+        public static IDeclCmd VisitDeclCmd([NotNull] VCDParser.DeclCmdContext context, Dictionary<string, VarDef> idToVariable, Stack<Scope> scopes)
         {
             switch (context.GetChild(0).GetText())
             {
