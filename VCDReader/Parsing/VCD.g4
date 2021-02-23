@@ -19,7 +19,7 @@ declCmd
 	| '$timescale' AsciiString AsciiString '$end'
 	| '$upscope' '$end'
 	| '$var' varType AsciiString AsciiString AsciiString '$end'
-	| '$version' AsciiString systemTask '$end'
+	| '$version' AsciiString AsciiString '$end'
 	;
 
 simCmdStream
@@ -72,10 +72,6 @@ valueChangeStream
 valueChange
 	: VectorValueChange AsciiString
 	| AsciiString
-	;
-
-systemTask
-	: AsciiString
 	;
 
 SimTime

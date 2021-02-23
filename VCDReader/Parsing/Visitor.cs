@@ -10,7 +10,7 @@ namespace VCDReader.Parsing
 {
     internal static class Visitor
     {
-        public static VCD VisitVcd([NotNull] VCDParser.VcdContext context)
+        internal static VCD VisitVcd([NotNull] VCDParser.VcdContext context)
         {
             var declAndVarID = VisitDeclCmdStream(context.declCmdStream());
             return new VCD(declAndVarID.declarations, declAndVarID.idToVariable, context.simCmdStream());
@@ -37,7 +37,7 @@ namespace VCDReader.Parsing
             return (declarations, idToVariable);
         }
 
-        public static IDeclCmd VisitDeclCmd([NotNull] VCDParser.DeclCmdContext context, Dictionary<string, VarDef> idToVariable, Stack<Scope> scopes)
+        internal static IDeclCmd VisitDeclCmd([NotNull] VCDParser.DeclCmdContext context, Dictionary<string, VarDef> idToVariable, Stack<Scope> scopes)
         {
             switch (context.GetChild(0).GetText())
             {
@@ -48,7 +48,7 @@ namespace VCDReader.Parsing
                 case "$scope":
                     {
                         ScopeType type = VisitScopeType(context.scopeType());
-                        string id = VisitId(context.AsciiString(0));
+                        string id = context.AsciiString(0).GetText();
 
                         Scope scope = new Scope(type, id);
                         scopes.Push(scope);
@@ -69,8 +69,8 @@ namespace VCDReader.Parsing
                     {
                         VarType type = VisitVarType(context.varType());
                         int size = VisitSize(context.AsciiString(0));
-                        string id = VisitId(context.AsciiString(1));
-                        string reference = VisitId(context.AsciiString(2));
+                        string id = context.AsciiString(1).GetText();
+                        string reference = context.AsciiString(2).GetText();
 
                         VarDef variable = new VarDef(type, size, id, reference, scopes.ToArray());
                         idToVariable.Add(id, variable);
@@ -89,7 +89,7 @@ namespace VCDReader.Parsing
             }
         }
 
-        public static ISimCmd VisitSimCmd([NotNull] VCDParser.SimCmdContext context, Dictionary<string, VarDef> idToVariable)
+        internal static ISimCmd VisitSimCmd([NotNull] VCDParser.SimCmdContext context, Dictionary<string, VarDef> idToVariable)
         {
             switch (context.GetChild(0).GetText())
             {
@@ -102,7 +102,7 @@ namespace VCDReader.Parsing
                 case "$dumpvars":
                     return new DumpVars(VisitValueChangeStream(context.valueChangeStream(), idToVariable));
                 case "$comment":
-                    return new Comment(VisitAsciiString(context.AsciiString()));                    
+                    return new Comment(context.GetChild(1).GetText());                    
             }
 
             if (context.GetChild(0).GetText().StartsWith('#'))
@@ -119,7 +119,7 @@ namespace VCDReader.Parsing
             }
         }
 
-        public static List<IValueChange> VisitValueChangeStream([NotNull] VCDParser.ValueChangeStreamContext context, Dictionary<string, VarDef> idToVariable)
+        internal static List<IValueChange> VisitValueChangeStream([NotNull] VCDParser.ValueChangeStreamContext context, Dictionary<string, VarDef> idToVariable)
         {
             List<IValueChange> changes = new List<IValueChange>();
             
@@ -133,7 +133,7 @@ namespace VCDReader.Parsing
             return changes;
         }
 
-        public static IValueChange VisitValueChange([NotNull] VCDParser.ValueChangeContext context, Dictionary<string, VarDef> idToVariable)
+        internal static IValueChange VisitValueChange([NotNull] VCDParser.ValueChangeContext context, Dictionary<string, VarDef> idToVariable)
         {
             if (context.VectorValueChange() is var vecVC && vecVC != null)
             {
@@ -163,7 +163,7 @@ namespace VCDReader.Parsing
             }
         }
 
-        public static IValueChange VisitBinaryVectorValueChange([NotNull] string valueText, ITerminalNode idContext, Dictionary<string, VarDef> idToVariable)
+        internal static IValueChange VisitBinaryVectorValueChange([NotNull] string valueText, ITerminalNode idContext, Dictionary<string, VarDef> idToVariable)
         {
             BitState[] bits = valueText.Select(x => ToBitState(x)).ToArray();
             string id = idContext.GetText();
@@ -178,7 +178,7 @@ namespace VCDReader.Parsing
             }
         }
 
-        public static IValueChange VisitRealVectorValueChange([NotNull] string valueText, ITerminalNode idContext, Dictionary<string, VarDef> idToVariable)
+        internal static IValueChange VisitRealVectorValueChange([NotNull] string valueText, ITerminalNode idContext, Dictionary<string, VarDef> idToVariable)
         {
             double value = double.Parse(valueText, CultureInfo.InvariantCulture);
             string id = idContext.GetText();
@@ -193,7 +193,7 @@ namespace VCDReader.Parsing
             }
         }
 
-        public static IValueChange VisitScalarValueChange([NotNull] ITerminalNode context, Dictionary<string, VarDef> idToVariable)
+        internal static IValueChange VisitScalarValueChange([NotNull] ITerminalNode context, Dictionary<string, VarDef> idToVariable)
         {
             string text = context.GetText();
             if (text.Length < 2)
@@ -216,7 +216,7 @@ namespace VCDReader.Parsing
             }
         }
 
-        private static BitState ToBitState(char value)
+        internal static BitState ToBitState(char value)
         {
             return value switch
             {
@@ -230,34 +230,7 @@ namespace VCDReader.Parsing
             };
         }
 
-        private static string VisitAsciiString(ITerminalNode context)
-        {
-            return context?.GetText() ?? string.Empty;
-        }
-
-        public static int Visit([NotNull] IParseTree tree)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static int VisitChildren([NotNull] IRuleNode node)
-        {
-            throw new NotImplementedException();
-        }
-
-
-
-        public static int VisitErrorNode([NotNull] IErrorNode node)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static string VisitId([NotNull] ITerminalNode context)
-        {
-            return context.GetText();
-        }
-
-        public static ScopeType VisitScopeType([NotNull] VCDParser.ScopeTypeContext context)
+        internal static ScopeType VisitScopeType([NotNull] VCDParser.ScopeTypeContext context)
         {
             return context.GetText() switch
             {
@@ -270,7 +243,7 @@ namespace VCDReader.Parsing
             };
         }
 
-        public static SimTime VisitSimTime([NotNull] ITerminalNode context)
+        internal static SimTime VisitSimTime([NotNull] ITerminalNode context)
         {
             if (!context.GetText().StartsWith('#'))
             {
@@ -279,26 +252,12 @@ namespace VCDReader.Parsing
             return new SimTime(int.Parse(context.GetText().Substring(1), CultureInfo.InvariantCulture));
         }
 
-        public static int VisitSize([NotNull] ITerminalNode context)
+        internal static int VisitSize([NotNull] ITerminalNode context)
         {
             return int.Parse(context.GetText(), CultureInfo.InvariantCulture);
         }
 
-        public static string VisitSystemTask([NotNull] VCDParser.SystemTaskContext context)
-        {
-            if (!context.GetText().StartsWith('$'))
-            {
-                throw new Exception($"Invalid system task: {context.GetText()}");
-            }
-            return context.GetText().Substring(1);
-        }
-
-        public static int VisitTerminal([NotNull] ITerminalNode node)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static int VisitTimeNumber([NotNull] ITerminalNode context)
+        internal static int VisitTimeNumber([NotNull] ITerminalNode context)
         {
             return context.GetText() switch
             {
@@ -309,7 +268,7 @@ namespace VCDReader.Parsing
             };
         }
 
-        public static TimeUnit VisitTimeUnit([NotNull] ITerminalNode context)
+        internal static TimeUnit VisitTimeUnit([NotNull] ITerminalNode context)
         {
             return context.GetText() switch
             {
@@ -323,7 +282,7 @@ namespace VCDReader.Parsing
             };
         }
 
-        public static VarType VisitVarType([NotNull] VCDParser.VarTypeContext context)
+        internal static VarType VisitVarType([NotNull] VCDParser.VarTypeContext context)
         {
             return context.GetText() switch
             {
