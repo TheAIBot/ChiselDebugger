@@ -69,6 +69,28 @@ b{bitState.ToChar()} !";
         }
 
         [TestMethod]
+        public void ParseVectorBinarySize2ValueChange()
+        {
+            IDeclCmd[] expectedDecls = new IDeclCmd[]
+            {
+                new VarDef(VarType.Wire, 2, "!", "b1", Array.Empty<Scope>())
+            };
+            ISimCmd[] expectedSimCmds = new ISimCmd[]
+            {
+                new BinaryChange(new BitState[] { BitState.Zero, BitState.Zero }, (VarDef)expectedDecls[0])
+            };
+
+            string vcdString = @$"
+$var wire 2 b1 b1 $end
+$enddefinitions $end
+b0 !";
+            VCD vcd = Parse.FromString(vcdString);
+
+            TestTools.VerifyDeclarations(expectedDecls, vcd.Declarations);
+            TestTools.VerifySimCmds(expectedSimCmds, vcd.GetSimulationCommands().ToArray());
+        }
+
+        [TestMethod]
         public void ParseVectorBinarySize4ValueChange()
         {
             BitState[] expectedBits = new BitState[] { BitState.Zero, BitState.One, BitState.X, BitState.Z };
