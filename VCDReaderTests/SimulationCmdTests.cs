@@ -158,10 +158,27 @@ b0000 .
 b0000 (
 0-
 $end";
-
             VCD vcd = Parse.FromString(vcdString);
 
             TestTools.VerifyDeclarations(expectedDecls, vcd.Declarations);
+            TestTools.VerifySimCmds(expectedSimCmds, vcd.GetSimulationCommands().ToArray());
+        }
+
+        [TestMethod]
+        public void ParseSimTime()
+        {
+            ISimCmd[] expectedSimCmds = new ISimCmd[]
+            {
+                new SimTime(0),
+                new SimTime(53)
+            };
+
+            string vcdString = @"
+$enddefinitions $end
+#0
+#53";
+            VCD vcd = Parse.FromString(vcdString);
+
             TestTools.VerifySimCmds(expectedSimCmds, vcd.GetSimulationCommands().ToArray());
         }
     }

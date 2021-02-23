@@ -300,7 +300,7 @@ namespace VCDReader
 
             if (context.GetChild(0).GetText().StartsWith('#'))
             {
-                return VisitSimTime(context.AsciiString());
+                return VisitSimTime(context.SimTime());
             }
             else if (context.valueChange() is var change && change != null)
             {

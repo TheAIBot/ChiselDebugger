@@ -32,6 +32,7 @@ simCmd
 	| '$dumpon' valueChangeStream '$end'
 	| '$dumpvars' valueChangeStream '$end'
 	| '$comment' AsciiString '$end'
+	| SimTime
 	| valueChange
 	;
 
@@ -75,6 +76,10 @@ valueChange
 
 systemTask
 	: AsciiString
+	;
+
+SimTime
+	: '#' AsciiString
 	;
 
 VectorValueChange
