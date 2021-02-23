@@ -4,14 +4,17 @@
 grammar VCD;
 
 vcd 
-	: declCmd*
-	| simCmd*
+	: declCmdStream simCmdStream? EOF
+	;
+
+declCmdStream
+	: declCmd declCmdStream
+	| '$enddefinitions' '$end'
 	;
 
 declCmd 
 	: '$comment' AsciiString '$end'
 	| '$date' AsciiString '$end'
-	| '$enddefinitions' '$end'
 	| '$scope' scopeType scopeId '$end'
 	| '$timescale' timeNumber timeUnit '$end'
 	| '$upscope' '$end'
@@ -19,11 +22,15 @@ declCmd
 	| '$version' AsciiString systemTask '$end'
 	;
 
+simCmdStream
+	: simCmd simCmdStream?
+	;
+
 simCmd
-	: '$dumpall' valueChange* '$end'
-	| '$dumpoff' valueChange* '$end'
-	| '$dumpon' valueChange* '$end'
-	| '$dumpvars' valueChange* '$end'
+	: '$dumpall' valueChangeStream '$end'
+	| '$dumpoff' valueChangeStream '$end'
+	| '$dumpon' valueChangeStream '$end'
+	| '$dumpvars' valueChangeStream '$end'
 	| '$comment' AsciiString '$end'
 	| simTime
 	| valueChange
@@ -38,9 +45,9 @@ scopeType
 	;
 
 timeNumber
-	: '1'
+	: '100'
 	| '10'
-	| '100'
+	| '1'
 	;
 
 timeUnit
@@ -77,6 +84,10 @@ simTime
 	: '#' DecimalNumber
 	;
 
+valueChangeStream
+	: valueChange valueChangeStream?
+	;
+
 valueChange
 	: scalarValueChange
 	| vectorValueChange
@@ -106,10 +117,11 @@ size
 	: DecimalNumber
 	;
 
+//Can't use normal Id here because it would also match the [
 ref
-	: id
-	| id '[' DecimalNumber ']'
-	| id '[' DecimalNumber ':' DecimalNumber ']'
+	: RefId
+	| RefId '[' DecimalNumber ']'
+	| RefId '[' DecimalNumber ':' DecimalNumber ']'
 	;
 
 systemTask
@@ -130,20 +142,28 @@ id
 	: AsciiChar+
 	;
 
-DecimalNumber
-	: ('+'|'-')?([1-9][0-9]*|[0-9])
-	;
-
 binaryNumber
 	: value+
 	;
 
-// Matches printf("%.16g")
+DecimalNumber
+	: ('+'|'-')?([1-9][0-9]*|[0-9])
+	;
+
+//Matches printf("%.16g")
 RealNumber
 	: ('+'|'-')?([1-9][0-9]*|[0-9])('.'[0-9]+('e+'[1-9][0-9]*)?)?
 	;
 
-fragment
-AsciiChar : [!-~];
+WS
+	: [ \r\t\n]+ -> skip
+	;
 
-AsciiString : (AsciiChar | [ \t\r\n])*;
+
+RefId
+	: ~('$'|'[')+
+	;
+
+AsciiString : ~'$'+;
+
+AsciiChar : [!-~];

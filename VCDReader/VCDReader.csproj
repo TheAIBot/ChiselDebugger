@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,4 +13,11 @@
     <PackageReference Include="Antlr4.Runtime" Version="4.6.6" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Antlr4 Update="Parsing\VCD.g4">
+      <CustomToolNamespace>VCDReader.Parsing.Antlr</CustomToolNamespace>
+      <Listener>false</Listener>
+      <Visitor>true</Visitor>
+    </Antlr4>
+  </ItemGroup>
 </Project>
