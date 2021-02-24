@@ -1,11 +1,9 @@
-﻿using Antlr4.Runtime;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using VCDReader.Parsing;
-using VCDReader.Parsing.Antlr;
 
 namespace VCDReader
 {
@@ -25,12 +23,8 @@ namespace VCDReader
 
         public static VCD FromStream(TextReader stream)
         {
-            ICharStream charStream = new UnbufferedCharStream(stream);
-            VCDLexer lexer = new VCDLexer(charStream);
-            lexer.TokenFactory = new CommonTokenFactory(true);
-            ITokenStream tokenStream = new UnbufferedTokenStream(lexer);
-            VCDParser parser = new VCDParser(tokenStream);
-            return Visitor.VisitVcd(parser.vcd());
+            VCDLexer lexer = new VCDLexer(stream);
+            return Visitor.VisitVcd(lexer);
         }
     }
 }

@@ -1,32 +1,210 @@
-﻿using Antlr4.Runtime.Misc;
-using Antlr4.Runtime.Tree;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
-using VCDReader.Parsing.Antlr;
 
 namespace VCDReader.Parsing
 {
-    internal static class Visitor
+    internal class VCDLexer
     {
-        internal static VCD VisitVcd([NotNull] VCDParser.VcdContext context)
+        private readonly TextReader Reader;
+        private char[] Buffer; 
+        private bool ReachedEOF;
+        private Memory<char> AvailableChars;
+        private const int DefaultBufferSize = 1024;
+        private const string SkipChars = " \t\r\n";
+
+        public VCDLexer(TextReader reader)
         {
-            var declAndVarID = VisitDeclCmdStream(context.declCmdStream());
-            return new VCD(declAndVarID.declarations, declAndVarID.idToVariable, context.simCmdStream());
+            this.Reader = reader;
+            this.Buffer = new char[DefaultBufferSize];
+            this.ReachedEOF = false;
+            this.AvailableChars = new Memory<char>();
+
+            FillBuffer(true);
         }
 
-        internal static (List<IDeclCmd> declarations, Dictionary<string, VarDef> idToVariable) VisitDeclCmdStream([NotNull] VCDParser.DeclCmdStreamContext context)
+        public ReadOnlySpan<char> NextInteger()
+        {
+            SkipStart();
+
+            int wordLength = 0;
+            while (!IsEmpty() && wordLength < AvailableChars.Length)
+            {
+                if (!char.IsDigit(AvailableChars.Span[wordLength]))
+                {
+                    break;
+                }
+
+                wordLength++;
+                if (AvailableChars.Length == wordLength && !ReachedEOF)
+                {
+                    FillBuffer(false);
+                }
+            }
+
+            ReadOnlySpan<char> numbers = AvailableChars.Span.Slice(0, wordLength);
+            AvailableChars = AvailableChars.Slice(numbers.Length);
+            return numbers;
+        }
+
+        public ReadOnlySpan<char> PeekNextWord()
+        {
+            SkipStart();
+
+            int wordLength = 0;
+            while (!IsEmpty() && wordLength < AvailableChars.Length)
+            {
+                if (!IsWordChar(AvailableChars.Span[wordLength]))
+                {
+                    break;
+                }
+
+                wordLength++;
+                if (AvailableChars.Length == wordLength && !ReachedEOF)
+                {
+                    FillBuffer(false);
+                }
+            }
+
+            return AvailableChars.Span.Slice(0, wordLength);
+        }
+
+        public void SkipWord(ReadOnlySpan<char> word)
+        {
+            AvailableChars = AvailableChars.Slice(word.Length);
+        }
+
+        public ReadOnlySpan<char> NextWord()
+        {
+            ReadOnlySpan<char> word = PeekNextWord();
+            SkipWord(word);
+
+            return word;
+        }
+
+        public ReadOnlySpan<char> NextUntil(ReadOnlySpan<char> stopAt)
+        {
+            SkipStart();
+
+            const int notFound = -1;
+            int foundIndex;
+            do
+            {
+                foundIndex = AvailableChars.Span.IndexOf(stopAt);
+                if (foundIndex == notFound)
+                {
+                    if (ReachedEOF)
+                    {
+                        throw new Exception($"Failed to find pattern before EOF. Pattern: {new string(stopAt)}");
+                    }
+                    FillBuffer(false);
+                }
+            } while (foundIndex == notFound);
+
+            ReadOnlySpan<char> text = AvailableChars.Span.Slice(0, foundIndex);
+            AvailableChars = AvailableChars.Slice(foundIndex);
+
+            return text.TrimEnd(SkipChars);
+        }
+
+        public void ExpectNextWord(ReadOnlySpan<char> expectedWord)
+        {
+            ReadOnlySpan<char> actualword = NextWord();
+            if (!expectedWord.SequenceEqual(actualword))
+            {
+                throw new Exception($"Expected next word to be {expectedWord.ToString()} but got {actualword.ToString()}");
+            }
+        }
+
+        private bool IsWordChar(char value)
+        {
+            return value >= '!' && value <= '~';
+        }
+
+        private void SkipStart()
+        {
+            ReadOnlySpan<char> ToSkip = SkipChars;
+            while (true)
+            {
+                AvailableChars = AvailableChars.TrimStart(ToSkip);
+                if (AvailableChars.Length == 0 && !ReachedEOF)
+                {
+                    FillBuffer(true);
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+
+        private void FillBuffer(bool overwriteExisting)
+        {
+            if (overwriteExisting)
+            {
+                int copiedLength = Reader.ReadBlock(Buffer, 0, Buffer.Length);
+                ReachedEOF = copiedLength < Buffer.Length;
+                AvailableChars = new Memory<char>(Buffer, 0, copiedLength);
+            }
+            else
+            {
+                //If there is still available chars equal to the
+                //size of the buffer then that means the buffer
+                //isn't large enough to contain all the chars
+                //required for some operation.
+                if (AvailableChars.Length == Buffer.Length)
+                {
+                    char[] biggerBuffer = new char[Buffer.Length * 2];
+                    AvailableChars.CopyTo(biggerBuffer);
+                    Buffer = biggerBuffer;
+                }
+                else
+                {
+                    //Move remaining text to start of buffer so more
+                    //text can be added to the end of it
+                    Memory<char> from = AvailableChars;
+                    Memory<char> to = new Memory<char>(Buffer, 0, AvailableChars.Length);
+                    from.CopyTo(to);
+                    AvailableChars = to;
+                }
+
+                int spaceLeft = Buffer.Length - AvailableChars.Length;
+                int copiedLength = Reader.ReadBlock(Buffer, AvailableChars.Length, spaceLeft);
+                ReachedEOF = copiedLength < spaceLeft;
+                AvailableChars = new Memory<char>(Buffer, 0, AvailableChars.Length + copiedLength);
+            }
+        }
+
+        internal bool IsEmpty()
+        {
+            return ReachedEOF && (AvailableChars.Length == 0);
+        }
+    }
+
+    public static class Visitor
+    {
+        internal static VCD VisitVcd(VCDLexer lexer)
+        {
+            var declAndVarID = VisitDeclCmdStream(lexer);
+            return new VCD(declAndVarID.declarations, declAndVarID.idToVariable, lexer);
+        }
+
+        internal static (List<IDeclCmd> declarations, Dictionary<string, VarDef> idToVariable) VisitDeclCmdStream(VCDLexer lexer)
         {
             List<IDeclCmd> declarations = new List<IDeclCmd>();
             Dictionary<string, VarDef> idToVariable = new Dictionary<string, VarDef>();
             Stack<Scope> scopes = new Stack<Scope>();
 
-            var currContext = context;
-            while (currContext != null && currContext.declCmd() is var dCmd && dCmd != null)
+            while (!lexer.IsEmpty())
             {
-                declarations.Add(VisitDeclCmd(dCmd, idToVariable, scopes));
-                currContext = currContext.declCmdStream();
+                IDeclCmd? decl = VisitDeclCmd(lexer, idToVariable, scopes);
+                if (decl == null)
+                {
+                    break;
+                }
+                declarations.Add(decl);
             }
 
             if (scopes.Count != 0)
@@ -37,136 +215,168 @@ namespace VCDReader.Parsing
             return (declarations, idToVariable);
         }
 
-        internal static IDeclCmd VisitDeclCmd([NotNull] VCDParser.DeclCmdContext context, Dictionary<string, VarDef> idToVariable, Stack<Scope> scopes)
+        internal static IDeclCmd? VisitDeclCmd(VCDLexer lexer, Dictionary<string, VarDef> idToVariable, Stack<Scope> scopes)
         {
-            switch (context.GetChild(0).GetText())
+            ReadOnlySpan<char> declWord = lexer.NextWord();
+            if (declWord.SequenceEqual("$comment"))
             {
-                case "$comment":
-                    return new Comment(context.GetChild(1).GetText());
-                case "$date":
-                    return new Date(context.GetChild(1).GetText());
-                case "$scope":
-                    {
-                        ScopeType type = VisitScopeType(context.scopeType());
-                        string id = context.AsciiString(0).GetText();
+                string text = lexer.NextUntil("$end").ToString();
 
-                        Scope scope = new Scope(type, id);
-                        scopes.Push(scope);
-
-                        return scope;
-                    }
-                case "$timescale":
-                    {
-                        int scale = VisitTimeNumber(context.AsciiString(0));
-                        TimeUnit unit = VisitTimeUnit(context.AsciiString(1));
-
-                        return new TimeScale(scale, unit);
-                    }
-                case "$upscope":
-                    scopes.Pop();
-                    return new UpScope();
-                case "$var":
-                    {
-                        VarType type = VisitVarType(context.varType());
-                        int size = VisitSize(context.AsciiString(0));
-                        string id = context.AsciiString(1).GetText();
-                        string reference = context.AsciiString(2).GetText();
-
-                        VarDef variable = new VarDef(type, size, id, reference, scopes.ToArray());
-                        idToVariable.Add(id, variable);
-
-                        return variable;
-                    }
-                case "$version":
-                    {
-                        string versionTxt = context.GetChild(1).GetText();
-                        string systemTaskString = context.GetChild(2).GetText();
-
-                        return new Version(versionTxt, systemTaskString);
-                    }
-                default:
-                    throw new Exception($"Invalid declaration command: {context.GetText()}");
+                lexer.ExpectNextWord("$end");
+                return new Comment(text);
             }
-        }
+            else if (declWord.SequenceEqual("$date"))
+            {
+                string text = lexer.NextUntil("$end").ToString();
 
-        internal static ISimCmd VisitSimCmd([NotNull] VCDParser.SimCmdContext context, Dictionary<string, VarDef> idToVariable)
-        {
-            switch (context.GetChild(0).GetText())
-            {
-                case "$dumpall":
-                    return new DumpAll(VisitValueChangeStream(context.valueChangeStream(), idToVariable));
-                case "$dumpoff":
-                    return new DumpOff();
-                case "$dumpon":
-                    return new DumpOn();
-                case "$dumpvars":
-                    return new DumpVars(VisitValueChangeStream(context.valueChangeStream(), idToVariable));
-                case "$comment":
-                    return new Comment(context.GetChild(1).GetText());                    
+                lexer.ExpectNextWord("$end");
+                return new Date(text);
             }
+            else if (declWord.SequenceEqual("$scope"))
+            {
+                ScopeType type = VisitScopeType(lexer);
+                string id = lexer.NextWord().ToString();
 
-            if (context.GetChild(0).GetText().StartsWith('#'))
-            {
-                return VisitSimTime(context.SimTime());
+                Scope scope = new Scope(type, id);
+                scopes.Push(scope);
+
+                lexer.ExpectNextWord("$end");
+                return scope;
             }
-            else if (context.valueChange() is var change && change != null)
+            else if (declWord.SequenceEqual("$timescale"))
             {
-                return VisitValueChange(change, idToVariable);
+                int scale = VisitTimeNumber(lexer);
+                TimeUnit unit = VisitTimeUnit(lexer);
+
+                lexer.ExpectNextWord("$end");
+                return new TimeScale(scale, unit);
+            }
+            else if (declWord.SequenceEqual("$upscope"))
+            {
+                scopes.Pop();
+
+                lexer.ExpectNextWord("$end");
+                return new UpScope();
+            }
+            else if (declWord.SequenceEqual("$var"))
+            {
+                VarType type = VisitVarType(lexer);
+                int size = VisitSize(lexer);
+                string id = lexer.NextWord().ToString();
+                string reference = lexer.NextWord().ToString();
+
+                VarDef variable = new VarDef(type, size, id, reference, scopes.ToArray());
+                idToVariable.Add(id, variable);
+
+                lexer.ExpectNextWord("$end");
+                return variable;
+            }
+            else if (declWord.SequenceEqual("$version"))
+            {
+                string versionTxt = lexer.NextWord().ToString();
+                string systemTaskString = string.Empty;
+
+                ReadOnlySpan<char> systemTask = lexer.PeekNextWord();
+                if (systemTask.StartsWith("$") && !systemTask.SequenceEqual("$end"))
+                {
+                    lexer.SkipWord(systemTask);
+                    systemTaskString = systemTask.ToString();
+                }
+
+                lexer.ExpectNextWord("$end");
+                return new Version(versionTxt, systemTaskString);
+            }
+            else if (declWord.SequenceEqual("$enddefinitions"))
+            {
+                lexer.ExpectNextWord("$end");
+                return null;
             }
             else
             {
-                throw new Exception($"Invalid simulation command: {context.GetText()}");
+                throw new Exception($"Invalid declaration command: {declWord.ToString()}");
             }
         }
 
-        internal static List<IValueChange> VisitValueChangeStream([NotNull] VCDParser.ValueChangeStreamContext context, Dictionary<string, VarDef> idToVariable)
+        internal static ISimCmd VisitSimCmd(VCDLexer lexer, Dictionary<string, VarDef> idToVariable)
+        {
+            ReadOnlySpan<char> declWord = lexer.NextWord();
+            if (declWord.SequenceEqual("$comment"))
+            {
+                string text = lexer.NextUntil("$end").ToString();
+
+                lexer.ExpectNextWord("$end");
+                return new Comment(text);
+            }
+            else if (declWord.SequenceEqual("$dumpall"))
+            {
+                return new DumpAll(VisitValueChangeStream(lexer, idToVariable));
+            }
+            else if (declWord.SequenceEqual("$dumpoff"))
+            {
+                lexer.ExpectNextWord("$end");
+                return new DumpOff();
+            }
+            else if (declWord.SequenceEqual("$dumpon"))
+            {
+                lexer.ExpectNextWord("$end");
+                return new DumpOn();
+            }
+            else if (declWord.SequenceEqual("$dumpvars"))
+            {
+                return new DumpVars(VisitValueChangeStream(lexer, idToVariable));
+            }
+            else if (declWord.StartsWith("#"))
+            {
+                return  VisitSimTime(declWord);
+            }
+            else
+            {
+                return VisitValueChange(lexer, declWord, idToVariable);
+            }
+        }
+
+        internal static List<IValueChange> VisitValueChangeStream(VCDLexer lexer, Dictionary<string, VarDef> idToVariable)
         {
             List<IValueChange> changes = new List<IValueChange>();
-            
-            var currContext = context;
-            while (currContext != null)
+
+            while (!lexer.IsEmpty())
             {
-                changes.Add(VisitValueChange(currContext.valueChange(), idToVariable));
-                currContext = currContext.valueChangeStream();
+                ReadOnlySpan<char> text = lexer.NextWord();
+                if (text.SequenceEqual("$end"))
+                {
+                    break;
+                }
+                changes.Add(VisitValueChange(lexer, text, idToVariable));
             }
 
             return changes;
         }
 
-        internal static IValueChange VisitValueChange([NotNull] VCDParser.ValueChangeContext context, Dictionary<string, VarDef> idToVariable)
+        internal static IValueChange VisitValueChange(VCDLexer lexer, ReadOnlySpan<char> text, Dictionary<string, VarDef> idToVariable)
         {
-            if (context.VectorValueChange() is var vecVC && vecVC != null)
+            if (text.Length < 2)
             {
-                if (vecVC.GetText().Length < 2)
-                {
-                    throw new Exception($"Invalid vector value change: {context.GetText()}");
-                }
+                throw new Exception($"Invalid value change: {text.ToString()}");
+            }
 
-                char vectorID = char.ToLower(vecVC.GetText()[0]);
-                string valueText = vecVC.GetText().Substring(1);
-                if (vectorID == 'b')
-                {
-                    return VisitBinaryVectorValueChange(valueText, context.AsciiString(), idToVariable);
-                }
-                else if (vectorID == 'r')
-                {
-                    return VisitRealVectorValueChange(valueText, context.AsciiString(), idToVariable);
-                }
-                else
-                {
-                    throw new Exception($"Invalid vector value change: {context.GetText()}");
-                }
+            if (text[0] == 'b' || text[0] == 'B')
+            {
+                return VisitBinaryVectorValueChange(lexer, text.Slice(1), idToVariable);
+            }
+            else if (text[0] == 'r' || text[0] == 'R')
+            {
+                return VisitRealVectorValueChange(lexer, text.Slice(1), idToVariable);
             }
             else
             {
-                return VisitScalarValueChange(context.AsciiString(), idToVariable);
+                return VisitScalarValueChange(text, idToVariable);
             }
         }
 
-        internal static IValueChange VisitBinaryVectorValueChange([NotNull] string valueText, ITerminalNode idContext, Dictionary<string, VarDef> idToVariable)
+        internal static IValueChange VisitBinaryVectorValueChange(VCDLexer lexer, ReadOnlySpan<char> valueText, Dictionary<string, VarDef> idToVariable)
         {
-            BitState[] bits = valueText.Select(x => ToBitState(x)).ToArray();
-            string id = idContext.GetText();
+            BitState[] bits = ToBitStates(valueText);
+            string id = lexer.NextWord().ToString();
 
             if (idToVariable.TryGetValue(id, out VarDef variable))
             {
@@ -178,10 +388,10 @@ namespace VCDReader.Parsing
             }
         }
 
-        internal static IValueChange VisitRealVectorValueChange([NotNull] string valueText, ITerminalNode idContext, Dictionary<string, VarDef> idToVariable)
+        internal static IValueChange VisitRealVectorValueChange(VCDLexer lexer, ReadOnlySpan<char> valueText, Dictionary<string, VarDef> idToVariable)
         {
-            double value = double.Parse(valueText, CultureInfo.InvariantCulture);
-            string id = idContext.GetText();
+            double value = double.Parse(valueText, NumberStyles.Float, CultureInfo.InvariantCulture);
+            string id = lexer.NextWord().ToString();
 
             if (idToVariable.TryGetValue(id, out VarDef variable))
             {
@@ -193,16 +403,10 @@ namespace VCDReader.Parsing
             }
         }
 
-        internal static IValueChange VisitScalarValueChange([NotNull] ITerminalNode context, Dictionary<string, VarDef> idToVariable)
+        internal static IValueChange VisitScalarValueChange(ReadOnlySpan<char> text, Dictionary<string, VarDef> idToVariable)
         {
-            string text = context.GetText();
-            if (text.Length < 2)
-            {
-                throw new Exception($"Invalid scalar value change: {text}");
-            }
-
             BitState bit = ToBitState(text[0]);
-            string id = text.Substring(1);
+            string id = text.Slice(1).ToString();
 
             BitState[] bits = new BitState[] { bit };
 
@@ -214,6 +418,17 @@ namespace VCDReader.Parsing
             {
                 throw new Exception($"Unknown variable identifier: {id}");
             }
+        }
+
+        internal static BitState[] ToBitStates(ReadOnlySpan<char> valueText)
+        {
+            BitState[] bits = new BitState[valueText.Length];
+            for (int i = 0; i < bits.Length; i++)
+            {
+                bits[i] = ToBitState(valueText[i]);
+            }
+
+            return bits;
         }
 
         internal static BitState ToBitState(char value)
@@ -230,82 +445,90 @@ namespace VCDReader.Parsing
             };
         }
 
-        internal static ScopeType VisitScopeType([NotNull] VCDParser.ScopeTypeContext context)
+        internal static ScopeType VisitScopeType(VCDLexer lexer)
         {
-            return context.GetText() switch
+            string text = lexer.NextWord().ToString();
+            if (Enum.TryParse(text, true, out ScopeType result))
             {
-                "begin" => ScopeType.Begin,
-                "fork" => ScopeType.Fork,
-                "function" => ScopeType.Function,
-                "module" => ScopeType.Module,
-                "task" => ScopeType.Task,
-                var error => throw new Exception($"Invalid scope type: {error}")
-            };
-        }
-
-        internal static SimTime VisitSimTime([NotNull] ITerminalNode context)
-        {
-            if (!context.GetText().StartsWith('#'))
-            {
-                throw new Exception($"Invalid simulation time: {context.GetText()}");
+                return result;
             }
-            return new SimTime(int.Parse(context.GetText().Substring(1), CultureInfo.InvariantCulture));
-        }
-
-        internal static int VisitSize([NotNull] ITerminalNode context)
-        {
-            return int.Parse(context.GetText(), CultureInfo.InvariantCulture);
-        }
-
-        internal static int VisitTimeNumber([NotNull] ITerminalNode context)
-        {
-            return context.GetText() switch
+            else
             {
-                "1" => 1,
-                "10" => 10,
-                "100" => 100,
-                var error => throw new Exception($"Invalid time scale: {error}")
-            };
+                throw new Exception($"Invalid scope type: {text}");
+            }
         }
 
-        internal static TimeUnit VisitTimeUnit([NotNull] ITerminalNode context)
+        internal static SimTime VisitSimTime(ReadOnlySpan<char> text)
         {
-            return context.GetText() switch
+            if (text.Length < 2 || text[0] != '#')
             {
-                "s" => TimeUnit.S,
-                "ms" => TimeUnit.Ms,
-                "us" => TimeUnit.Us,
-                "ns" => TimeUnit.Ns,
-                "ps" => TimeUnit.Ps,
-                "fs" => TimeUnit.Fs,
-                var error => throw new Exception($"Invalid time unit: {error}")
-            };
+                throw new Exception($"Invalid simulation time: {text.ToString()}");
+            }
+            return new SimTime(ParseInt(text.Slice(1)));
         }
 
-        internal static VarType VisitVarType([NotNull] VCDParser.VarTypeContext context)
+        private static int ParseInt(ReadOnlySpan<char> text)
         {
-            return context.GetText() switch
+            if (int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out int result))
             {
-                "event" => VarType.Event,
-                "integer" => VarType.Integer,
-                "parameter" => VarType.Parameter,
-                "real" => VarType.Real,
-                "realtime" => VarType.RealTime,
-                "reg" => VarType.Reg,
-                "supply0" => VarType.Supply0,
-                "supply1" => VarType.Supply1,
-                "time" => VarType.Time,
-                "tri" => VarType.Tri,
-                "triand" => VarType.TriAnd,
-                "trior" => VarType.TriOr,
-                "trireg" => VarType.TriReg,
-                "tri0" => VarType.Tri0,
-                "tri1" => VarType.Tri1,
-                "wand" => VarType.Wand,
-                "wire" => VarType.Wire,
-                "wor" => VarType.Wor,
-                _ => throw new Exception($"Invalid variable type: {context.GetText()}")
-            };
+                return result;
+            }
+            else
+            {
+                throw new Exception($"Failed to parse integer: {text.ToString()}");
+            }
+        }
+
+        internal static int VisitSize(VCDLexer lexer)
+        {
+            return ParseInt(lexer.NextWord());
+        }
+
+        internal static int VisitTimeNumber(VCDLexer lexer)
+        {
+            ReadOnlySpan<char> text = lexer.NextInteger();
+            if (text.SequenceEqual("1"))
+            {
+                return 1;
+            }
+            else if (text.SequenceEqual("10"))
+            {
+                return 10;
+            }
+            else if (text.SequenceEqual("100"))
+            {
+                return 100;
+            }
+            else
+            {
+                throw new Exception($"Invalid time scale: {text.ToString()}");
+            }
+        }
+
+        internal static TimeUnit VisitTimeUnit(VCDLexer lexer)
+        {
+            string text = lexer.NextWord().ToString();
+            if (Enum.TryParse(text, true, out TimeUnit result))
+            {
+                return result;
+            }
+            else
+            {
+                throw new Exception($"Invalid time unit: {text}");
+            }
+        }
+
+        internal static VarType VisitVarType(VCDLexer lexer)
+        {
+            string text = lexer.NextWord().ToString();
+            if (Enum.TryParse(text, true, out VarType result))
+            {
+                return result;
+            }
+            else
+            {
+                throw new Exception($"Invalid variable type: {text}");
+            }
         }
     }
 }

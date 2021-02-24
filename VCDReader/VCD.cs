@@ -13,15 +13,15 @@ namespace VCDReader
         public readonly TimeScale? Time;
         public readonly Version? Version;
 
-        private readonly Parsing.Antlr.VCDParser.SimCmdStreamContext SimStream;
+        private VCDLexer Lexer;
 
         public IEnumerable<VarDef> Variables => IDToVariable.Values;
 
-        internal VCD(List<IDeclCmd> declarations, Dictionary<string, VarDef> idToVariable, Parsing.Antlr.VCDParser.SimCmdStreamContext simStream)
+        internal VCD(List<IDeclCmd> declarations, Dictionary<string, VarDef> idToVariable, VCDLexer lexer)
         {
             this.Declarations = declarations;
             this.IDToVariable = idToVariable;
-            this.SimStream = simStream;
+            this.Lexer = lexer;
 
             this.Date = Declarations.FirstOrDefault(x => x is Date) as Date;
             this.Time = Declarations.FirstOrDefault(x => x is TimeScale) as TimeScale;
@@ -30,11 +30,9 @@ namespace VCDReader
 
         public IEnumerable<ISimCmd> GetSimulationCommands()
         {
-            var currStream = SimStream;
-            while (currStream != null)
+            while (!Lexer.IsEmpty())
             {
-                yield return Visitor.VisitSimCmd(currStream.simCmd(), IDToVariable);
-                currStream = currStream.simCmdStream();
+                yield return Visitor.VisitSimCmd(Lexer, IDToVariable);
             }
         }
     }

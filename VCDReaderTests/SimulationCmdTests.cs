@@ -73,7 +73,7 @@ b{bitState.ToChar()} !";
         {
             IDeclCmd[] expectedDecls = new IDeclCmd[]
             {
-                new VarDef(VarType.Wire, 2, "!", "b1", Array.Empty<Scope>())
+                new VarDef(VarType.Wire, 2, "b1", "b1", Array.Empty<Scope>())
             };
             ISimCmd[] expectedSimCmds = new ISimCmd[]
             {
@@ -83,7 +83,7 @@ b{bitState.ToChar()} !";
             string vcdString = @$"
 $var wire 2 b1 b1 $end
 $enddefinitions $end
-b0 !";
+b0 b1";
             VCD vcd = Parse.FromString(vcdString);
 
             TestTools.VerifyDeclarations(expectedDecls, vcd.Declarations);
