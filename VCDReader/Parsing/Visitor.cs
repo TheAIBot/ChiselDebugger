@@ -200,7 +200,7 @@ namespace VCDReader.Parsing
             BitState[] bits = ToBitStates(valueText);
             string id = lexer.NextWord().ToString();
 
-            if (idToVariable.TryGetValue(id, out VarDef variable))
+            if (idToVariable.TryGetValue(id, out VarDef? variable))
             {
                 return new BinaryChange(bits, variable);
             }
@@ -215,7 +215,7 @@ namespace VCDReader.Parsing
             double value = double.Parse(valueText, NumberStyles.Float, CultureInfo.InvariantCulture);
             string id = lexer.NextWord().ToString();
 
-            if (idToVariable.TryGetValue(id, out VarDef variable))
+            if (idToVariable.TryGetValue(id, out VarDef? variable))
             {
                 return new RealChange(value, variable);
             }
@@ -232,7 +232,7 @@ namespace VCDReader.Parsing
 
             BitState[] bits = new BitState[] { bit };
 
-            if (idToVariable.TryGetValue(id, out VarDef variable))
+            if (idToVariable.TryGetValue(id, out VarDef? variable))
             {
                 return new BinaryChange(bits, variable);
             }
