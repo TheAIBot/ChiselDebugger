@@ -123,6 +123,7 @@ namespace ChiselDebug
 
                 Dictionary<Node<FIRRTLNode>, int> yOrdering = new Dictionary<Node<FIRRTLNode>, int>();
                 var xGroups = xOrdering.GroupBy(x => x.Value).Select(x => x.Select(y => y.Key).Where(y => y.Value != Mod).ToArray()).ToArray();
+
                 foreach (var group in xGroups)
                 {
                     int y = 0;
@@ -183,11 +184,13 @@ namespace ChiselDebug
                 foreach (var modIONode in modInputNodes)
                 {
                     xOrdering.Remove(modIONode);
+                    yOrdering.Remove(modIONode);
                     graph.RemoveNode(modIONode);
                 }
                 foreach (var modIONode in modOutputNodes)
                 {
                     xOrdering.Remove(modIONode);
+                    yOrdering.Remove(modIONode);
                     graph.RemoveNode(modIONode);
                 }
 
