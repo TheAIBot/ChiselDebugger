@@ -13,7 +13,7 @@ namespace ChiselDebug.GraphFIR
         public Connection(Output from)
         {
             this.From = from;
-            this.Value = new ValueType(0, new SizedType(GroundType.UInt, 1));
+            this.Value = new ValueType("??", new SizedType(GroundType.UInt, 1));
         }
 
         public void ConnectToInput(Input input)

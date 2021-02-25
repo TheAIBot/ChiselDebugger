@@ -7,28 +7,29 @@ namespace ChiselDebug.GraphFIR
 {
     public struct ValueType
     {
-        BigInteger Value;
+        string ValueString;
         SizedType ValueT;
 
-        public ValueType(BigInteger value, SizedType type)
+        public ValueType(string valueString, SizedType type)
         {
-            Value = value;
+            ValueString = valueString;
             ValueT = type;
         }
 
         public string ToBinaryString()
         {
-            string binary = Value.ToBinaryString();
-            binary = binary.Substring(0, Math.Min(binary.Length, ValueT.Width));
+            return ValueString;
+            //string binary = Value.ToBinaryString();
+            //binary = binary.Substring(0, Math.Min(binary.Length, ValueT.Width));
 
-            if (ValueT.GType == GroundType.SInt)
-            {
-                return binary.PadLeft(ValueT.Width, binary.Last());
-            }
-            else
-            {
-                return binary.PadLeft(ValueT.Width, '0');
-            }
+            //if (ValueT.GType == GroundType.SInt)
+            //{
+            //    return binary.PadLeft(ValueT.Width, binary.Last());
+            //}
+            //else
+            //{
+            //    return binary.PadLeft(ValueT.Width, '0');
+            //}
         }
     }
 
