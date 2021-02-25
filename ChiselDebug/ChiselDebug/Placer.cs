@@ -102,10 +102,7 @@ namespace ChiselDebug
                 }
 
                 Dictionary<Node<FIRRTLNode>, int> xOrdering = graph.TopologicalSort();
-                xOrdering.Remove(modInputNode);
-                xOrdering.Remove(modOutputNode);
-                graph.RemoveNode(modInputNode);
-                graph.RemoveNode(modOutputNode);
+
 
                 Dictionary<Node<FIRRTLNode>, int> yOrdering = new Dictionary<Node<FIRRTLNode>, int>();
                 var xGroups = xOrdering.GroupBy(x => x.Value).Select(x => x.Select(y => y.Key).ToArray()).ToArray();
