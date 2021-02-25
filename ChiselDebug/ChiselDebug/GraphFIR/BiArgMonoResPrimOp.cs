@@ -74,4 +74,19 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRLt(Output aIn, Output bIn, IFIRType outType) : base("<", aIn, bIn, outType) { }
     }
+
+    public class FIRAnd : BiArgMonoResPrimOp
+    {
+        public FIRAnd(Output aIn, Output bIn, IFIRType outType) : base("&", aIn, bIn, outType) { }
+    }
+
+    public class FIROr : BiArgMonoResPrimOp
+    {
+        public FIROr(Output aIn, Output bIn, IFIRType outType) : base("|", aIn, bIn, outType) { }
+    }
+
+    public class FIRXor : BiArgMonoResPrimOp
+    {
+        public FIRXor(Output aIn, Output bIn, IFIRType outType) : base("^", aIn, bIn, outType) { }
+    }
 }
