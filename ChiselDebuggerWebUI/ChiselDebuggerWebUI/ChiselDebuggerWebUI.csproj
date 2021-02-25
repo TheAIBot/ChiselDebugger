@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
@@ -8,6 +8,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\ChiselDebug\ChiselDebug\ChiselDebug.csproj" />
     <ProjectReference Include="..\..\FIRRTL\FIRRTL.csproj" />
+    <ProjectReference Include="..\..\VCDReader\VCDReader.csproj" />
   </ItemGroup>
 
   <ItemGroup>

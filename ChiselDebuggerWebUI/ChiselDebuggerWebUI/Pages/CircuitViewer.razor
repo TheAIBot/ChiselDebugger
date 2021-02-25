@@ -19,6 +19,7 @@
     protected override void OnInitialized()
     {
         var circuit = FIRRTL.Parse.FromFile("Examples/MovingAveragePow2.lo.fir");
+        var vcd = VCDReader.Parse.FromFile("Examples/MovingAveragePow2.vcd");
         var graph = CircuitGraph.VisitCircuit(circuit);
         ModulePositions.Add(new Positioned<ChiselDebug.GraphFIR.Module>(new Point(0, 0), graph.Modules[0]));
     }
