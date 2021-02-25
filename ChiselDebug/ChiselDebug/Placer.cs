@@ -71,18 +71,21 @@ namespace ChiselDebug
                     outputToNode.Add(keyValue.Key, firNodeToNode[keyValue.Value]);
                 }
 
-                Node<FIRRTLNode> modInputNode = new Node<FIRRTLNode>(Mod);
-                graph.AddNode(modInputNode);
+                List<Node<FIRRTLNode>> modInputNodes = new List<Node<FIRRTLNode>>();
                 foreach (var input in Mod.InternalInputs)
                 {
+                    Node<FIRRTLNode> modInputNode = new Node<FIRRTLNode>(Mod);
+                    graph.AddNode(modInputNode);
                     inputToNode.Add(input, modInputNode);
+                    modInputNodes.Add(modInputNode);
                 }
-
-                Node<FIRRTLNode> modOutputNode = new Node<FIRRTLNode>(Mod);
-                graph.AddNode(modOutputNode);
+                List<Node<FIRRTLNode>> modOutputNodes = new List<Node<FIRRTLNode>>();
                 foreach (var output in Mod.InternalOutputs)
                 {
+                    Node<FIRRTLNode> modOutputNode = new Node<FIRRTLNode>(Mod);
+                    graph.AddNode(modOutputNode);
                     outputToNode.Add(output, modOutputNode);
+                    modOutputNodes.Add(modOutputNode);
                 }
 
 
@@ -103,9 +106,23 @@ namespace ChiselDebug
 
                 Dictionary<Node<FIRRTLNode>, int> xOrdering = graph.TopologicalSort();
 
+                {
+                    int minXOrdering = xOrdering.Values.Min();
+                    int maxXOrdering = xOrdering.Values.Max();
+
+                    foreach (var modInputNode in modInputNodes)
+                    {
+                        xOrdering[modInputNode] = maxXOrdering + 1;
+                    }
+                    foreach (var modOutputNode in modOutputNodes)
+                    {
+                        xOrdering[modOutputNode] = minXOrdering - 1;
+                    }
+                }
+
 
                 Dictionary<Node<FIRRTLNode>, int> yOrdering = new Dictionary<Node<FIRRTLNode>, int>();
-                var xGroups = xOrdering.GroupBy(x => x.Value).Select(x => x.Select(y => y.Key).ToArray()).ToArray();
+                var xGroups = xOrdering.GroupBy(x => x.Value).Select(x => x.Select(y => y.Key).Where(y => y.Value != Mod).ToArray()).ToArray();
                 foreach (var group in xGroups)
                 {
                     int y = 0;
@@ -113,6 +130,15 @@ namespace ChiselDebug
                     {
                         yOrdering.Add(node, y++);
                     }
+                }
+
+                for (int y = 0; y < modInputNodes.Count; y++)
+                {
+                    yOrdering.Add(modInputNodes[y], y);
+                }
+                for (int y = 0; y < modOutputNodes.Count; y++)
+                {
+                    yOrdering.Add(modOutputNodes[y], y);
                 }
 
                 const int iterations = 40;
@@ -154,28 +180,35 @@ namespace ChiselDebug
                 //    }
                 //}
 
-                xOrdering.Remove(modInputNode);
-                xOrdering.Remove(modOutputNode);
-                graph.RemoveNode(modInputNode);
-                graph.RemoveNode(modOutputNode);
-
-
-                int minXOrdering = xOrdering.Values.Min();
-                int minYOrdering = yOrdering.Values.Min();
-                foreach (var node in xOrdering.Keys)
+                foreach (var modIONode in modInputNodes)
                 {
-                    Point size = NodeSizes[node.Value];
-                    int xOrder = xOrdering[node] - minXOrdering;
-                    int yOrder = yOrdering[node] - minYOrdering;
+                    xOrdering.Remove(modIONode);
+                    graph.RemoveNode(modIONode);
+                }
+                foreach (var modIONode in modOutputNodes)
+                {
+                    xOrdering.Remove(modIONode);
+                    graph.RemoveNode(modIONode);
+                }
 
-                    Point pos = new Point(50 + xOrder * 150, yOrder * 75);
-                    placments.AddNodePlacement(node.Value, new Rectangle(pos, size));
+                {
+                    int minXOrdering = xOrdering.Values.Min();
+                    int minYOrdering = yOrdering.Values.Min();
+                    foreach (var node in xOrdering.Keys)
+                    {
+                        Point size = NodeSizes[node.Value];
+                        int xOrder = xOrdering[node] - minXOrdering;
+                        int yOrder = yOrdering[node] - minYOrdering;
+
+                        Point pos = new Point(50 + xOrder * 150, 30 + yOrder * 85);
+                        placments.AddNodePlacement(node.Value, new Rectangle(pos, size));
+                    }
                 }
 
                 placments.AddEndStuff();
                 return placments;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Debug.WriteLine(e.Message);
                 Debug.WriteLine(e.StackTrace);
