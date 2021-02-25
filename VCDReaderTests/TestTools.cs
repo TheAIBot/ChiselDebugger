@@ -51,11 +51,19 @@ namespace VCDReaderTests
                 }
                 else if (expected[i] is DumpOn expectedOn && actual[i] is DumpOn actualOn)
                 {
-
+                    Assert.AreEqual(expectedOn.Values.Count, actualOn.Values.Count);
+                    for (int z = 0; z < expectedOn.Values.Count; z++)
+                    {
+                        VerifyValueChange(expectedOn.Values[z], actualOn.Values[z]);
+                    }
                 }
                 else if (expected[i] is DumpOff expectedOff && actual[i] is DumpOff actualOff)
                 {
-
+                    Assert.AreEqual(expectedOff.Values.Count, actualOff.Values.Count);
+                    for (int z = 0; z < expectedOff.Values.Count; z++)
+                    {
+                        VerifyValueChange(expectedOff.Values[z], actualOff.Values[z]);
+                    }
                 }
                 else if (expected[i] is SimTime expectedTime && actual[i] is SimTime actualTime)
                 {

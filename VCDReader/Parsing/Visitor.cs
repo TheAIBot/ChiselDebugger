@@ -135,13 +135,11 @@ namespace VCDReader.Parsing
             }
             else if (declWord.SequenceEqual("$dumpoff"))
             {
-                lexer.ExpectNextWord("$end");
-                return new DumpOff();
+                return new DumpOff(VisitValueChangeStream(lexer, idToVariable));
             }
             else if (declWord.SequenceEqual("$dumpon"))
             {
-                lexer.ExpectNextWord("$end");
-                return new DumpOn();
+                return new DumpOn(VisitValueChangeStream(lexer, idToVariable));
             }
             else if (declWord.SequenceEqual("$dumpvars"))
             {
