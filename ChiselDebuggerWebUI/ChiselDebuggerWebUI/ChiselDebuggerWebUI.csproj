@@ -14,4 +14,11 @@
     <Folder Include="Data\" />
   </ItemGroup>
 
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <ItemGroup>
+      <ExampleFiles Include="Examples/*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ExampleFiles)"  DestinationFolder="$(TargetDir)/Examples/"/>
+  </Target>
+
 </Project>
