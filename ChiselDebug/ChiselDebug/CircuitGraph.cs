@@ -115,6 +115,13 @@ namespace ChiselDebug
             {
                 var nodeOut = VisitExp(outToNode, nameToOutput, module, connect.Expr);
                 string name = ((FIRRTL.Reference)connect.Loc).Name;
+                if (nameToOutput.TryGetValue(name, out var maybeRegOut) && 
+                    outToNode.TryGetValue(maybeRegOut, out var maybeReg) && 
+                    maybeReg is GraphFIR.Register)
+                {
+                    name = name + "/in";
+                }
+
                 nodeOut.output.SetName(name);
                 if (!nameToOutput.ContainsKey(name))
                 {
@@ -162,7 +169,7 @@ namespace ChiselDebug
 
                 module.AddNode(register);
                 outToNode.Add(register.Result, register);
-                nameToInput.Add(register.Name, register.In);
+                nameToInput.Add(register.Name + "/in", register.In);
                 nameToOutput.Add(register.Name, register.Result);
             }
             else if (statement is FIRRTL.DefInstance)
