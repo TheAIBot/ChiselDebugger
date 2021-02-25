@@ -26,20 +26,11 @@
 
     protected override List<DirectedIO> OnMakeInputs(int width, int height)
     {
-        List<DirectedIO> inputs = new List<DirectedIO>();
+        List<DirectedIO> inputs = IOPositionCalc.EvenVertical<Input>(height, Operation.Choises, 0, INDENT);
 
         //Add chose input
         Point deciderOffset = new Point(WIDTH / 2, INDENT / 2);
         inputs.Add(new DirectedIO(Operation.Decider, deciderOffset, MoveDirs.Down));
-
-        //Add choise inputs
-        int yChoiseOffset = (HEIGHT - USABLE_CHOISE_HEIGHT) / 2;
-        int yChoiseDistance = USABLE_CHOISE_HEIGHT / (Operation.Choises.Count - 1);
-        for (int i = 0; i < Operation.Choises.Count; i++)
-        {
-            Point choiseOffset = new Point(0, yChoiseOffset + yChoiseDistance * i);
-            inputs.Add(new DirectedIO(Operation.Choises[i], choiseOffset, MoveDirs.Right));
-        }
 
         return inputs;
     }

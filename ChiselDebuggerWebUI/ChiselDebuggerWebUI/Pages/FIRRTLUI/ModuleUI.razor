@@ -49,7 +49,7 @@
 
     private const int MarginForIO = 20;
     private const int MinSpaceBetweenIO = 15;
-    private const int MaxSpaceBetweenIO = 40;
+    
     private List<WirePath> ModuleConnections = new List<WirePath>();
 
     private ConnectionsHandler ConHandler;
@@ -108,46 +108,14 @@
 
     protected override List<DirectedIO> OnMakeInputs(int width, int height)
     {
-        return PositionIO<Input>(width, height, Operation.InternalInputs, width + ContentPadding);
+        return IOPositionCalc.EvenVertical<Input>(height, Operation.InternalInputs, width + ContentPadding, MarginForIO);
     }
 
     protected override List<DirectedIO> OnMakeOutputs(int width, int height)
     {
-        return PositionIO<Output>(width, height, Operation.InternalOutputs, -ContentPadding);
+        return IOPositionCalc.EvenVertical<Output>(height, Operation.InternalOutputs, -ContentPadding, MarginForIO);
     }
 
-    private List<DirectedIO> PositionIO<T>(int width, int height, List<T> io, int x) where T : FIRIO
-    {
-        int usableSpace = height - MarginForIO * 2;
-
-        int yStart = MarginForIO;
-        int spaceBetweenIO;
-        if (io.Count <= 1)
-        {
-            yStart += usableSpace / 2;
-            spaceBetweenIO = 0;
-        }
-        else
-        {
-            int spacersNeeded = io.Count - 1;
-            int possibleSpaceBetweenIO = usableSpace / spacersNeeded;
-            spaceBetweenIO = Math.Min(MaxSpaceBetweenIO, possibleSpaceBetweenIO);
-            int usedSpace = spaceBetweenIO * spacersNeeded;
-
-            yStart += (usableSpace - usedSpace) / 2;
-        }
-
-        List<DirectedIO> posIO = new List<DirectedIO>();
-        for (int i = 0; i < io.Count; i++)
-        {
-            int y = yStart + spaceBetweenIO * i;
-
-            Point pos = new Point(x, y);
-            posIO.Add(new DirectedIO(io[i], pos, MoveDirs.Right));
-        }
-
-        return posIO;
-    }
 
     private void UpdateComponentInfo(FIRComponentUpdate updateData)
     {
