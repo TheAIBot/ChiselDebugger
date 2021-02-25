@@ -288,6 +288,19 @@ namespace ChiselDebug
                 GraphFIR.FIRRTLNode node = outToNode[output];
                 return (node, output);
             }
+            else if (exp is FIRRTL.ValidIf validIf)
+            {
+                var cond = VisitExp(outToNode, nameToOutput, module, validIf.Cond);
+                var ifValid = VisitExp(outToNode, nameToOutput, module, validIf.Value);
+
+                GraphFIR.Mux node = new GraphFIR.Mux(new List<FIRRTL.IFIRType>() { ifValid.output.Type }, validIf.Type);
+                cond.output.ConnectToInput(node.Decider);
+                ifValid.output.ConnectToInput(node.Choises[0]);
+
+                outToNode.Add(node.Result, node);
+                module.AddNode(node);
+                return (node, node.Result);
+            }
             else
             {
                 throw new NotImplementedException();
