@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace ChiselDebug
 {
@@ -8,6 +9,13 @@ namespace ChiselDebug
     {
         public readonly string Name;
         public readonly List<GraphFIR.Module> Modules = new List<GraphFIR.Module>();
+
+        private static long UniqueNumber;
+
+        private static string GetUniqueName()
+        {
+            return $"~{Interlocked.Increment(ref UniqueNumber)}";
+        }
 
         public CircuitGraph(string name, List<GraphFIR.Module> modules)
         {
@@ -196,7 +204,7 @@ namespace ChiselDebug
         {
             if (exp is FIRRTL.Literal lit)
             {
-                GraphFIR.ConstValue value = new GraphFIR.ConstValue(lit);
+                GraphFIR.ConstValue value = new GraphFIR.ConstValue(GetUniqueName(), lit);
 
                 outToNode.Add(value.Result, value);
                 module.AddNode(value);

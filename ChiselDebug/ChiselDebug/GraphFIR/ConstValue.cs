@@ -7,10 +7,10 @@ namespace ChiselDebug.GraphFIR
         public readonly FIRRTL.Literal Value;
         public readonly Output Result;
 
-        public ConstValue(FIRRTL.Literal value)
+        public ConstValue(string outputName, FIRRTL.Literal value)
         {
             this.Value = value;
-            this.Result = new Output("lol", new FIRRTL.UnknownType());
+            this.Result = new Output(outputName, new FIRRTL.UnknownType());
         }
 
         public override Input[] GetInputs()
