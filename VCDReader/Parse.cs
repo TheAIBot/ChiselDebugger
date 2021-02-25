@@ -11,13 +11,13 @@ namespace VCDReader
     {
         public static VCD FromFile(string filepath)
         {
-            using var fileStream = File.OpenText(filepath);
+            var fileStream = File.OpenText(filepath);
             return FromStream(fileStream);
         }
 
         public static VCD FromString(string vcdString)
         {
-            using var stringStream = new StringReader(vcdString);
+            var stringStream = new StringReader(vcdString);
             return FromStream(stringStream);
         }
 

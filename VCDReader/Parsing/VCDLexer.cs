@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace VCDReader.Parsing
 {
-    internal class VCDLexer
+    internal class VCDLexer : IDisposable
     {
         private readonly TextReader Reader;
         private char[] Buffer; 
@@ -178,6 +178,11 @@ namespace VCDReader.Parsing
         internal bool IsEmpty()
         {
             return ReachedEOF && (AvailableChars.Length == 0);
+        }
+
+        public void Dispose()
+        {
+            Reader.Dispose();
         }
     }
 }
