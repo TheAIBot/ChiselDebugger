@@ -158,7 +158,6 @@ namespace ChiselDebug
                 {
                     List<float> inputNodeValues = modInputNodes.SelectMany(x => x.Incomming).Select(x => yOrdering[x]).ToList();
                     float inputStartY = (inputNodeValues.Sum() / inputNodeValues.Count) / 2.0f;
-                    Debug.WriteLine(inputStartY);
                     for (int y = 0; y < modInputNodes.Count; y++)
                     {
                         yOrdering[modInputNodes[y]] = y - inputStartY;
@@ -363,7 +362,7 @@ namespace ChiselDebug
 
                 while (noYImprovementCount < maxNoYImprovmentCount)
                 {
-                    RecenterModuleIO(yOrdering);
+
                     OptimizeYOrdering(xGroups, xOrdering, yOrdering);
 
                     var currPlacement = ToPlacement(xOrdering, yOrdering);
