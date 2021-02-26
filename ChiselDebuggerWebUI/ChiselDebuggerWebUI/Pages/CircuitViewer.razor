@@ -56,6 +56,27 @@
             }
         }
 
+        //For connections from const values, the initial value is constant
+        foreach (var mod in graph.Modules)
+        {
+            foreach (var node in mod.GetAllNodes())
+            {
+                var constNode = node as ConstValue;
+                if (constNode == null)
+                {
+                    continue;
+                }
+
+                if (!constNode.Result.Con.IsUsed())
+                {
+                    continue;
+                }
+
+                SizedType sType = constNode.Value.ToSizedType();
+                constNode.Result.Con.Value = new ChiselDebug.GraphFIR.ValueType(constNode.Value.Value.ToSignedBinaryString(sType), sType);
+            }
+        }
+
         DumpVars initialValues = (DumpVars)vcd.GetSimulationCommands().First(x => x is DumpVars);
 
         //Set each connections initial value
