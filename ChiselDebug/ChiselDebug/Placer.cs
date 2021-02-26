@@ -227,11 +227,21 @@ namespace ChiselDebug
                     Dictionary<Node<FIRRTLNode>, float> newPosition = new Dictionary<Node<FIRRTLNode>, float>();
                     foreach (var node in group)
                     {
-                        float parentSum = node.Incomming.Sum(x => yOrdering[x]);
-                        float childSum = node.Outgoing.Sum(x => yOrdering[x]);
-                        float indirectSum = node.Indirectly.Sum(x => yOrdering[x]);
-                        float mean = (parentSum + childSum + indirectSum) / (node.Incomming.Count + node.Outgoing.Count + node.Indirectly.Count);
+                        const float parentWeight = 1;
+                        const float childWeight = 2;
+                        const float indirectweight = 3;
 
+                        float ySum = 0;
+                        ySum += node.Incomming.Sum(x => yOrdering[x]) * parentWeight;
+                        ySum += node.Outgoing.Sum(x => yOrdering[x]) * childWeight;
+                        ySum += node.Indirectly.Sum(x => yOrdering[x]) * indirectweight;
+
+                        float weightSum = 0;
+                        weightSum += node.Incomming.Count * parentWeight;
+                        weightSum += node.Outgoing.Count * childWeight;
+                        weightSum += node.Indirectly.Count * indirectweight;
+
+                        float mean = ySum / weightSum;
                         newPosition.Add(node, mean);
                     }
 
