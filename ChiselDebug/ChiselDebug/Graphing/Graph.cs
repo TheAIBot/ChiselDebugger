@@ -8,8 +8,8 @@ namespace ChiselDebug.Graphing
 {
     internal class Node<T>
     {
-        public readonly HashSet<Node<T>> Incomming = new HashSet<Node<T>>();
-        public readonly HashSet<Node<T>> Outgoing = new HashSet<Node<T>>();
+        public HashSet<Node<T>> Incomming { get; private set; } = new HashSet<Node<T>>();
+        public HashSet<Node<T>> Outgoing { get; private set; } = new HashSet<Node<T>>();
         public readonly T Value;
 
         public Node(T value)
@@ -27,6 +27,13 @@ namespace ChiselDebug.Graphing
         {
             Outgoing.Remove(node);
             node.Incomming.Remove(this);
+        }
+
+        public void InvertEdges()
+        {
+            var tmp = Incomming;
+            Incomming = Outgoing;
+            Outgoing = tmp;
         }
     }
 
@@ -55,6 +62,14 @@ namespace ChiselDebug.Graphing
             foreach (var childNode in node.Outgoing)
             {
                 node.RemoveEdgeTo(childNode);
+            }
+        }
+
+        public void InvertAllEdges()
+        {
+            foreach (var node in Nodes)
+            {
+                node.InvertEdges();
             }
         }
 
