@@ -39,7 +39,7 @@ namespace ChiselDebug.Graphing
 
     internal class Graph<T>
     {
-        List<Node<T>> Nodes = new List<Node<T>>();
+        public readonly List<Node<T>> Nodes = new List<Node<T>>();
 
         public void AddNode(Node<T> node)
         {
