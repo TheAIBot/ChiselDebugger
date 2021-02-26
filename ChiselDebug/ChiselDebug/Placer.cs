@@ -121,8 +121,12 @@ namespace ChiselDebug
                 }
 
 
-                Dictionary<Node<FIRRTLNode>, int> yOrdering = new Dictionary<Node<FIRRTLNode>, int>();
-                var xGroups = xOrdering.GroupBy(x => x.Value).Select(x => x.Select(y => y.Key).Where(y => y.Value != Mod).ToArray()).ToArray();
+                Dictionary<Node<FIRRTLNode>, float> yOrdering = new Dictionary<Node<FIRRTLNode>, float>();
+                var xGroups = xOrdering
+                    .GroupBy(x => x.Value)
+                    .OrderByDescending(x => x.First().Value)
+                    .Select(x => x.Select(y => y.Key).Where(y => y.Value != Mod).ToArray())
+                    .ToArray();
 
                 foreach (var group in xGroups)
                 {
@@ -133,53 +137,108 @@ namespace ChiselDebug
                     }
                 }
 
-                for (int y = 0; y < modInputNodes.Count; y++)
                 {
-                    yOrdering.Add(modInputNodes[y], y);
-                }
-                for (int y = 0; y < modOutputNodes.Count; y++)
-                {
-                    yOrdering.Add(modOutputNodes[y], y);
+                    float inputStartY = modInputNodes.Count / 2.0f;
+                    for (int y = 0; y < modInputNodes.Count; y++)
+                    {
+                        yOrdering.Add(modInputNodes[y], y - inputStartY);
+                    }
+                    float outputStartY = modOutputNodes.Count / 2.0f;
+                    for (int y = 0; y < modOutputNodes.Count; y++)
+                    {
+                        yOrdering.Add(modOutputNodes[y], y - outputStartY);
+                    }
                 }
 
-                const int iterations = 40;
+                const int iterations = 400;
                 for (int i = 0; i < iterations; i++)
                 {
+                    {
+                        List<float> inputNodeValues = modInputNodes.SelectMany(x => x.Incomming).Select(x => yOrdering[x]).ToList();
+                        float inputStartY = (inputNodeValues.Sum() / inputNodeValues.Count) / 2.0f;
+                        Debug.WriteLine(inputStartY);
+                        for (int y = 0; y < modInputNodes.Count; y++)
+                        {
+                            yOrdering[modInputNodes[y]] = y - inputStartY;
+                        }
+                        List<float> outputNodeValues = modOutputNodes.SelectMany(x => x.Outgoing).Select(x => yOrdering[x]).ToList();
+                        float outputStartY = (outputNodeValues.Sum() / outputNodeValues.Count) / 2.0f;
+                        for (int y = 0; y < modOutputNodes.Count; y++)
+                        {
+                            yOrdering[modOutputNodes[y]] = y - outputStartY;
+                        }
+                    }
                     foreach (var group in xGroups)
                     {
                         Dictionary<Node<FIRRTLNode>, float> newPosition = new Dictionary<Node<FIRRTLNode>, float>();
                         foreach (var node in group)
                         {
-                            float parentSum = node.Incomming.Sum(x => yOrdering[x]);
-                            float childSum = node.Outgoing.Sum(x => yOrdering[x]);
+                            float WeighedDistance(float currNodeY, float otherNodeY)
+                            {
+                                return otherNodeY;
+                                float distance = otherNodeY - currNodeY;
+                                float weighedDist = MathF.Pow(MathF.Abs(distance), 0.95f);
+                                float signedWeighedDist = MathF.CopySign(weighedDist, distance);
+                                return currNodeY + signedWeighedDist;
+                            }
+
+                            float currY = yOrdering[node];
+                            float parentSum = node.Incomming.Sum(x => WeighedDistance(currY, yOrdering[x]));
+                            float childSum = node.Outgoing.Sum(x => WeighedDistance(currY, yOrdering[x]));
                             float mean = (parentSum + childSum) / (node.Incomming.Count + node.Outgoing.Count);
 
                             newPosition.Add(node, mean);
                         }
 
-                        int minY = 0;
+                        List<List<Node<FIRRTLNode>>> clusters = new List<List<Node<FIRRTLNode>>>();
+                        float prevElemY = -100000;
+                        List<Node<FIRRTLNode>> currCluster = null;
                         foreach (var node in newPosition.OrderBy(x => x.Value))
                         {
-                            int newY = (int)MathF.Round(MathF.Max((float)minY, node.Value));
-                            yOrdering[node.Key] = newY;
-                            minY = newY + 1;
+                            if (Math.Abs(node.Value - prevElemY) > 1.0f)
+                            {
+                                if (currCluster != null)
+                                {
+                                    clusters.Add(currCluster);
+                                }
+
+                                currCluster = new List<Node<FIRRTLNode>>();
+                                currCluster.Add(node.Key);
+                            }
+                            else
+                            {
+                                if (currCluster == null)
+                                {
+                                    currCluster = new List<Node<FIRRTLNode>>();
+                                }
+
+                                currCluster.Add(node.Key);
+                            }
+
+                            prevElemY = node.Value;
+                        }
+                        if (currCluster != null)
+                        {
+                            clusters.Add(currCluster);
+                        }
+
+                        float prevClusterMaxY = -100000;
+                        foreach (var cluster in clusters)
+                        {
+                            float yMean = cluster.Sum(x => newPosition[x]) / cluster.Count;
+
+                            float middleIndex = cluster.Count / 2.0f;
+                            float overlapWithPrevCluster =  Math.Max(0.0f, prevClusterMaxY + 1 - (yMean - middleIndex));
+
+                            for (int z = 0; z < cluster.Count; z++)
+                            {
+                                yOrdering[cluster[z]] = yMean + (z - middleIndex) + overlapWithPrevCluster;
+                            }
+
+                            prevClusterMaxY = yOrdering[cluster.Last()];
                         }
                     }
                 }
-
-                //int maxYOrdering = yOrdering.Values.Max();
-                //var yGroups = yOrdering.GroupBy(x => x.Value).Select(x => x.OrderBy(x => x.Value).ToArray()).ToArray();
-                //int unusedYCount = 0;
-                //int prevY = -1;
-                //foreach (var group in yGroups)
-                //{
-                //    unusedYCount += (group[0].Value - prevY) - 1;
-                //    prevY = group[0].Value;
-                //    foreach (var node in group)
-                //    {
-                //        yOrdering[node.Key] = node.Value - unusedYCount;
-                //    }
-                //}
 
                 foreach (var modIONode in modInputNodes)
                 {
@@ -196,12 +255,12 @@ namespace ChiselDebug
 
                 {
                     int minXOrdering = xOrdering.Values.Min();
-                    int minYOrdering = yOrdering.Values.Min();
+                    float minYOrdering = yOrdering.Values.Min();
                     foreach (var node in xOrdering.Keys)
                     {
                         Point size = NodeSizes[node.Value];
                         int xOrder = xOrdering[node] - minXOrdering;
-                        int yOrder = yOrdering[node] - minYOrdering;
+                        int yOrder = (int)(yOrdering[node] - minYOrdering);
 
                         Point pos = new Point(50 + xOrder * 150, 30 + yOrder * 85);
                         placments.AddNodePlacement(node.Value, new Rectangle(pos, size));
