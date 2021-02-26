@@ -272,7 +272,7 @@ namespace ChiselDebug
                     {
                         float yMean = cluster.Sum(x => newPosition[x]) / cluster.Count;
 
-                        float middleIndex = cluster.Count / 2.0f;
+                        float middleIndex = (cluster.Count - 1) / 2.0f;
                         float overlapWithPrevCluster = Math.Max(0.0f, prevClusterMaxY + 1 - (yMean - middleIndex));
 
                         for (int z = 0; z < cluster.Count; z++)
