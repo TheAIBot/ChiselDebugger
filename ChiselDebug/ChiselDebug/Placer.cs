@@ -230,7 +230,7 @@ namespace ChiselDebug
                         float parentSum = node.Incomming.Sum(x => yOrdering[x]);
                         float childSum = node.Outgoing.Sum(x => yOrdering[x]);
                         float indirectSum = node.Indirectly.Sum(x => yOrdering[x]);
-                        float mean = (parentSum + childSum + indirectSum * 2) / (node.Incomming.Count + node.Outgoing.Count + node.Indirectly.Count * 2);
+                        float mean = (parentSum + childSum + indirectSum) / (node.Incomming.Count + node.Outgoing.Count + node.Indirectly.Count);
 
                         newPosition.Add(node, mean);
                     }
