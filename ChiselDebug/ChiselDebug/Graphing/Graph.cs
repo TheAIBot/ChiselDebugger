@@ -107,7 +107,7 @@ namespace ChiselDebug.Graphing
             Dictionary<Node<T>, int> nodeOrders = new Dictionary<Node<T>, int>();
             foreach (var node in Nodes)
             {
-                nodeOrders.Add(node, int.MaxValue);
+                nodeOrders.Add(node, int.MinValue);
             }
 
             HashSet<Node<T>> inPath = new HashSet<Node<T>>();
@@ -133,7 +133,7 @@ namespace ChiselDebug.Graphing
                             continue;
                         }
 
-                        if (nodeOrders[child] <= depth + 1)
+                        if (nodeOrders[child] >= depth + 1)
                         {
                             continue;
                         }
