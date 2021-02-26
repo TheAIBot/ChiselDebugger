@@ -10,6 +10,7 @@ namespace ChiselDebug.Graphing
     {
         public HashSet<Node<T>> Incomming { get; private set; } = new HashSet<Node<T>>();
         public HashSet<Node<T>> Outgoing { get; private set; } = new HashSet<Node<T>>();
+        public HashSet<Node<T>> Indirectly { get; private set; } = new HashSet<Node<T>>();
         public readonly T Value;
 
         public Node(T value)
@@ -27,6 +28,22 @@ namespace ChiselDebug.Graphing
         {
             Outgoing.Remove(node);
             node.Incomming.Remove(this);
+        }
+
+        public void MakeIndirectEdges()
+        {
+            foreach (var from in Outgoing)
+            {
+                foreach (var to in Outgoing)
+                {
+                    if (from == to)
+                    {
+                        continue;
+                    }
+
+                    from.Indirectly.Add(to);
+                }
+            }
         }
 
         public void InvertEdges()
@@ -62,6 +79,14 @@ namespace ChiselDebug.Graphing
             foreach (var childNode in node.Outgoing)
             {
                 node.RemoveEdgeTo(childNode);
+            }
+        }
+
+        public void MakeIndirectConnections()
+        {
+            foreach (var node in Nodes)
+            {
+                node.MakeIndirectEdges();
             }
         }
 

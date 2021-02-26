@@ -103,6 +103,7 @@ namespace ChiselDebug
                         graph.AddEdge(from, to);
                     }
                 }
+                graph.MakeIndirectConnections();
 
                 var placement = GetPlacements(graph, modInputNodes, modOutputNodes);
                 foreach (var modIONode in modInputNodes)
@@ -228,7 +229,8 @@ namespace ChiselDebug
                     {
                         float parentSum = node.Incomming.Sum(x => yOrdering[x]);
                         float childSum = node.Outgoing.Sum(x => yOrdering[x]);
-                        float mean = (parentSum + childSum) / (node.Incomming.Count + node.Outgoing.Count);
+                        float indirectSum = node.Indirectly.Sum(x => yOrdering[x]);
+                        float mean = (parentSum + childSum + indirectSum * 2) / (node.Incomming.Count + node.Outgoing.Count + node.Indirectly.Count * 2);
 
                         newPosition.Add(node, mean);
                     }
