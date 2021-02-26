@@ -146,9 +146,10 @@ namespace ChiselDebug
             Node<FIRRTLNode>[][] GetXGroups(Dictionary<Node<FIRRTLNode>, int> xOrdering)
             {
                 return xOrdering
+                    .Where(x => x.Key.Value != Mod)
                     .GroupBy(x => x.Value)
                     .OrderByDescending(x => x.First().Value)
-                    .Select(x => x.Select(y => y.Key).Where(y => y.Value != Mod).ToArray())
+                    .Select(x => x.Select(y => y.Key).ToArray())
                     .ToArray();
             }
 
