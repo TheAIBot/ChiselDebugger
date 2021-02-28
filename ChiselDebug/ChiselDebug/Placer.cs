@@ -74,6 +74,10 @@ namespace ChiselDebug
                 List<Node<FIRRTLNode>> modInputNodes = new List<Node<FIRRTLNode>>();
                 foreach (var input in Mod.InternalInputs)
                 {
+                    if (input.Con == null)
+                    {
+                        continue;
+                    }
                     Node<FIRRTLNode> modInputNode = new Node<FIRRTLNode>(Mod);
                     graph.AddNode(modInputNode);
                     inputToNode.Add(input, modInputNode);
@@ -82,6 +86,10 @@ namespace ChiselDebug
                 List<Node<FIRRTLNode>> modOutputNodes = new List<Node<FIRRTLNode>>();
                 foreach (var output in Mod.InternalOutputs)
                 {
+                    if (!output.Con.IsUsed())
+                    {
+                        continue;
+                    }
                     Node<FIRRTLNode> modOutputNode = new Node<FIRRTLNode>(Mod);
                     graph.AddNode(modOutputNode);
                     outputToNode.Add(output, modOutputNode);
@@ -146,9 +154,8 @@ namespace ChiselDebug
             Node<FIRRTLNode>[][] GetXGroups(Dictionary<Node<FIRRTLNode>, int> xOrdering)
             {
                 return xOrdering
-                    .Where(x => x.Key.Value != Mod)
                     .GroupBy(x => x.Value)
-                    .OrderByDescending(x => x.First().Value)
+                    .OrderBy(x => x.First().Value)
                     .Select(x => x.Select(y => y.Key).ToArray())
                     .ToArray();
             }
@@ -222,14 +229,15 @@ namespace ChiselDebug
 
             void OptimizeYOrdering(Node<FIRRTLNode>[][] xGroups, Dictionary<Node<FIRRTLNode>, int> xOrdering, Dictionary<Node<FIRRTLNode>, float> yOrdering)
             {
+                var prefYGroups = new List<Dictionary<Node<FIRRTLNode>, float>>();
                 foreach (var group in xGroups)
                 {
-                    Dictionary<Node<FIRRTLNode>, float> newPosition = new Dictionary<Node<FIRRTLNode>, float>();
+                    Dictionary<Node<FIRRTLNode>, float> prefYPoses = new Dictionary<Node<FIRRTLNode>, float>();
                     foreach (var node in group)
                     {
-                        const float parentWeight = 1;
-                        const float childWeight = 2;
-                        const float indirectweight = 3;
+                        float parentWeight = 1;
+                        float childWeight = 1;
+                        float indirectweight = 5;
 
                         float ySum = 0;
                         ySum += node.Incomming.Sum(x => yOrdering[x]) * parentWeight;
@@ -242,9 +250,14 @@ namespace ChiselDebug
                         weightSum += node.Indirectly.Count * indirectweight;
 
                         float mean = ySum / weightSum;
-                        newPosition.Add(node, mean);
+                        prefYPoses.Add(node, mean);
                     }
 
+                    prefYGroups.Add(prefYPoses);
+                }
+
+                foreach (var newPosition in prefYGroups)
+                {
                     List<List<Node<FIRRTLNode>>> clusters = new List<List<Node<FIRRTLNode>>>();
                     float prevElemY = -100000;
                     List<Node<FIRRTLNode>> currCluster = null;
@@ -339,68 +352,18 @@ namespace ChiselDebug
                 }
             }
 
-            //Y ordering for module IO must be in the same order that they are in the module
+            for (int x = 0; x < 5; x++)
             {
-                float inputStartY = modInputNodes.Count / 2.0f;
-                for (int y = 0; y < modInputNodes.Count; y++)
-                {
-                    yOrdering.Add(modInputNodes[y], y - inputStartY);
-                }
-                float outputStartY = modOutputNodes.Count / 2.0f;
-                for (int y = 0; y < modOutputNodes.Count; y++)
-                {
-                    yOrdering.Add(modOutputNodes[y], y - outputStartY);
-                }
-            }
-
-            var bestPlacement = ToPlacement(xOrdering, yOrdering);
-            float bestScore = GetPlacementScore(bestPlacement);
-
-            int attemptsWithoutImprovement = 0;
-            int maxNoImprovementsBeforeBreak = 20;
-
-            while (attemptsWithoutImprovement < maxNoImprovementsBeforeBreak)
-            {
-
                 OptimizeXOrdering(xOrdering);
                 xGroups = GetXGroups(xOrdering);
 
-
-                int noYImprovementCount = 0;
-                int maxNoYImprovmentCount = 200;
-                bool improved = false;
-
-                while (noYImprovementCount < maxNoYImprovmentCount)
+                for (int y = 0; y < 200; y++)
                 {
-
                     OptimizeYOrdering(xGroups, xOrdering, yOrdering);
-
-                    var currPlacement = ToPlacement(xOrdering, yOrdering);
-                    var currScore = GetPlacementScore(currPlacement);
-                    //if (currScore < bestScore)
-                    //{
-                        bestPlacement = currPlacement;
-                        bestScore = currScore;
-                    //    noYImprovementCount = 0;
-                    //    improved = true;
-                    //}
-                    //else
-                    //{
-                        noYImprovementCount++;
-                    //}
                 }
-
-                //if (improved)
-                //{
-                //    attemptsWithoutImprovement = 0;
-                //}
-                //else
-                //{
-                    attemptsWithoutImprovement++;
-                //}
             }
 
-            return bestPlacement;
+            return ToPlacement(xOrdering, yOrdering);
         }
 
         public void SetNodeSize(FIRRTLNode node, Point size)
