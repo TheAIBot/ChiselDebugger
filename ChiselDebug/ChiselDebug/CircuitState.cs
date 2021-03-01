@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using ChiselDebug.Timeline;
+using System.Collections.Generic;
 using VCDReader;
 
-namespace ChiselDebug.Timeline
+namespace ChiselDebug
 {
     public class CircuitState
     {
