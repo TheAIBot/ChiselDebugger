@@ -69,7 +69,7 @@ namespace VCDReaderTests
                 {
                     Assert.AreEqual(expectedTime.Time, actualTime.Time);
                 }
-                else if (expected[i] is IValueChange expectedChange && actual[i] is IValueChange actualChange)
+                else if (expected[i] is VarValue expectedChange && actual[i] is VarValue actualChange)
                 {
                     VerifyValueChange(expectedChange, actualChange);
                 }
@@ -80,14 +80,14 @@ namespace VCDReaderTests
             }
         }
 
-        internal static void VerifyValueChange(IValueChange expected, IValueChange actual)
+        internal static void VerifyValueChange(VarValue expected, VarValue actual)
         {
-            if (expected is BinaryChange expectedBin && actual is BinaryChange actualBin)
+            if (expected is BinaryVarValue expectedBin && actual is BinaryVarValue actualBin)
             {
                 CollectionAssert.AreEqual(expectedBin.Bits, actualBin.Bits);
                 VerifyVarDef(expectedBin.Variable, actualBin.Variable);
             }
-            else if (expected is RealChange expectedReal && actual is RealChange actualReal)
+            else if (expected is RealVarValue expectedReal && actual is RealVarValue actualReal)
             {
                 Assert.AreEqual(expectedReal.Value, actualReal.Value);
                 VerifyVarDef(expectedReal.Variable, actualReal.Variable);

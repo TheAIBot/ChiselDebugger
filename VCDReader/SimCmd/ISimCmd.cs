@@ -4,9 +4,9 @@ namespace VCDReader
 {
     public interface ISimCmd { }
 
-    public record DumpAll(List<IValueChange> Values) : ISimCmd;
-    public record DumpOn(List<IValueChange> Values) : ISimCmd;
-    public record DumpOff(List<IValueChange> Values) : ISimCmd;
-    public record DumpVars(List<IValueChange> InitialValues) : ISimCmd;
-    public record SimTime(int Time) : ISimCmd;
+    public record DumpAll(List<VarValue> Values) : ISimCmd;
+    public record DumpOn(List<VarValue> Values) : ISimCmd;
+    public record DumpOff(List<VarValue> Values) : ISimCmd;
+    public record DumpVars(List<VarValue> InitialValues) : ISimCmd;
+    public record SimTime(ulong Time) : ISimCmd;
 }

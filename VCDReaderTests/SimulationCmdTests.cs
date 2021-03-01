@@ -31,9 +31,9 @@ $enddefinitions $end
 
                 ISimCmd[] simCmds = vcd.GetSimulationCommands().ToArray();
                 Assert.AreEqual(1, simCmds.Length);
-                Assert.IsTrue(simCmds[0] is BinaryChange);
+                Assert.IsTrue(simCmds[0] is BinaryVarValue);
 
-                var valueChange = simCmds[0] as BinaryChange;
+                var valueChange = simCmds[0] as BinaryVarValue;
                 Assert.AreEqual(1, valueChange.Bits.Length);
                 Assert.AreEqual(bitState, valueChange.Bits[0]);
                 Assert.AreEqual(variable, valueChange.Variable);
@@ -59,9 +59,9 @@ b{bitState.ToChar()} !";
 
                 ISimCmd[] simCmds = vcd.GetSimulationCommands().ToArray();
                 Assert.AreEqual(1, simCmds.Length);
-                Assert.IsTrue(simCmds[0] is BinaryChange);
+                Assert.IsTrue(simCmds[0] is BinaryVarValue);
 
-                var valueChange = simCmds[0] as BinaryChange;
+                var valueChange = simCmds[0] as BinaryVarValue;
                 Assert.AreEqual(1, valueChange.Bits.Length);
                 Assert.AreEqual(bitState, valueChange.Bits[0]);
                 Assert.AreEqual(variable, valueChange.Variable);
@@ -77,7 +77,7 @@ b{bitState.ToChar()} !";
             };
             ISimCmd[] expectedSimCmds = new ISimCmd[]
             {
-                new BinaryChange(new BitState[] { BitState.Zero, BitState.Zero }, (VarDef)expectedDecls[0])
+                new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero }, (VarDef)expectedDecls[0])
             };
 
             string vcdString = @$"
@@ -108,9 +108,9 @@ b{expectedBits.BitsToString()} !";
 
             ISimCmd[] simCmds = vcd.GetSimulationCommands().ToArray();
             Assert.AreEqual(1, simCmds.Length);
-            Assert.IsTrue(simCmds[0] is BinaryChange);
+            Assert.IsTrue(simCmds[0] is BinaryVarValue);
 
-            var valueChange = simCmds[0] as BinaryChange;
+            var valueChange = simCmds[0] as BinaryVarValue;
             CollectionAssert.AreEqual(expectedBits, valueChange.Bits);
             Assert.AreEqual(variable, valueChange.Variable);
         }
@@ -132,9 +132,9 @@ r{expectedValue.ToString(CultureInfo.InvariantCulture)} !";
 
             ISimCmd[] simCmds = vcd.GetSimulationCommands().ToArray();
             Assert.AreEqual(1, simCmds.Length);
-            Assert.IsTrue(simCmds[0] is RealChange);
+            Assert.IsTrue(simCmds[0] is RealVarValue);
 
-            var valueChange = simCmds[0] as RealChange;
+            var valueChange = simCmds[0] as RealVarValue;
             Assert.AreEqual(expectedValue, valueChange.Value);
             Assert.AreEqual(variable, valueChange.Variable);
         }
@@ -157,12 +157,12 @@ r{expectedValue.ToString(CultureInfo.InvariantCulture)} !";
 
             ISimCmd[] expectedSimCmds = new ISimCmd[]
             {
-                new DumpVars(new List<IValueChange>()
+                new DumpVars(new List<VarValue>()
                 {
-                    new BinaryChange(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, (VarDef)expectedDecls[1]),
-                    new BinaryChange(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, (VarDef)expectedDecls[4]),
-                    new BinaryChange(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, (VarDef)expectedDecls[2]),
-                    new BinaryChange(new BitState[] { BitState.Zero }, (VarDef)expectedDecls[3])
+                    new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, (VarDef)expectedDecls[1]),
+                    new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, (VarDef)expectedDecls[4]),
+                    new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, (VarDef)expectedDecls[2]),
+                    new BinaryVarValue(new BitState[] { BitState.Zero }, (VarDef)expectedDecls[3])
                 })
             };
 

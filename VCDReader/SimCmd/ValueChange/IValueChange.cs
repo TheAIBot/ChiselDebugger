@@ -2,17 +2,23 @@
 
 namespace VCDReader
 {
-    public interface IValueChange : ISimCmd { }
-
-    public class BinaryChange : IValueChange
+    public abstract class VarValue : ISimCmd
     {
-        public readonly BitState[] Bits;
         public readonly VarDef Variable;
 
-        public BinaryChange(BitState[] bits, VarDef variable)
+        public VarValue(VarDef variable)
+        {
+            this.Variable = variable;
+        }
+    }
+
+    public class BinaryVarValue : VarValue
+    {
+        public readonly BitState[] Bits;
+
+        public BinaryVarValue(BitState[] bits, VarDef variable) : base(variable)
         {
             this.Bits = new BitState[variable.Size];
-            this.Variable = variable;
 
             Array.Fill(Bits, bits[^1].LeftExtendWith());
             bits.CopyTo(Bits, 0);
@@ -36,5 +42,13 @@ namespace VCDReader
             return true;
         }
     }
-    public record RealChange(double Value, VarDef Variable) : IValueChange;
+    public class RealVarValue: VarValue
+    {
+        public readonly double Value;
+
+        public RealVarValue(double value, VarDef variable) : base(variable)
+        {
+            this.Value = value;
+        }
+    }
 }

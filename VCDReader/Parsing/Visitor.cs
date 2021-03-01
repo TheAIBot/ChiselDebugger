@@ -155,9 +155,9 @@ namespace VCDReader.Parsing
             }
         }
 
-        internal static List<IValueChange> VisitValueChangeStream(VCDLexer lexer, Dictionary<string, VarDef> idToVariable)
+        internal static List<VarValue> VisitValueChangeStream(VCDLexer lexer, Dictionary<string, VarDef> idToVariable)
         {
-            List<IValueChange> changes = new List<IValueChange>();
+            List<VarValue> changes = new List<VarValue>();
 
             while (!lexer.IsEmpty())
             {
@@ -172,7 +172,7 @@ namespace VCDReader.Parsing
             return changes;
         }
 
-        internal static IValueChange VisitValueChange(VCDLexer lexer, ReadOnlySpan<char> text, Dictionary<string, VarDef> idToVariable)
+        internal static VarValue VisitValueChange(VCDLexer lexer, ReadOnlySpan<char> text, Dictionary<string, VarDef> idToVariable)
         {
             if (text.Length < 2)
             {
@@ -193,14 +193,14 @@ namespace VCDReader.Parsing
             }
         }
 
-        internal static IValueChange VisitBinaryVectorValueChange(VCDLexer lexer, ReadOnlySpan<char> valueText, Dictionary<string, VarDef> idToVariable)
+        internal static VarValue VisitBinaryVectorValueChange(VCDLexer lexer, ReadOnlySpan<char> valueText, Dictionary<string, VarDef> idToVariable)
         {
             BitState[] bits = ToBitStates(valueText);
             string id = lexer.NextWord().ToString();
 
             if (idToVariable.TryGetValue(id, out VarDef? variable))
             {
-                return new BinaryChange(bits, variable);
+                return new BinaryVarValue(bits, variable);
             }
             else
             {
@@ -208,14 +208,14 @@ namespace VCDReader.Parsing
             }
         }
 
-        internal static IValueChange VisitRealVectorValueChange(VCDLexer lexer, ReadOnlySpan<char> valueText, Dictionary<string, VarDef> idToVariable)
+        internal static VarValue VisitRealVectorValueChange(VCDLexer lexer, ReadOnlySpan<char> valueText, Dictionary<string, VarDef> idToVariable)
         {
             double value = double.Parse(valueText, NumberStyles.Float, CultureInfo.InvariantCulture);
             string id = lexer.NextWord().ToString();
 
             if (idToVariable.TryGetValue(id, out VarDef? variable))
             {
-                return new RealChange(value, variable);
+                return new RealVarValue(value, variable);
             }
             else
             {
@@ -223,7 +223,7 @@ namespace VCDReader.Parsing
             }
         }
 
-        internal static IValueChange VisitScalarValueChange(ReadOnlySpan<char> text, Dictionary<string, VarDef> idToVariable)
+        internal static VarValue VisitScalarValueChange(ReadOnlySpan<char> text, Dictionary<string, VarDef> idToVariable)
         {
             BitState bit = ToBitState(text[0]);
             string id = text.Slice(1).ToString();
@@ -232,7 +232,7 @@ namespace VCDReader.Parsing
 
             if (idToVariable.TryGetValue(id, out VarDef? variable))
             {
-                return new BinaryChange(bits, variable);
+                return new BinaryVarValue(bits, variable);
             }
             else
             {
@@ -284,7 +284,19 @@ namespace VCDReader.Parsing
             {
                 throw new Exception($"Invalid simulation time: {text.ToString()}");
             }
-            return new SimTime(ParseInt(text.Slice(1)));
+            return new SimTime(ParseULong(text.Slice(1)));
+        }
+
+        private static ulong ParseULong(ReadOnlySpan<char> text)
+        {
+            if (ulong.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out ulong result))
+            {
+                return result;
+            }
+            else
+            {
+                throw new Exception($"Failed to parse unsigned long: {text.ToString()}");
+            }
         }
 
         private static int ParseInt(ReadOnlySpan<char> text)
