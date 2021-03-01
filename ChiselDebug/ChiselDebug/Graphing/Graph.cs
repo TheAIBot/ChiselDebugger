@@ -10,6 +10,7 @@ namespace ChiselDebug.Graphing
     {
         public HashSet<Node<T>> Incomming { get; private set; } = new HashSet<Node<T>>();
         public HashSet<Node<T>> Outgoing { get; private set; } = new HashSet<Node<T>>();
+        public HashSet<Node<T>> Indirectly { get; private set; } = new HashSet<Node<T>>();
         public readonly T Value;
 
         public Node(T value)
@@ -29,6 +30,22 @@ namespace ChiselDebug.Graphing
             node.Incomming.Remove(this);
         }
 
+        public void MakeIndirectEdges()
+        {
+            foreach (var from in Outgoing)
+            {
+                foreach (var to in Outgoing)
+                {
+                    if (from == to)
+                    {
+                        continue;
+                    }
+
+                    from.Indirectly.Add(to);
+                }
+            }
+        }
+
         public void InvertEdges()
         {
             var tmp = Incomming;
@@ -39,7 +56,7 @@ namespace ChiselDebug.Graphing
 
     internal class Graph<T>
     {
-        List<Node<T>> Nodes = new List<Node<T>>();
+        public readonly List<Node<T>> Nodes = new List<Node<T>>();
 
         public void AddNode(Node<T> node)
         {
@@ -65,6 +82,14 @@ namespace ChiselDebug.Graphing
             }
         }
 
+        public void MakeIndirectConnections()
+        {
+            foreach (var node in Nodes)
+            {
+                node.MakeIndirectEdges();
+            }
+        }
+
         public void InvertAllEdges()
         {
             foreach (var node in Nodes)
@@ -82,7 +107,7 @@ namespace ChiselDebug.Graphing
             Dictionary<Node<T>, int> nodeOrders = new Dictionary<Node<T>, int>();
             foreach (var node in Nodes)
             {
-                nodeOrders.Add(node, int.MaxValue);
+                nodeOrders.Add(node, int.MinValue);
             }
 
             HashSet<Node<T>> inPath = new HashSet<Node<T>>();
@@ -108,7 +133,7 @@ namespace ChiselDebug.Graphing
                             continue;
                         }
 
-                        if (nodeOrders[child] <= depth + 1)
+                        if (nodeOrders[child] >= depth + 1)
                         {
                             continue;
                         }

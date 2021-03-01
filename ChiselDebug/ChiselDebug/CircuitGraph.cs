@@ -121,22 +121,23 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.Connect connect)
             {
-                var nodeOut = VisitExp(outToNode, nameToOutput, module, connect.Expr);
-                string name = ((FIRRTL.Reference)connect.Loc).Name;
-                if (nameToOutput.TryGetValue(name, out var maybeRegOut) && 
+                //Yes it currently only works with references
+                string fromName = ((FIRRTL.Reference)connect.Expr).Name;
+                string toName = ((FIRRTL.Reference)connect.Loc).Name;
+
+                //The name for a register input is special because /in
+                //is added to the name in the vcd file. If name is a register
+                //then set name to register input name.
+                if (nameToOutput.TryGetValue(toName, out var maybeRegOut) && 
                     outToNode.TryGetValue(maybeRegOut, out var maybeReg) && 
                     maybeReg is GraphFIR.Register)
                 {
-                    name = name + "/in";
+                    toName = toName + "/in";
                 }
 
-                nodeOut.output.SetName(name);
-                if (!nameToOutput.ContainsKey(name))
-                {
-                    nameToOutput.Add(name, nodeOut.output);
-                }
-                var input = nameToInput[name];
-                nodeOut.output.ConnectToInput(input);
+                var fromOutput = nameToOutput[fromName];
+                var toInput = nameToInput[toName];
+                fromOutput.ConnectToInput(toInput);
             }
             else if (statement is FIRRTL.PartialConnect)
             {
