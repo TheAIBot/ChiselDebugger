@@ -2,6 +2,8 @@
 @page "/"
 @using FIRRTL
 @using VCDReader
+@using System.Diagnostics
+@using ChiselDebug.Timeline;
 
 <div class="Circuit">
     @foreach (var modulePos in ModulePositions)
@@ -18,76 +20,14 @@
 
     protected override void OnInitialized()
     {
-        var circuit = FIRRTL.Parse.FromFile("Examples/MovingAveragePow2.lo.fir");
-        var vcd = VCDReader.Parse.FromFile("Examples/MovingAveragePow2.vcd");
+        //var circuit = FIRRTL.Parse.FromFile("Examples/MovingAveragePow2.lo.fir");
+        //var vcd = VCDReader.Parse.FromFile("Examples/MovingAveragePow2.vcd");
+        var circuit = FIRRTL.Parse.FromFile("Examples/RegFileVec.lo.fir");
+        var vcd = VCDReader.Parse.FromFile("Examples/RegFileVec.vcd");
         var graph = CircuitGraph.VisitCircuit(circuit);
+        graph.InferTypes();
 
-        Dictionary<string, Connection> cons = new Dictionary<string, Connection>();
-        foreach (var mod in graph.Modules)
-        {
-            foreach (var node in mod.GetAllNodes())
-            {
-                foreach (var output in node.GetOutputs())
-                {
-                    if (output.Con.IsUsed() && output.Name != string.Empty)
-                    {
-                        cons.Add(output.Name, output.Con);
-                    }
-                }
-            }
-            foreach (var output in mod.InternalOutputs)
-            {
-                if (output.Con.IsUsed() && output.Name != string.Empty)
-                {
-                    cons.Add(output.Name, output.Con);
-                }
-            }
-        }
-
-
-        //Set all bits for each connection to X(unknown logical value).
-        //I am doing this because i don't know if $dumpvars will dump
-        //all variables initial values or if it will leave some out.
-        foreach (var variable in vcd.Variables)
-        {
-            if (cons.TryGetValue(variable.Reference, out Connection con))
-            {
-                con.Value = new ChiselDebug.GraphFIR.ValueType(new string(BitState.X.ToChar(), variable.Size), new SizedType(ChiselDebug.GraphFIR.GroundType.UInt, variable.Size));
-            }
-        }
-
-        //For connections from const values, the initial value is constant
-        foreach (var mod in graph.Modules)
-        {
-            foreach (var node in mod.GetAllNodes())
-            {
-                var constNode = node as ConstValue;
-                if (constNode == null)
-                {
-                    continue;
-                }
-
-                if (!constNode.Result.Con.IsUsed())
-                {
-                    continue;
-                }
-
-                SizedType sType = constNode.Value.ToSizedType();
-                constNode.Result.Con.Value = new ChiselDebug.GraphFIR.ValueType(constNode.Value.Value.ToSignedBinaryString(sType), sType);
-            }
-        }
-
-        DumpVars initialValues = (DumpVars)vcd.GetSimulationCommands().First(x => x is DumpVars);
-
-        //Set each connections initial value
-        foreach (BinaryChange initVarValue in initialValues.InitialValues)
-        {
-            if (cons.TryGetValue(initVarValue.Variable.Reference, out Connection con))
-            {
-                con.Value = new ChiselDebug.GraphFIR.ValueType(initVarValue.BitsToString(), new SizedType(ChiselDebug.GraphFIR.GroundType.UInt, initVarValue.Variable.Size));
-            }
-        }
-
+        VCDTimeline timeline = new VCDTimeline(vcd);
 
         ModulePositions.Add(new Positioned<ChiselDebug.GraphFIR.Module>(new Point(0, 0), graph.Modules[0]));
     }
