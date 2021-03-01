@@ -277,7 +277,7 @@ namespace ChiselDebug
                 }
                 else if (prim.Op is FIRRTL.Bits)
                 {
-                    nodePrim = new GraphFIR.BitExtract(args[0].output, prim.Type, (int)prim.Consts[0], (int)prim.Consts[1]);
+                    nodePrim = new GraphFIR.BitExtract(args[0].output, prim.Type, (int)prim.Consts[1], (int)prim.Consts[0]);
                 }
                 else
                 {
