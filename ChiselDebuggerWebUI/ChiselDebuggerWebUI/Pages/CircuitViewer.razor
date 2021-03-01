@@ -24,7 +24,7 @@
         //var vcd = VCDReader.Parse.FromFile("Examples/MovingAveragePow2.vcd");
         var circuit = FIRRTL.Parse.FromFile("Examples/RegFileVec.lo.fir");
         var vcd = VCDReader.Parse.FromFile("Examples/RegFileVec.vcd");
-        var graph = CircuitGraph.VisitCircuit(circuit);
+        var graph = CircuitToGraph.GetAsGraph(circuit);
         graph.InferTypes();
 
         VCDTimeline timeline = new VCDTimeline(vcd);
