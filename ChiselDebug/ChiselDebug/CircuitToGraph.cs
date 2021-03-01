@@ -51,6 +51,8 @@ namespace ChiselDebug
 
                 VisitStatement(outToNode, nameToOutput, nameToInput, module, mod.Body);
 
+                module.FinishModuleSetup();
+
                 return module;
             }
             else
@@ -179,7 +181,17 @@ namespace ChiselDebug
             else if (statement is FIRRTL.DefNode node)
             {
                 var nodeOut = VisitExp(outToNode, nameToOutput, module, node.Value);
-                nodeOut.output.SetName(node.Name);
+
+                if (node.Value is FIRRTL.RefLikeExpression)
+                {
+                    module.AddOutputRename(node.Name, nodeOut.output);
+                }
+                else
+                {
+                    nodeOut.output.SetName(node.Name);
+                }
+                
+                
                 nameToOutput.Add(node.Name, nodeOut.output);
             }
             else if (statement is FIRRTL.DefMemory)
@@ -275,6 +287,7 @@ namespace ChiselDebug
                     throw new NotImplementedException();
                 }
 
+                nodePrim.Result.SetName(GetUniqueName());
                 outToNode.Add(nodePrim.Result, nodePrim);
                 module.AddNode(nodePrim);
                 return (nodePrim, nodePrim.Result);
