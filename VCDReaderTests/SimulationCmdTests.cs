@@ -91,6 +91,19 @@ b0 b1";
         }
 
         [TestMethod]
+        public void ParseVCDWithEndAsSkipChars()
+        {
+            string vcdString = @$"
+$var wire 2 b1 b1 $end
+$enddefinitions $end
+b0 b1
+ 
+   
+";
+            VCD vcd = Parse.FromString(vcdString);
+        }
+
+        [TestMethod]
         public void ParseVectorBinarySize4ValueChange()
         {
             BitState[] expectedBits = new BitState[] { BitState.Zero, BitState.One, BitState.X, BitState.Z };

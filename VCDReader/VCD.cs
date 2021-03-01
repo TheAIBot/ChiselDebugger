@@ -30,7 +30,7 @@ namespace VCDReader
 
         public IEnumerable<ISimCmd> GetSimulationCommands()
         {
-            while (!Lexer.IsEmpty())
+            while (Lexer.IsWordsRemaining())
             {
                 yield return Visitor.VisitSimCmd(Lexer, IDToVariable);
             }

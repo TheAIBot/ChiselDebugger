@@ -180,6 +180,16 @@ namespace VCDReader.Parsing
             return ReachedEOF && (AvailableChars.Length == 0);
         }
 
+        internal bool IsWordsRemaining()
+        {
+            if (!ReachedEOF)
+            {
+                return true;
+            }
+
+            return AvailableChars.Length > 0 && AvailableChars.Span.TrimStart(SkipChars).Length > 0;
+        }
+
         public void Dispose()
         {
             Reader.Dispose();
