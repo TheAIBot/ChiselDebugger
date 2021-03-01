@@ -121,8 +121,9 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.Connect connect)
             {
+                GraphFIR.Output fromOutput = VisitExp(outToNode, nameToOutput, module, connect.Expr).output;
+
                 //Yes it currently only works with references
-                string fromName = ((FIRRTL.Reference)connect.Expr).Name;
                 string toName = ((FIRRTL.Reference)connect.Loc).Name;
 
                 //The name for a register input is special because /in
@@ -135,7 +136,6 @@ namespace ChiselDebug
                     toName = toName + "/in";
                 }
 
-                var fromOutput = nameToOutput[fromName];
                 var toInput = nameToInput[toName];
                 fromOutput.ConnectToInput(toInput);
             }
