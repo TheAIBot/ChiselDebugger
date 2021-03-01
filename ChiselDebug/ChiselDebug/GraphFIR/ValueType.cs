@@ -1,14 +1,27 @@
-﻿namespace ChiselDebug.GraphFIR
-{
-    public struct ValueType
-    {
-        string ValueString;
-        SizedType ValueT;
+﻿using FIRRTL;
+using VCDReader;
 
-        public ValueType(string valueString, SizedType type)
+namespace ChiselDebug.GraphFIR
+{
+    public class ValueType
+    {
+        string ValueString = string.Empty;
+        private readonly IFIRType Type;
+        private VarValue Value;
+
+        public ValueType(IFIRType type)
         {
-            ValueString = valueString;
-            ValueT = type;
+            this.Type = type;
+            if (Type is FIRRTL.GroundType ground && ground.IsWidthKnown)
+            {
+                this.ValueString = new string(BitState.X.ToChar(), ground.Width);
+            }
+        }
+
+        public void SetValue(VarValue value)
+        {
+            Value = value;
+            ValueString = ((BinaryVarValue)Value).BitsToString();
         }
 
         public string ToBinaryString()

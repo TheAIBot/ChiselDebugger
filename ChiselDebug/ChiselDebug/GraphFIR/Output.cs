@@ -8,9 +8,6 @@ namespace ChiselDebug.GraphFIR
         public IFIRType Type { get; private set; }
         public readonly Connection Con;
 
-        public Output()
-        { }
-
         public Output(IFIRType type) : this(string.Empty, type)
         { }
 
@@ -20,7 +17,6 @@ namespace ChiselDebug.GraphFIR
             this.Type = type;
             this.Con = new Connection(this);
         }
-
 
         public void SetName(string name)
         {
