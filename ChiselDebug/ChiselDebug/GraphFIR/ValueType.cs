@@ -24,6 +24,11 @@ namespace ChiselDebug.GraphFIR
             ValueString = ((BinaryVarValue)Value).BitsToString();
         }
 
+        public void SetValueString(string valueString)
+        {
+            ValueString = valueString;
+        }
+
         public string ToBinaryString()
         {
             return ValueString;

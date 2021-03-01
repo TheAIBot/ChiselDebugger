@@ -8,7 +8,6 @@ namespace ChiselDebug.GraphFIR
     {
         public readonly string Name;
         public List<FIRRTLNode> Nodes = new List<FIRRTLNode>();
-        public List<Module> Modules = new List<Module>();
 
         public Module(string name)
         {
@@ -53,6 +52,14 @@ namespace ChiselDebug.GraphFIR
         public FIRRTLNode[] GetAllNodes()
         {
             return Nodes.ToArray();
+        }
+
+        public override void InferType()
+        {
+            foreach (var node in Nodes)
+            {
+                node.InferType();
+            }
         }
     }
 }

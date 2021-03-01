@@ -9,7 +9,7 @@ namespace ChiselDebug.GraphFIR
 
         public FIRRTLPrimOP(IFIRType type)
         {
-            this.Result = new Output(type);
+            this.Result = new Output(this, type);
         }
 
         public override Output[] GetOutputs()

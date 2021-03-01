@@ -23,69 +23,147 @@ namespace ChiselDebug.GraphFIR
         {
             return new Input[] { A, B };
         }
+
+        public override void InferType()
+        {
+            if (Result.Type is not UnknownType)
+            {
+                return;
+            }
+
+            A.InferType();
+            B.InferType();
+
+            Result.SetType(BiArgInferType());
+        }
+        public abstract IFIRType BiArgInferType();
     }
 
     public class FIRAdd : BiArgMonoResPrimOp
     {
         public FIRAdd(Output aIn, Output bIn, IFIRType outType) : base("+", aIn, bIn, outType) { }
+
+        public override IFIRType BiArgInferType() => (A.Type, B.Type) switch
+        {
+            (UIntType a, UIntType b) => new UIntType(Math.Max(a.Width, b.Width) + 1),
+            (UIntType a, SIntType b) => new SIntType(Math.Max(a.Width, b.Width) + 1),
+            (SIntType a, UIntType b) => new SIntType(Math.Max(a.Width, b.Width) + 1),
+            (SIntType a, SIntType b) => new SIntType(Math.Max(a.Width, b.Width) + 1),
+            _ => throw new Exception("Failed to infer type.")
+        };
     }
 
     public class FIRSub : BiArgMonoResPrimOp
     {
         public FIRSub(Output aIn, Output bIn, IFIRType outType) : base("-", aIn, bIn, outType) { }
+
+        public override IFIRType BiArgInferType() => (A.Type, B.Type) switch
+        {
+            (UIntType a, UIntType b) => new SIntType(Math.Max(a.Width, b.Width) + 1),
+            (UIntType a, SIntType b) => new SIntType(Math.Max(a.Width, b.Width) + 1),
+            (SIntType a, UIntType b) => new SIntType(Math.Max(a.Width, b.Width) + 1),
+            (SIntType a, SIntType b) => new SIntType(Math.Max(a.Width, b.Width) + 1),
+            _ => throw new Exception("Failed to infer type.")
+        };
     }
 
     public class FIRMul : BiArgMonoResPrimOp
     {
         public FIRMul(Output aIn, Output bIn, IFIRType outType) : base("*", aIn, bIn, outType) { }
+
+        public override IFIRType BiArgInferType() => (A.Type, B.Type) switch
+        {
+            (UIntType a, UIntType b) => new UIntType(a.Width + b.Width),
+            (UIntType a, SIntType b) => new SIntType(a.Width + b.Width),
+            (SIntType a, UIntType b) => new SIntType(a.Width + b.Width),
+            (SIntType a, SIntType b) => new SIntType(a.Width + b.Width),
+            _ => throw new Exception("Failed to infer type.")
+        };
     }
 
     public class FIRDiv : BiArgMonoResPrimOp
     {
         public FIRDiv(Output aIn, Output bIn, IFIRType outType) : base("/", aIn, bIn, outType) { }
+
+        public override IFIRType BiArgInferType() => (A.Type, B.Type) switch
+        {
+            (UIntType a, UIntType b) => new UIntType(a.Width),
+            (UIntType a, SIntType b) => new SIntType(a.Width + 1),
+            (SIntType a, UIntType b) => new SIntType(a.Width),
+            (SIntType a, SIntType b) => new SIntType(a.Width + 1),
+            _ => throw new Exception("Failed to infer type.")
+        };
     }
 
-    public class FIREq : BiArgMonoResPrimOp
+    public abstract class FIRCompOp : BiArgMonoResPrimOp
+    {
+        public FIRCompOp(string opName, Output aIn, Output bIn, IFIRType outType) : base(opName, aIn, bIn, outType) { }
+
+        public override IFIRType BiArgInferType() => (A.Type, B.Type) switch
+        {
+            (UIntType a, UIntType b) => new UIntType(1),
+            (UIntType a, SIntType b) => new UIntType(1),
+            (SIntType a, UIntType b) => new UIntType(1),
+            (SIntType a, SIntType b) => new UIntType(1),
+            _ => throw new Exception("Failed to infer type.")
+        };
+    }
+
+    public class FIREq : FIRCompOp
     {
         public FIREq(Output aIn, Output bIn, IFIRType outType) : base("=", aIn, bIn, outType){ }
     }
     
-    public class FIRNeq : BiArgMonoResPrimOp
+    public class FIRNeq : FIRCompOp
     {
         public FIRNeq(Output aIn, Output bIn, IFIRType outType) : base("≠", aIn, bIn, outType) { }
     }
     
-    public class FIRGeq : BiArgMonoResPrimOp
+    public class FIRGeq : FIRCompOp
     {
         public FIRGeq(Output aIn, Output bIn, IFIRType outType) : base("≥", aIn, bIn, outType) { }
     }
     
-    public class FIRLeq : BiArgMonoResPrimOp
+    public class FIRLeq : FIRCompOp
     {
         public FIRLeq(Output aIn, Output bIn, IFIRType outType) : base("≤", aIn, bIn, outType) { }
     }
     
-    public class FIRGt : BiArgMonoResPrimOp
+    public class FIRGt : FIRCompOp
     {
         public FIRGt(Output aIn, Output bIn, IFIRType outType) : base(">", aIn, bIn, outType) { }
     }
     
-    public class FIRLt : BiArgMonoResPrimOp
+    public class FIRLt : FIRCompOp
     {
         public FIRLt(Output aIn, Output bIn, IFIRType outType) : base("<", aIn, bIn, outType) { }
     }
 
-    public class FIRAnd : BiArgMonoResPrimOp
+    public abstract class FIRBitwise : BiArgMonoResPrimOp
+    {
+        public FIRBitwise(string opName, Output aIn, Output bIn, IFIRType outType) : base(opName, aIn, bIn, outType) { }
+
+        public override IFIRType BiArgInferType() => (A.Type, B.Type) switch
+        {
+            (UIntType a, UIntType b) => new UIntType(Math.Max(a.Width, b.Width)),
+            (UIntType a, SIntType b) => new UIntType(Math.Max(a.Width, b.Width)),
+            (SIntType a, UIntType b) => new UIntType(Math.Max(a.Width, b.Width)),
+            (SIntType a, SIntType b) => new UIntType(Math.Max(a.Width, b.Width)),
+            _ => throw new Exception("Failed to infer type.")
+        };
+    }
+
+    public class FIRAnd : FIRBitwise
     {
         public FIRAnd(Output aIn, Output bIn, IFIRType outType) : base("&", aIn, bIn, outType) { }
     }
 
-    public class FIROr : BiArgMonoResPrimOp
+    public class FIROr : FIRBitwise
     {
         public FIROr(Output aIn, Output bIn, IFIRType outType) : base("|", aIn, bIn, outType) { }
     }
 
-    public class FIRXor : BiArgMonoResPrimOp
+    public class FIRXor : FIRBitwise
     {
         public FIRXor(Output aIn, Output bIn, IFIRType outType) : base("^", aIn, bIn, outType) { }
     }

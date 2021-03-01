@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FIRRTL;
+using System;
 
 namespace ChiselDebug.GraphFIR
 {
@@ -10,7 +11,9 @@ namespace ChiselDebug.GraphFIR
         public ConstValue(string outputName, FIRRTL.Literal value)
         {
             this.Value = value;
-            this.Result = new Output(outputName, new FIRRTL.UnknownType());
+
+            this.Result = new Output(this, outputName, value.GetFIRType());
+            Result.Con.Value.SetValueString(value.Value.ToSignedBinaryString((FIRRTL.GroundType)value.GetFIRType()));
         }
 
         public override Input[] GetInputs()
@@ -21,6 +24,10 @@ namespace ChiselDebug.GraphFIR
         public override Output[] GetOutputs()
         {
             return new Output[] { Result };
+        }
+
+        public override void InferType()
+        {
         }
     }
 }

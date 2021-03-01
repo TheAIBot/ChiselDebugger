@@ -7,18 +7,22 @@ namespace ChiselDebug.GraphFIR
 {
     public static class Extensions
     {
-        public static string ToSignedBinaryString(this BigInteger value, SizedType type)
+        public static string ToSignedBinaryString(this BigInteger value, FIRRTL.GroundType type)
         {
             string binary = value.ToBinaryString();
             binary = binary.Substring(0, Math.Min(binary.Length, type.Width));
 
-            if (type.GType == GroundType.SInt)
+            if (type is FIRRTL.SIntType)
             {
                 return binary.PadLeft(type.Width, binary.Last());
             }
-            else
+            else if (type is FIRRTL.UIntType)
             {
                 return binary.PadLeft(type.Width, '0');
+            }
+            else
+            {
+                throw new Exception();
             }
         }
 

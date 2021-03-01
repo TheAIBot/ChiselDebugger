@@ -34,5 +34,14 @@ namespace ChiselDebug.GraphFIR
         {
             return Con != null;
         }
+
+        public void InferType()
+        {
+            if (Con != null && Type is UnknownType)
+            {
+                Con.From.InferType();
+                Type = Con.From.Type;
+            }
+        }
     }
 }

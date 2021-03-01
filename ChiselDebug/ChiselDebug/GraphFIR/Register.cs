@@ -29,7 +29,7 @@ namespace ChiselDebug.GraphFIR
             {
                 this.Init = new Input(init.Type);
             }
-            this.Result = new Output(Name, outType);
+            this.Result = new Output(this, Name, outType);
         }
 
         public override Input[] GetInputs()
@@ -52,5 +52,8 @@ namespace ChiselDebug.GraphFIR
         {
             return new Output[] { Result };
         }
+
+        public override void InferType()
+        { }
     }
 }

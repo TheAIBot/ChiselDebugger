@@ -1,4 +1,5 @@
 ﻿using FIRRTL;
+using System;
 using System.Collections.Generic;
 
 namespace ChiselDebug.GraphFIR
@@ -14,12 +15,12 @@ namespace ChiselDebug.GraphFIR
         public void AddExternalInput(string inputName, IFIRType type)
         {
             ExternalInputs.Add(new Input(inputName, type));
-            InternalOutputs.Add(new Output(inputName, type));
+            InternalOutputs.Add(new Output(null, inputName, type));
         }
 
         public void AddExternalOutput(string outputName, IFIRType type)
         {
-            ExternalOutputs.Add(new Output(outputName, type));
+            ExternalOutputs.Add(new Output(null, outputName, type));
             InternalInputs.Add(new Input(outputName, type));
         }
 
@@ -44,6 +45,11 @@ namespace ChiselDebug.GraphFIR
         public override Output[] GetOutputs()
         {
             return ExternalOutputs.ToArray();
+        }
+
+        public override void InferType()
+        {
+            throw new NotImplementedException();
         }
     }
 }

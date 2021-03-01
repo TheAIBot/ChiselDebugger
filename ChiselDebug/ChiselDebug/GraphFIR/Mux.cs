@@ -22,5 +22,17 @@ namespace ChiselDebug.GraphFIR
             inputs.Add(Decider);
             return inputs.ToArray();
         }
+
+        public override void InferType()
+        {
+            if (Choises.First().Type is not FIRRTL.UnknownType)
+            {
+                return;
+            }
+
+            Choises.First().InferType();
+
+            Result.SetType(Choises.First().Type);
+        }
     }
 }

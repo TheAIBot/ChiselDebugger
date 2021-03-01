@@ -161,9 +161,24 @@ namespace FIRRTL
     public record SubIndex(Expression Expr, int Value, IFIRType Type, FlowType Flow) : Expression, RefLikeExpression;
     public record SubAccess(Expression Expr, Expression Index, IFIRType Type, FlowType Flow) : Expression, RefLikeExpression;
 
-    public record Literal(BigInteger Value, int Width) : Expression;
-    public record UIntLiteral(BigInteger Value, int Width) : Literal(Value, Width);
-    public record SIntLiteral(BigInteger Value, int Width) : Literal(Value, Width);
+    public abstract record Literal(BigInteger Value, int Width) : Expression
+    {
+        public abstract IFIRType GetFIRType();
+    }
+    public record UIntLiteral(BigInteger Value, int Width) : Literal(Value, Width)
+    {
+        public override IFIRType GetFIRType()
+        {
+            return new UIntType(Width);
+        }
+    }
+    public record SIntLiteral(BigInteger Value, int Width) : Literal(Value, Width)
+    {
+        public override IFIRType GetFIRType()
+        {
+            return new SIntType(Width);
+        }
+    }
 
     public record Statement() : FirrtlNode;
     public record EmptyStmt() : Statement;

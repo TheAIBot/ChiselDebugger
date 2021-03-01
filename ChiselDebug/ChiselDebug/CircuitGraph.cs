@@ -23,6 +23,14 @@ namespace ChiselDebug
             this.Modules = modules;
         }
 
+        public void InferTypes()
+        {
+            foreach (var mod in Modules)
+            {
+                mod.InferType();
+            }
+        }
+
         public static CircuitGraph VisitCircuit(FIRRTL.Circuit circuit)
         {
             List<GraphFIR.Module> modules = new List<GraphFIR.Module>();

@@ -32,6 +32,24 @@ namespace ChiselDebug.GraphFIR
         {
             this.FromMSB = fromMSB;
         }
+
+        public override void InferType()
+        {
+            if (In.Type is not FIRRTL.UnknownType)
+            {
+                return;
+            }
+
+            In.InferType();
+
+            IFIRType type = In.Type switch
+            {
+                UIntType a => new UIntType(FromMSB),
+                SIntType a => new UIntType(FromMSB),
+                _ => throw new Exception("Failed to infer type.")
+            };
+            Result.SetType(type);
+        }
     }
 
     public class Tail : ConstBitRange
@@ -40,6 +58,24 @@ namespace ChiselDebug.GraphFIR
         public Tail(Output arg1, IFIRType outType, int fromLSB) : base("tail", arg1, outType)
         {
             this.FromLSB = fromLSB;
+        }
+
+        public override void InferType()
+        {
+            if (In.Type is not FIRRTL.UnknownType)
+            {
+                return;
+            }
+
+            In.InferType();
+
+            IFIRType type = In.Type switch
+            {
+                UIntType a => new UIntType(a.Width - FromLSB),
+                SIntType a => new UIntType(a.Width - FromLSB),
+                _ => throw new Exception("Failed to infer type.")
+            };
+            Result.SetType(type);
         }
     }
 
@@ -51,6 +87,24 @@ namespace ChiselDebug.GraphFIR
         {
             this.StartInclusive = startInclusive;
             this.EndInclusive = endInclusive;
+        }
+
+        public override void InferType()
+        {
+            if (In.Type is not FIRRTL.UnknownType)
+            {
+                return;
+            }
+
+            In.InferType();
+
+            IFIRType type = In.Type switch
+            {
+                UIntType a => new UIntType(EndInclusive - StartInclusive + 1),
+                SIntType a => new UIntType(EndInclusive - StartInclusive + 1),
+                _ => throw new Exception("Failed to infer type.")
+            };
+            Result.SetType(type);
         }
     }
 }
