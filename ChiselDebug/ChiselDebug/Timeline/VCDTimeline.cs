@@ -50,11 +50,16 @@ namespace ChiselDebug.Timeline
 
                             stepChanges = new List<TimeStepChanges>();
                             changeCounter = 0;
+
+                            startTime = time.Time;
                         }
+                    }
+                    else
+                    {
+                        startTime = time.Time;
                     }
 
                     currTimeStep = new TimeStepChanges(time.Time);
-                    startTime = time.Time;
                 }
                 else if (simCmd is VarValue change)
                 {
