@@ -73,7 +73,7 @@ namespace ChiselDebug.Timeline
             //end with a simulation time command.
             if (stepChanges.Count > 0)
             {
-                TimeSpan tSpan = new TimeSpan(startTime, stepChanges.Last().Time);
+                TimeSpan tSpan = new TimeSpan(startTime, stepChanges.Last().Time + 1);
                 SegmentChanges.Add(new TimeSegmentChanges(tSpan, segmentStartState, stepChanges));
             }
 
