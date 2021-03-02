@@ -5,12 +5,32 @@
 @using System.Diagnostics
 @using ChiselDebug.Timeline;
 
-<div class="Circuit">
-    @foreach (var modulePos in ModulePositions)
-    {
-        <ModuleUI PosOp="@modulePos"></ModuleUI>
-    }
+<div class="timelineContent">
+    @*<div class="timelineStop"></div>
+    <div class="timeline"></div>
+    <div class="timelineStop"></div>*@
+
+
+    <input class="timeline" type="range" min="@StartTime" max="@EndTime" list="steplist" @oninput="TimeChanged"/>
+        <datalist class="fewj" id="steplist">
+            @foreach (var time in TimeSteps)
+            {
+                <option value="@time"></option>
+            }
+        </datalist>
 </div>
+<div style="height:20px;"></div>
+<div>
+    <div class="Circuit">
+        @foreach (var modulePos in ModulePositions)
+        {
+            <ModuleUI PosOp="@modulePos"></ModuleUI>
+        }
+
+    </div>
+</div>
+
+
 
 
 
@@ -18,17 +38,35 @@
 {
     private List<Positioned<ChiselDebug.GraphFIR.Module>> ModulePositions = new List<Positioned<ChiselDebug.GraphFIR.Module>>();
 
+    private VCDTimeline Timeline;
+    private CircuitGraph Graph;
+
+    private ulong StartTime;
+    private ulong EndTime;
+    private List<ulong> TimeSteps = new List<ulong>();
+
     protected override void OnInitialized()
     {
         //var circuit = FIRRTL.Parse.FromFile("Examples/MovingAveragePow2.lo.fir");
         //var vcd = VCDReader.Parse.FromFile("Examples/MovingAveragePow2.vcd");
         var circuit = FIRRTL.Parse.FromFile("Examples/RegFileVec.lo.fir");
         var vcd = VCDReader.Parse.FromFile("Examples/RegFileVec.vcd");
-        var graph = CircuitToGraph.GetAsGraph(circuit);
-        graph.InferTypes();
+        Graph = CircuitToGraph.GetAsGraph(circuit);
+        Graph.InferTypes();
 
-        VCDTimeline timeline = new VCDTimeline(vcd);
+        Timeline = new VCDTimeline(vcd);
+        StartTime = Timeline.TimeInterval.StartInclusive;
+        EndTime = Timeline.TimeInterval.InclusiveEnd();
 
-        ModulePositions.Add(new Positioned<ChiselDebug.GraphFIR.Module>(new Point(0, 0), graph.Modules[0]));
+        TimeSteps = Timeline.GetAllSimTimes().ToList();
+
+
+        ModulePositions.Add(new Positioned<ChiselDebug.GraphFIR.Module>(new Point(0, 0), Graph.Modules[0]));
+    }
+
+    private void TimeChanged(ChangeEventArgs args)
+    {
+        ulong time = ulong.Parse((string)args.Value);
+        Graph.SetState(Timeline.GetStateAtTime(time));
     }
 }
