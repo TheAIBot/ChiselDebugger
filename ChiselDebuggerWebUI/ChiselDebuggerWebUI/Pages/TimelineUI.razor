@@ -1,0 +1,61 @@
+﻿@using VCDReader
+@using ChiselDebug.Timeline;
+
+<div class="timelineContent">
+    <input class="timeline" type="range" min="@StartTime" max="@EndTime" value="@StartTime" list="steplist" @oninput="TimeChanged" />
+    <div style=" padding-left: 10px; padding-right: 10px;">
+        <div class="ticksList">
+            @foreach (var time in TimeSteps)
+            {
+                <tick value="@time" style="left: @($"{((((float)time - StartTime) / (EndTime - StartTime)) * 100).ToString(System.Globalization.CultureInfo.InvariantCulture)}%"); top: 0px;">@(time.ToString("N0", System.Globalization.CultureInfo.InvariantCulture))ns</tick>
+            }
+        </div>
+    </div>
+
+    <datalist id="steplist">
+        @foreach (var time in TimeSteps)
+        {
+            <option value="@time"></option>
+        }
+    </datalist>
+</div>
+
+@code {
+    [CascadingParameter(Name = "DebugCtrl")]
+    protected DebugController DebugCtrl { get; set; }
+
+    private ulong CurrTime;
+    private ulong StartTime;
+    private ulong EndTime;
+    private List<ulong> TimeSteps = new List<ulong>();
+
+    protected override Task OnParametersSetAsync()
+    {
+        VCDTimeline timeline = DebugCtrl.Timeline;
+        StartTime = timeline.TimeInterval.StartInclusive;
+        EndTime = timeline.TimeInterval.InclusiveEnd();
+        CurrTime = StartTime;
+
+        List<ulong> times = timeline.GetAllSimTimes().ToList();
+        const int timesOnTimeline = 15;
+        for (int i = 0; i < timesOnTimeline - 1; i++)
+        {
+            TimeSteps.Add(times[(int)((times.Count / (float)timesOnTimeline) * i)]);
+        }
+        TimeSteps.Add(times.Last());
+
+        return base.OnParametersSetAsync();
+    }
+
+
+    private void TimeChanged(ChangeEventArgs args)
+    {
+        ulong time = ulong.Parse((string)args.Value);
+        if (time != CurrTime)
+        {
+            CurrTime = time;
+            DebugCtrl.SetCircuitState(time);
+        }
+    }
+
+}

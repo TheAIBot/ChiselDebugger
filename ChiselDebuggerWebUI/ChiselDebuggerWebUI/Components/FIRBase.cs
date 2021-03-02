@@ -11,7 +11,11 @@ using System.Threading.Tasks;
 
 namespace ChiselDebuggerWebUI.Components
 {
-    public abstract class FIRBase<T> : ComponentBase where T : FIRRTLNode
+    public interface IFIRUINode
+    {
+        public abstract void PrepareForRender();
+    }
+    public abstract class FIRBase<T> : ComponentBase, IFIRUINode where T : FIRRTLNode
     {
         [Inject]
         private IJSRuntime JS { get; set; }
@@ -21,6 +25,9 @@ namespace ChiselDebuggerWebUI.Components
 
         [Parameter]
         public EventCallback<FIRComponentUpdate> OnComponentUpdate { get; set; }
+
+        [CascadingParameter(Name = "DebugCtrl")]
+        protected DebugController DebugCtrl { get; set; }
 
         protected Point Position => PosOp.Position;
         protected T Operation => PosOp.Value;
@@ -55,6 +62,8 @@ namespace ChiselDebuggerWebUI.Components
             {
                 IsFirstSetParametersEvent = false;
 
+                DebugCtrl.AddUINode(this, Operation.GetInputs().Select(x => x.Con).Where(x => x != null).ToList());
+                DebugCtrl.AddUINode(this, Operation.GetOutputs().Select(x => x.Con).ToList());
                 OnFirstParametersSetAsync();
             }
             return base.OnParametersSetAsync();
@@ -93,7 +102,7 @@ namespace ChiselDebuggerWebUI.Components
                 }
             }
 
-            Debug.WriteLine($"Render: {typeof(T)} sizeChange: {sizeChanged}, posChange: {hasMoved}, Count: {RenderCounter++}");
+            //Debug.WriteLine($"Render: {typeof(T)} sizeChange: {sizeChanged}, posChange: {hasMoved}, Count: {RenderCounter++}");
         }
 
         protected override bool ShouldRender()
@@ -107,6 +116,11 @@ namespace ChiselDebuggerWebUI.Components
         {
             HasToRender = true;
             base.StateHasChanged();
+        }
+
+        public void PrepareForRender()
+        {
+            HasToRender = true;
         }
 
         protected virtual void OnAfterFirstRenderAsync(int width, int height)
