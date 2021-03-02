@@ -42,7 +42,7 @@
         VCDTimeline timeline = new VCDTimeline(vcd);
 
         DebugCtrl = new DebugController(graph, timeline);
-        DebugCtrl.OnReRender += StateHasChanged;
+        DebugCtrl.OnReRender += () => InvokeAsync(StateHasChanged);
 
         ModulePositions.Add(new Positioned<ChiselDebug.GraphFIR.Module>(new Point(0, 0), graph.Modules[0]));
     }
