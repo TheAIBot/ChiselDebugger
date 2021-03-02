@@ -127,6 +127,7 @@ namespace ChiselDebug
                     maybeReg is GraphFIR.Register)
                 {
                     toName = toName + "/in";
+                    module.AddOutputRename(toName, fromOutput);
                 }
 
                 var toInput = nameToInput[toName];
