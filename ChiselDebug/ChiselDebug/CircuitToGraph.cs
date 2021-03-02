@@ -303,6 +303,7 @@ namespace ChiselDebug
                 ifTrue.output.ConnectToInput(node.Choises[0]);
                 ifFalse.output.ConnectToInput(node.Choises[1]);
 
+                node.Result.SetName(GetUniqueName());
                 outToNode.Add(node.Result, node);
                 module.AddNode(node);
                 return (node, node.Result);
@@ -322,6 +323,7 @@ namespace ChiselDebug
                 cond.output.ConnectToInput(node.Decider);
                 ifValid.output.ConnectToInput(node.Choises[0]);
 
+                node.Result.SetName(GetUniqueName());
                 outToNode.Add(node.Result, node);
                 module.AddNode(node);
                 return (node, node.Result);
