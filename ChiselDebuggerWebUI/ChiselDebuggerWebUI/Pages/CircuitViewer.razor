@@ -6,18 +6,22 @@
 @using ChiselDebug.Timeline;
 
 <div class="timelineContent">
-    @*<div class="timelineStop"></div>
-    <div class="timeline"></div>
-    <div class="timelineStop"></div>*@
-
-
-    <input class="timeline" type="range" min="@StartTime" max="@EndTime" list="steplist" @oninput="TimeChanged"/>
-        <datalist class="fewj" id="steplist">
+    <input class="timeline" type="range" min="@StartTime" max="@EndTime" value="@StartTime" list="steplist" @oninput="TimeChanged" />
+    <div style=" padding-left: 10px; padding-right: 10px;">
+        <div class="ticksList">
             @foreach (var time in TimeSteps)
             {
-                <option value="@time"></option>
+                <tick value="@time" style="left: @($"{((((float)time - StartTime) / (EndTime - StartTime)) * 100).ToString(System.Globalization.CultureInfo.InvariantCulture)}%"); top: 0px;">@(time.ToString("N0", System.Globalization.CultureInfo.InvariantCulture))ns</tick>
             }
-        </datalist>
+        </div>
+    </div>
+
+    <datalist id="steplist">
+        @foreach (var time in TimeSteps)
+        {
+            <option value="@time"></option>
+        }
+    </datalist>
 </div>
 <div style="height:20px;"></div>
 <div>
@@ -41,6 +45,7 @@
     private VCDTimeline Timeline;
     private CircuitGraph Graph;
 
+    private ulong CurrTime;
     private ulong StartTime;
     private ulong EndTime;
     private List<ulong> TimeSteps = new List<ulong>();
@@ -57,8 +62,15 @@
         Timeline = new VCDTimeline(vcd);
         StartTime = Timeline.TimeInterval.StartInclusive;
         EndTime = Timeline.TimeInterval.InclusiveEnd();
+        CurrTime = StartTime;
 
-        TimeSteps = Timeline.GetAllSimTimes().ToList();
+        List<ulong> times = Timeline.GetAllSimTimes().ToList();
+        const int timesOnTimeline = 15;
+        for (int i = 0; i < timesOnTimeline - 1; i++)
+        {
+            TimeSteps.Add(times[(int)((times.Count / (float)timesOnTimeline) * i)]);
+        }
+        TimeSteps.Add(times.Last());
 
 
         ModulePositions.Add(new Positioned<ChiselDebug.GraphFIR.Module>(new Point(0, 0), Graph.Modules[0]));
@@ -67,6 +79,10 @@
     private void TimeChanged(ChangeEventArgs args)
     {
         ulong time = ulong.Parse((string)args.Value);
-        Graph.SetState(Timeline.GetStateAtTime(time));
+        if (time != CurrTime)
+        {
+            CurrTime = time;
+            Graph.SetState(Timeline.GetStateAtTime(CurrTime));
+        }
     }
 }
