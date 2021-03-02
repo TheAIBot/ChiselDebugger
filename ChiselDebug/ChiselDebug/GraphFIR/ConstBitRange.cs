@@ -107,4 +107,31 @@ namespace ChiselDebug.GraphFIR
             Result.SetType(type);
         }
     }
+
+    public class Pad : ConstBitRange
+    {
+        public readonly int WidthAfterPad;
+        public Pad(Output arg1, IFIRType outType, int newWidth) : base("pad", arg1, outType)
+        {
+            this.WidthAfterPad = newWidth;
+        }
+
+        public override void InferType()
+        {
+            if (In.Type is not FIRRTL.UnknownType)
+            {
+                return;
+            }
+
+            In.InferType();
+
+            IFIRType type = In.Type switch
+            {
+                UIntType a => new UIntType(Math.Max(a.Width, WidthAfterPad)),
+                SIntType a => new SIntType(Math.Max(a.Width, WidthAfterPad)),
+                _ => throw new Exception("Failed to infer type.")
+            };
+            Result.SetType(type);
+        }
+    }
 }

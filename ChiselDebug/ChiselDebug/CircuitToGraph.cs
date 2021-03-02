@@ -282,6 +282,10 @@ namespace ChiselDebug
                 {
                     nodePrim = new GraphFIR.BitExtract(args[0].output, prim.Type, (int)prim.Consts[1], (int)prim.Consts[0]);
                 }
+                else if (prim.Op is FIRRTL.Pad)
+                {
+                    nodePrim = new GraphFIR.Pad(args[0].output, prim.Type, (int)prim.Consts[0]);
+                }
                 else
                 {
                     throw new NotImplementedException();
