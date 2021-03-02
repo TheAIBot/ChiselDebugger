@@ -71,6 +71,15 @@ namespace ChiselDebug
             if (port.Direction == FIRRTL.Dir.Input)
             {
                 module.AddExternalInput(port.Name, port.Type);
+
+                //VCD may keep track of the previous clock cycle value even if it doesn't use it.
+                //To keep in line with supporting everything in the VCD, an input representing
+                //the previous clock cycle value is added so there isn't an issue when loading
+                //a CircuitState from VCD.
+                if (port.Type is FIRRTL.ClockType)
+                {
+                    module.AddExternalInput(port.Name + "/prev", port.Type);
+                }
             }
             else
             {
