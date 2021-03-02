@@ -1,6 +1,7 @@
 ﻿using ChiselDebug.GraphFIR;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using VCDReader;
 
@@ -25,8 +26,9 @@ namespace ChiselDebug
             }
         }
 
-        public void SetState(CircuitState state)
+        public List<Connection> SetState(CircuitState state)
         {
+            List<Connection> consWithChanges = new List<Connection>();
             foreach (BinaryVarValue varValue in state.VariableValues.Values)
             {
                 Scope scope = varValue.Variable.Scopes[0];
@@ -35,13 +37,18 @@ namespace ChiselDebug
                     Module mod = Modules.First(x => x.Name == scope.Name);
                     Connection con = mod.GetConnection(varValue.Variable.Scopes.AsSpan().Slice(1), varValue.Variable.Reference);
 
-                    con.Value.SetValue(varValue);
+                    if (con.Value.UpdateValue(varValue))
+                    {
+                        consWithChanges.Add(con);
+                    }
                 }
                 else
                 {
                     throw new NotImplementedException();
                 }
             }
+
+            return consWithChanges;
         }
     }
 }

@@ -10,6 +10,8 @@ namespace VCDReader
         {
             this.Variable = variable;
         }
+
+        public abstract bool SameValue(VarValue other);
     }
 
     public class BinaryVarValue : VarValue
@@ -41,6 +43,29 @@ namespace VCDReader
 
             return true;
         }
+
+        public override bool SameValue(VarValue other)
+        {
+            if (other is BinaryVarValue binary)
+            {
+                if (Bits.Length != binary.Bits.Length)
+                {
+                    return false;
+                }
+
+                for (int i = 0; i < Bits.Length; i++)
+                {
+                    if (Bits[i] != binary.Bits[i])
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            return false;
+        }
     }
     public class RealVarValue: VarValue
     {
@@ -49,6 +74,12 @@ namespace VCDReader
         public RealVarValue(double value, VarDef variable) : base(variable)
         {
             this.Value = value;
+        }
+
+        public override bool SameValue(VarValue other)
+        {
+            return other is RealVarValue real &&
+                   Value == real.Value;
         }
     }
 }
