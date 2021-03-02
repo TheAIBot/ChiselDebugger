@@ -30,5 +30,13 @@ namespace ChiselDebug.Timeline
 
             return state;
         }
+
+        public IEnumerable<ulong> GetAllSimTimes()
+        {
+            foreach (var step in StepChanges)
+            {
+                yield return step.Time;
+            }
+        }
     }
 }

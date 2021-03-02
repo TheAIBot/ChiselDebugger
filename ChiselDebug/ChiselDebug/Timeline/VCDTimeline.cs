@@ -11,7 +11,7 @@ namespace ChiselDebug.Timeline
     public class VCDTimeline
     {
         public readonly TimeScale TimeScale;
-        private readonly TimeSpan TimeInterval;
+        public readonly TimeSpan TimeInterval;
         private readonly List<TimeSegmentChanges> SegmentChanges = new List<TimeSegmentChanges>();
 
         public VCDTimeline(VCD vcd)
@@ -89,6 +89,17 @@ namespace ChiselDebug.Timeline
 
             TimeSegmentChanges segment = SegmentChanges.First(x => x.TimeInterval.IsTimeInTimeSpan(time));
             return segment.GetStateAtTime(time);
+        }
+
+        public IEnumerable<ulong> GetAllSimTimes()
+        {
+            foreach (var segment in SegmentChanges)
+            {
+                foreach (var time in segment.GetAllSimTimes())
+                {
+                    yield return time;
+                }
+            }
         }
     }
 }
