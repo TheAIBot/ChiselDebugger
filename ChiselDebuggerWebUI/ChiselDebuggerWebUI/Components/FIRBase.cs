@@ -35,7 +35,6 @@ namespace ChiselDebuggerWebUI.Components
         private Point PreviousSize = new Point(0, 0);
         private Point PreviousPos = new Point(0, 0);
         private int RenderCounter = 0;
-        private bool IsFirstSetParametersEvent = true;
         protected ElementReference SizeWatcher;
         protected List<DirectedIO> InputOffsets = new List<DirectedIO>();
         protected List<DirectedIO> OutputOffsets = new List<DirectedIO>();
@@ -55,22 +54,12 @@ namespace ChiselDebuggerWebUI.Components
             PreviousSize = size;
         }
 
-        protected override Task OnParametersSetAsync()
+        protected override void OnFirstParametersSetAsync()
         {
-            if (IsFirstSetParametersEvent)
-            {
-                IsFirstSetParametersEvent = false;
-
-                DebugCtrl.AddUINode(this, Operation.GetInputs().Select(x => x.Con).Where(x => x != null).ToList());
-                DebugCtrl.AddUINode(this, Operation.GetOutputs().Select(x => x.Con).ToList());
-                ParentModCtrl?.AddUINode(this);
-                OnFirstParametersSetAsync();
-            }
-            return base.OnParametersSetAsync();
+            DebugCtrl.AddUINode(this, Operation.GetInputs().Select(x => x.Con).Where(x => x != null).ToList());
+            DebugCtrl.AddUINode(this, Operation.GetOutputs().Select(x => x.Con).ToList());
+            ParentModCtrl?.AddUINode(this);
         }
-
-        protected virtual void OnFirstParametersSetAsync()
-        { }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {

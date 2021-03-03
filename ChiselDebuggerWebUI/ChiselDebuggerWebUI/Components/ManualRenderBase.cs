@@ -9,6 +9,7 @@ namespace ChiselDebuggerWebUI.Components
     public abstract class ManualRenderBase : ComponentBase
     {
         protected bool HasToRender = true;
+        private bool IsFirstSetParametersEvent = true;
 
         protected override bool ShouldRender()
         {
@@ -22,5 +23,18 @@ namespace ChiselDebuggerWebUI.Components
             HasToRender = true;
             base.StateHasChanged();
         }
+
+        protected override Task OnParametersSetAsync()
+        {
+            if (IsFirstSetParametersEvent)
+            {
+                IsFirstSetParametersEvent = false;
+
+                OnFirstParametersSetAsync();
+            }
+            return base.OnParametersSetAsync();
+        }
+
+        protected virtual void OnFirstParametersSetAsync(){ }
     }
 }
