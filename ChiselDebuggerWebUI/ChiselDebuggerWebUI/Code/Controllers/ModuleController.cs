@@ -3,7 +3,7 @@ using ChiselDebug.GraphFIR;
 using ChiselDebug.Routing;
 using System;
 using System.Collections.Generic;
-using static ChiselDebug.Placer;
+using static ChiselDebug.SimplePlacer;
 
 namespace ChiselDebuggerWebUI.Code
 {
@@ -12,7 +12,7 @@ namespace ChiselDebuggerWebUI.Code
         private readonly Module Mod;
         private readonly ConnectionsHandler ConHandler;
         private readonly SimpleRouter WireRouter;
-        private readonly Placer NodePlacer;
+        private readonly SimplePlacer NodePlacer;
 
         public event PlacedHandler OnPlacedNodes;
 
@@ -25,7 +25,7 @@ namespace ChiselDebuggerWebUI.Code
             this.Mod = mod;
             this.ConHandler = new ConnectionsHandler(Mod);
             this.WireRouter = new SimpleRouter(ConHandler);
-            this.NodePlacer = new Placer(Mod);
+            this.NodePlacer = new SimplePlacer(Mod);
             NodePlacer.OnPlacedNodes += PropagateOnPlacedEvent;
         }
 

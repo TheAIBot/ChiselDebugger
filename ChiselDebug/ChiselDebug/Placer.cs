@@ -8,7 +8,7 @@ using System.Diagnostics;
 
 namespace ChiselDebug
 {
-    public class Placer
+    public class SimplePlacer
     {
         private readonly Module Mod;
         private readonly HashSet<FIRRTLNode> MissingNodeDims;
@@ -17,7 +17,7 @@ namespace ChiselDebug
         public delegate void PlacedHandler(PlacementInfo placements);
         public event PlacedHandler OnPlacedNodes;
 
-        public Placer(Module mod)
+        public SimplePlacer(Module mod)
         {
             this.Mod = mod;
             this.MissingNodeDims = new HashSet<FIRRTLNode>(Mod.GetAllNodes());
