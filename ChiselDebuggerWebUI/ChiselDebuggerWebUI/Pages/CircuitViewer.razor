@@ -5,6 +5,7 @@
 @using ChiselDebug.Timeline;
 
 @inject IJSRuntime JS;
+@inherits ManualRenderBase
 
 <CascadingValue Value="@DebugCtrl" Name="DebugCtrl" IsFixed="true">
     <TimelineUI />
@@ -16,10 +17,6 @@
         }
     </div>
 </CascadingValue>
-
-
-
-
 
 @code
 {
@@ -44,8 +41,6 @@
         DebugCtrl.OnReRender += () => InvokeAsync(StateHasChanged);
 
         ModulePositions.Add(new Positioned<ChiselDebug.GraphFIR.Module>(new Point(0, 0), graph.Modules[0]));
-
-
     }
 
     protected override Task OnAfterRenderAsync(bool firstRender)

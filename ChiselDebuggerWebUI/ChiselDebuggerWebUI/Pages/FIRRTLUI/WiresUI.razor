@@ -1,4 +1,6 @@
-﻿<svg class="wiresContainer">
+﻿@inherits ManualRenderBase
+
+<svg class="wiresContainer">
     @foreach (var wireGroup in WirePaths.GroupBy(x => x.GetEndIO()))
     {
         <g>
@@ -17,25 +19,22 @@
     }
 </svg>
 
-@code 
+@code
 {
     [Parameter]
     public ModuleController ModCtrl { get; set; }
 
     private List<WirePath> WirePaths = new List<WirePath>();
 
-    protected override Task OnParametersSetAsync()
+    protected override void OnFirstParametersSetAsync()
     {
         ModCtrl.OnWiresRouted += x => InvokeAsync(() => UpdateWires(x));
-
-        return base.OnParametersSetAsync();
     }
 
     private void UpdateWires(List<WirePath> wirePaths)
     {
         WirePaths = wirePaths;
 
-        //ModCtrl.RerenderModule();
         StateHasChanged();
     }
 }
