@@ -10,7 +10,7 @@
 <CascadingValue Value="@DebugCtrl" Name="DebugCtrl" IsFixed="true">
     <TimelineUI />
     <div style="height:20px;" />
-    <div id="CircuitContainer" class="Circuit" style="transform: scale(@CircuitScale.ToHtmlNumber());">
+    <div id="CircuitContainer" class="Circuit" style="transform: translate(@CircuitPosOffset.X.ToPixels(), @CircuitPosOffset.Y.ToPixels()) scale(@CircuitScale.ToHtmlNumber());">
         @foreach (var modulePos in ModulePositions)
         {
             <ModuleUI PosOp="@modulePos" />
@@ -28,6 +28,7 @@
     private DebugController DebugCtrl;
     private List<Positioned<ChiselDebug.GraphFIR.Module>> ModulePositions = new List<Positioned<ChiselDebug.GraphFIR.Module>>();
     private float CircuitScale = 1.0f;
+    private Point CircuitPosOffset = new Point(0, 0);
 
     protected override void OnInitialized()
     {
@@ -52,7 +53,9 @@
     {
         if (firstRender)
         {
-            return JSEvents.AddScrollListener(JS, "CircuitContainer", x => InvokeAsync(() => HandleScroll(x))).AsTask();
+            ValueTask addScrollTask = JSEvents.AddScrollListener(JS, "CircuitContainer", x => InvokeAsync(() => HandleScroll(x)));
+            ValueTask addDragTask = JSEvents.AddDragListener(JS, "CircuitContainer", x => InvokeAsync(() => HandleDrag(x)));
+            return Task.WhenAll(addScrollTask.AsTask(), addDragTask.AsTask());
         }
         return base.OnAfterRenderAsync(firstRender);
     }
@@ -61,6 +64,12 @@
     {
         CircuitScale -= scrollDelta / 10.0f;
         CircuitScale = Math.Clamp(CircuitScale, 0.1f, 10.0f);
+        StateHasChanged();
+    }
+
+    private void HandleDrag(Point dragged)
+    {
+        CircuitPosOffset += dragged;
         StateHasChanged();
     }
 }
