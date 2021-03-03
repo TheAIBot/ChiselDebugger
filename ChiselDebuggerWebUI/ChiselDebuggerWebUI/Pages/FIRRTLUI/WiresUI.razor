@@ -26,7 +26,7 @@
 
     protected override Task OnParametersSetAsync()
     {
-        ModCtrl.OnWiresRouted += UpdateWires;
+        ModCtrl.OnWiresRouted += x => InvokeAsync(() => UpdateWires(x));
 
         return base.OnParametersSetAsync();
     }
@@ -34,6 +34,8 @@
     private void UpdateWires(List<WirePath> wirePaths)
     {
         WirePaths = wirePaths;
+
+        //ModCtrl.RerenderModule();
         StateHasChanged();
     }
 }

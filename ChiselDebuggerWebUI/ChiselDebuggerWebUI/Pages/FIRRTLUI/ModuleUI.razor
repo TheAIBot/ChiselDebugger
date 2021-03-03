@@ -56,7 +56,7 @@
 
         ModuleOpPoses = Operation.GetAllNodes().Select(x => new Positioned<FIRRTLNode>(new Point(0, 0), x)).ToList();
         CurrModCtrl = new ModuleController(Operation);
-        CurrModCtrl.OnPlacedNodes += UpdatePlacement;
+        CurrModCtrl.OnPlacedNodes += x => InvokeAsync(() => UpdatePlacement(x));
 
         DebugCtrl.AddModCtrl(CurrModCtrl);
     }
@@ -92,6 +92,7 @@
         InputOffsets = OnMakeInputs(moduleSize.X, moduleSize.Y);
         OutputOffsets = OnMakeOutputs(moduleSize.X, moduleSize.Y);
         CurrModCtrl.UpdateIOFromNode(Operation, InputOffsets, OutputOffsets);
+        CurrModCtrl.RerenderModule();
 
         CurrModCtrl.RouteWires(placements);
 
