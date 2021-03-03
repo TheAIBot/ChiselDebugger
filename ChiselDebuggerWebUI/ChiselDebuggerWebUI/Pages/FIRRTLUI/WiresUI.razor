@@ -1,5 +1,5 @@
 ﻿<svg class="wiresContainer">
-    @foreach (var wireGroup in Paths.GroupBy(x => x.GetEndIO()))
+    @foreach (var wireGroup in WirePaths.GroupBy(x => x.GetEndIO()))
     {
         <g>
             @foreach (var wire in wireGroup)
@@ -20,5 +20,20 @@
 @code 
 {
     [Parameter]
-    public List<WirePath> Paths { get; set; }
+    public ModuleController ModCtrl { get; set; }
+
+    private List<WirePath> WirePaths = new List<WirePath>();
+
+    protected override Task OnParametersSetAsync()
+    {
+        ModCtrl.OnWiresRouted += UpdateWires;
+
+        return base.OnParametersSetAsync();
+    }
+
+    private void UpdateWires(List<WirePath> wirePaths)
+    {
+        WirePaths = wirePaths;
+        StateHasChanged();
+    }
 }

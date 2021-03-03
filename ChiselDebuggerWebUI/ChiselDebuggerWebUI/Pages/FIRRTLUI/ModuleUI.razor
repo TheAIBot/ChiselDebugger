@@ -36,7 +36,7 @@
                 <IOPortUI Position="@output.Position"></IOPortUI>
             }
 
-            <WiresUI Paths="@ModuleConnections"></WiresUI>
+            <WiresUI ModCtrl="CurrModCtrl"></WiresUI>
         </div>
     </div>
 </div>
@@ -44,13 +44,10 @@
 @code
 {
     private const int ContentPadding = 20;
-    private Point MinContentSize;
-    private List<Positioned<FIRRTLNode>> ModuleOpPoses = new List<Positioned<FIRRTLNode>>();
-
     private const int MarginForIO = 20;
     private const int MinSpaceBetweenIO = 15;
-
-    private List<WirePath> ModuleConnections = new List<WirePath>();
+    private Point MinContentSize;
+    private List<Positioned<FIRRTLNode>> ModuleOpPoses = new List<Positioned<FIRRTLNode>>();
     private ModuleController CurrModCtrl;
 
     protected override void OnFirstParametersSetAsync()
@@ -58,7 +55,8 @@
         MinContentSize = GetMinSizeForIO();
 
         ModuleOpPoses = Operation.GetAllNodes().Select(x => new Positioned<FIRRTLNode>(new Point(0, 0), x)).ToList();
-        CurrModCtrl = new ModuleController(Operation, UpdatePlacement);
+        CurrModCtrl = new ModuleController(Operation);
+        CurrModCtrl.OnPlacedNodes += UpdatePlacement;
     }
 
     protected override bool OnResize(int width, int height)
@@ -93,7 +91,7 @@
         OutputOffsets = OnMakeOutputs(moduleSize.X, moduleSize.Y);
         CurrModCtrl.UpdateIOFromNode(Operation, InputOffsets, OutputOffsets);
 
-        ModuleConnections = CurrModCtrl.WireRouter.PathLines(placements);
+        CurrModCtrl.RouteWires(placements);
 
         SetCurrentSize(moduleSize);
         StateHasChanged();

@@ -3,6 +3,7 @@ using ChiselDebug.GraphFIR;
 using ChiselDebug.Routing;
 using System;
 using System.Collections.Generic;
+using static ChiselDebug.Placer;
 
 namespace ChiselDebuggerWebUI.Code
 {
@@ -10,17 +11,32 @@ namespace ChiselDebuggerWebUI.Code
     {
         private readonly Module Mod;
         private readonly ConnectionsHandler ConHandler;
-        public readonly SimpleRouter WireRouter;
+        private readonly SimpleRouter WireRouter;
         private readonly Placer NodePlacer;
 
+        public event PlacedHandler OnPlacedNodes;
 
-        public ModuleController(Module mod, Action<PlacementInfo> onPlacedNodes)
+        public delegate void RoutedHandler(List<WirePath> wirePaths);
+        public event RoutedHandler OnWiresRouted;
+
+
+        public ModuleController(Module mod)
         {
             this.Mod = mod;
             this.ConHandler = new ConnectionsHandler(Mod);
             this.WireRouter = new SimpleRouter(ConHandler);
             this.NodePlacer = new Placer(Mod);
-            NodePlacer.OnPlacedNodes += x => onPlacedNodes(x);
+            NodePlacer.OnPlacedNodes += PropagateOnPlacedEvent;
+        }
+
+        private void PropagateOnPlacedEvent(PlacementInfo placements)
+        {
+            OnPlacedNodes?.Invoke(placements);
+        }
+
+        public void RouteWires(PlacementInfo placements)
+        {
+            OnWiresRouted?.Invoke(WireRouter.PathLines(placements));
         }
 
         public void UpdateComponentInfo(FIRComponentUpdate updateData)
