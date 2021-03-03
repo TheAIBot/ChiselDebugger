@@ -64,6 +64,7 @@ namespace ChiselDebuggerWebUI.Components
 
                 DebugCtrl.AddUINode(this, Operation.GetInputs().Select(x => x.Con).Where(x => x != null).ToList());
                 DebugCtrl.AddUINode(this, Operation.GetOutputs().Select(x => x.Con).ToList());
+                ParentModCtrl?.AddUINode(this);
                 OnFirstParametersSetAsync();
             }
             return base.OnParametersSetAsync();
