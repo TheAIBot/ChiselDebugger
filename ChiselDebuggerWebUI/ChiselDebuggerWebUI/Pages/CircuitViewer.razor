@@ -5,10 +5,12 @@
 @using System.Diagnostics
 @using ChiselDebug.Timeline;
 
+@inject IJSRuntime JS;
+
 <CascadingValue Value="@DebugCtrl" Name="DebugCtrl" IsFixed="true">
     <TimelineUI />
     <div style="height:20px;" />
-    <div class="Circuit" style="transform: scale(@CircuitScale.ToHtmlNumber());">
+    <div id="CircuitContainer" class="Circuit" style="transform: scale(@CircuitScale.ToHtmlNumber());">
         @foreach (var modulePos in ModulePositions)
         {
             <ModuleUI PosOp="@modulePos" />
@@ -43,7 +45,16 @@
 
         ModulePositions.Add(new Positioned<ChiselDebug.GraphFIR.Module>(new Point(0, 0), graph.Modules[0]));
 
-        JSEvents.OnWindowScroll += x => InvokeAsync(() => HandleScroll(x));
+
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            return JSEvents.AddScrollListener(JS, "CircuitContainer", x => InvokeAsync(() => HandleScroll(x))).AsTask();
+        }
+        return base.OnAfterRenderAsync(firstRender);
     }
 
     private void HandleScroll(int scrollDelta)
