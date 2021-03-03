@@ -15,7 +15,7 @@ namespace ChiselDebuggerWebUI.Components
     {
         public abstract void PrepareForRender();
     }
-    public abstract class FIRBase<T> : ComponentBase, IFIRUINode where T : FIRRTLNode
+    public abstract class FIRBase<T> : ManualRenderBase, IFIRUINode where T : FIRRTLNode
     {
         [Inject]
         private IJSRuntime JS { get; set; }
@@ -34,7 +34,6 @@ namespace ChiselDebuggerWebUI.Components
 
         private Point PreviousSize = new Point(0, 0);
         private Point PreviousPos = new Point(0, 0);
-        private bool HasToRender = true;
         private int RenderCounter = 0;
         private bool IsFirstSetParametersEvent = true;
         protected ElementReference SizeWatcher;
@@ -104,19 +103,6 @@ namespace ChiselDebuggerWebUI.Components
             }
 
             //Debug.WriteLine($"Render: {typeof(T)} sizeChange: {sizeChanged}, posChange: {hasMoved}, Count: {RenderCounter++}");
-        }
-
-        protected override bool ShouldRender()
-        {
-            bool doRender = HasToRender;
-            HasToRender = false;
-            return doRender;
-        }
-
-        protected new void StateHasChanged()
-        {
-            HasToRender = true;
-            base.StateHasChanged();
         }
 
         public void PrepareForRender()
