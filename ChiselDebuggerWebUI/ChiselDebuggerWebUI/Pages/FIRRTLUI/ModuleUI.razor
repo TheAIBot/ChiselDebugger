@@ -10,19 +10,19 @@
             {
                 @if (posOp.Value is Mux)
                 {
-                    <MuxOp PosOp="@(posOp.Cast<Mux>())" OnComponentUpdate="@UpdateComponentInfo"></MuxOp>
+                    <MuxOp PosOp="@(posOp.Cast<Mux>())" ParentModCtrl="CurrModCtrl"></MuxOp>
                 }
                 else if (posOp.Value is BiArgMonoResPrimOp)
                 {
-                    <BiArgMonoResPrimOpUI PosOp="@(posOp.Cast<BiArgMonoResPrimOp>())" OnComponentUpdate="@UpdateComponentInfo"></BiArgMonoResPrimOpUI>
+                    <BiArgMonoResPrimOpUI PosOp="@(posOp.Cast<BiArgMonoResPrimOp>())" ParentModCtrl="CurrModCtrl"></BiArgMonoResPrimOpUI>
                 }
                 else if (posOp.Value is ConstBitRange)
                 {
-                    <ConstBitRangeUI PosOp="@(posOp.Cast<ConstBitRange>())" OnComponentUpdate="@UpdateComponentInfo"></ConstBitRangeUI>
+                    <ConstBitRangeUI PosOp="@(posOp.Cast<ConstBitRange>())" ParentModCtrl="CurrModCtrl"></ConstBitRangeUI>
                 }
                 else if (posOp.Value is Register)
                 {
-                    <RegisterUI PosOp="@(posOp.Cast<Register>())" OnComponentUpdate="@UpdateComponentInfo"></RegisterUI>
+                    <RegisterUI PosOp="@(posOp.Cast<Register>())" ParentModCtrl="CurrModCtrl"></RegisterUI>
                 }
             }
 
@@ -49,30 +49,23 @@
 
     private const int MarginForIO = 20;
     private const int MinSpaceBetweenIO = 15;
-    
-    private List<WirePath> ModuleConnections = new List<WirePath>();
 
-    private ConnectionsHandler ConHandler;
-    private Placer NodePlacer;
-    private SimpleRouter WireRouter;
+    private List<WirePath> ModuleConnections = new List<WirePath>();
+    private ModuleController CurrModCtrl;
 
     protected override void OnFirstParametersSetAsync()
     {
         MinContentSize = GetMinSizeForIO();
 
-        NodePlacer = new Placer(Operation);
-        NodePlacer.OnPlacedNodes += UpdatePlacement;
         ModuleOpPoses = Operation.GetAllNodes().Select(x => new Positioned<FIRRTLNode>(new Point(0, 0), x)).ToList();
-
-        ConHandler = new ConnectionsHandler(Operation);
-        WireRouter = new SimpleRouter(ConHandler);
+        CurrModCtrl = new ModuleController(Operation, UpdatePlacement);
     }
 
     protected override bool OnResize(int width, int height)
     {
         base.OnResize(width, height);
 
-        ConHandler.UpdateIOFromNode(Operation, InputOffsets, OutputOffsets);
+        CurrModCtrl.UpdateIOFromNode(Operation, InputOffsets, OutputOffsets);
 
         return true;
     }
@@ -98,9 +91,9 @@
         //With new module size, the io positions need to be updated
         InputOffsets = OnMakeInputs(moduleSize.X, moduleSize.Y);
         OutputOffsets = OnMakeOutputs(moduleSize.X, moduleSize.Y);
-        ConHandler.UpdateIOFromNode(Operation, InputOffsets, OutputOffsets);
+        CurrModCtrl.UpdateIOFromNode(Operation, InputOffsets, OutputOffsets);
 
-        ModuleConnections = WireRouter.PathLines(placements);
+        ModuleConnections = CurrModCtrl.WireRouter.PathLines(placements);
 
         SetCurrentSize(moduleSize);
         StateHasChanged();
@@ -114,12 +107,5 @@
     protected override List<DirectedIO> OnMakeOutputs(int width, int height)
     {
         return IOPositionCalc.EvenVertical<Output>(height, Operation.InternalOutputs, -ContentPadding, MarginForIO);
-    }
-
-
-    private void UpdateComponentInfo(FIRComponentUpdate updateData)
-    {
-        ConHandler.UpdateIOFromNode(updateData.Node, updateData.InputOffsets, updateData.OutputOffsets);
-        NodePlacer.SetNodeSize(updateData.Node, updateData.Size);
     }
 }

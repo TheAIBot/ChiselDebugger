@@ -17,6 +17,7 @@ namespace ChiselDebuggerWebUI.Code
         private readonly CircuitGraph Graph;
         public VCDTimeline Timeline { get; init; }
         private readonly Dictionary<Connection, List<IFIRUINode>> ConToUINode = new Dictionary<Connection, List<IFIRUINode>>();
+        private readonly List<ModuleController> ModControllers = new List<ModuleController>();
 
         public delegate void ReRenderCircuit();
         public event ReRenderCircuit OnReRender;
@@ -95,6 +96,11 @@ namespace ChiselDebuggerWebUI.Code
                     ConToUINode.Add(con, nodes);
                 }
             }
+        }
+
+        public void AddModCtrl(ModuleController modCtrl)
+        {
+            ModControllers.Add(modCtrl);
         }
 
         public void SetCircuitState(ulong time)

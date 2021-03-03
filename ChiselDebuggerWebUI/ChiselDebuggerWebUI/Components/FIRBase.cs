@@ -24,7 +24,7 @@ namespace ChiselDebuggerWebUI.Components
         public Positioned<T> PosOp { get; set; }
 
         [Parameter]
-        public EventCallback<FIRComponentUpdate> OnComponentUpdate { get; set; }
+        public ModuleController ParentModCtrl { get; set; }
 
         [CascadingParameter(Name = "DebugCtrl")]
         protected DebugController DebugCtrl { get; set; }
@@ -131,7 +131,7 @@ namespace ChiselDebuggerWebUI.Components
             InputOffsets = OnMakeInputs(width, height);
             OutputOffsets = OnMakeOutputs(width, height);
 
-            OnComponentUpdate.InvokeAsync(new FIRComponentUpdate(Operation, new Point(width, height), InputOffsets, OutputOffsets));
+            ParentModCtrl?.UpdateComponentInfo(new FIRComponentUpdate(Operation, new Point(width, height), InputOffsets, OutputOffsets));
 
             return true;
         }
