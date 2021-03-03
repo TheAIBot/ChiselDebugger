@@ -6,16 +6,13 @@
 @using ChiselDebug.Timeline;
 
 <CascadingValue Value="@DebugCtrl" Name="DebugCtrl" IsFixed="true">
-    <TimelineUI/>
-    <div style="height:20px;"></div>
-    <div>
-        <div class="Circuit">
-            @foreach (var modulePos in ModulePositions)
-            {
-                <ModuleUI PosOp="@modulePos"></ModuleUI>
-            }
-
-        </div>
+    <TimelineUI />
+    <div style="height:20px;" />
+    <div class="Circuit">
+        @foreach (var modulePos in ModulePositions)
+        {
+            <ModuleUI PosOp="@modulePos" />
+        }
     </div>
 </CascadingValue>
 
