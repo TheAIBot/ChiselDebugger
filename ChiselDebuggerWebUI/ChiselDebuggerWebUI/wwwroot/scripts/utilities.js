@@ -8,8 +8,7 @@
 
 var JSUtils = JSUtils || {};
 JSUtils.getElementSize = function(element) {
-    const elemRect = element.getBoundingClientRect();
-    return new ElemWH(elemRect.width, elemRect.height);
+    return new ElemWH(element.clientWidth, element.clientHeight);
 };
 
 
