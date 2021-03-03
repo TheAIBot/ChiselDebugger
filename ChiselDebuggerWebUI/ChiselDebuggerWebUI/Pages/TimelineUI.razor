@@ -40,7 +40,7 @@
         const int timesOnTimeline = 15;
         for (int i = 0; i < timesOnTimeline - 1; i++)
         {
-            TimeSteps.Add(times[(int)((times.Count / (float)timesOnTimeline) * i)]);
+            TimeSteps.Add(times[(int)((times.Count / (float)(timesOnTimeline - 1)) * i)]);
         }
         TimeSteps.Add(times.Last());
 
