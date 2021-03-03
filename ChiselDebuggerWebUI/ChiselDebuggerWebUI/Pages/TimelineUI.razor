@@ -38,9 +38,10 @@
 
         List<ulong> times = timeline.GetAllSimTimes().ToList();
         const int timesOnTimeline = 15;
+        float distanceBetweenTimes = times.Count / (float)(timesOnTimeline - 1);
         for (int i = 0; i < timesOnTimeline - 1; i++)
         {
-            TimeSteps.Add(times[(int)((times.Count / (float)(timesOnTimeline - 1)) * i)]);
+            TimeSteps.Add(times[(int)(distanceBetweenTimes * i)]);
         }
         TimeSteps.Add(times.Last());
 
