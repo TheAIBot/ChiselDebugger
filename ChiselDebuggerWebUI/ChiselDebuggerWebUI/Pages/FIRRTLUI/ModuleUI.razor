@@ -92,10 +92,10 @@
         InputOffsets = OnMakeInputs(moduleSize.X, moduleSize.Y);
         OutputOffsets = OnMakeOutputs(moduleSize.X, moduleSize.Y);
         CurrModCtrl.UpdateIOFromNode(Operation, InputOffsets, OutputOffsets);
-        CurrModCtrl.RerenderModule();
 
         CurrModCtrl.RouteWires(placements);
 
+        CurrModCtrl.RerenderModule();
         SetCurrentSize(moduleSize);
         StateHasChanged();
     }
