@@ -8,7 +8,7 @@
 <CascadingValue Value="@DebugCtrl" Name="DebugCtrl" IsFixed="true">
     <TimelineUI />
     <div style="height:20px;" />
-    <div class="Circuit">
+    <div class="Circuit" style="transform: scale(@CircuitScale.ToHtmlNumber());">
         @foreach (var modulePos in ModulePositions)
         {
             <ModuleUI PosOp="@modulePos" />
@@ -24,8 +24,8 @@
 {
 
     private DebugController DebugCtrl;
-
     private List<Positioned<ChiselDebug.GraphFIR.Module>> ModulePositions = new List<Positioned<ChiselDebug.GraphFIR.Module>>();
+    private float CircuitScale = 1.0f;
 
     protected override void OnInitialized()
     {
@@ -42,5 +42,14 @@
         DebugCtrl.OnReRender += () => InvokeAsync(StateHasChanged);
 
         ModulePositions.Add(new Positioned<ChiselDebug.GraphFIR.Module>(new Point(0, 0), graph.Modules[0]));
+
+        JSEvents.OnWindowScroll += x => InvokeAsync(() => HandleScroll(x));
+    }
+
+    private void HandleScroll(int scrollDelta)
+    {
+        CircuitScale += scrollDelta / 10.0f;
+        CircuitScale = Math.Clamp(CircuitScale, 0.1f, 10.0f);
+        StateHasChanged();
     }
 }
