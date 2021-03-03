@@ -9,7 +9,7 @@
         <div class="ticksList">
             @foreach (var time in TimeSteps)
             {
-                <tick value="@time" style="left: @($"{((((float)time - StartTime) / (EndTime - StartTime)) * 100).ToString(System.Globalization.CultureInfo.InvariantCulture)}%"); top: 0px;">@(time.ToString("N0", System.Globalization.CultureInfo.InvariantCulture))ns</tick>
+                <tick value="@time" style="left: @($"{time.GetXPercent(StartTime, EndTime).ToPercent()}"); top: 0px;">@time.ToString()</tick>
             }
         </div>
     </div>
@@ -29,7 +29,27 @@
     private ulong CurrTime;
     private ulong StartTime;
     private ulong EndTime;
-    private List<ulong> TimeSteps = new List<ulong>();
+    private List<TimePos> TimeSteps = new List<TimePos>();
+
+    private readonly struct TimePos
+    {
+        public readonly ulong Time;
+
+        public TimePos(ulong time)
+        {
+            this.Time = time;
+        }
+
+        public float GetXPercent(ulong startTime, ulong endTime)
+        {
+            return (((float)Time - startTime) / (endTime - startTime)) * 100;
+        }
+
+        public override string ToString()
+        {
+            return Time.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + "ns";
+        }
+    }
 
     protected override void OnFirstParametersSetAsync()
     {
@@ -38,14 +58,23 @@
         EndTime = timeline.TimeInterval.InclusiveEnd();
         CurrTime = StartTime;
 
-        List<ulong> times = timeline.GetAllSimTimes().ToList();
+        MakeTimeTicks();
+    }
+
+    private void MakeTimeTicks()
+    {
+        List<ulong> times = DebugCtrl.Timeline.GetAllSimTimes()
+            .Where(x => StartTime <= x && x <= EndTime)
+            .ToList();
+
+
         const int timesOnTimeline = 15;
         float distanceBetweenTimes = times.Count / (float)(timesOnTimeline - 1);
         for (int i = 0; i < timesOnTimeline - 1; i++)
         {
-            TimeSteps.Add(times[(int)(distanceBetweenTimes * i)]);
+            TimeSteps.Add(new TimePos(times[(int)(distanceBetweenTimes * i)]));
         }
-        TimeSteps.Add(times.Last());
+        TimeSteps.Add(new TimePos(times.Last()));
     }
 
     private void TimeChanged(ChangeEventArgs args)
