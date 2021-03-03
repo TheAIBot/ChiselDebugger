@@ -57,6 +57,8 @@
         ModuleOpPoses = Operation.GetAllNodes().Select(x => new Positioned<FIRRTLNode>(new Point(0, 0), x)).ToList();
         CurrModCtrl = new ModuleController(Operation);
         CurrModCtrl.OnPlacedNodes += UpdatePlacement;
+
+        DebugCtrl.AddModCtrl(CurrModCtrl);
     }
 
     protected override bool OnResize(int width, int height)
