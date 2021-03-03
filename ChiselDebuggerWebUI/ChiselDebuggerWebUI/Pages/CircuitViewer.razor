@@ -48,7 +48,7 @@
 
     private void HandleScroll(int scrollDelta)
     {
-        CircuitScale += scrollDelta / 10.0f;
+        CircuitScale -= scrollDelta / 10.0f;
         CircuitScale = Math.Clamp(CircuitScale, 0.1f, 10.0f);
         StateHasChanged();
     }
