@@ -1,6 +1,8 @@
 ﻿@using VCDReader
 @using ChiselDebug.Timeline;
 
+@inherits ManualRenderBase
+
 <div class="timelineContent">
     <input class="timeline" type="range" min="@StartTime" max="@EndTime" value="@StartTime" list="steplist" @oninput="TimeChanged" />
     <div style=" padding-left: 10px; padding-right: 10px;">
@@ -29,7 +31,7 @@
     private ulong EndTime;
     private List<ulong> TimeSteps = new List<ulong>();
 
-    protected override Task OnParametersSetAsync()
+    protected override void OnFirstParametersSetAsync()
     {
         VCDTimeline timeline = DebugCtrl.Timeline;
         StartTime = timeline.TimeInterval.StartInclusive;
@@ -44,10 +46,7 @@
             TimeSteps.Add(times[(int)(distanceBetweenTimes * i)]);
         }
         TimeSteps.Add(times.Last());
-
-        return base.OnParametersSetAsync();
     }
-
 
     private void TimeChanged(ChangeEventArgs args)
     {
