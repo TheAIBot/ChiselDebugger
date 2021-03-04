@@ -154,14 +154,18 @@
             double relXPos = args.ClientX - RangeParentStartX;
             EndRangeSelect = TimePos.GetTimeFromPos(relXPos, RangeParentWidth, StartTime, EndTime);
 
-            StartTime = StartRangeSelect.Time;
-            EndTime = EndRangeSelect.Time;
             if (EndRangeSelect.Time < StartRangeSelect.Time)
             {
                 var temp = StartRangeSelect;
                 StartRangeSelect = EndRangeSelect;
                 EndRangeSelect = temp;
             }
+
+            ulong minTime = AllTimes.First();
+            ulong maxTime = AllTimes.Last();
+
+            StartTime = Math.Clamp(StartRangeSelect.Time, minTime, maxTime);
+            EndTime = Math.Clamp(EndRangeSelect.Time, minTime, maxTime);
 
             MakeTimeTicks();
             StateHasChanged();
@@ -174,6 +178,7 @@
         {
             double relXPos = args.ClientX - RangeParentStartX;
             EndRangeSelect = TimePos.GetTimeFromPos(relXPos, RangeParentWidth, StartTime, EndTime);
+
             StateHasChanged();
         }
     }
