@@ -52,6 +52,7 @@
     private ulong CurrTime;
     private ulong StartTime;
     private ulong EndTime;
+    private List<ulong> AllTimes;
     private List<TimePos> TimeSteps = new List<TimePos>();
 
     private readonly struct TimePos
@@ -93,6 +94,7 @@
         StartTime = timeline.TimeInterval.StartInclusive;
         EndTime = timeline.TimeInterval.InclusiveEnd();
         CurrTime = StartTime;
+        AllTimes = timeline.GetAllSimTimes().ToList();
 
         MakeTimeTicks();
     }
@@ -110,12 +112,19 @@
 
     private void MakeTimeTicks()
     {
-        List<ulong> times = DebugCtrl.Timeline.GetAllSimTimes()
-            .Where(x => StartTime <= x && x <= EndTime)
-            .ToList();
+        StartRangeSelect = new TimePos(StartTime);
+        EndRangeSelect = new TimePos(EndTime);
 
+        List<ulong> times = AllTimes
+        .Where(x => StartTime <= x && x <= EndTime)
+        .ToList();
 
         TimeSteps.Clear();
+        if (times.Count == 0)
+        {
+            return;
+        }
+
         int timesOnTimeline = Math.Min(times.Count, 15);
         float distanceBetweenTimes = times.Count / (float)(timesOnTimeline - 1);
         for (int i = 0; i < timesOnTimeline - 1; i++)
@@ -123,9 +132,6 @@
             TimeSteps.Add(new TimePos(times[(int)MathF.Round(distanceBetweenTimes * i)]));
         }
         TimeSteps.Add(new TimePos(times.Last()));
-
-        StartRangeSelect = new TimePos(StartTime);
-        EndRangeSelect = new TimePos(EndTime);
     }
 
     private void TimeChanged(ChangeEventArgs args)
