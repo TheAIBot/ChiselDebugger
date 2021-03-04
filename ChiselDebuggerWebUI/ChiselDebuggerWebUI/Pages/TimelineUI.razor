@@ -6,9 +6,17 @@
 
 <div class="timelineContent">
     <div class="ticksPadding">
-        <div class="rangeSelect" @ref="RangeDiv" @onmousedown="RangeSelectStarted" @onmouseup="RangeSelectEnded" @onmousemove="RangeSelectMove">
-            <div class="rangeStart" style="left: 0px; width: @(StartRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth).ToPixels());"></div>
-            <div class="rangeStop" style="left: @(EndRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth).ToPixels()); width: @(((float)RangeParentWidth - EndRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth)).ToPixels());"></div>
+        <div class="rangeSelect" @ref="RangeDiv" @onmousedown="RangeSelectStarted" @onmouseup="RangeSelectEnded" @onmousemove="RangeSelectMove" @ondblclick="ResetRange">
+            @if (StartRangeSelect.Time <= EndRangeSelect.Time)
+            {
+                <div class="rangeStart" style="left: 0px; width: @(StartRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth).ToPixels());"></div>
+                <div class="rangeStop" style="left: @(EndRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth).ToPixels()); width: @(((float)RangeParentWidth - EndRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth)).ToPixels());"></div>
+            }
+            else
+            {
+                <div class="rangeStart" style="left: 0px; width: @(EndRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth).ToPixels());"></div>
+                <div class="rangeStop" style="left: @(StartRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth).ToPixels()); width: @(((float)RangeParentWidth - StartRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth)).ToPixels());"></div>
+            }
         </div>
     </div>
     <input class="timeline" type="range" min="@StartTime" max="@EndTime" value="@StartTime" list="steplist" @oninput="TimeChanged" />
@@ -135,6 +143,7 @@
         IsSelectingRange = true;
         double relXPos = args.ClientX - RangeParentStartX;
         StartRangeSelect = TimePos.GetTimeFromPos(relXPos, RangeParentWidth, StartTime, EndTime);
+        EndRangeSelect = StartRangeSelect;
         StateHasChanged();
 
     }
@@ -147,6 +156,12 @@
 
             StartTime = StartRangeSelect.Time;
             EndTime = EndRangeSelect.Time;
+            if (EndRangeSelect.Time < StartRangeSelect.Time)
+            {
+                var temp = StartRangeSelect;
+                StartRangeSelect = EndRangeSelect;
+                EndRangeSelect = temp;
+            }
 
             MakeTimeTicks();
             StateHasChanged();
