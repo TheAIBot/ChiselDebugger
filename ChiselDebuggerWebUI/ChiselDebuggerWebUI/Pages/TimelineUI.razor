@@ -150,8 +150,8 @@
         double relXPos = args.ClientX - RangeParentStartX;
         StartRangeSelect = TimePos.GetTimeFromPos(relXPos, RangeParentWidth, StartTime, EndTime);
         EndRangeSelect = StartRangeSelect;
-        StateHasChanged();
 
+        StateHasChanged();
     }
     private void RangeSelectEnded(MouseEventArgs args)
     {
@@ -187,5 +187,15 @@
 
             StateHasChanged();
         }
+    }
+    private void ResetRange(MouseEventArgs args)
+    {
+        IsSelectingRange = false;
+
+        StartTime = AllTimes.First();
+        EndTime = AllTimes.Last();
+
+        MakeTimeTicks();
+        StateHasChanged();
     }
 }
