@@ -6,7 +6,7 @@
 
 <div class="timelineContent">
     <div class="ticksPadding">
-        <div class="rangeSelect" @ref="RangeDiv" @onmousedown="RangeSelectStarted" @onmouseup="RangeSelectEnded" @onmousemove="RangeSelectMove" @ondblclick="ResetRange">
+        <div class="rangeSelect" @ref="RangeDiv" @onmousedown="RangeSelectStarted" @ondblclick="ResetRange">
             @if (StartRangeSelect.Time <= EndRangeSelect.Time)
             {
                 <div class="rangeStart" style="left: 0px; width: @(StartRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth).ToPixels());"></div>
@@ -41,12 +41,14 @@
     [CascadingParameter(Name = "DebugCtrl")]
     protected DebugController DebugCtrl { get; set; }
 
+    [CascadingParameter(Name = "DocEvents")]
+    protected MainLayout DocEvents { get; set; }
+
 
     private double RangeParentStartX;
     private double RangeParentWidth;
     private TimePos StartRangeSelect;
     private TimePos EndRangeSelect;
-    private bool IsSelectingRange = false;
     protected ElementReference RangeDiv;
 
     private ulong CurrTime;
@@ -146,52 +148,48 @@
 
     private void RangeSelectStarted(MouseEventArgs args)
     {
-        IsSelectingRange = true;
         double relXPos = args.ClientX - RangeParentStartX;
         StartRangeSelect = TimePos.GetTimeFromPos(relXPos, RangeParentWidth, StartTime, EndTime);
         EndRangeSelect = StartRangeSelect;
+
+        DocEvents.OnMouseUp += RangeSelectEnded;
+        DocEvents.OnMouseMove += RangeSelectMove;
 
         StateHasChanged();
     }
     private void RangeSelectEnded(MouseEventArgs args)
     {
-        if (IsSelectingRange)
+        DocEvents.OnMouseUp -= RangeSelectEnded;
+        DocEvents.OnMouseMove -= RangeSelectMove;
+
+        double relXPos = args.ClientX - RangeParentStartX;
+        EndRangeSelect = TimePos.GetTimeFromPos(relXPos, RangeParentWidth, StartTime, EndTime);
+
+        if (EndRangeSelect.Time < StartRangeSelect.Time)
         {
-            double relXPos = args.ClientX - RangeParentStartX;
-            EndRangeSelect = TimePos.GetTimeFromPos(relXPos, RangeParentWidth, StartTime, EndTime);
-
-            if (EndRangeSelect.Time < StartRangeSelect.Time)
-            {
-                var temp = StartRangeSelect;
-                StartRangeSelect = EndRangeSelect;
-                EndRangeSelect = temp;
-            }
-
-            ulong minTime = AllTimes.First();
-            ulong maxTime = AllTimes.Last();
-
-            StartTime = Math.Clamp(StartRangeSelect.Time, minTime, maxTime);
-            EndTime = Math.Clamp(EndRangeSelect.Time, minTime, maxTime);
-
-            MakeTimeTicks();
-            StateHasChanged();
+            var temp = StartRangeSelect;
+            StartRangeSelect = EndRangeSelect;
+            EndRangeSelect = temp;
         }
-        IsSelectingRange = false;
+
+        ulong minTime = AllTimes.First();
+        ulong maxTime = AllTimes.Last();
+
+        StartTime = Math.Clamp(StartRangeSelect.Time, minTime, maxTime);
+        EndTime = Math.Clamp(EndRangeSelect.Time, minTime, maxTime);
+
+        MakeTimeTicks();
+        StateHasChanged();
     }
     private void RangeSelectMove(MouseEventArgs args)
     {
-        if (IsSelectingRange)
-        {
-            double relXPos = args.ClientX - RangeParentStartX;
-            EndRangeSelect = TimePos.GetTimeFromPos(relXPos, RangeParentWidth, StartTime, EndTime);
+        double relXPos = args.ClientX - RangeParentStartX;
+        EndRangeSelect = TimePos.GetTimeFromPos(relXPos, RangeParentWidth, StartTime, EndTime);
 
-            StateHasChanged();
-        }
+        StateHasChanged();
     }
     private void ResetRange(MouseEventArgs args)
     {
-        IsSelectingRange = false;
-
         StartTime = AllTimes.First();
         EndTime = AllTimes.Last();
 
