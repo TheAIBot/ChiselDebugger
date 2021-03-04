@@ -13,9 +13,14 @@ namespace ChiselDebuggerWebUI.Code
             return value + "px";
         }
 
+        public static string ToPixels(this float value)
+        {
+            return value.ToHtmlNumber() + "px";
+        }
+
         public static string ToPercent(this float value)
         {
-            return value.ToString(CultureInfo.InvariantCulture) + "%";
+            return value.ToHtmlNumber() + "%";
         }
 
         public static string ToHtmlNumber(this float value)
