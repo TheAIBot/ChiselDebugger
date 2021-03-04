@@ -24,14 +24,14 @@
     <datalist id="steplist">
         @foreach (var time in TimeSteps)
         {
-            <option value="@time"></option>
+            <option value="@time.Time"></option>
         }
     </datalist>
 </div>
 
 @code {
-        [CascadingParameter(Name = "DebugCtrl")]
-        protected DebugController DebugCtrl { get; set; }
+    [CascadingParameter(Name = "DebugCtrl")]
+    protected DebugController DebugCtrl { get; set; }
 
 
     private double RangeParentStartX;
