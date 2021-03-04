@@ -10,7 +10,7 @@
 <CascadingValue Value="@DebugCtrl" Name="DebugCtrl" IsFixed="true">
     <TimelineUI />
     <div style="height:20px;" />
-    <div id="CircuitContainer" class="Circuit" style="transform: translate(@CircuitPosOffset.X.ToPixels(), @CircuitPosOffset.Y.ToPixels()) scale(@CircuitScale.ToHtmlNumber());" @onwheel="HandleScroll">
+    <div id="CircuitContainer" class="Circuit" style="transform: translate(@CircuitOffset.X.ToPixels(), @CircuitOffset.Y.ToPixels()) scale(@CircuitScale.ToHtmlNumber());" @onwheel="HandleScroll">
         @foreach (var modulePos in ModulePositions)
         {
             <ModuleUI PosOp="@modulePos" />
@@ -24,7 +24,7 @@
     private DebugController DebugCtrl;
     private List<Positioned<ChiselDebug.GraphFIR.Module>> ModulePositions = new List<Positioned<ChiselDebug.GraphFIR.Module>>();
     private float CircuitScale = 1.0f;
-    private Point CircuitPosOffset = new Point(0, 0);
+    private Point CircuitOffset = new Point(0, 0);
 
     protected override void OnInitialized()
     {
@@ -55,15 +55,19 @@
 
     private void HandleScroll(WheelEventArgs args)
     {
-        int scrollDelta = args.DeltaY > 0 ? 1 : -1;
-        CircuitScale -= scrollDelta / 10.0f;
+        float scaleDelta = args.DeltaY > 0 ? 0.1f : -0.1f;
+        CircuitScale -= scaleDelta;
         CircuitScale = Math.Clamp(CircuitScale, 0.1f, 10.0f);
+
+        CircuitOffset.X += (int)(args.OffsetX * scaleDelta);
+        CircuitOffset.Y += (int)(args.OffsetY * scaleDelta);
+
         StateHasChanged();
     }
 
     private void HandleDrag(Point dragged)
     {
-        CircuitPosOffset += dragged;
+        CircuitOffset += dragged;
         StateHasChanged();
     }
 }
