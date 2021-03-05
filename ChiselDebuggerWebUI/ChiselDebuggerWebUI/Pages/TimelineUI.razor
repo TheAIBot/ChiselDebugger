@@ -54,7 +54,7 @@
     private ulong CurrTime;
     private ulong StartTime;
     private ulong EndTime;
-    private List<ulong> AllTimes;
+    private ulong[] AllTimes;
     private List<TimePos> TimeSteps = new List<TimePos>();
 
     private readonly struct TimePos
@@ -97,7 +97,7 @@
         StartTime = timeline.TimeInterval.StartInclusive;
         EndTime = timeline.TimeInterval.InclusiveEnd();
         CurrTime = StartTime;
-        AllTimes = timeline.GetAllSimTimes().ToList();
+        AllTimes = timeline.GetAllSimTimes().ToArray();
 
         MakeTimeTicks();
     }
@@ -115,11 +115,25 @@
 
     private void MakeTimeTicks()
     {
-        List<ulong> times = AllTimes
-            .Where(x => StartTime <= x && x <= EndTime)
-            .ToList();
+        int startIndex = 0;
+        while (startIndex < AllTimes.Length &&
+               AllTimes[startIndex] < StartTime)
+        {
+            startIndex++;
+        }
 
-        if (times.Count == 0)
+        int length = 0;
+        for (int i = startIndex; i < AllTimes.Length; i++)
+        {
+            if (AllTimes[i] <= EndTime)
+            {
+                length++;
+            }
+        }
+
+        Span<ulong> times = AllTimes.AsSpan(startIndex, length);
+
+        if (times.Length == 0)
         {
             times = AllTimes;
             StartTime = AllTimes.First();
@@ -130,13 +144,13 @@
         EndRangeSelect = new TimePos(EndTime);
 
         TimeSteps.Clear();
-        int timesOnTimeline = Math.Min(times.Count, 15);
-        float distanceBetweenTimes = times.Count / (float)(timesOnTimeline - 1);
+        int timesOnTimeline = Math.Min(times.Length, 15);
+        float distanceBetweenTimes = times.Length / (float)(timesOnTimeline - 1);
         for (int i = 0; i < timesOnTimeline - 1; i++)
         {
             TimeSteps.Add(new TimePos(times[(int)MathF.Round(distanceBetweenTimes * i)]));
         }
-        TimeSteps.Add(new TimePos(times.Last()));
+        TimeSteps.Add(new TimePos(times[^1]));
     }
 
     private void TimeChanged(ChangeEventArgs args)
