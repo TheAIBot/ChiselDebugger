@@ -81,13 +81,13 @@
             return (GetXPercent(startTime, endTime) / 100) * (float)containerWidth;
         }
 
-        public static TimePos GetTimeFromPos(double xToTime, double containerWidth, ulong startTime, ulong endTime)
+        public static ulong GetTimeFromPos(double xToTime, double containerWidth, ulong startTime, ulong endTime)
         {
             double xPercent = xToTime / containerWidth;
             double time = startTime + endTime * xPercent - xPercent * startTime;
 
             ulong utime = (ulong)Math.Round(time);
-            return new TimePos(Math.Clamp(utime, startTime, endTime));
+            return Math.Clamp(utime, startTime, endTime);
         }
 
         public override string ToString()
@@ -120,23 +120,7 @@
 
     private void MakeTimeTicks()
     {
-        int startIndex = 0;
-        while (startIndex < AllTimes.Length &&
-               AllTimes[startIndex] < StartTime)
-        {
-            startIndex++;
-        }
-
-        int length = 0;
-        for (int i = startIndex; i < AllTimes.Length; i++)
-        {
-            if (AllTimes[i] <= EndTime)
-            {
-                length++;
-            }
-        }
-
-        Span<ulong> times = AllTimes.AsSpan(startIndex, length);
+        Span<ulong> times = GetTimelineSlice(StartTime, EndTime);
 
         if (times.Length == 0)
         {
@@ -149,29 +133,103 @@
         EndRangeSelect = new TimePos(EndTime);
 
         TimeSteps.Clear();
-        int timesOnTimeline = Math.Min(times.Length, 15);
-        float distanceBetweenTimes = times.Length / (float)(timesOnTimeline - 1);
-        for (int i = 0; i < timesOnTimeline - 1; i++)
+        const int maxTimesOnTimeline = 15;
+        if (times.Length > maxTimesOnTimeline)
         {
-            TimeSteps.Add(new TimePos(times[(int)MathF.Round(distanceBetweenTimes * i)]));
+            float distanceBetweenTimes = times.Length / (float)(maxTimesOnTimeline - 1);
+            for (int i = 0; i < maxTimesOnTimeline - 1; i++)
+            {
+                TimeSteps.Add(new TimePos(times[(int)MathF.Round(distanceBetweenTimes * i)]));
+            }
+            TimeSteps.Add(new TimePos(times[^1]));
         }
-        TimeSteps.Add(new TimePos(times[^1]));
+        else
+        {
+            for (int i = 0; i < times.Length; i++)
+            {
+                TimeSteps.Add(new TimePos(times[i]));
+            }
+        }
+    }
+
+    private Span<ulong> GetTimelineSlice(ulong fromTimeInclusive, ulong toTimeInclusive)
+    {
+        int startIndex = Array.BinarySearch(AllTimes, fromTimeInclusive);
+        int endIndex = Array.BinarySearch(AllTimes, toTimeInclusive);
+
+        return AllTimes.AsSpan(startIndex, endIndex - startIndex);
     }
 
     private void TimeChanged(ChangeEventArgs args)
     {
-        ulong time = ulong.Parse((string)args.Value);
-        if (time != CurrTime)
+        if (ulong.TryParse((string)args.Value, out ulong time) &&
+            time != CurrTime)
         {
-            CurrTime = time;
-            DebugCtrl.SetCircuitState(time);
+            //Limit to range of timeline
+            time = Math.Clamp(time, AllTimes.First(), AllTimes.Last());
+
+            ulong inTimeline = GetClosestTime(time);
+
+            //changed time may lie outside the timeline range.
+            //in that case set resize the range to include the
+            //time.
+            if (inTimeline < StartTime || inTimeline > EndTime)
+            {
+                StartTime = Math.Min(StartTime, inTimeline);
+                EndTime = Math.Min(EndTime, inTimeline);
+                MakeTimeTicks();
+            }
+
+            if (CurrTime != inTimeline)
+            {
+                CurrTime = inTimeline;
+                DebugCtrl.SetCircuitState(CurrTime);
+            }
+
+            StateHasChanged();
         }
+    }
+
+    private ulong GetClosestTime(ulong time)
+    {
+        //Try find ex
+        int matchIndex = Array.BinarySearch(AllTimes, time);
+
+        //If no exact match then find closest match
+        if (matchIndex < 0)
+        {
+            for (int i = 0; i < AllTimes.Length - 1; i++)
+            {
+                if (AllTimes[i] < time && time < AllTimes[i + 1])
+                {
+                    if (time - AllTimes[i] < AllTimes[i + 1] - time)
+                    {
+                        matchIndex = i;
+                    }
+                    else
+                    {
+                        matchIndex = i + 1;
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        if (matchIndex < 0)
+        {
+            matchIndex = AllTimes.Length - 1;
+        }
+
+        return AllTimes[matchIndex];
     }
 
     private void RangeSelectStarted(MouseEventArgs args)
     {
         double relXPos = Math.Max(0.0, args.ClientX - RangeParentStartX);
-        StartRangeSelect = TimePos.GetTimeFromPos(relXPos, RangeParentWidth, StartTime, EndTime);
+        ulong timeFromPos = TimePos.GetTimeFromPos(relXPos, RangeParentWidth, StartTime, EndTime);
+        ulong timeInTimeline = GetClosestTime(timeFromPos);
+        StartRangeSelect = new TimePos(timeInTimeline);
         EndRangeSelect = StartRangeSelect;
 
         DocEvents.OnMouseUp += RangeSelectEnded;
@@ -185,7 +243,9 @@
         DocEvents.OnMouseMove -= RangeSelectMove;
 
         double relXPos = Math.Max(0.0, args.ClientX - RangeParentStartX);
-        EndRangeSelect = TimePos.GetTimeFromPos(relXPos, RangeParentWidth, StartTime, EndTime);
+        ulong timeFromPos = TimePos.GetTimeFromPos(relXPos, RangeParentWidth, StartTime, EndTime);
+        ulong timeInTimeline = GetClosestTime(timeFromPos);
+        EndRangeSelect = new TimePos(timeInTimeline);
 
         if (EndRangeSelect.Time < StartRangeSelect.Time)
         {
@@ -206,7 +266,9 @@
     private void RangeSelectMove(MouseEventArgs args)
     {
         double relXPos = Math.Max(0.0, args.ClientX - RangeParentStartX);
-        EndRangeSelect = TimePos.GetTimeFromPos(relXPos, RangeParentWidth, StartTime, EndTime);
+        ulong timeFromPos = TimePos.GetTimeFromPos(relXPos, RangeParentWidth, StartTime, EndTime);
+        ulong timeInTimeline = GetClosestTime(timeFromPos);
+        EndRangeSelect = new TimePos(timeInTimeline);
 
         StateHasChanged();
     }
