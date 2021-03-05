@@ -14,7 +14,7 @@
     position: absolute;
     top: 0px;
     background-color: #808080;
-    border-left: medium solid #000000;
+    border-right: medium solid #000000;
 }
 
 .rangeStop {
@@ -22,7 +22,7 @@
     position: absolute;
     top: 0px;
     background-color: #808080;
-    border-right: medium solid #000000;
+    border-left: medium solid #000000;
 }
 
 .timeline {
