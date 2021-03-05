@@ -5,9 +5,13 @@
 @inject IJSRuntime JS
 @inherits ManualRenderBase
 
-<div class="timelineContent">
+<div class="sideBySide">
     <div class="timelineControlsContent">
-        <input type="number" min="@AllTimes.First()" max="@AllTimes.Last()" value="@CurrTime" pattern="\d+" title="Positive numbers only." @oninput="TimeChanged" />
+        <input class="timelineTimeInput" type="number" min="@AllTimes.First()" max="@AllTimes.Last()" value="@CurrTime" pattern="\d+" title="Positive numbers only." @oninput="TimeChanged" />
+        <div class="sideBySide">
+            <div class="timelineButton" @onclick="PreviousTime">&lt;</div>
+            <div class="timelineButton" @onclick="NextTime">&gt;</div>
+        </div>
     </div>
     <div class="timelineRangeContent">
         <div class="ticksPadding">
@@ -154,26 +158,49 @@
             //Limit to range of timeline
             time = Math.Clamp(time, AllTimes.First(), AllTimes.Last());
 
-            ulong inTimeline = GetClosestTime(time);
-
-            //changed time may lie outside the timeline range.
-            //in that case set resize the range to include the
-            //time.
-            if (inTimeline < StartTime || inTimeline > EndTime)
-            {
-                StartTime = Math.Min(StartTime, inTimeline);
-                EndTime = Math.Max(EndTime, inTimeline);
-                MakeTimeTicks();
-            }
-
-            if (CurrTime != inTimeline)
-            {
-                CurrTime = inTimeline;
-                DebugCtrl.SetCircuitState(CurrTime);
-            }
-
-            StateHasChanged();
+            MoveCurrTime(GetClosestTime(time));
         }
+    }
+
+    private void NextTime(MouseEventArgs args)
+    {
+        int index = Array.BinarySearch(AllTimes, CurrTime) + 1;
+        index = Math.Clamp(index, 0, AllTimes.Length - 1);
+        if (CurrTime != AllTimes[index])
+        {
+            MoveCurrTime(AllTimes[index]);
+        }
+    }
+
+    private void PreviousTime(MouseEventArgs args)
+    {
+        int index = Array.BinarySearch(AllTimes, CurrTime) - 1;
+        index = Math.Clamp(index, 0, AllTimes.Length - 1);
+        if (CurrTime != AllTimes[index])
+        {
+            MoveCurrTime(AllTimes[index]);
+        }
+    }
+
+    private void MoveCurrTime(ulong inTimeline)
+    {
+        //changed time may lie outside the timeline range.
+        //in that case set resize the range to include the
+        //time.
+        if (inTimeline < StartTime || inTimeline > EndTime)
+        {
+            StartTime = Math.Min(StartTime, inTimeline);
+            EndTime = Math.Max(EndTime, inTimeline);
+            MakeTimeTicks();
+        }
+
+        if (CurrTime != inTimeline)
+        {
+            CurrTime = inTimeline;
+            DebugCtrl.SetCircuitState(CurrTime);
+        }
+
+        StateHasChanged();
     }
 
     private ulong GetClosestTime(ulong time)
