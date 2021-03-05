@@ -61,6 +61,7 @@ namespace ChiselDebuggerWebUI.Code
             }
 
             CancelSource.Cancel();
+            CancelSource.Dispose();
             Worker = null;
         }
     }
