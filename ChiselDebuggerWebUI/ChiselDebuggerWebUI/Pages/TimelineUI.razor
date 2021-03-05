@@ -260,6 +260,8 @@
         StartTime = Math.Clamp(StartRangeSelect.Time, minTime, maxTime);
         EndTime = Math.Clamp(EndRangeSelect.Time, minTime, maxTime);
 
+        CurrTime = Math.Clamp(CurrTime, StartTime, EndTime);
+
         MakeTimeTicks();
         StateHasChanged();
     }
