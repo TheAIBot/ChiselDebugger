@@ -8,23 +8,23 @@ using System.Diagnostics;
 
 namespace ChiselDebug
 {
-    public class Placer
+    public class SimplePlacer
     {
         private readonly Module Mod;
         private readonly HashSet<FIRRTLNode> MissingNodeDims;
         private readonly Dictionary<FIRRTLNode, Point> NodeSizes = new Dictionary<FIRRTLNode, Point>();
 
-        public delegate void PlacedHandler(PlacementInfo placements);
-        public event PlacedHandler OnPlacedNodes;
+        public delegate void ReadyToPlaceHandler();
+        public event ReadyToPlaceHandler OnReadyToPlaceNodes;
 
-        public Placer(Module mod)
+        public SimplePlacer(Module mod)
         {
             this.Mod = mod;
             this.MissingNodeDims = new HashSet<FIRRTLNode>(Mod.GetAllNodes());
             MissingNodeDims.RemoveWhere(x => x is INoPlaceAndRoute);
         }
 
-        private PlacementInfo PositionModuleComponents()
+        public PlacementInfo PositionModuleComponents()
         {
             try
             {
@@ -368,12 +368,19 @@ namespace ChiselDebug
 
         public void SetNodeSize(FIRRTLNode node, Point size)
         {
+            //If the size hasn't changed then there is no need to
+            //do anything at all as the result will be the same
+            if (NodeSizes.TryGetValue(node, out var oldSize) && oldSize == size)
+            {
+                return;
+            }
+
             NodeSizes[node] = size;
 
             MissingNodeDims.Remove(node);
             if (MissingNodeDims.Count == 0)
             {
-                OnPlacedNodes?.Invoke(PositionModuleComponents());
+                OnReadyToPlaceNodes?.Invoke();
             }
         }
     }

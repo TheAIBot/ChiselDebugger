@@ -19,7 +19,7 @@
     <ItemGroup>
       <ExampleFiles Include="Examples/*" />
     </ItemGroup>
-    <Copy SourceFiles="@(ExampleFiles)"  DestinationFolder="$(TargetDir)/Examples/"/>
+    <Copy SourceFiles="@(ExampleFiles)" DestinationFolder="$(TargetDir)/Examples/" />
   </Target>
 
 </Project>

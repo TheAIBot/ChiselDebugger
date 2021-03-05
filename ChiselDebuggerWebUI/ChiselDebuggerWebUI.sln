@@ -15,7 +15,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FIRRTLTests", "..\FIRRTLTes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VCDReader", "..\VCDReader\VCDReader.csproj", "{2AA002FF-3AC3-40EC-AEA0-8FE9BF99F9AB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VCDReaderTests", "..\VCDReaderTests\VCDReaderTests.csproj", "{E77F7A53-F289-4375-8632-99EB7F1634BD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VCDReaderTests", "..\VCDReaderTests\VCDReaderTests.csproj", "{E77F7A53-F289-4375-8632-99EB7F1634BD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

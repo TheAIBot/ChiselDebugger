@@ -11,7 +11,11 @@ using System.Threading.Tasks;
 
 namespace ChiselDebuggerWebUI.Components
 {
-    public abstract class FIRBase<T> : ComponentBase where T : FIRRTLNode
+    public interface IFIRUINode
+    {
+        public abstract void PrepareForRender();
+    }
+    public abstract class FIRBase<T> : ManualRenderBase, IFIRUINode where T : FIRRTLNode
     {
         [Inject]
         private IJSRuntime JS { get; set; }
@@ -20,16 +24,17 @@ namespace ChiselDebuggerWebUI.Components
         public Positioned<T> PosOp { get; set; }
 
         [Parameter]
-        public EventCallback<FIRComponentUpdate> OnComponentUpdate { get; set; }
+        public ModuleController ParentModCtrl { get; set; }
+
+        [CascadingParameter(Name = "DebugCtrl")]
+        protected DebugController DebugCtrl { get; set; }
 
         protected Point Position => PosOp.Position;
         protected T Operation => PosOp.Value;
 
         private Point PreviousSize = new Point(0, 0);
         private Point PreviousPos = new Point(0, 0);
-        private bool HasToRender = true;
         private int RenderCounter = 0;
-        private bool IsFirstSetParametersEvent = true;
         protected ElementReference SizeWatcher;
         protected List<DirectedIO> InputOffsets = new List<DirectedIO>();
         protected List<DirectedIO> OutputOffsets = new List<DirectedIO>();
@@ -49,19 +54,12 @@ namespace ChiselDebuggerWebUI.Components
             PreviousSize = size;
         }
 
-        protected override Task OnParametersSetAsync()
+        protected override void OnFirstParametersSetAsync()
         {
-            if (IsFirstSetParametersEvent)
-            {
-                IsFirstSetParametersEvent = false;
-
-                OnFirstParametersSetAsync();
-            }
-            return base.OnParametersSetAsync();
+            DebugCtrl.AddUINode(this, Operation.GetInputs().Select(x => x.Con).Where(x => x != null).ToList());
+            DebugCtrl.AddUINode(this, Operation.GetOutputs().Select(x => x.Con).ToList());
+            ParentModCtrl?.AddUINode(this);
         }
-
-        protected virtual void OnFirstParametersSetAsync()
-        { }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
@@ -93,20 +91,12 @@ namespace ChiselDebuggerWebUI.Components
                 }
             }
 
-            Debug.WriteLine($"Render: {typeof(T)} sizeChange: {sizeChanged}, posChange: {hasMoved}, Count: {RenderCounter++}");
+            //Debug.WriteLine($"Render: {typeof(T)} sizeChange: {sizeChanged}, posChange: {hasMoved}, Count: {RenderCounter++}");
         }
 
-        protected override bool ShouldRender()
-        {
-            bool doRender = HasToRender;
-            HasToRender = false;
-            return doRender;
-        }
-
-        protected new void StateHasChanged()
+        public void PrepareForRender()
         {
             HasToRender = true;
-            base.StateHasChanged();
         }
 
         protected virtual void OnAfterFirstRenderAsync(int width, int height)
@@ -117,7 +107,7 @@ namespace ChiselDebuggerWebUI.Components
             InputOffsets = OnMakeInputs(width, height);
             OutputOffsets = OnMakeOutputs(width, height);
 
-            OnComponentUpdate.InvokeAsync(new FIRComponentUpdate(Operation, new Point(width, height), InputOffsets, OutputOffsets));
+            ParentModCtrl?.UpdateComponentInfo(new FIRComponentUpdate(Operation, new Point(width, height), InputOffsets, OutputOffsets));
 
             return true;
         }

@@ -1,0 +1,199 @@
+﻿@using VCDReader
+@using ChiselDebug.Timeline;
+
+@inject IJSRuntime JS
+@inherits ManualRenderBase
+
+<div class="timelineContent">
+    <div class="ticksPadding">
+        <div class="rangeSelect" @ref="RangeDiv" @onmousedown="RangeSelectStarted" @ondblclick="ResetRange">
+            @if (StartRangeSelect.Time <= EndRangeSelect.Time)
+            {
+                <div class="rangeStart" style="left: 0px; width: @(StartRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth).ToPixels());"></div>
+                <div class="rangeStop" style="left: @(EndRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth).ToPixels()); width: @(((float)RangeParentWidth - EndRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth)).ToPixels());"></div>
+            }
+            else
+            {
+                <div class="rangeStart" style="left: 0px; width: @(EndRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth).ToPixels());"></div>
+                <div class="rangeStop" style="left: @(StartRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth).ToPixels()); width: @(((float)RangeParentWidth - StartRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth)).ToPixels());"></div>
+            }
+        </div>
+    </div>
+    <input class="timeline" type="range" min="@StartTime" max="@EndTime" value="@StartTime" list="steplist" @oninput="TimeChanged" />
+    <div class="ticksPadding">
+        <div class="ticksList">
+            @foreach (var time in TimeSteps)
+            {
+                <tick value="@time" style="left: @($"{time.GetXPercent(StartTime, EndTime).ToPercent()}"); top: 0px;">@time.ToString()</tick>
+            }
+        </div>
+    </div>
+
+    <datalist id="steplist">
+        @foreach (var time in TimeSteps)
+        {
+            <option value="@time.Time"></option>
+        }
+    </datalist>
+</div>
+
+@code {
+    [CascadingParameter(Name = "DebugCtrl")]
+    protected DebugController DebugCtrl { get; set; }
+
+    [CascadingParameter(Name = "DocEvents")]
+    protected MainLayout DocEvents { get; set; }
+
+
+    private double RangeParentStartX;
+    private double RangeParentWidth;
+    private TimePos StartRangeSelect;
+    private TimePos EndRangeSelect;
+    protected ElementReference RangeDiv;
+
+    private ulong CurrTime;
+    private ulong StartTime;
+    private ulong EndTime;
+    private List<ulong> AllTimes;
+    private List<TimePos> TimeSteps = new List<TimePos>();
+
+    private readonly struct TimePos
+    {
+        public readonly ulong Time;
+
+        public TimePos(ulong time)
+        {
+            this.Time = time;
+        }
+
+        public float GetXPercent(ulong startTime, ulong endTime)
+        {
+            return (((float)Time - startTime) / (endTime - startTime)) * 100;
+        }
+
+        public float GetPixels(ulong startTime, ulong endTime, double containerWidth)
+        {
+            return (GetXPercent(startTime, endTime) / 100) * (float)containerWidth;
+        }
+
+        public static TimePos GetTimeFromPos(double xToTime, double containerWidth, ulong startTime, ulong endTime)
+        {
+            double xPercent = xToTime / containerWidth;
+            double time = startTime + endTime * xPercent - xPercent * startTime;
+
+            return new TimePos((ulong)Math.Round(time));
+        }
+
+        public override string ToString()
+        {
+            return Time.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + "ns";
+        }
+    }
+
+    protected override void OnFirstParametersSetAsync()
+    {
+        VCDTimeline timeline = DebugCtrl.Timeline;
+        StartTime = timeline.TimeInterval.StartInclusive;
+        EndTime = timeline.TimeInterval.InclusiveEnd();
+        CurrTime = StartTime;
+        AllTimes = timeline.GetAllSimTimes().ToList();
+
+        MakeTimeTicks();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            RangeParentStartX = (await JS.InvokeAsync<ElemWH>("JSUtils.getElementPosition", RangeDiv)).Width;
+            RangeParentWidth = (await JS.InvokeAsync<ElemWH>("JSUtils.getElementSize", RangeDiv)).Width;
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private void MakeTimeTicks()
+    {
+        StartRangeSelect = new TimePos(StartTime);
+        EndRangeSelect = new TimePos(EndTime);
+
+        List<ulong> times = AllTimes
+        .Where(x => StartTime <= x && x <= EndTime)
+        .ToList();
+
+        TimeSteps.Clear();
+        if (times.Count == 0)
+        {
+            return;
+        }
+
+        int timesOnTimeline = Math.Min(times.Count, 15);
+        float distanceBetweenTimes = times.Count / (float)(timesOnTimeline - 1);
+        for (int i = 0; i < timesOnTimeline - 1; i++)
+        {
+            TimeSteps.Add(new TimePos(times[(int)MathF.Round(distanceBetweenTimes * i)]));
+        }
+        TimeSteps.Add(new TimePos(times.Last()));
+    }
+
+    private void TimeChanged(ChangeEventArgs args)
+    {
+        ulong time = ulong.Parse((string)args.Value);
+        if (time != CurrTime)
+        {
+            CurrTime = time;
+            DebugCtrl.SetCircuitState(time);
+        }
+    }
+
+    private void RangeSelectStarted(MouseEventArgs args)
+    {
+        double relXPos = args.ClientX - RangeParentStartX;
+        StartRangeSelect = TimePos.GetTimeFromPos(relXPos, RangeParentWidth, StartTime, EndTime);
+        EndRangeSelect = StartRangeSelect;
+
+        DocEvents.OnMouseUp += RangeSelectEnded;
+        DocEvents.OnMouseMove += RangeSelectMove;
+
+        StateHasChanged();
+    }
+    private void RangeSelectEnded(MouseEventArgs args)
+    {
+        DocEvents.OnMouseUp -= RangeSelectEnded;
+        DocEvents.OnMouseMove -= RangeSelectMove;
+
+        double relXPos = args.ClientX - RangeParentStartX;
+        EndRangeSelect = TimePos.GetTimeFromPos(relXPos, RangeParentWidth, StartTime, EndTime);
+
+        if (EndRangeSelect.Time < StartRangeSelect.Time)
+        {
+            var temp = StartRangeSelect;
+            StartRangeSelect = EndRangeSelect;
+            EndRangeSelect = temp;
+        }
+
+        ulong minTime = AllTimes.First();
+        ulong maxTime = AllTimes.Last();
+
+        StartTime = Math.Clamp(StartRangeSelect.Time, minTime, maxTime);
+        EndTime = Math.Clamp(EndRangeSelect.Time, minTime, maxTime);
+
+        MakeTimeTicks();
+        StateHasChanged();
+    }
+    private void RangeSelectMove(MouseEventArgs args)
+    {
+        double relXPos = args.ClientX - RangeParentStartX;
+        EndRangeSelect = TimePos.GetTimeFromPos(relXPos, RangeParentWidth, StartTime, EndTime);
+
+        StateHasChanged();
+    }
+    private void ResetRange(MouseEventArgs args)
+    {
+        StartTime = AllTimes.First();
+        EndTime = AllTimes.Last();
+
+        MakeTimeTicks();
+        StateHasChanged();
+    }
+}

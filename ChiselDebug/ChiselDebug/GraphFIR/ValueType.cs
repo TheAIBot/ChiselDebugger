@@ -18,10 +18,16 @@ namespace ChiselDebug.GraphFIR
             }
         }
 
-        public void SetValue(VarValue value)
+        public bool UpdateValue(VarValue value)
         {
+            if (Value != null && Value.SameValue(value))
+            {
+                return false;
+            }
+
             Value = value;
             ValueString = ((BinaryVarValue)Value).BitsToString();
+            return true;
         }
 
         public void SetValueString(string valueString)

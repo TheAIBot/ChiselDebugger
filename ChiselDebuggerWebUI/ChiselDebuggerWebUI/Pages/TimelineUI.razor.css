@@ -1,0 +1,48 @@
+﻿.timelineContent {
+    width: 100%;
+}
+
+.rangeSelect {
+    min-width: 100%;
+    max-width: 100%;
+    height: 50px;
+    position: relative;
+}
+
+.rangeStart {
+    height: 50px;
+    position: absolute;
+    top: 0px;
+    background-color: #808080;
+    border-right: medium solid #000000;
+}
+
+.rangeStop {
+    height: 50px;
+    position: absolute;
+    top: 0px;
+    background-color: #808080;
+    border-left: medium solid #000000;
+}
+
+.timeline {
+    width: 100%;
+}
+
+.ticksPadding {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.ticksList {
+    width: 100%;
+    position: relative;
+    height: 2em;
+}
+
+tick {
+    position: absolute;
+    text-align: center;
+    transform: translateX(-50%);
+    line-height: 2em;
+}

@@ -2,93 +2,72 @@
 @page "/"
 @using FIRRTL
 @using VCDReader
+@using ChiselDebug.Timeline;
 
-<div class="Circuit">
-    @foreach (var modulePos in ModulePositions)
-    {
-        <ModuleUI PosOp="@modulePos"></ModuleUI>
-    }
-</div>
+@inject IJSRuntime JS
+@inherits ManualRenderBase
 
-
+<CascadingValue Value="@DebugCtrl" Name="DebugCtrl" IsFixed="true">
+    <TimelineUI />
+    <div style="height:20px;" />
+    <div id="CircuitContainer" class="Circuit" style="transform: translate(@CircuitOffset.X.ToPixels(), @CircuitOffset.Y.ToPixels()) scale(@CircuitScale.ToHtmlNumber());" @onwheel="HandleScroll">
+        @foreach (var modulePos in ModulePositions)
+        {
+            <ModuleUI PosOp="@modulePos" />
+        }
+    </div>
+</CascadingValue>
 
 @code
 {
+
+    private DebugController DebugCtrl;
     private List<Positioned<ChiselDebug.GraphFIR.Module>> ModulePositions = new List<Positioned<ChiselDebug.GraphFIR.Module>>();
+    private float CircuitScale = 1.0f;
+    private Point CircuitOffset = new Point(0, 0);
 
     protected override void OnInitialized()
     {
-        var circuit = FIRRTL.Parse.FromFile("Examples/MovingAveragePow2.lo.fir");
-        var vcd = VCDReader.Parse.FromFile("Examples/MovingAveragePow2.vcd");
-        var graph = CircuitGraph.VisitCircuit(circuit);
+        //var circuit = FIRRTL.Parse.FromFile("Examples/MovingAveragePow2.lo.fir");
+        //var vcd = VCDReader.Parse.FromFile("Examples/MovingAveragePow2.vcd");
+        var circuit = FIRRTL.Parse.FromFile("Examples/RegFileVec.lo.fir");
+        var vcd = VCDReader.Parse.FromFile("Examples/RegFileVec.vcd");
+        CircuitGraph graph = CircuitToGraph.GetAsGraph(circuit);
+        graph.InferTypes();
 
-        Dictionary<string, Connection> cons = new Dictionary<string, Connection>();
-        foreach (var mod in graph.Modules)
-        {
-            foreach (var node in mod.GetAllNodes())
-            {
-                foreach (var output in node.GetOutputs())
-                {
-                    if (output.Con.IsUsed() && output.Name != string.Empty)
-                    {
-                        cons.Add(output.Name, output.Con);
-                    }
-                }
-            }
-            foreach (var output in mod.InternalOutputs)
-            {
-                if (output.Con.IsUsed() && output.Name != string.Empty)
-                {
-                    cons.Add(output.Name, output.Con);
-                }
-            }
-        }
+        VCDTimeline timeline = new VCDTimeline(vcd);
 
-
-        //Set all bits for each connection to X(unknown logical value).
-        //I am doing this because i don't know if $dumpvars will dump
-        //all variables initial values or if it will leave some out.
-        foreach (var variable in vcd.Variables)
-        {
-            if (cons.TryGetValue(variable.Reference, out Connection con))
-            {
-                con.Value = new ChiselDebug.GraphFIR.ValueType(new string(BitState.X.ToChar(), variable.Size), new SizedType(ChiselDebug.GraphFIR.GroundType.UInt, variable.Size));
-            }
-        }
-
-        //For connections from const values, the initial value is constant
-        foreach (var mod in graph.Modules)
-        {
-            foreach (var node in mod.GetAllNodes())
-            {
-                var constNode = node as ConstValue;
-                if (constNode == null)
-                {
-                    continue;
-                }
-
-                if (!constNode.Result.Con.IsUsed())
-                {
-                    continue;
-                }
-
-                SizedType sType = constNode.Value.ToSizedType();
-                constNode.Result.Con.Value = new ChiselDebug.GraphFIR.ValueType(constNode.Value.Value.ToSignedBinaryString(sType), sType);
-            }
-        }
-
-        DumpVars initialValues = (DumpVars)vcd.GetSimulationCommands().First(x => x is DumpVars);
-
-        //Set each connections initial value
-        foreach (BinaryChange initVarValue in initialValues.InitialValues)
-        {
-            if (cons.TryGetValue(initVarValue.Variable.Reference, out Connection con))
-            {
-                con.Value = new ChiselDebug.GraphFIR.ValueType(initVarValue.BitsToString(), new SizedType(ChiselDebug.GraphFIR.GroundType.UInt, initVarValue.Variable.Size));
-            }
-        }
-
+        DebugCtrl = new DebugController(graph, timeline);
+        DebugCtrl.OnReRender += () => InvokeAsync(StateHasChanged);
 
         ModulePositions.Add(new Positioned<ChiselDebug.GraphFIR.Module>(new Point(0, 0), graph.Modules[0]));
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSEvents.AddDragListener(JS, "CircuitContainer", x => InvokeAsync(() => HandleDrag(x)));
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private void HandleScroll(WheelEventArgs args)
+    {
+        float scaleDelta = args.DeltaY > 0 ? 0.1f : -0.1f;
+        CircuitScale -= scaleDelta;
+        CircuitScale = Math.Clamp(CircuitScale, 0.1f, 10.0f);
+
+        CircuitOffset.X += (int)(args.OffsetX * scaleDelta);
+        CircuitOffset.Y += (int)(args.OffsetY * scaleDelta);
+
+        StateHasChanged();
+    }
+
+    private void HandleDrag(Point dragged)
+    {
+        CircuitOffset += dragged;
+        StateHasChanged();
     }
 }
