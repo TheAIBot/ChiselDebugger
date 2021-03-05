@@ -5,27 +5,32 @@
 @inherits ManualRenderBase
 
 <div class="timelineContent">
-    <div class="ticksPadding">
-        <div class="rangeSelect" @ref="RangeDiv" @onmousedown="RangeSelectStarted" @ondblclick="ResetRange">
-            @if (StartRangeSelect.Time <= EndRangeSelect.Time)
-            {
-                <div class="rangeStart" style="left: 0px; width: @(StartRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth).ToPixels());"></div>
-                <div class="rangeStop" style="left: @(EndRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth).ToPixels()); width: @(((float)RangeParentWidth - EndRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth)).ToPixels());"></div>
-            }
-            else
-            {
-                <div class="rangeStart" style="left: 0px; width: @(EndRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth).ToPixels());"></div>
-                <div class="rangeStop" style="left: @(StartRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth).ToPixels()); width: @(((float)RangeParentWidth - StartRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth)).ToPixels());"></div>
-            }
-        </div>
+    <div class="timelineControlsContent">
+        <input type="number" min="@AllTimes.First()" max="@AllTimes.Last()" value="@CurrTime" pattern="\d+" title="Positive numbers only." @oninput="TimeChanged" />
     </div>
-    <input class="timeline" type="range" min="@StartTime" max="@EndTime" value="@StartTime" list="steplist" @oninput="TimeChanged" />
-    <div class="ticksPadding">
-        <div class="ticksList">
-            @foreach (var time in TimeSteps)
-            {
-                <tick value="@time" style="left: @($"{time.GetXPercent(StartTime, EndTime).ToPercent()}"); top: 0px;">@time.ToString()</tick>
-            }
+    <div class="timelineRangeContent">
+        <div class="ticksPadding">
+            <div class="rangeSelect" @ref="RangeDiv" @onmousedown="RangeSelectStarted" @ondblclick="ResetRange">
+                @if (StartRangeSelect.Time <= EndRangeSelect.Time)
+                {
+                    <div class="rangeStart" style="left: 0px; width: @(StartRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth).ToPixels());"></div>
+                    <div class="rangeStop" style="left: @(EndRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth).ToPixels()); width: @(((float)RangeParentWidth - EndRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth)).ToPixels());"></div>
+                }
+                else
+                {
+                    <div class="rangeStart" style="left: 0px; width: @(EndRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth).ToPixels());"></div>
+                    <div class="rangeStop" style="left: @(StartRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth).ToPixels()); width: @(((float)RangeParentWidth - StartRangeSelect.GetPixels(StartTime, EndTime, RangeParentWidth)).ToPixels());"></div>
+                }
+            </div>
+        </div>
+        <input class="timeline" type="range" min="@StartTime" max="@EndTime" value="@CurrTime" list="steplist" @oninput="TimeChanged" />
+        <div class="ticksPadding">
+            <div class="ticksList">
+                @foreach (var time in TimeSteps)
+                {
+                    <tick value="@time" style="left: @($"{time.GetXPercent(StartTime, EndTime).ToPercent()}"); top: 0px;">@time.ToString()</tick>
+                }
+            </div>
         </div>
     </div>
 
