@@ -176,7 +176,7 @@
             if (inTimeline < StartTime || inTimeline > EndTime)
             {
                 StartTime = Math.Min(StartTime, inTimeline);
-                EndTime = Math.Min(EndTime, inTimeline);
+                EndTime = Math.Max(EndTime, inTimeline);
                 MakeTimeTicks();
             }
 
