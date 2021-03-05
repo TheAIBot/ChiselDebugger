@@ -114,19 +114,21 @@
 
     private void MakeTimeTicks()
     {
+        List<ulong> times = AllTimes
+            .Where(x => StartTime <= x && x <= EndTime)
+            .ToList();
+
+        if (times.Count == 0)
+        {
+            times = AllTimes;
+            StartTime = AllTimes.First();
+            EndTime = AllTimes.Last();
+        }
+
         StartRangeSelect = new TimePos(StartTime);
         EndRangeSelect = new TimePos(EndTime);
 
-        List<ulong> times = AllTimes
-        .Where(x => StartTime <= x && x <= EndTime)
-        .ToList();
-
         TimeSteps.Clear();
-        if (times.Count == 0)
-        {
-            return;
-        }
-
         int timesOnTimeline = Math.Min(times.Count, 15);
         float distanceBetweenTimes = times.Count / (float)(timesOnTimeline - 1);
         for (int i = 0; i < timesOnTimeline - 1; i++)
