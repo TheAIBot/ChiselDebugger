@@ -81,7 +81,8 @@
             double xPercent = xToTime / containerWidth;
             double time = startTime + endTime * xPercent - xPercent * startTime;
 
-            return new TimePos((ulong)Math.Round(time));
+            ulong utime = (ulong)Math.Round(time);
+            return new TimePos(Math.Clamp(utime, startTime, endTime));
         }
 
         public override string ToString()
@@ -150,7 +151,7 @@
 
     private void RangeSelectStarted(MouseEventArgs args)
     {
-        double relXPos = args.ClientX - RangeParentStartX;
+        double relXPos = Math.Max(0.0, args.ClientX - RangeParentStartX);
         StartRangeSelect = TimePos.GetTimeFromPos(relXPos, RangeParentWidth, StartTime, EndTime);
         EndRangeSelect = StartRangeSelect;
 
@@ -164,7 +165,7 @@
         DocEvents.OnMouseUp -= RangeSelectEnded;
         DocEvents.OnMouseMove -= RangeSelectMove;
 
-        double relXPos = args.ClientX - RangeParentStartX;
+        double relXPos = Math.Max(0.0, args.ClientX - RangeParentStartX);
         EndRangeSelect = TimePos.GetTimeFromPos(relXPos, RangeParentWidth, StartTime, EndTime);
 
         if (EndRangeSelect.Time < StartRangeSelect.Time)
@@ -185,7 +186,7 @@
     }
     private void RangeSelectMove(MouseEventArgs args)
     {
-        double relXPos = args.ClientX - RangeParentStartX;
+        double relXPos = Math.Max(0.0, args.ClientX - RangeParentStartX);
         EndRangeSelect = TimePos.GetTimeFromPos(relXPos, RangeParentWidth, StartTime, EndTime);
 
         StateHasChanged();
