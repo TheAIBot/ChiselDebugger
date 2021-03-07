@@ -267,7 +267,12 @@
         StartTime = Math.Clamp(StartRangeSelect, minTime, maxTime);
         EndTime = Math.Clamp(EndRangeSelect, minTime, maxTime);
 
-        CurrTime = Math.Clamp(CurrTime, StartTime, EndTime);
+        ulong inTimeRange = Math.Clamp(CurrTime, StartTime, EndTime);
+        if (CurrTime != inTimeRange)
+        {
+            CurrTime = inTimeRange;
+            DebugCtrl.SetCircuitState(CurrTime);
+        }
 
         MakeTimeTicks();
         StateHasChanged();
