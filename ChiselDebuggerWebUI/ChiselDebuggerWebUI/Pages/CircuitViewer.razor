@@ -14,7 +14,7 @@
     }
 
     <div style="height:20px;" />
-    <div id="CircuitContainer" class="Circuit" style="transform: translate(@CircuitOffset.X.ToPixels(), @CircuitOffset.Y.ToPixels()) scale(@CircuitScale.ToHtmlNumber());" @onwheel="HandleScroll">
+    <div id="@DragEventID" class="Circuit" style="transform: translate(@CircuitOffset.X.ToPixels(), @CircuitOffset.Y.ToPixels()) scale(@CircuitScale.ToHtmlNumber());" @onwheel="HandleScroll">
         @foreach (var modulePos in ModulePositions)
         {
             <ModuleUI PosOp="@modulePos" />
@@ -29,6 +29,7 @@
     private List<Positioned<ChiselDebug.GraphFIR.Module>> ModulePositions = new List<Positioned<ChiselDebug.GraphFIR.Module>>();
     private float CircuitScale = 1.0f;
     private Point CircuitOffset = new Point(0, 0);
+    private readonly string DragEventID = UniqueID.UniqueHTMLID();
 
     protected override void OnInitialized()
     {
@@ -51,7 +52,7 @@
     {
         if (firstRender)
         {
-            await JSEvents.AddDragListener(JS, "CircuitContainer", x => InvokeAsync(() => HandleDrag(x)));
+            await JSEvents.AddDragListener(JS, DragEventID, x => InvokeAsync(() => HandleDrag(x)));
         }
 
         await base.OnAfterRenderAsync(firstRender);
