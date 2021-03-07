@@ -16,16 +16,8 @@
     <div class="timelineRangeContent">
         <div class="ticksPadding">
             <div class="rangeSelect" @ref="RangeDiv" @onmousedown="RangeSelectStarted" @ondblclick="ResetRange">
-                @if (StartRangeSelect <= EndRangeSelect)
-                {
-                    <div class="rangeStart" style="left: 0px; width: @GetPixels(StartRangeSelect).ToPixels();"></div>
-                    <div class="rangeStop" style="left: @GetPixels(EndRangeSelect).ToPixels(); width: @(((float)RangeParentWidth - GetPixels(EndRangeSelect)).ToPixels());"></div>
-                }
-                else
-                {
-                    <div class="rangeStart" style="left: 0px; width: @(GetPixels(EndRangeSelect).ToPixels());"></div>
-                    <div class="rangeStop" style="left: @GetPixels(StartRangeSelect).ToPixels(); width: @(((float)RangeParentWidth - GetPixels(StartRangeSelect)).ToPixels());"></div>
-                }
+                <div class="rangeStart" style="width: @GetPixels(Math.Min(StartRangeSelect, EndRangeSelect)).ToPixels();"></div>
+                <div class="rangeStop" style="left: @GetPixels(Math.Max(StartRangeSelect, EndRangeSelect)).ToPixels();"></div>
             </div>
         </div>
         <input class="timeline" type="range" min="@StartTime" max="@EndTime" value="@CurrTime" list="steplist" @oninput="TimeChanged" />
@@ -103,6 +95,7 @@
         {
             RangeParentStartX = (await JS.InvokeAsync<ElemWH>("JSUtils.getElementPosition", RangeDiv)).Width;
             RangeParentWidth = (await JS.InvokeAsync<ElemWH>("JSUtils.getElementSize", RangeDiv)).Width;
+            StateHasChanged();
         }
 
         await base.OnAfterRenderAsync(firstRender);

@@ -44,6 +44,7 @@
     height: 50px;
     position: absolute;
     top: 0px;
+    left: 0px;
     background-color: #808080;
     border-right: thin solid #000000;
 }
@@ -52,6 +53,7 @@
     height: 50px;
     position: absolute;
     top: 0px;
+    right: 0px;
     background-color: #808080;
     border-left: thin solid #000000;
 }
