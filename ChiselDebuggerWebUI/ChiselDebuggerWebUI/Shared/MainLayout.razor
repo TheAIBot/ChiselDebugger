@@ -1,6 +1,6 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page">
+<div class="page" @onmouseup="MouseUp" @onmousemove="MouseMove">
     <div class="sidebar">
         <NavMenu />
     </div>
@@ -11,7 +11,7 @@
         </div>
 
         <CascadingValue Value="@this" Name="DocEvents" IsFixed="true">
-            <div class="content px-4" @onmouseup="MouseUp" @onmousemove="MouseMove">
+            <div class="content px-4">
                 @Body
             </div>
         </CascadingValue>

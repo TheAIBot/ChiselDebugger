@@ -71,6 +71,10 @@ namespace ChiselDebug.Timeline
             //Add last segment if it's not empty.
             //Segment isn't added by above loop if the vcd file doesn't 
             //end with a simulation time command.
+            if (currTimeStep != null)
+            {
+                stepChanges.Add(currTimeStep);
+            }
             if (stepChanges.Count > 0)
             {
                 TimeSpan tSpan = new TimeSpan(startTime, stepChanges.Last().Time + 1);

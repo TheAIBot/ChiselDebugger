@@ -27,5 +27,10 @@ namespace ChiselDebuggerWebUI.Code
         {
             return value.ToString(CultureInfo.InvariantCulture);
         }
+
+        public static string ToStringWithDots(this ulong value)
+        {
+            return value.ToString("N0", CultureInfo.InvariantCulture);
+        }
     }
 }

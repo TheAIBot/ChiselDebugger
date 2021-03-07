@@ -4,13 +4,14 @@ using ChiselDebug.Timeline;
 using ChiselDebuggerWebUI.Components;
 using System;
 using System.Collections.Generic;
+using VCDReader;
 
 namespace ChiselDebuggerWebUI.Code
 {
     public class DebugController : IDisposable
     {
         private readonly CircuitGraph Graph;
-        public VCDTimeline Timeline { get; init; }
+        public VCDTimeline Timeline { get; init; } = null;
         private readonly Dictionary<Connection, List<IFIRUINode>> ConToUINode = new Dictionary<Connection, List<IFIRUINode>>();
         private readonly List<ModuleController> ModControllers = new List<ModuleController>();
 
@@ -19,32 +20,36 @@ namespace ChiselDebuggerWebUI.Code
 
         private readonly ExecuteOnlyLatest<ulong> TimeChanger = new ExecuteOnlyLatest<ulong>();
 
-        public DebugController(CircuitGraph graph, VCDTimeline timeline)
+        public DebugController(CircuitGraph graph, VCD vcd)
         {
             this.Graph = graph;
-            this.Timeline = timeline;
-            TimeChanger.Start(time =>
-            {
-                List<Connection> changedConnections = Graph.SetState(Timeline.GetStateAtTime(time));
 
-                //Only rerender the uiNodes that are connected to a connection
-                //that changed value. UiNodes are not rerendered here, but they
-                //are being allowed to rerender here.
-                foreach (var connection in changedConnections)
+            if (vcd != null)
+            {
+                this.Timeline = new VCDTimeline(vcd);
+                TimeChanger.Start(time =>
                 {
-                    if (ConToUINode.TryGetValue(connection, out var uiNodes))
+                    List<Connection> changedConnections = Graph.SetState(Timeline.GetStateAtTime(time));
+
+                    //Only rerender the uiNodes that are connected to a connection
+                    //that changed value. UiNodes are not rerendered here, but they
+                    //are being allowed to rerender here.
+                    foreach (var connection in changedConnections)
                     {
-                        foreach (var uiNode in uiNodes)
+                        if (ConToUINode.TryGetValue(connection, out var uiNodes))
                         {
-                            uiNode.PrepareForRender();
+                            foreach (var uiNode in uiNodes)
+                            {
+                                uiNode.PrepareForRender();
+                            }
                         }
                     }
-                }
 
-                //Ask ui to render again so the allowed uiNodes
-                //can be rerendered.
-                OnReRender?.Invoke();
-            });
+                    //Ask ui to render again so the allowed uiNodes
+                    //can be rerendered.
+                    OnReRender?.Invoke();
+                });
+            }
         }
 
         public void AddUINode(IFIRUINode node, List<Connection> connections)

@@ -8,7 +8,11 @@
 @inherits ManualRenderBase
 
 <CascadingValue Value="@DebugCtrl" Name="DebugCtrl" IsFixed="true">
-    <TimelineUI />
+    @if (DebugCtrl.Timeline != null)
+    {
+        <TimelineUI />
+    }
+
     <div style="height:20px;" />
     <div id="CircuitContainer" class="Circuit" style="transform: translate(@CircuitOffset.X.ToPixels(), @CircuitOffset.Y.ToPixels()) scale(@CircuitScale.ToHtmlNumber());" @onwheel="HandleScroll">
         @foreach (var modulePos in ModulePositions)
@@ -32,12 +36,12 @@
         //var vcd = VCDReader.Parse.FromFile("Examples/MovingAveragePow2.vcd");
         var circuit = FIRRTL.Parse.FromFile("Examples/RegFileVec.lo.fir");
         var vcd = VCDReader.Parse.FromFile("Examples/RegFileVec.vcd");
+        //var circuit = FIRRTL.Parse.FromFile("Examples/FSM.lo.fir");
+        //VCD vcd = null;
         CircuitGraph graph = CircuitToGraph.GetAsGraph(circuit);
         graph.InferTypes();
 
-        VCDTimeline timeline = new VCDTimeline(vcd);
-
-        DebugCtrl = new DebugController(graph, timeline);
+        DebugCtrl = new DebugController(graph, vcd);
         DebugCtrl.OnReRender += () => InvokeAsync(StateHasChanged);
 
         ModulePositions.Add(new Positioned<ChiselDebug.GraphFIR.Module>(new Point(0, 0), graph.Modules[0]));

@@ -1,5 +1,36 @@
-﻿.timelineContent {
+﻿.sideBySide {
+    display: flex;
+    flex-direction: row;
+}
+
+.timelineControlsContent {
+    flex-grow: 1;
+    width: 10%;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.timelineRangeContent {
+    flex-grow: 1;
+    width: 90%;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.timelineTimeInput {
     width: 100%;
+    margin-bottom: 5px;
+}
+
+.timelineButton {
+    flex-grow: 1;
+    cursor: pointer;
+    border: thin solid #000000;
+    border-radius: 3px;
+    background-color: #b2b2b2;
+    text-align: center;
+    font-size: 1.5em;
+    margin: 5px;
 }
 
 .rangeSelect {
