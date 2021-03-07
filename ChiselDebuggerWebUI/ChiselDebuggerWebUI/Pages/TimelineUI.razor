@@ -110,21 +110,33 @@
 
     private void MakeTimeTicks()
     {
-        Span<ulong> times = GetTimelineSlice(StartTime, EndTime);
-
-        if (times.Length == 0)
-        {
-            times = AllTimes;
-            StartTime = AllTimes.First();
-            EndTime = AllTimes.Last();
-        }
-
-        StartRangeSelect = StartTime;
-        EndRangeSelect = EndTime;
-
         TimeSteps.Clear();
+
+        int startIndex = Array.BinarySearch(AllTimes, StartTime);
+        int endIndex = Array.BinarySearch(AllTimes, EndTime);
+        Span<ulong> times = AllTimes.AsSpan(startIndex, endIndex - startIndex + 1);
+
+        //If the range includes too few times then stretch the selected timline
+        //so enough times are included
         const int maxTimesOnTimeline = 15;
-        if (times.Length > maxTimesOnTimeline)
+        if (times.Length < maxTimesOnTimeline)
+        {
+            //Try and get half the missing times from before selected timeline
+            int missing = maxTimesOnTimeline - times.Length;
+            startIndex = Math.Max(0, startIndex - (missing / 2));
+            times = AllTimes.AsSpan(startIndex, endIndex - startIndex + 1);
+
+            //Try and get the remaining missing times from after the selected time
+            missing = maxTimesOnTimeline - times.Length;
+            endIndex = Math.Min(AllTimes.Length - 1, endIndex + missing);
+            times = AllTimes.AsSpan(startIndex, endIndex - startIndex + 1);
+
+            for (int i = 0; i < times.Length; i++)
+            {
+                TimeSteps.Add(times[i]);
+            }
+        }
+        else
         {
             float distanceBetweenTimes = times.Length / (float)(maxTimesOnTimeline - 1);
             for (int i = 0; i < maxTimesOnTimeline - 1; i++)
@@ -133,21 +145,12 @@
             }
             TimeSteps.Add(times[^1]);
         }
-        else
-        {
-            for (int i = 0; i < times.Length; i++)
-            {
-                TimeSteps.Add(times[i]);
-            }
-        }
-    }
 
-    private Span<ulong> GetTimelineSlice(ulong fromTimeInclusive, ulong toTimeInclusive)
-    {
-        int startIndex = Array.BinarySearch(AllTimes, fromTimeInclusive);
-        int endIndex = Array.BinarySearch(AllTimes, toTimeInclusive);
+        StartTime = AllTimes[startIndex];
+        EndTime = AllTimes[endIndex];
 
-        return AllTimes.AsSpan(startIndex, endIndex - startIndex + 1);
+        StartRangeSelect = StartTime;
+        EndRangeSelect = EndTime;
     }
 
     private void TimeChanged(ChangeEventArgs args)
