@@ -5,6 +5,39 @@ using System.Threading;
 
 namespace ChiselDebug
 {
+    internal class VisitHelper
+    {
+        public readonly GraphFIR.Module Mod;
+        public readonly Dictionary<GraphFIR.Output, GraphFIR.FIRRTLNode> OutToNode = new Dictionary<GraphFIR.Output, GraphFIR.FIRRTLNode>();
+        public readonly Dictionary<string, GraphFIR.Output> NameToOutput = new Dictionary<string, GraphFIR.Output>();
+        public readonly Dictionary<string, GraphFIR.Input> NameToInput = new Dictionary<string, GraphFIR.Input>();
+
+        public VisitHelper(GraphFIR.Module mod)
+        {
+            this.Mod = mod;
+        }
+
+        public VisitHelper ForNewModule(string moduleName)
+        {
+            return new VisitHelper(new GraphFIR.Module(moduleName));
+        }
+
+        public void AddNodeToModule(GraphFIR.FIRRTLPrimOP node)
+        {
+            Mod.AddNode(node);
+            OutToNode.Add(node.Result, node);
+        }
+
+        public void AddNodeToModule(GraphFIR.FIRRTLNode node)
+        {
+            Mod.AddNode(node);
+            foreach (var output in node.GetOutputs())
+            {
+                OutToNode.Add(output, node);
+            }
+        }
+    }
+
     public static class CircuitToGraph
     {
         private static long UniqueNumber = 0;
@@ -16,44 +49,43 @@ namespace ChiselDebug
 
         public static CircuitGraph GetAsGraph(FIRRTL.Circuit circuit)
         {
+            VisitHelper helper = new VisitHelper(null);
+
             List<GraphFIR.Module> modules = new List<GraphFIR.Module>();
             foreach (var moduleDef in circuit.Modules)
             {
-                modules.Add(VisitModule(moduleDef));
+                modules.Add(VisitModule(helper, moduleDef));
             }
 
             return new CircuitGraph(circuit.Main, modules);
         }
 
-        private static GraphFIR.Module VisitModule(FIRRTL.DefModule moduleDef)
+        private static GraphFIR.Module VisitModule(VisitHelper parentHelper, FIRRTL.DefModule moduleDef)
         {
             if (moduleDef is FIRRTL.Module mod)
             {
-                GraphFIR.Module module = new GraphFIR.Module(mod.Name);
+                VisitHelper helper = parentHelper.ForNewModule(mod.Name);
                 foreach (var port in mod.Ports)
                 {
-                    VisitPort(module, port);
+                    VisitPort(helper.Mod, port);
                 }
 
-                var outToNode = new Dictionary<GraphFIR.Output, GraphFIR.FIRRTLNode>();
-                var nameToOutput = new Dictionary<string, GraphFIR.Output>();
-                foreach (var output in module.InternalOutputs)
+                foreach (var output in helper.Mod.InternalOutputs)
                 {
-                    outToNode.Add(output, module);
-                    nameToOutput.Add(output.Name, output);
+                    helper.OutToNode.Add(output, helper.Mod);
+                    helper.NameToOutput.Add(output.Name, output);
                 }
 
-                var nameToInput = new Dictionary<string, GraphFIR.Input>();
-                foreach (var input in module.InternalInputs)
+                foreach (var input in helper.Mod.InternalInputs)
                 {
-                    nameToInput.Add(input.Name, input);
+                    helper.NameToInput.Add(input.Name, input);
                 }
 
-                VisitStatement(outToNode, nameToOutput, nameToInput, module, mod.Body);
+                VisitStatement(helper, mod.Body);
 
-                module.FinishModuleSetup();
+                helper.Mod.FinishModuleSetup();
 
-                return module;
+                return helper.Mod;
             }
             else
             {
@@ -87,11 +119,7 @@ namespace ChiselDebug
             }
         }
 
-        private static void VisitStatement(
-            Dictionary<GraphFIR.Output, GraphFIR.FIRRTLNode> outToNode,
-            Dictionary<string, GraphFIR.Output> nameToOutput,
-            Dictionary<string, GraphFIR.Input> nameToInput,
-            GraphFIR.Module module, FIRRTL.Statement statement)
+        private static void VisitStatement(VisitHelper helper, FIRRTL.Statement statement)
         {
             if (statement is FIRRTL.EmptyStmt)
             {
@@ -99,7 +127,7 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.Block block)
             {
-                block.Statements.ForEach(x => VisitStatement(outToNode, nameToOutput, nameToInput, module, x));
+                block.Statements.ForEach(x => VisitStatement(helper, x));
             }
             else if (statement is FIRRTL.Conditionally)
             {
@@ -123,7 +151,7 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.Connect connect)
             {
-                GraphFIR.Output fromOutput = VisitExp(outToNode, nameToOutput, module, connect.Expr).output;
+                GraphFIR.Output fromOutput = VisitExp(helper, connect.Expr).output;
 
                 //Yes it currently only works with references
                 string toName = ((FIRRTL.Reference)connect.Loc).Name;
@@ -131,15 +159,15 @@ namespace ChiselDebug
                 //The name for a register input is special because /in
                 //is added to the name in the vcd file. If name is a register
                 //then set name to register input name.
-                if (nameToOutput.TryGetValue(toName, out var maybeRegOut) &&
-                    outToNode.TryGetValue(maybeRegOut, out var maybeReg) &&
+                if (helper.NameToOutput.TryGetValue(toName, out var maybeRegOut) &&
+                    helper.OutToNode.TryGetValue(maybeRegOut, out var maybeReg) &&
                     maybeReg is GraphFIR.Register)
                 {
                     toName = toName + "/in";
-                    module.AddOutputRename(toName, fromOutput);
+                    helper.Mod.AddOutputRename(toName, fromOutput);
                 }
 
-                var toInput = nameToInput[toName];
+                var toInput = helper.NameToInput[toName];
                 fromOutput.ConnectToInput(toInput);
             }
             else if (statement is FIRRTL.PartialConnect)
@@ -164,7 +192,7 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.DefRegister reg)
             {
-                var clock = VisitExp(outToNode, nameToOutput, module, reg.Clock);
+                var clock = VisitExp(helper, reg.Clock);
                 GraphFIR.Register register;
 
                 //if it has no reset then it also has no init value
@@ -174,15 +202,14 @@ namespace ChiselDebug
                 }
                 else
                 {
-                    var reset = VisitExp(outToNode, nameToOutput, module, reg.Reset);
-                    var initValue = VisitExp(outToNode, nameToOutput, module, reg.Init);
+                    var reset = VisitExp(helper, reg.Reset);
+                    var initValue = VisitExp(helper, reg.Init);
                     register = new GraphFIR.Register(reg.Name, clock.output, reset.output, initValue.output, reg.Type);
                 }
 
-                module.AddNode(register);
-                outToNode.Add(register.Result, register);
-                nameToInput.Add(register.Name + "/in", register.In);
-                nameToOutput.Add(register.Name, register.Result);
+                helper.AddNodeToModule(register);
+                helper.NameToInput.Add(register.Name + "/in", register.In);
+                helper.NameToOutput.Add(register.Name, register.Result);
             }
             else if (statement is FIRRTL.DefInstance)
             {
@@ -190,19 +217,19 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.DefNode node)
             {
-                var nodeOut = VisitExp(outToNode, nameToOutput, module, node.Value);
+                var nodeOut = VisitExp(helper, node.Value);
 
                 if (node.Value is FIRRTL.RefLikeExpression)
                 {
-                    module.AddOutputRename(node.Name, nodeOut.output);
+                    helper.Mod.AddOutputRename(node.Name, nodeOut.output);
                 }
                 else
                 {
                     nodeOut.output.SetName(node.Name);
                 }
-                
-                
-                nameToOutput.Add(node.Name, nodeOut.output);
+
+
+                helper.NameToOutput.Add(node.Name, nodeOut.output);
             }
             else if (statement is FIRRTL.DefMemory)
             {
@@ -214,19 +241,18 @@ namespace ChiselDebug
             }
         }
 
-        private static (GraphFIR.FIRRTLNode node, GraphFIR.Output output) VisitExp(Dictionary<GraphFIR.Output, GraphFIR.FIRRTLNode> outToNode, Dictionary<string, GraphFIR.Output> nameToOutput, GraphFIR.Module module, FIRRTL.Expression exp)
+        private static (GraphFIR.FIRRTLNode node, GraphFIR.Output output) VisitExp(VisitHelper helper, FIRRTL.Expression exp)
         {
             if (exp is FIRRTL.Literal lit)
             {
                 GraphFIR.ConstValue value = new GraphFIR.ConstValue(GetUniqueName(), lit);
 
-                outToNode.Add(value.Result, value);
-                module.AddNode(value);
+                helper.AddNodeToModule(value);
                 return (value, value.Result);
             }
             else if (exp is FIRRTL.DoPrim prim)
             {
-                var args = prim.Args.Select(x => VisitExp(outToNode, nameToOutput, module, x)).ToArray();
+                var args = prim.Args.Select(x => VisitExp(helper, x)).ToArray();
                 GraphFIR.FIRRTLPrimOP nodePrim;
                 if (prim.Op is FIRRTL.Add)
                 {
@@ -302,15 +328,14 @@ namespace ChiselDebug
                 }
 
                 nodePrim.Result.SetName(GetUniqueName());
-                outToNode.Add(nodePrim.Result, nodePrim);
-                module.AddNode(nodePrim);
+                helper.AddNodeToModule(nodePrim);
                 return (nodePrim, nodePrim.Result);
             }
             else if (exp is FIRRTL.Mux mux)
             {
-                var cond = VisitExp(outToNode, nameToOutput, module, mux.Cond);
-                var ifTrue = VisitExp(outToNode, nameToOutput, module, mux.TrueValue);
-                var ifFalse = VisitExp(outToNode, nameToOutput, module, mux.FalseValue);
+                var cond = VisitExp(helper, mux.Cond);
+                var ifTrue = VisitExp(helper, mux.TrueValue);
+                var ifFalse = VisitExp(helper, mux.FalseValue);
 
                 GraphFIR.Mux node = new GraphFIR.Mux(new List<FIRRTL.IFIRType>() { ifTrue.output.Type, ifFalse.output.Type }, mux.Type);
                 cond.output.ConnectToInput(node.Decider);
@@ -318,28 +343,26 @@ namespace ChiselDebug
                 ifFalse.output.ConnectToInput(node.Choises[1]);
 
                 node.Result.SetName(GetUniqueName());
-                outToNode.Add(node.Result, node);
-                module.AddNode(node);
+                helper.AddNodeToModule(node);
                 return (node, node.Result);
             }
             else if (exp is FIRRTL.Reference reference)
             {
-                GraphFIR.Output output = nameToOutput[reference.Name];
-                GraphFIR.FIRRTLNode node = outToNode[output];
+                GraphFIR.Output output = helper.NameToOutput[reference.Name];
+                GraphFIR.FIRRTLNode node = helper.OutToNode[output];
                 return (node, output);
             }
             else if (exp is FIRRTL.ValidIf validIf)
             {
-                var cond = VisitExp(outToNode, nameToOutput, module, validIf.Cond);
-                var ifValid = VisitExp(outToNode, nameToOutput, module, validIf.Value);
+                var cond = VisitExp(helper, validIf.Cond);
+                var ifValid = VisitExp(helper, validIf.Value);
 
                 GraphFIR.Mux node = new GraphFIR.Mux(new List<FIRRTL.IFIRType>() { ifValid.output.Type }, validIf.Type);
                 cond.output.ConnectToInput(node.Decider);
                 ifValid.output.ConnectToInput(node.Choises[0]);
 
                 node.Result.SetName(GetUniqueName());
-                outToNode.Add(node.Result, node);
-                module.AddNode(node);
+                helper.AddNodeToModule(node);
                 return (node, node.Result);
             }
             else
