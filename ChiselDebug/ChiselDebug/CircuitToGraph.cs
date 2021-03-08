@@ -8,18 +8,23 @@ namespace ChiselDebug
     internal class VisitHelper
     {
         public readonly GraphFIR.Module Mod;
+        public readonly Dictionary<string, FIRRTL.DefModule> ModuleRoots;
         public readonly Dictionary<GraphFIR.Output, GraphFIR.FIRRTLNode> OutToNode = new Dictionary<GraphFIR.Output, GraphFIR.FIRRTLNode>();
         public readonly Dictionary<string, GraphFIR.Output> NameToOutput = new Dictionary<string, GraphFIR.Output>();
         public readonly Dictionary<string, GraphFIR.Input> NameToInput = new Dictionary<string, GraphFIR.Input>();
 
-        public VisitHelper(GraphFIR.Module mod)
+        public VisitHelper(GraphFIR.Module mod) : this(mod, new Dictionary<string, FIRRTL.DefModule>())
+        { }
+
+        public VisitHelper(GraphFIR.Module mod, Dictionary<string, FIRRTL.DefModule> roots)
         {
             this.Mod = mod;
+            this.ModuleRoots = roots;
         }
 
         public VisitHelper ForNewModule(string moduleName)
         {
-            return new VisitHelper(new GraphFIR.Module(moduleName));
+            return new VisitHelper(new GraphFIR.Module(moduleName), ModuleRoots);
         }
 
         public void AddNodeToModule(GraphFIR.FIRRTLPrimOP node)
@@ -50,6 +55,10 @@ namespace ChiselDebug
         public static CircuitGraph GetAsGraph(FIRRTL.Circuit circuit)
         {
             VisitHelper helper = new VisitHelper(null);
+            foreach (var moduleDef in circuit.Modules)
+            {
+                helper.ModuleRoots.Add(moduleDef.Name, moduleDef);
+            }
 
             List<GraphFIR.Module> modules = new List<GraphFIR.Module>();
             foreach (var moduleDef in circuit.Modules)

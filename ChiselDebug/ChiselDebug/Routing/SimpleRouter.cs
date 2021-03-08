@@ -44,7 +44,7 @@ namespace ChiselDebug.Routing
                 List<WirePath> paths = new List<WirePath>();
                 while (linesPriority.Count > 0)
                 {
-                    Debug.WriteLine(linesPriority.Count);
+                    //Debug.WriteLine(linesPriority.Count);
                     (IOInfo start, IOInfo end) = linesPriority.Dequeue();
 
                     Rectangle? startRect = null;
