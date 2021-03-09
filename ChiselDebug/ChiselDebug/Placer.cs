@@ -124,17 +124,43 @@ namespace ChiselDebug
                 }
 
                 {
+                    int[] largestSizeInX = placement
+                        .GroupBy(x => x.Value.X)
+                        .OrderBy(x => x.Key)
+                        .Select(x => x
+                            .Select(y => NodeSizes[y.Key.Value].X)
+                            .Aggregate(Math.Max))
+                        .ToArray();
+
                     int minXOrdering = placement.Values.Min(x => x.X);
                     int minYOrdering = placement.Values.Min(x => x.Y);
-                    foreach (var node in placement.Keys)
-                    {
-                        Point size = NodeSizes[node.Value];
-                        Point nodePos = placement[node];
-                        int xOrder = nodePos.X - minXOrdering;
-                        int yOrder = nodePos.Y - minYOrdering;
+                    Node<FIRRTLNode>[][] nodePlacements = placement
+                        .GroupBy(x => x.Value.X)
+                        .OrderBy(x => x.Key)
+                        .Select(x => x
+                            .OrderBy(y => y.Value.Y)
+                            .Select(y => y.Key)
+                            .ToArray())
+                        .ToArray();
 
-                        Point pos = new Point(50 + xOrder * 150, 30 + yOrder * 150);
-                        placments.AddNodePlacement(node.Value, new Rectangle(pos, size));
+                    int xOffset = 50;
+                    for (int x = 0; x < nodePlacements.Length; x++)
+                    {
+                        int yOffset = 30;
+                        for (int y = 0; y < nodePlacements[x].Length; y++)
+                        {
+                            Node<FIRRTLNode> node = nodePlacements[x][y];
+
+                            Point offset = new Point(xOffset, yOffset);
+                            Point padding = new Point(70, 50);
+                            Point pos = offset + padding;
+
+                            placments.AddNodePlacement(node.Value, new Rectangle(pos, NodeSizes[node.Value]));
+
+                            yOffset += (NodeSizes[node.Value] + padding).Y;
+                        }
+
+                        xOffset += largestSizeInX[x] + 70;
                     }
                 }
 
