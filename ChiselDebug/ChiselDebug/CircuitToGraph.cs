@@ -227,9 +227,10 @@ namespace ChiselDebug
 
                 helper.AddNodeToModule(register);
             }
-            else if (statement is FIRRTL.DefInstance)
+            else if (statement is FIRRTL.DefInstance instance)
             {
-                throw new NotImplementedException();
+                GraphFIR.Module mod = VisitModule(helper, helper.ModuleRoots[instance.Module]);
+                helper.Mod.AddModule(mod, instance.Name);
             }
             else if (statement is FIRRTL.DefNode node)
             {

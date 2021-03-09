@@ -37,6 +37,17 @@ namespace ChiselDebug.GraphFIR
             }
         }
 
+        public void AddModule(Module mod, string bundleName)
+        {
+            Nodes.Add(mod);
+            List<FIRIO> modIO = new List<FIRIO>();
+            modIO.AddRange(mod.GetInputs());
+            modIO.AddRange(mod.GetOutputs());
+
+            IOBundle bundle = new IOBundle(bundleName, modIO, false);
+            NameToIO.Add(bundleName, bundle);
+        }
+
         public void AddIORename(string name, FIRIO io)
         {
             NameToIO.Add(name, io);
