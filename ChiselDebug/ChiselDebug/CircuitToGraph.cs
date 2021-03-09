@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using static FIRRTL.Extensions;
 
 namespace ChiselDebug
 {
@@ -9,9 +10,9 @@ namespace ChiselDebug
     {
         public readonly GraphFIR.Module Mod;
         public readonly Dictionary<string, FIRRTL.DefModule> ModuleRoots;
-        public readonly Dictionary<GraphFIR.Output, GraphFIR.FIRRTLNode> OutToNode = new Dictionary<GraphFIR.Output, GraphFIR.FIRRTLNode>();
         public readonly Dictionary<string, GraphFIR.Output> NameToOutput = new Dictionary<string, GraphFIR.Output>();
         public readonly Dictionary<string, GraphFIR.Input> NameToInput = new Dictionary<string, GraphFIR.Input>();
+        public readonly Dictionary<string, GraphFIR.IOBundle> NameToBundle = new Dictionary<string, GraphFIR.IOBundle>();
 
         public VisitHelper(GraphFIR.Module mod) : this(mod, new Dictionary<string, FIRRTL.DefModule>())
         { }
@@ -27,19 +28,9 @@ namespace ChiselDebug
             return new VisitHelper(new GraphFIR.Module(moduleName), ModuleRoots);
         }
 
-        public void AddNodeToModule(GraphFIR.FIRRTLPrimOP node)
-        {
-            Mod.AddNode(node);
-            OutToNode.Add(node.Result, node);
-        }
-
         public void AddNodeToModule(GraphFIR.FIRRTLNode node)
         {
             Mod.AddNode(node);
-            foreach (var output in node.GetOutputs())
-            {
-                OutToNode.Add(output, node);
-            }
         }
     }
 
@@ -76,16 +67,15 @@ namespace ChiselDebug
                 VisitHelper helper = parentHelper.ForNewModule(mod.Name);
                 foreach (var port in mod.Ports)
                 {
-                    VisitPort(helper.Mod, port);
+                    VisitPort(helper, port);
                 }
 
-                foreach (var output in helper.Mod.InternalOutputs)
+                foreach (var output in helper.Mod.GetInternalOutputs())
                 {
-                    helper.OutToNode.Add(output, helper.Mod);
                     helper.NameToOutput.Add(output.Name, output);
                 }
 
-                foreach (var input in helper.Mod.InternalInputs)
+                foreach (var input in helper.Mod.GetInternalInputs())
                 {
                     helper.NameToInput.Add(input.Name, input);
                 }
@@ -102,30 +92,57 @@ namespace ChiselDebug
             }
         }
 
-        private static void VisitPort(GraphFIR.Module module, FIRRTL.Port port)
+        private static void VisitPort(VisitHelper helper, FIRRTL.Port port)
         {
-            if (port.Type is FIRRTL.AggregateType)
+            foreach (var io in VisitType(helper, port.Direction, port.Name, port.Type))
+            {
+                helper.Mod.AddExternalIO(io);
+            }
+        }
+
+        private static List<GraphFIR.FIRIO> VisitType(VisitHelper helper, FIRRTL.Dir direction, string name, FIRRTL.IFIRType type)
+        {
+            List<GraphFIR.FIRIO> io = new List<GraphFIR.FIRIO>();
+            if (type is FIRRTL.BundleType bundle)
+            {
+                io.Add(VisitBundle(helper, direction, name, bundle));
+            }
+            else if (type is FIRRTL.AggregateType)
             {
                 throw new NotImplementedException();
             }
 
-            if (port.Direction == FIRRTL.Dir.Input)
+            if (direction == FIRRTL.Dir.Input)
             {
-                module.AddExternalInput(port.Name, port.Type);
+                io.Add(new GraphFIR.Input(null, name, type));
 
                 //VCD may keep track of the previous clock cycle value even if it doesn't use it.
                 //To keep in line with supporting everything in the VCD, an input representing
                 //the previous clock cycle value is added so there isn't an issue when loading
                 //a CircuitState from VCD.
-                if (port.Type is FIRRTL.ClockType)
+                if (type is FIRRTL.ClockType)
                 {
-                    module.AddExternalInput(port.Name + "/prev", port.Type);
+                    io.Add(new GraphFIR.Input(null, name + "/prev", type));
                 }
             }
             else
             {
-                module.AddExternalOutput(port.Name, port.Type);
+                io.Add(new GraphFIR.Output(null, name, type));
             }
+
+            return io;
+        }
+
+        private static GraphFIR.FIRIO VisitBundle(VisitHelper helper, FIRRTL.Dir direction, string bundleName, FIRRTL.BundleType bundle)
+        {
+            List<GraphFIR.FIRIO> io = new List<GraphFIR.FIRIO>();
+            foreach (var field in bundle.Fields)
+            {
+                FIRRTL.Dir fieldDir = direction.Flip(field.Flip);
+                io.AddRange(VisitType(helper, fieldDir, field.Name, field.Type));
+            }
+
+            return new GraphFIR.IOBundle(bundleName, io);
         }
 
         private static void VisitStatement(VisitHelper helper, FIRRTL.Statement statement)
@@ -169,8 +186,8 @@ namespace ChiselDebug
                 //is added to the name in the vcd file. If name is a register
                 //then set name to register input name.
                 if (helper.NameToOutput.TryGetValue(toName, out var maybeRegOut) &&
-                    helper.OutToNode.TryGetValue(maybeRegOut, out var maybeReg) &&
-                    maybeReg is GraphFIR.Register)
+                    maybeRegOut.Node != null &&
+                    maybeRegOut.Node is GraphFIR.Register)
                 {
                     toName = toName + "/in";
                     helper.Mod.AddOutputRename(toName, fromOutput);
@@ -358,8 +375,7 @@ namespace ChiselDebug
             else if (exp is FIRRTL.Reference reference)
             {
                 GraphFIR.Output output = helper.NameToOutput[reference.Name];
-                GraphFIR.FIRRTLNode node = helper.OutToNode[output];
-                return (node, output);
+                return (output.Node, output);
             }
             else if (exp is FIRRTL.ValidIf validIf)
             {

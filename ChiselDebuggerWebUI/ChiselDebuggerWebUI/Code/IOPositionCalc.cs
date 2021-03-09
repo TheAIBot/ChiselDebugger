@@ -11,18 +11,18 @@ namespace ChiselDebuggerWebUI.Code
     {
         private const int MaxSpaceBetweenIO = 40;
 
-        internal static List<DirectedIO> EvenVertical<T>(int height, List<T> io, int fixedX, int startY) where T : FIRIO
+        internal static List<DirectedIO> EvenVertical<T>(int height, T[] io, int fixedX, int startY) where T : FIRIO
         {
             int usableHeight = height - startY * 2;
             int spaceBetweenIO;
-            if (io.Count <= 1)
+            if (io.Length <= 1)
             {
                 startY += usableHeight / 2;
                 spaceBetweenIO = 0;
             }
             else
             {
-                int spacersNeeded = io.Count - 1;
+                int spacersNeeded = io.Length - 1;
                 int possibleSpaceBetweenIO = usableHeight / spacersNeeded;
                 spaceBetweenIO = Math.Min(MaxSpaceBetweenIO, possibleSpaceBetweenIO);
                 int usedSpace = spaceBetweenIO * spacersNeeded;
@@ -31,7 +31,7 @@ namespace ChiselDebuggerWebUI.Code
             }
 
             List<DirectedIO> posIO = new List<DirectedIO>();
-            for (int i = 0; i < io.Count; i++)
+            for (int i = 0; i < io.Length; i++)
             {
                 int y = startY + spaceBetweenIO * i;
 

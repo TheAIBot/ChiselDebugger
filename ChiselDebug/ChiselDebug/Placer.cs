@@ -72,7 +72,7 @@ namespace ChiselDebug
                 }
 
                 List<Node<FIRRTLNode>> modInputNodes = new List<Node<FIRRTLNode>>();
-                foreach (var input in Mod.InternalInputs)
+                foreach (var input in Mod.GetInternalInputs())
                 {
                     if (input.Con == null)
                     {
@@ -84,7 +84,7 @@ namespace ChiselDebug
                     modInputNodes.Add(modInputNode);
                 }
                 List<Node<FIRRTLNode>> modOutputNodes = new List<Node<FIRRTLNode>>();
-                foreach (var output in Mod.InternalOutputs)
+                foreach (var output in Mod.GetInternalOutputs())
                 {
                     if (!output.Con.IsUsed())
                     {

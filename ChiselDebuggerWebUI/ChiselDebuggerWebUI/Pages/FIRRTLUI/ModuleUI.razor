@@ -76,7 +76,7 @@
     {
         int requiredWidth = 0;
 
-        int maxIO = Math.Max(Operation.ExternalInputs.Count, Operation.ExternalOutputs.Count);
+        int maxIO = Math.Max(Operation.GetInputs().Length, Operation.GetOutputs().Length);
 
         int requiredIOMargin = MarginForIO * 2;
         int requiredHeight = requiredIOMargin + (maxIO - 1) * MinSpaceBetweenIO;
@@ -104,11 +104,11 @@
 
     protected override List<DirectedIO> OnMakeInputs(int width, int height)
     {
-        return IOPositionCalc.EvenVertical<Input>(height, Operation.InternalInputs, width + ContentPadding, MarginForIO);
+        return IOPositionCalc.EvenVertical<Input>(height, Operation.GetInternalInputs(), width + ContentPadding, MarginForIO);
     }
 
     protected override List<DirectedIO> OnMakeOutputs(int width, int height)
     {
-        return IOPositionCalc.EvenVertical<Output>(height, Operation.InternalOutputs, -ContentPadding, MarginForIO);
+        return IOPositionCalc.EvenVertical<Output>(height, Operation.GetInternalOutputs(), -ContentPadding, MarginForIO);
     }
 }

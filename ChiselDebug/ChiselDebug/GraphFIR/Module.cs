@@ -11,6 +11,7 @@ namespace ChiselDebug.GraphFIR
         public readonly string Name;
         public List<FIRRTLNode> Nodes = new List<FIRRTLNode>();
         private Dictionary<string, Connection> NameToConnection = new Dictionary<string, Connection>();
+        
 
         public Module(string name)
         {
@@ -44,11 +45,11 @@ namespace ChiselDebug.GraphFIR
                 }
             }
 
-            foreach (var output in ExternalOutputs)
+            foreach (var output in GetOutputs())
             {
                 NameToConnection.Add(output.Name, output.Con);
             }
-            foreach (var output in InternalOutputs)
+            foreach (var output in GetInternalOutputs())
             {
                 NameToConnection.Add(output.Name, output.Con);
             }
@@ -78,7 +79,7 @@ namespace ChiselDebug.GraphFIR
         public List<Connection> GetAllModuleConnections()
         {
             List<Connection> connestions = new List<Connection>();
-            foreach (var output in InternalOutputs)
+            foreach (var output in GetInternalOutputs())
             {
                 if (output.Con.IsUsed())
                 {
@@ -98,11 +99,6 @@ namespace ChiselDebug.GraphFIR
             }
 
             return connestions;
-        }
-
-        public Input GetInternalInput(string name)
-        {
-            return InternalInputs.Find(x => x.Name == name);
         }
 
         public FIRRTLNode[] GetAllNodes()
