@@ -6,7 +6,12 @@ using System.Text;
 
 namespace ChiselDebug.GraphFIR
 {
-    public abstract class FIRIO
+    public interface IContainerIO
+    {
+        public IContainerIO GetIO(string ioName);
+    }
+
+    public abstract class FIRIO : IContainerIO
     {
         public string Name { get; private set; }
         public IOBundle Bundle { get; private set; } = null;
@@ -28,6 +33,7 @@ namespace ChiselDebug.GraphFIR
         }
 
         public abstract FIRIO Flip();
+        public abstract IContainerIO GetIO(string ioName);
     }
 
     public abstract class ScalarIO : FIRIO
@@ -48,6 +54,11 @@ namespace ChiselDebug.GraphFIR
         public bool IsConnected()
         {
             return Con != null;
+        }
+
+        public override IContainerIO GetIO(string ioName)
+        {
+            throw new Exception("Scalar IO can't contain additional io.");
         }
 
         public abstract void SetType(IFIRType type);
@@ -118,15 +129,18 @@ namespace ChiselDebug.GraphFIR
 
     public class IOBundle : FIRIO
     {
-        public readonly List<FIRIO> IO = new List<FIRIO>();
+        private readonly Dictionary<string, FIRIO> IO = new Dictionary<string, FIRIO>();
 
         public IOBundle(string name, List<FIRIO> io, bool twoWayRelationship = true) : base(name)
         {
-            this.IO = io;
+            foreach (var firIO in io)
+            {
+                IO.Add(firIO.Name, firIO);
+            }
 
             if (twoWayRelationship)
             {
-                foreach (var firIO in IO)
+                foreach (var firIO in IO.Values)
                 {
                     firIO.SetBundle(this);
                 }
@@ -135,13 +149,13 @@ namespace ChiselDebug.GraphFIR
 
         public override FIRIO Flip()
         {
-            List<FIRIO> flipped = IO.Select(x => x.Flip()).ToList();
-            return new IOBundle(Name, flipped, IO.FirstOrDefault()?.IsPartOfBundle ?? false);
+            List<FIRIO> flipped = IO.Values.Select(x => x.Flip()).ToList();
+            return new IOBundle(Name, flipped, IO.Values.FirstOrDefault()?.IsPartOfBundle ?? false);
         }
 
         public IEnumerable<FIRIO> Flatten()
         {
-            foreach (var io in IO)
+            foreach (var io in IO.Values)
             {
                 if (io is IOBundle bundle)
                 {
@@ -155,6 +169,16 @@ namespace ChiselDebug.GraphFIR
                     yield return io;
                 }
             }
+        }
+
+        public override IContainerIO GetIO(string ioName)
+        {
+            if (IO.TryGetValue(ioName, out FIRIO innerIO))
+            {
+                return innerIO;
+            }
+
+            throw new Exception($"Failed to find io. IO name: {ioName}");
         }
     }
 }

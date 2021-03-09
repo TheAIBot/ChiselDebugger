@@ -269,6 +269,11 @@ namespace ChiselDebug
 
         private static (GraphFIR.FIRRTLNode node, GraphFIR.Output output) VisitExp(VisitHelper helper, FIRRTL.Expression exp)
         {
+            if (exp is FIRRTL.RefLikeExpression)
+            {
+                return VisitRef(helper, exp);
+            }
+
             if (exp is FIRRTL.Literal lit)
             {
                 GraphFIR.ConstValue value = new GraphFIR.ConstValue(GetUniqueName(), lit);
@@ -372,11 +377,6 @@ namespace ChiselDebug
                 helper.AddNodeToModule(node);
                 return (node, node.Result);
             }
-            else if (exp is FIRRTL.Reference reference)
-            {
-                GraphFIR.Output output = helper.NameToOutput[reference.Name];
-                return (output.Node, output);
-            }
             else if (exp is FIRRTL.ValidIf validIf)
             {
                 var cond = VisitExp(helper, validIf.Cond);
@@ -396,5 +396,21 @@ namespace ChiselDebug
             }
         }
 
+        private static (GraphFIR.FIRRTLNode node, T output) VisitRef<T>(VisitHelper helper, FIRRTL.RefLikeExpression exp, GraphFIR.IContainerIO currContainer) where T : GraphFIR.FIRIO
+        {
+            if (exp is FIRRTL.Reference reference)
+            {
+                GraphFIR.Output output = helper.NameToOutput[reference.Name];
+                return (output.Node, output);
+            }
+            else if (exp is FIRRTL.SubField subField)
+            {
+
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
     }
 }
