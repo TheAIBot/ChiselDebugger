@@ -24,6 +24,10 @@
                 {
                     <RegisterUI PosOp="@(posOp.Cast<Register>())" ParentModCtrl="CurrModCtrl"></RegisterUI>
                 }
+                else if (posOp.Value is Module)
+                {
+                    <ModuleUI PosOp="@(posOp.Cast<Module>())" ParentModCtrl="CurrModCtrl"></ModuleUI>
+                }
             }
 
             @foreach (var input in InputOffsets)
@@ -60,6 +64,7 @@
         CurrModCtrl = new ModuleController(Operation);
         CurrModCtrl.OnPlacedNodes += x => InvokeAsync(() => UpdatePlacement(x));
 
+        ParentModCtrl?.AddModuleCtrl(CurrModCtrl);
         DebugCtrl.AddModCtrl(CurrModCtrl);
     }
 
@@ -94,6 +99,7 @@
         InputOffsets = OnMakeInputs(moduleSize.X, moduleSize.Y);
         OutputOffsets = OnMakeOutputs(moduleSize.X, moduleSize.Y);
         CurrModCtrl.UpdateIOFromNode(Operation, InputOffsets, OutputOffsets);
+        ParentModCtrl?.UpdateComponentInfo(new FIRComponentUpdate(Operation, moduleSize, InputOffsets, OutputOffsets));
 
         CurrModCtrl.RouteWires(placements);
 
