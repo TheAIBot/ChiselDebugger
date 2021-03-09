@@ -132,6 +132,10 @@ namespace ChiselDebug.Routing
                     endGo = allowedDir.MovePoint(endGo);
                 } while (endRectRelative.Within(endGo));
             }
+            else
+            {
+                board.SetCellAllowedMoves(relativeStart, end.DirIO.InitialDir.Reverse());
+            }
 
             if (startRect.HasValue)
             {
