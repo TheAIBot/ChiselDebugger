@@ -34,6 +34,11 @@ namespace ChiselDebug.GraphFIR
             A.InferType();
             B.InferType();
 
+            if (B.Type is UnknownType)
+            {
+                B.InferType();
+            }
+
             Result.SetType(BiArgInferType());
         }
         public abstract IFIRType BiArgInferType();

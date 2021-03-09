@@ -35,11 +35,6 @@ namespace ChiselDebug.GraphFIR
 
         public override void InferType()
         {
-            if (In.Type is not FIRRTL.UnknownType)
-            {
-                return;
-            }
-
             In.InferType();
 
             IFIRType type = In.Type switch
@@ -62,11 +57,6 @@ namespace ChiselDebug.GraphFIR
 
         public override void InferType()
         {
-            if (In.Type is not FIRRTL.UnknownType)
-            {
-                return;
-            }
-
             In.InferType();
 
             IFIRType type = In.Type switch
@@ -91,11 +81,6 @@ namespace ChiselDebug.GraphFIR
 
         public override void InferType()
         {
-            if (In.Type is not FIRRTL.UnknownType)
-            {
-                return;
-            }
-
             In.InferType();
 
             IFIRType type = In.Type switch
@@ -118,11 +103,6 @@ namespace ChiselDebug.GraphFIR
 
         public override void InferType()
         {
-            if (In.Type is not FIRRTL.UnknownType)
-            {
-                return;
-            }
-
             In.InferType();
 
             IFIRType type = In.Type switch
