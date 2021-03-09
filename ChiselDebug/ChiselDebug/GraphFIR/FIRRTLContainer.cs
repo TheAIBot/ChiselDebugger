@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace ChiselDebug.GraphFIR
 {
-    public class FIRRTLContainer : FIRRTLNode, IContainerIO
+    public abstract class FIRRTLContainer : FIRRTLNode, IContainerIO
     {
         public readonly Dictionary<string, FIRIO> ExternalIO = new Dictionary<string, FIRIO>();
 
@@ -58,14 +58,6 @@ namespace ChiselDebug.GraphFIR
             throw new NotImplementedException();
         }
 
-        public IContainerIO GetIO(string ioName)
-        {
-            if (InternalIO.TryGetValue(ioName, out FIRIO innerIO))
-            {
-                return innerIO;
-            }
-
-            throw new Exception($"Failed to find io. IO name: {ioName}");
-        }
+        public abstract IContainerIO GetIO(string ioName);
     }
 }

@@ -9,11 +9,22 @@ namespace ChiselDebug.GraphFIR
     public interface IContainerIO
     {
         public IContainerIO GetIO(string ioName);
+
+        public IContainerIO GetIO(Span<string> names)
+        {
+            if (names.Length == 0)
+            {
+                return this;
+            }
+
+            return GetIO(names[0]).GetIO(names.Slice(1));
+        }
     }
 
     public abstract class FIRIO : IContainerIO
     {
         public string Name { get; private set; }
+        public bool IsAnonymous => Name == string.Empty;
         public IOBundle Bundle { get; private set; } = null;
         public bool IsPartOfBundle => Bundle != null;
 
@@ -32,6 +43,7 @@ namespace ChiselDebug.GraphFIR
             Bundle = bundle;
         }
 
+        public abstract void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false);
         public abstract FIRIO Flip();
         public abstract IContainerIO GetIO(string ioName);
     }
@@ -80,14 +92,21 @@ namespace ChiselDebug.GraphFIR
             Con.Value = new ValueType(type);
         }
 
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false)
+        {
+            if (input is Input ioIn)
+            {
+                Con.ConnectToInput(ioIn);
+            }
+            else
+            {
+                throw new Exception("Output can only be connected to input.");
+            }
+        }
+
         public override FIRIO Flip()
         {
             return new Input(Node, Name, Type);
-        }
-
-        public void ConnectToInput(Input input)
-        {
-            Con.ConnectToInput(input);
         }
 
         public void InferType()
@@ -97,6 +116,8 @@ namespace ChiselDebug.GraphFIR
                 Node.InferType();
             }
         }
+
+
     }
 
     public class Input : ScalarIO
@@ -110,6 +131,11 @@ namespace ChiselDebug.GraphFIR
         public override void SetType(IFIRType type)
         {
             Type = type;
+        }
+
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false)
+        {
+            throw new Exception("Input can't be connected to output. Flow is reversed.");
         }
 
         public override FIRIO Flip()
@@ -147,6 +173,57 @@ namespace ChiselDebug.GraphFIR
             }
         }
 
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false)
+        {
+            if (input is not IOBundle)
+            {
+                throw new Exception("Bundle can only connect to other bundle.");
+            }
+            IOBundle bundle = (IOBundle)input;
+
+            if (asPassive && !IsPassiveOfType<Output>())
+            {
+                throw new Exception("Bundle must be a passive output bundle but it was not.");
+            }
+
+            if (asPassive && !bundle.IsPassiveOfType<Input>())
+            {
+                throw new Exception("Bundle must connect to a passive input bundle.");
+            }
+
+            if (!allowPartial && IO.Count != bundle.IO.Count)
+            {
+                throw new Exception("Trying to fully connect two bundles that don't match.");
+            }
+
+            IEnumerable<string> ioConnectNames = IO.Keys;
+            if (allowPartial)
+            {
+                ioConnectNames = ioConnectNames.Intersect(bundle.IO.Keys);
+            }
+
+            foreach (var ioName in ioConnectNames)
+            {
+                var a = GetIO(ioName);
+                var b = bundle.GetIO(ioName);
+
+                if (a is Output aOut && b is Input bIn)
+                {
+                    aOut.ConnectToInput(bIn);
+                }
+                else if (a is Input aIn && b is Output bOut)
+                {
+                    bOut.ConnectToInput(aIn);
+                }
+                else if (a is IOBundle aBundle && b is IOBundle bBundle)
+                {
+                    aBundle.ConnectToInput(bBundle, allowPartial, asPassive);
+                }
+
+                throw new Exception($"Can't connect IO of type {a.GetType()} to {b.GetType()}.");
+            }
+        }
+
         public override FIRIO Flip()
         {
             List<FIRIO> flipped = IO.Values.Select(x => x.Flip()).ToList();
@@ -169,6 +246,23 @@ namespace ChiselDebug.GraphFIR
                     yield return io;
                 }
             }
+        }
+
+        private bool IsPassiveOfType<T>()
+        {
+            foreach (var io in IO.Values)
+            {
+                if (io is IOBundle bundle && !bundle.IsPassiveOfType<T>())
+                {
+                    return false;
+                }
+                else if (io is not T)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public override IContainerIO GetIO(string ioName)

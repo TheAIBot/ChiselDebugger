@@ -10,7 +10,7 @@ namespace ChiselDebug.GraphFIR
     {
         public readonly string Name;
         public List<FIRRTLNode> Nodes = new List<FIRRTLNode>();
-        private Dictionary<string, Connection> NameToConnection = new Dictionary<string, Connection>();
+        private readonly Dictionary<string, FIRIO> NameToIO = new Dictionary<string, FIRIO>();
         
 
         public Module(string name)
@@ -21,59 +21,40 @@ namespace ChiselDebug.GraphFIR
         public void AddNode(FIRRTLNode node)
         {
             Nodes.Add(node);
-        }
-
-        public void AddOutputRename(string name, Output output)
-        {
-            NameToConnection.Add(name, output.Con);
-        }
-
-        public void FinishModuleSetup()
-        {
-            foreach (var node in Nodes)
+            foreach (var input in node.GetInputs())
             {
-                if (node is FIRRTLPrimOP prim)
+                if (!input.IsAnonymous)
                 {
-                    NameToConnection.Add(prim.Result.Name, prim.Result.Con);
-                }
-                else
-                {
-                    foreach (var output in node.GetOutputs())
-                    {
-                        NameToConnection.Add(output.Name, output.Con);
-                    }
+                    NameToIO.Add(input.Name, input);
                 }
             }
-
-            foreach (var output in GetOutputs())
+            foreach (var output in node.GetOutputs())
             {
-                NameToConnection.Add(output.Name, output.Con);
-            }
-            foreach (var output in GetInternalOutputs())
-            {
-                NameToConnection.Add(output.Name, output.Con);
+                if (!output.IsAnonymous)
+                {
+                    NameToIO.Add(output.Name, output);
+                }
             }
         }
 
-        public Connection GetConnection(Span<Scope> scopes, string connectionName)
+        public void AddIORename(string name, FIRIO io)
         {
-            if (scopes.IsEmpty)
+            NameToIO.Add(name, io);
+        }
+
+        public override IContainerIO GetIO(string ioName)
+        {
+            if (NameToIO.TryGetValue(ioName, out FIRIO innerIO))
             {
-                return NameToConnection[connectionName];
+                return innerIO;
             }
-            else
+
+            if (InternalIO.TryGetValue(ioName, out FIRIO io))
             {
-                Scope scope = scopes[0];
-                if (scope.Type == ScopeType.Module)
-                {
-                    Module mod = (Module)Nodes.First(x => x is Module mod && mod.Name == scope.Name);
-                    return mod.GetConnection(scopes.Slice(1), connectionName);
-                }
-                else
-                {
-                    throw new NotImplementedException();
-                }
+                return io;
             }
+
+            throw new Exception($"Failed to find io. IO name: {ioName}");
         }
 
         public List<Connection> GetAllModuleConnections()

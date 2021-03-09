@@ -13,7 +13,7 @@ namespace ChiselDebug.GraphFIR
         public Mux(List<IFIRType> choiseTypes, IFIRType outType) : base(outType)
         {
             this.Choises = choiseTypes.Select(x => new Input(this, x)).ToArray();
-            this.Decider = new Input(this, "Selector", new FIRRTL.UIntType(1));
+            this.Decider = new Input(this, new FIRRTL.UIntType(1));
         }
 
         public override Input[] GetInputs()

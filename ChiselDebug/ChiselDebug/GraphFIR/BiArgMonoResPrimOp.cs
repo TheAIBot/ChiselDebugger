@@ -12,8 +12,8 @@ namespace ChiselDebug.GraphFIR
         public BiArgMonoResPrimOp(string opName, Output aIn, Output bIn, IFIRType outType) : base(outType)
         {
             this.OpName = opName;
-            this.A = new Input(this, "a", aIn.Type);
-            this.B = new Input(this, "b", bIn.Type);
+            this.A = new Input(this, aIn.Type);
+            this.B = new Input(this, bIn.Type);
 
             aIn.ConnectToInput(A);
             bIn.ConnectToInput(B);

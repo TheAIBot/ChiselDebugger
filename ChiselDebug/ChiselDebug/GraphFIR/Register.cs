@@ -19,7 +19,7 @@ namespace ChiselDebug.GraphFIR
         public Register(string name, Output clock, Output? reset, Output? init, IFIRType outType)
         {
             this.Name = name;
-            this.In = new Input(this, outType);
+            this.In = new Input(this, name + "/in", outType);
             this.Clock = new Input(this, clock.Type);
             if (reset != null)
             {

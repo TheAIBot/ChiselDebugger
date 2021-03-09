@@ -34,10 +34,12 @@ namespace ChiselDebug
                 Scope scope = varValue.Variable.Scopes[0];
                 if (scope.Type == ScopeType.Module)
                 {
-                    Module mod = Modules.First(x => x.Name == scope.Name);
-                    Connection con = mod.GetConnection(varValue.Variable.Scopes.AsSpan().Slice(1), varValue.Variable.Reference);
+                    IContainerIO mod = Modules.First(x => x.Name == scope.Name);
+                    List<string> magic = varValue.Variable.Scopes.Select(x => x.Name).ToList();
+                    magic.Add(varValue.Variable.Reference);
+                    Connection con = ((ScalarIO)mod.GetIO(magic.ToArray().AsSpan(1))).Con;
 
-                    if (con.Value.UpdateValue(varValue))
+                    if (con != null && con.Value.UpdateValue(varValue))
                     {
                         consWithChanges.Add(con);
                     }
