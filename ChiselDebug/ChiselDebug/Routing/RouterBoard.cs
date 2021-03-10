@@ -18,10 +18,8 @@ namespace ChiselDebug.Routing
 
         public RouterBoard(Point neededBoardSize)
         {
-            Point extra = new Point(20, 20);
-
-            this.TopLeft = -extra;
-            this.BottomRight = neededBoardSize + extra;
+            this.TopLeft = new Point(0, 0);
+            this.BottomRight = neededBoardSize;
 
             Point boardSize = BottomRight - TopLeft;
             this.CellsWide = CeilDiv(boardSize.X, CellSize) + 1;
