@@ -15,10 +15,6 @@ namespace ChiselDebuggerWebUI.Code
         public VCDTimeline Timeline { get; init; } = null;
         private readonly Dictionary<FIRRTLNode, ModuleController> FIRNodeToModCtrl = new Dictionary<FIRRTLNode, ModuleController>();
         private readonly List<ModuleController> ModControllers = new List<ModuleController>();
-
-        public delegate void ReRenderCircuit();
-        public event ReRenderCircuit OnReRender;
-
         private readonly ExecuteOnlyLatest<ulong> TimeChanger = new ExecuteOnlyLatest<ulong>();
 
         public DebugController(CircuitGraph graph, VCD vcd)
