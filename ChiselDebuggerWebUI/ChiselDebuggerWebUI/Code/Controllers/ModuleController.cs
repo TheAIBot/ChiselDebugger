@@ -61,7 +61,7 @@ namespace ChiselDebuggerWebUI.Code
             PlaceNodes();
         }
 
-        public void RerenderModule()
+        public void PrepareToRerenderModule()
         {
             foreach (var uiNode in UINodes)
             {
