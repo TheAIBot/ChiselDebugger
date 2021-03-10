@@ -68,9 +68,15 @@
 
     protected override bool OnResize(int width, int height)
     {
-        base.OnResize(width, height);
-
+        //Update this module with its internal io positions
+        InputOffsets = OnMakeInputs(width, height);
+        OutputOffsets = OnMakeOutputs(width, height);
         CurrModCtrl.UpdateIOFromNode(Operation, InputOffsets, OutputOffsets);
+
+        //Update parent module with this modules external io positions
+        var externalInputs = MakeExternalInputs(width, height);
+        var externalOutputs = MakeExternalOutputs(width, height);
+        ParentModCtrl?.UpdateComponentInfo(new FIRComponentUpdate(Operation, new Point(width, height), externalInputs, externalOutputs));
 
         return true;
     }
@@ -94,10 +100,7 @@
         Point moduleSize = Point.Max(MinContentSize, placements.SpaceNeeded);
 
         //With new module size, the io positions need to be updated
-        InputOffsets = OnMakeInputs(moduleSize.X, moduleSize.Y);
-        OutputOffsets = OnMakeOutputs(moduleSize.X, moduleSize.Y);
-        CurrModCtrl.UpdateIOFromNode(Operation, InputOffsets, OutputOffsets);
-        ParentModCtrl?.UpdateComponentInfo(new FIRComponentUpdate(Operation, moduleSize, InputOffsets, OutputOffsets));
+        OnResize(moduleSize.X, moduleSize.Y);
 
         CurrModCtrl.RouteWires(placements);
 
@@ -114,5 +117,15 @@
     protected override List<DirectedIO> OnMakeOutputs(int width, int height)
     {
         return IOPositionCalc.EvenVertical<Output>(height, Operation.GetInternalOutputs(), -ContentPadding, MarginForIO);
+    }
+
+    private List<DirectedIO> MakeExternalInputs(int width, int height)
+    {
+        return IOPositionCalc.EvenVertical<Input>(height, Operation.GetInputs(), -ContentPadding, MarginForIO);
+    }
+
+    private List<DirectedIO> MakeExternalOutputs(int width, int height)
+    {
+        return IOPositionCalc.EvenVertical<Output>(height, Operation.GetOutputs(), width + ContentPadding, MarginForIO);
     }
 }
