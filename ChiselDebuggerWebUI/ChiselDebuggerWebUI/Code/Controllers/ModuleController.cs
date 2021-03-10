@@ -40,8 +40,7 @@ namespace ChiselDebuggerWebUI.Code
             this.NodePlacer = new SimplePlacer(Mod);
             NodePlacer.OnReadyToPlaceNodes += PlaceNodes;
 
-            List<Module> nestedModules = mod.GetAllNodes().Where(x => x is Module).Cast<Module>().ToList();
-            foreach (var nested in nestedModules)
+            foreach (var nested in mod.GetAllNodes().OfType<Module>())
             {
                 NotRenderedYet.Add(nested);
             }
