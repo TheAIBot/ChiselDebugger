@@ -45,7 +45,7 @@
         DebugCtrl = new DebugController(graph, vcd);
         DebugCtrl.OnReRender += () => InvokeAsync(StateHasChanged);
 
-        ModulePositions.Add(new Positioned<ChiselDebug.GraphFIR.Module>(new Point(0, 0), graph.Modules[0]));
+        ModulePositions.Add(new Positioned<ChiselDebug.GraphFIR.Module>(new Point(0, 0), graph.MainModule));
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

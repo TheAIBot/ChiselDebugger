@@ -10,20 +10,17 @@ namespace ChiselDebug
     public class CircuitGraph
     {
         public readonly string Name;
-        public readonly List<Module> Modules = new List<Module>();
+        public readonly Module MainModule;
 
-        public CircuitGraph(string name, List<Module> modules)
+        public CircuitGraph(string name, Module mainModule)
         {
             this.Name = name;
-            this.Modules = modules;
+            this.MainModule = mainModule;
         }
 
         public void InferTypes()
         {
-            foreach (var mod in Modules)
-            {
-                mod.InferType();
-            }
+            MainModule.InferType();
         }
 
         public List<Connection> SetState(CircuitState state)
@@ -34,9 +31,8 @@ namespace ChiselDebug
                 Scope scope = varValue.Variable.Scopes[0];
                 if (scope.Type == ScopeType.Module)
                 {
-                    IContainerIO mod = Modules.First(x => x.Name == scope.Name);
                     string[] modulePath = varValue.Variable.Scopes.Skip(1).Select(x => x.Name).ToArray();
-                    IContainerIO moduleIO = mod.GetIO(modulePath, true);
+                    IContainerIO moduleIO = ((IContainerIO)MainModule).GetIO(modulePath, true);
                     IContainerIO ioLink = moduleIO.GetIO(varValue.Variable.Reference);
 
                     //Apparently if a module contains an instance of another module

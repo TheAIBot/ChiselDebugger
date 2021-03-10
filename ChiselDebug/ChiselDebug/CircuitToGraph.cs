@@ -54,7 +54,9 @@ namespace ChiselDebug
                 modules.Add(VisitModule(helper, moduleDef));
             }
 
-            return new CircuitGraph(circuit.Main, modules);
+            FIRRTL.DefModule mainModDef = circuit.Modules.Single(x => x.Name == circuit.Main);
+            GraphFIR.Module mainModule = VisitModule(helper, mainModDef);
+            return new CircuitGraph(circuit.Main, mainModule);
         }
 
         private static GraphFIR.Module VisitModule(VisitHelper parentHelper, FIRRTL.DefModule moduleDef)
