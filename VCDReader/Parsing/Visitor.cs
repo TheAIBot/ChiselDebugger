@@ -87,7 +87,7 @@ namespace VCDReader.Parsing
                 string id = lexer.NextWord().ToString();
                 string reference = lexer.NextWord().ToString();
 
-                VarDef variable = new VarDef(type, size, id, reference, scopes.ToArray());
+                VarDef variable = new VarDef(type, size, id, reference, scopes.Reverse().ToArray());
                 idToVariable.Add(id, variable);
 
                 lexer.ExpectNextWord("$end");
