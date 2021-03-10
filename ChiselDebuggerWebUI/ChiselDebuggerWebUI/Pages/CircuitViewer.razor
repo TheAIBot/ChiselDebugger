@@ -15,10 +15,7 @@
 
     <div style="height:20px;" />
     <div id="@DragEventID" class="Circuit" style="transform: translate(@CircuitOffset.X.ToPixels(), @CircuitOffset.Y.ToPixels()) scale(@CircuitScale.ToHtmlNumber());" @onwheel="HandleScroll">
-        @foreach (var modulePos in ModulePositions)
-        {
-            <ModuleUI PosOp="@modulePos" />
-        }
+        <ModuleUI PosOp="@ModulePosition" />
     </div>
 </CascadingValue>
 
@@ -26,7 +23,7 @@
 {
 
     private DebugController DebugCtrl;
-    private List<Positioned<ChiselDebug.GraphFIR.Module>> ModulePositions = new List<Positioned<ChiselDebug.GraphFIR.Module>>();
+    private Positioned<ChiselDebug.GraphFIR.Module> ModulePosition;
     private float CircuitScale = 1.0f;
     private Point CircuitOffset = new Point(0, 0);
     private readonly string DragEventID = UniqueID.UniqueHTMLID();
@@ -44,7 +41,7 @@
 
         DebugCtrl = new DebugController(graph, vcd);
 
-        ModulePositions.Add(new Positioned<ChiselDebug.GraphFIR.Module>(new Point(0, 0), graph.MainModule));
+        ModulePosition = new Positioned<ChiselDebug.GraphFIR.Module>(new Point(0, 0), graph.MainModule);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
