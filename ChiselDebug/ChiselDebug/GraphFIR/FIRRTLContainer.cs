@@ -19,37 +19,29 @@ namespace ChiselDebug.GraphFIR
 
         public override Input[] GetInputs()
         {
-            return ExternalIO.Values
-                .SelectMany(x => x is IOBundle bundle ? bundle.Flatten() : new FIRIO[] { x })
-                .Where(x => x is Input)
-                .Cast<Input>()
-                .ToArray();
+            return FlattenAndFilterIO<Input>(ExternalIO);
         }
 
         public override Output[] GetOutputs()
         {
-            return ExternalIO.Values
-                .SelectMany(x => x is IOBundle bundle ? bundle.Flatten() : new FIRIO[] { x })
-                .Where(x => x is Output)
-                .Cast<Output>()
-                .ToArray();
+            return FlattenAndFilterIO<Output>(ExternalIO);
         }
 
         public Input[] GetInternalInputs()
         {
-            return InternalIO.Values
-                .SelectMany(x => x is IOBundle bundle ? bundle.Flatten() : new FIRIO[] { x })
-                .Where(x => x is Input)
-                .Cast<Input>()
-                .ToArray();
+            return FlattenAndFilterIO<Input>(InternalIO);
         }
 
         public Output[] GetInternalOutputs()
         {
-            return InternalIO.Values
+            return FlattenAndFilterIO<Output>(InternalIO);
+        }
+
+        private T[] FlattenAndFilterIO<T>(Dictionary<string, FIRIO> io)
+        {
+            return io.Values
                 .SelectMany(x => x is IOBundle bundle ? bundle.Flatten() : new FIRIO[] { x })
-                .Where(x => x is Output)
-                .Cast<Output>()
+                .OfType<T>()
                 .ToArray();
         }
 
