@@ -45,7 +45,7 @@ namespace ChiselDebug
             {
                 nodePoses.Add(nodePos.Value, nodePos.Position);
             }
-            nodePoses.Add(Mod, new Point(0, 0));
+            nodePoses.Add(Mod, Point.Zero);
 
             List<(IOInfo start, IOInfo end)> lines = new List<(IOInfo start, IOInfo end)>();
             foreach (var connection in UsedModuleConnections)

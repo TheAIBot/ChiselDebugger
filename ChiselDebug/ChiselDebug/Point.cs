@@ -10,6 +10,8 @@ namespace ChiselDebug
         public int X;
         public int Y;
 
+        public static readonly Point Zero = new Point(0, 0);
+
         public Point(int x, int y)
         {
             this.X = x;

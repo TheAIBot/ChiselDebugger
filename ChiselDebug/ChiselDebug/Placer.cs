@@ -422,7 +422,7 @@ namespace ChiselDebug
     {
         public readonly List<Positioned<FIRRTLNode>> NodePositions = new List<Positioned<FIRRTLNode>>();
         public readonly Dictionary<FIRRTLNode, Rectangle> UsedSpace = new Dictionary<FIRRTLNode, Rectangle>();
-        public Point SpaceNeeded { get; private set; } = new Point(0, 0);
+        public Point SpaceNeeded { get; private set; } = Point.Zero;
 
         internal void AddNodePlacement(FIRRTLNode node, Rectangle shape)
         {

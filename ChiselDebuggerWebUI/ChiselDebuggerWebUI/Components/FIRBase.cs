@@ -32,8 +32,8 @@ namespace ChiselDebuggerWebUI.Components
         protected Point Position => PosOp.Position;
         protected T Operation => PosOp.Value;
 
-        private Point PreviousSize = new Point(0, 0);
-        private Point PreviousPos = new Point(0, 0);
+        private Point PreviousSize = Point.Zero;
+        private Point PreviousPos = Point.Zero;
         private int RenderCounter = 0;
         protected ElementReference SizeWatcher;
         protected List<DirectedIO> InputOffsets = new List<DirectedIO>();
