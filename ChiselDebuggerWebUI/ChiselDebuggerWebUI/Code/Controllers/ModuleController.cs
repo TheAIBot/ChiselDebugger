@@ -15,6 +15,7 @@ namespace ChiselDebuggerWebUI.Code
     {
         private readonly Module Mod;
         private readonly ModuleUI ModUI;
+        private readonly ModuleController ParentModCtrl;
         private readonly ConnectionsHandler ConHandler;
         private readonly SimpleRouter WireRouter;
         private readonly SimplePlacer NodePlacer;
@@ -27,17 +28,15 @@ namespace ChiselDebuggerWebUI.Code
         public delegate void RoutedHandler(List<WirePath> wirePaths);
         public event RoutedHandler OnWiresRouted;
 
-        public delegate void Renderhandler(Module mod);
-        public event Renderhandler OnRenderModule;
-
         private readonly ExecuteOnlyLatest<bool> PlaceLimiter = new ExecuteOnlyLatest<bool>();
         private readonly ExecuteOnlyLatest<PlacementInfo> RouteLimiter = new ExecuteOnlyLatest<PlacementInfo>();
 
 
-        public ModuleController(Module mod, ModuleUI modUI)
+        public ModuleController(Module mod, ModuleUI modUI, ModuleController parentModCtrl)
         {
             this.Mod = mod;
             this.ModUI = modUI;
+            this.ParentModCtrl = parentModCtrl;
             this.ConHandler = new ConnectionsHandler(Mod);
             this.WireRouter = new SimpleRouter(ConHandler);
             this.NodePlacer = new SimplePlacer(Mod);
@@ -58,13 +57,10 @@ namespace ChiselDebuggerWebUI.Code
             UINodes.Add(uiNode);
         }
 
-        public void AddModuleCtrl(ModuleController modCtrl)
+        private void ChildCtrlRendered(Module childMod)
         {
-            modCtrl.OnRenderModule += x =>
-            {
-                NotRenderedYet.Remove(x);
-                PlaceNodes();
-            };
+            NotRenderedYet.Remove(childMod);
+            PlaceNodes();
         }
 
         public void RerenderModule()
@@ -74,7 +70,7 @@ namespace ChiselDebuggerWebUI.Code
                 uiNode.PrepareForRender();
             }
 
-            OnRenderModule?.Invoke(Mod);
+            ParentModCtrl?.ChildCtrlRendered(Mod);
         }
 
         public void RerenderWithoutPreparation()
