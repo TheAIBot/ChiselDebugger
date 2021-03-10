@@ -5,6 +5,7 @@
     left: 0;
     width: 100%;
     height: 100%;
+    pointer-events: none;
 }
 
 .wire {
@@ -26,6 +27,10 @@
     stroke: black;
 }
 
-g:hover > .wireElement {
+.wireGroup {
+    pointer-events: auto;
+}
+
+.wireGroup:hover > .wireElement {
     stroke: orange;
 }
