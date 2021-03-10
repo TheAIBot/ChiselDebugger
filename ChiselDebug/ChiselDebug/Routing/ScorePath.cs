@@ -25,7 +25,7 @@
             int turns = TurnsTaken;
             turns += isTurning ? 1 : 0;
             turns += onEnemyWire ? 1 : 0;
-            turns += onWireCorner ? 50 : 0;
+            turns += onWireCorner ? 500 : 0;
             turns += isTurningOnEnemyWire ? 50 : 0;
 
             return new ScorePath(TraveledDist + 1, turns, dir.Reverse());
