@@ -8,16 +8,16 @@ namespace ChiselDebug.GraphFIR
 {
     public interface IContainerIO
     {
-        public IContainerIO GetIO(string ioName);
+        public IContainerIO GetIO(string ioName, bool modulesOnly = false);
 
-        public IContainerIO GetIO(Span<string> names)
+        public IContainerIO GetIO(Span<string> names, bool modulesOnly = false)
         {
             if (names.Length == 0)
             {
                 return this;
             }
 
-            return GetIO(names[0]).GetIO(names.Slice(1));
+            return GetIO(names[0], modulesOnly).GetIO(names.Slice(1), modulesOnly);
         }
     }
 
@@ -45,7 +45,7 @@ namespace ChiselDebug.GraphFIR
 
         public abstract void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false);
         public abstract FIRIO Flip();
-        public abstract IContainerIO GetIO(string ioName);
+        public abstract IContainerIO GetIO(string ioName, bool modulesOnly = false);
     }
 
     public abstract class ScalarIO : FIRIO
@@ -68,7 +68,7 @@ namespace ChiselDebug.GraphFIR
             return Con != null;
         }
 
-        public override IContainerIO GetIO(string ioName)
+        public override IContainerIO GetIO(string ioName, bool modulesOnly = false)
         {
             throw new Exception("Scalar IO can't contain additional io.");
         }
@@ -265,7 +265,7 @@ namespace ChiselDebug.GraphFIR
             return true;
         }
 
-        public override IContainerIO GetIO(string ioName)
+        public override IContainerIO GetIO(string ioName, bool modulesOnly = false)
         {
             if (IO.TryGetValue(ioName, out FIRIO innerIO))
             {

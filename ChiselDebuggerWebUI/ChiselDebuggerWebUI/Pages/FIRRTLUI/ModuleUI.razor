@@ -59,11 +59,11 @@
         MinContentSize = GetMinSizeForIO();
 
         ModuleOpPoses = Operation.GetAllNodes().Select(x => new Positioned<FIRRTLNode>(new Point(0, 0), x)).ToList();
-        CurrModCtrl = new ModuleController(Operation);
+        CurrModCtrl = new ModuleController(Operation, this);
         CurrModCtrl.OnPlacedNodes += x => InvokeAsync(() => UpdatePlacement(x));
 
         ParentModCtrl?.AddModuleCtrl(CurrModCtrl);
-        DebugCtrl.AddModCtrl(CurrModCtrl);
+        DebugCtrl.AddModCtrl(CurrModCtrl, Operation.GetAllNodes());
     }
 
     protected override bool OnResize(int width, int height)

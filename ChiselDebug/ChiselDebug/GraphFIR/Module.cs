@@ -11,6 +11,7 @@ namespace ChiselDebug.GraphFIR
         public readonly string Name;
         public List<FIRRTLNode> Nodes = new List<FIRRTLNode>();
         private readonly Dictionary<string, FIRIO> NameToIO = new Dictionary<string, FIRIO>();
+        private readonly Dictionary<IOBundle, Module> BundleToModule = new Dictionary<IOBundle, Module>();
         
 
         public Module(string name)
@@ -43,6 +44,7 @@ namespace ChiselDebug.GraphFIR
 
             IOBundle bundle = new IOBundle(bundleName, mod.ExternalIO.Values.ToList(), false);
             NameToIO.Add(bundleName, bundle);
+            BundleToModule.Add(bundle, mod);
         }
 
         public void AddIORename(string name, FIRIO io)
@@ -50,11 +52,18 @@ namespace ChiselDebug.GraphFIR
             NameToIO.Add(name, io);
         }
 
-        public override IContainerIO GetIO(string ioName)
+        public override IContainerIO GetIO(string ioName, bool modulesOnly = false)
         {
             if (NameToIO.TryGetValue(ioName, out FIRIO innerIO))
             {
-                return innerIO;
+                if (modulesOnly && innerIO is IOBundle bundle)
+                {
+                    return BundleToModule[bundle];
+                }
+                else
+                {
+                    return innerIO;
+                }
             }
 
             if (InternalIO.TryGetValue(ioName, out FIRIO io))

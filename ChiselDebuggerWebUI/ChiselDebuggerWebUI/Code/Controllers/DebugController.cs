@@ -2,6 +2,7 @@
 using ChiselDebug.GraphFIR;
 using ChiselDebug.Timeline;
 using ChiselDebuggerWebUI.Components;
+using ChiselDebuggerWebUI.Pages.FIRRTLUI;
 using System;
 using System.Collections.Generic;
 using VCDReader;
@@ -12,7 +13,7 @@ namespace ChiselDebuggerWebUI.Code
     {
         private readonly CircuitGraph Graph;
         public VCDTimeline Timeline { get; init; } = null;
-        private readonly Dictionary<Connection, List<IFIRUINode>> ConToUINode = new Dictionary<Connection, List<IFIRUINode>>();
+        private readonly Dictionary<FIRRTLNode, ModuleController> FIRNodeToModCtrl = new Dictionary<FIRRTLNode, ModuleController>();
         private readonly List<ModuleController> ModControllers = new List<ModuleController>();
 
         public delegate void ReRenderCircuit();
@@ -31,47 +32,43 @@ namespace ChiselDebuggerWebUI.Code
                 {
                     List<Connection> changedConnections = Graph.SetState(Timeline.GetStateAtTime(time));
 
+                    HashSet<ModuleController> modulesToReRender = new HashSet<ModuleController>();
+
                     //Only rerender the uiNodes that are connected to a connection
                     //that changed value. UiNodes are not rerendered here, but they
                     //are being allowed to rerender here.
                     foreach (var connection in changedConnections)
                     {
-                        if (ConToUINode.TryGetValue(connection, out var uiNodes))
+                        foreach (var node in connection.To)
                         {
-                            foreach (var uiNode in uiNodes)
+                            if (node.Node != null && 
+                                FIRNodeToModCtrl.TryGetValue(node.Node, out var modCtrl1))
                             {
-                                uiNode.PrepareForRender();
+                                modulesToReRender.Add(modCtrl1);
                             }
+                        }
+                        if (connection.From.Node != null && 
+                            FIRNodeToModCtrl.TryGetValue(connection.From.Node, out var modCtrl2))
+                        {
+                            modulesToReRender.Add(modCtrl2);
                         }
                     }
 
-                    //Ask ui to render again so the allowed uiNodes
-                    //can be rerendered.
-                    OnReRender?.Invoke();
+                    foreach (var moduleUI in modulesToReRender)
+                    {
+                        moduleUI.RerenderWithoutPreparation();
+                    }
                 });
             }
         }
 
-        public void AddUINode(IFIRUINode node, List<Connection> connections)
-        {
-            foreach (var con in connections)
-            {
-                if (ConToUINode.TryGetValue(con, out var uiNodes))
-                {
-                    uiNodes.Add(node);
-                }
-                else
-                {
-                    List<IFIRUINode> nodes = new List<IFIRUINode>();
-                    nodes.Add(node);
-                    ConToUINode.Add(con, nodes);
-                }
-            }
-        }
-
-        public void AddModCtrl(ModuleController modCtrl)
+        public void AddModCtrl(ModuleController modCtrl, FIRRTLNode[] modNodes)
         {
             ModControllers.Add(modCtrl);
+            foreach (var node in modNodes)
+            {
+                FIRNodeToModCtrl.Add(node, modCtrl);
+            }
         }
 
         public void SetCircuitState(ulong time)

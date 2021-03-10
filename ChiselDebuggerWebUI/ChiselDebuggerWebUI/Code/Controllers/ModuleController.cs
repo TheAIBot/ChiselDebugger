@@ -14,6 +14,7 @@ namespace ChiselDebuggerWebUI.Code
     public class ModuleController
     {
         private readonly Module Mod;
+        private readonly ModuleUI ModUI;
         private readonly ConnectionsHandler ConHandler;
         private readonly SimpleRouter WireRouter;
         private readonly SimplePlacer NodePlacer;
@@ -33,9 +34,10 @@ namespace ChiselDebuggerWebUI.Code
         private readonly ExecuteOnlyLatest<PlacementInfo> RouteLimiter = new ExecuteOnlyLatest<PlacementInfo>();
 
 
-        public ModuleController(Module mod)
+        public ModuleController(Module mod, ModuleUI modUI)
         {
             this.Mod = mod;
+            this.ModUI = modUI;
             this.ConHandler = new ConnectionsHandler(Mod);
             this.WireRouter = new SimpleRouter(ConHandler);
             this.NodePlacer = new SimplePlacer(Mod);
@@ -73,6 +75,16 @@ namespace ChiselDebuggerWebUI.Code
             }
 
             OnRenderModule?.Invoke(Mod);
+        }
+
+        public void RerenderWithoutPreparation()
+        {
+            foreach (var uiNode in UINodes)
+            {
+                uiNode.PrepareForRender();
+            }
+
+            ModUI.InvokestateHasChanged();
         }
 
         private void PlaceNodes()

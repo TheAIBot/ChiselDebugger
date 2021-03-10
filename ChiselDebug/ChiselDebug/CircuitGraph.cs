@@ -35,9 +35,19 @@ namespace ChiselDebug
                 if (scope.Type == ScopeType.Module)
                 {
                     IContainerIO mod = Modules.First(x => x.Name == scope.Name);
-                    List<string> magic = varValue.Variable.Scopes.Select(x => x.Name).ToList();
-                    magic.Add(varValue.Variable.Reference);
-                    Connection con = ((ScalarIO)mod.GetIO(magic.ToArray().AsSpan(1))).Con;
+                    string[] modulePath = varValue.Variable.Scopes.Skip(1).Select(x => x.Name).ToArray();
+                    IContainerIO moduleIO = mod.GetIO(modulePath, true);
+                    IContainerIO ioLink = moduleIO.GetIO(varValue.Variable.Reference);
+
+                    //Apparently if a module contains an instance of another module
+                    //then it will also have a wire with the instance name in the vcd
+                    //file. Ends up with a bundle when this happens so just ignore the
+                    //change.
+                    if (ioLink is IOBundle)
+                    {
+                        continue;
+                    }
+                    Connection con = ((ScalarIO)ioLink).Con;
 
                     if (con != null && con.Value.UpdateValue(varValue))
                     {

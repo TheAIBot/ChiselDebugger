@@ -58,6 +58,6 @@ namespace ChiselDebug.GraphFIR
             throw new NotImplementedException();
         }
 
-        public abstract IContainerIO GetIO(string ioName);
+        public abstract IContainerIO GetIO(string ioName, bool modulesOnly = false);
     }
 }
