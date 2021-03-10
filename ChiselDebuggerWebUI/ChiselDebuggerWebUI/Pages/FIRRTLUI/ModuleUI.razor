@@ -9,23 +9,23 @@
         {
             @if (posOp.Value is Mux)
             {
-                <MuxOp PosOp="@(posOp.Cast<Mux>())" ParentModCtrl="CurrModCtrl"></MuxOp>
+                <MuxOp @key=posOp.Value PosOp="@(posOp.Cast<Mux>())" ParentModCtrl="CurrModCtrl"></MuxOp>
             }
             else if (posOp.Value is BiArgMonoResPrimOp)
             {
-                <BiArgMonoResPrimOpUI PosOp="@(posOp.Cast<BiArgMonoResPrimOp>())" ParentModCtrl="CurrModCtrl"></BiArgMonoResPrimOpUI>
+                <BiArgMonoResPrimOpUI @key=posOp.Value PosOp="@(posOp.Cast<BiArgMonoResPrimOp>())" ParentModCtrl="CurrModCtrl"></BiArgMonoResPrimOpUI>
             }
             else if (posOp.Value is ConstBitRange)
             {
-                <ConstBitRangeUI PosOp="@(posOp.Cast<ConstBitRange>())" ParentModCtrl="CurrModCtrl"></ConstBitRangeUI>
+                <ConstBitRangeUI @key=posOp.Value PosOp="@(posOp.Cast<ConstBitRange>())" ParentModCtrl="CurrModCtrl"></ConstBitRangeUI>
             }
             else if (posOp.Value is Register)
             {
-                <RegisterUI PosOp="@(posOp.Cast<Register>())" ParentModCtrl="CurrModCtrl"></RegisterUI>
+                <RegisterUI @key=posOp.Value PosOp="@(posOp.Cast<Register>())" ParentModCtrl="CurrModCtrl"></RegisterUI>
             }
             else if (posOp.Value is Module)
             {
-                <ModuleUI PosOp="@(posOp.Cast<Module>())" ParentModCtrl="CurrModCtrl"></ModuleUI>
+                <ModuleUI @key=posOp.Value PosOp="@(posOp.Cast<Module>())" ParentModCtrl="CurrModCtrl"></ModuleUI>
             }
         }
 
