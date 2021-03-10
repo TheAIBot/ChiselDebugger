@@ -16,7 +16,6 @@ namespace ChiselDebuggerWebUI.Code
         private readonly Module Mod;
         private readonly ModuleUI ModUI;
         private readonly ModuleController ParentModCtrl;
-        private readonly ConnectionsHandler ConHandler;
         private readonly SimpleRouter WireRouter;
         private readonly SimplePlacer NodePlacer;
         private readonly List<IFIRUINode> UINodes = new List<IFIRUINode>();
@@ -37,8 +36,7 @@ namespace ChiselDebuggerWebUI.Code
             this.Mod = mod;
             this.ModUI = modUI;
             this.ParentModCtrl = parentModCtrl;
-            this.ConHandler = new ConnectionsHandler(Mod);
-            this.WireRouter = new SimpleRouter(ConHandler);
+            this.WireRouter = new SimpleRouter(Mod);
             this.NodePlacer = new SimplePlacer(Mod);
             NodePlacer.OnReadyToPlaceNodes += PlaceNodes;
 
@@ -99,13 +97,13 @@ namespace ChiselDebuggerWebUI.Code
 
         public void UpdateComponentInfo(FIRComponentUpdate updateData)
         {
-            ConHandler.UpdateIOFromNode(updateData.Node, updateData.InputOffsets, updateData.OutputOffsets);
+            WireRouter.UpdateIOFromNode(updateData.Node, updateData.InputOffsets, updateData.OutputOffsets);
             NodePlacer.SetNodeSize(updateData.Node, updateData.Size);
         }
 
         public void UpdateIOFromNode(FIRRTLNode node, List<DirectedIO> inputOffsets, List<DirectedIO> outputOffsets)
         {
-            ConHandler.UpdateIOFromNode(node, inputOffsets, outputOffsets);
+            WireRouter.UpdateIOFromNode(node, inputOffsets, outputOffsets);
         }
     }
 }

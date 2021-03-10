@@ -1,4 +1,5 @@
-﻿using PriorityQueue;
+﻿using ChiselDebug.GraphFIR;
+using PriorityQueue;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,9 +13,9 @@ namespace ChiselDebug.Routing
     {
         private readonly ConnectionsHandler Connections;
 
-        public SimpleRouter(ConnectionsHandler connections)
+        public SimpleRouter(Module mod)
         {
-            this.Connections = connections;
+            this.Connections = new ConnectionsHandler(mod);
         }
 
         private record LineInfo(IOInfo Start, IOInfo End)
@@ -23,6 +24,11 @@ namespace ChiselDebug.Routing
             {
                 return new Line(Start.DirIO.Position, End.DirIO.Position).GetManhattanDistance();
             }
+        }
+
+        public void UpdateIOFromNode(FIRRTLNode node, List<DirectedIO> inputOffsets, List<DirectedIO> outputOffsets)
+        {
+            Connections.UpdateIOFromNode(node, inputOffsets, outputOffsets);
         }
 
         public List<WirePath> PathLines(PlacementInfo placements)
