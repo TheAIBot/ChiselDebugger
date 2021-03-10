@@ -398,19 +398,22 @@ namespace ChiselDebug
 
         public void SetNodeSize(FIRRTLNode node, Point size)
         {
-            //If the size hasn't changed then there is no need to
-            //do anything at all as the result will be the same
-            if (NodeSizes.TryGetValue(node, out var oldSize) && oldSize == size)
+            lock (this)
             {
-                return;
-            }
+                //If the size hasn't changed then there is no need to
+                //do anything at all as the result will be the same
+                if (NodeSizes.TryGetValue(node, out var oldSize) && oldSize == size)
+                {
+                    return;
+                }
 
-            NodeSizes[node] = size;
+                NodeSizes[node] = size;
 
-            MissingNodeDims.Remove(node);
-            if (MissingNodeDims.Count == 0)
-            {
-                OnReadyToPlaceNodes?.Invoke();
+                MissingNodeDims.Remove(node);
+                if (MissingNodeDims.Count == 0)
+                {
+                    OnReadyToPlaceNodes?.Invoke();
+                }
             }
         }
     }

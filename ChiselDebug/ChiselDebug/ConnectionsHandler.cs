@@ -25,13 +25,16 @@ namespace ChiselDebug
 
         public void UpdateIOFromNode(FIRRTLNode node, List<DirectedIO> inputOffsets, List<DirectedIO> outputOffsets)
         {
-            foreach (var inputPos in inputOffsets)
+            lock (this)
             {
-                IOInfos[inputPos.IO] = new IOInfo(node, inputPos);
-            }
-            foreach (var inputPos in outputOffsets)
-            {
-                IOInfos[inputPos.IO] = new IOInfo(node, inputPos);
+                foreach (var inputPos in inputOffsets)
+                {
+                    IOInfos[inputPos.IO] = new IOInfo(node, inputPos);
+                }
+                foreach (var inputPos in outputOffsets)
+                {
+                    IOInfos[inputPos.IO] = new IOInfo(node, inputPos);
+                }
             }
         }
 
