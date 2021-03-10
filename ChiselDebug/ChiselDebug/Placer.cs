@@ -146,21 +146,25 @@ namespace ChiselDebug
                     int xOffset = 50;
                     for (int x = 0; x < nodePlacements.Length; x++)
                     {
-                        int yOffset = 30;
+                        int yOffset = 50;
+                        int largestWidth = 0;
                         for (int y = 0; y < nodePlacements[x].Length; y++)
                         {
                             Node<FIRRTLNode> node = nodePlacements[x][y];
 
                             Point offset = new Point(xOffset, yOffset);
-                            Point padding = new Point(70, 50);
+                            Point padding = new Point(200, 100);
                             Point pos = offset + padding;
+                            Point size = NodeSizes[node.Value];
+                            Point paddedSize = size + padding;
 
                             placments.AddNodePlacement(node.Value, new Rectangle(pos, NodeSizes[node.Value]));
 
-                            yOffset += (NodeSizes[node.Value] + padding).Y;
+                            largestWidth = Math.Max(largestWidth, paddedSize.X);
+                            yOffset += paddedSize.Y;
                         }
 
-                        xOffset += largestSizeInX[x] + 70;
+                        xOffset += largestWidth;
                     }
                 }
 
