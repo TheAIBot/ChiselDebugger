@@ -11,7 +11,7 @@ using static ChiselDebug.SimplePlacer;
 
 namespace ChiselDebuggerWebUI.Code
 {
-    public class ModuleController
+    public class ModuleController : IDisposable
     {
         private readonly Module Mod;
         private readonly ModuleUI ModUI;
@@ -104,6 +104,12 @@ namespace ChiselDebuggerWebUI.Code
         public void UpdateIOFromNode(FIRRTLNode node, List<DirectedIO> inputOffsets, List<DirectedIO> outputOffsets)
         {
             WireRouter.UpdateIOFromNode(node, inputOffsets, outputOffsets);
+        }
+
+        public void Dispose()
+        {
+            PlaceLimiter.Dispose();
+            RouteLimiter.Dispose();
         }
     }
 }

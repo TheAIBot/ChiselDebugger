@@ -6,6 +6,7 @@
 
 @inject IJSRuntime JS
 @inherits ManualRenderBase
+@implements IDisposable
 
 <CascadingValue Value="@DebugCtrl" Name="DebugCtrl" IsFixed="true">
     @if (DebugCtrl.Timeline != null)
@@ -31,11 +32,11 @@
     protected override void OnInitialized()
     {
         //var circuit = FIRRTL.Parse.FromFile("Examples/MovingAveragePow2.lo.fir");
-        //var vcd = VCDReader.Parse.FromFile("Examples/MovingAveragePow2.vcd");
-        var circuit = FIRRTL.Parse.FromFile("Examples/RegFileVec.lo.fir");
-        var vcd = VCDReader.Parse.FromFile("Examples/RegFileVec.vcd");
-        //var circuit = FIRRTL.Parse.FromFile("Examples/FSM.lo.fir");
-        //VCD vcd = null;
+        //using var vcd = VCDReader.Parse.FromFile("Examples/MovingAveragePow2.vcd");
+        //var circuit = FIRRTL.Parse.FromFile("Examples/RegFileVec.lo.fir");
+        //using var vcd = VCDReader.Parse.FromFile("Examples/RegFileVec.vcd");
+        var circuit = FIRRTL.Parse.FromFile("Examples/FSMDatapath.lo.fir");
+        using VCD vcd = VCDReader.Parse.FromFile("Examples/FSMDatapath.vcd");
         CircuitGraph graph = CircuitToGraph.GetAsGraph(circuit);
         graph.InferTypes();
 
@@ -70,5 +71,10 @@
     {
         CircuitOffset += dragged;
         StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        DebugCtrl.Dispose();
     }
 }

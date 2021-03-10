@@ -1,4 +1,5 @@
 ﻿@inherits FIRBase<Module>
+@implements IDisposable
 
 <div class="module"  @ref="SizeWatcher" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();">
     @*<div class="moduleHeader">
@@ -126,5 +127,10 @@
     private List<DirectedIO> MakeExternalOutputs(int width, int height)
     {
         return IOPositionCalc.EvenVertical<Output>(height, Operation.GetOutputs(), width + ContentPadding, MarginForIO);
+    }
+
+    public void Dispose()
+    {
+        CurrModCtrl.Dispose();
     }
 }
