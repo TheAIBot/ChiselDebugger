@@ -414,7 +414,7 @@ namespace ChiselDebug
             {
                 //If the size hasn't changed then there is no need to
                 //do anything at all as the result will be the same
-                if (SizeChanges.TryGetValue(node, out var oldSize) && oldSize == size)
+                if (NodeSizes.TryGetValue(node, out var oldSize) && oldSize == size)
                 {
                     return;
                 }
