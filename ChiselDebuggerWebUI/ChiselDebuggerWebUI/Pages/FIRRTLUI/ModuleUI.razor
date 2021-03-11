@@ -73,12 +73,14 @@
         OutputOffsets = OnMakeOutputs(width, height);
         CurrModCtrl.UpdateIOFromNode(Operation, InputOffsets, OutputOffsets);
 
-        //Update parent module with this modules external io positions
+        return true;
+    }
+
+    private void UpdateParentAboutExteriorIO(int width, int height)
+    {
         var externalInputs = MakeExternalInputs(width, height);
         var externalOutputs = MakeExternalOutputs(width, height);
         ParentModCtrl?.UpdateComponentInfo(new FIRComponentUpdate(Operation, new Point(width, height), externalInputs, externalOutputs));
-
-        return true;
     }
 
     private Point GetMinSizeForIO()
@@ -101,6 +103,7 @@
 
         //With new module size, the io positions need to be updated
         OnResize(moduleSize.X, moduleSize.Y);
+        UpdateParentAboutExteriorIO(moduleSize.X, moduleSize.Y);
 
         CurrModCtrl.RouteWires(placements);
 

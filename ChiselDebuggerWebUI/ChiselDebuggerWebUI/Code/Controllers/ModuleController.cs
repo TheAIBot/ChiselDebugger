@@ -19,7 +19,6 @@ namespace ChiselDebuggerWebUI.Code
         private readonly SimpleRouter WireRouter;
         private readonly SimplePlacer NodePlacer;
         private readonly List<IFIRUINode> UINodes = new List<IFIRUINode>();
-        private readonly HashSet<Module> NotRenderedYet = new HashSet<Module>();
 
         public delegate void PlacedHandler(PlacementInfo placements);
         public event PlacedHandler OnPlacedNodes;
@@ -38,12 +37,6 @@ namespace ChiselDebuggerWebUI.Code
             this.ParentModCtrl = parentModCtrl;
             this.WireRouter = new SimpleRouter(Mod);
             this.NodePlacer = new SimplePlacer(Mod);
-            NodePlacer.OnReadyToPlaceNodes += PlaceNodes;
-
-            foreach (var nested in mod.GetAllNodes().OfType<Module>())
-            {
-                NotRenderedYet.Add(nested);
-            }
 
             PlaceLimiter.Start(_ => OnPlacedNodes?.Invoke(NodePlacer.PositionModuleComponents()));
             RouteLimiter.Start(placements => OnWiresRouted?.Invoke(WireRouter.PathLines(placements)));
@@ -54,20 +47,12 @@ namespace ChiselDebuggerWebUI.Code
             UINodes.Add(uiNode);
         }
 
-        private void ChildCtrlRendered(Module childMod)
-        {
-            NotRenderedYet.Remove(childMod);
-            PlaceNodes();
-        }
-
         public void PrepareToRerenderModule()
         {
             foreach (var uiNode in UINodes)
             {
                 uiNode.PrepareForRender();
             }
-
-            ParentModCtrl?.ChildCtrlRendered(Mod);
         }
 
         public void RerenderWithoutPreparation()
@@ -80,13 +65,9 @@ namespace ChiselDebuggerWebUI.Code
             ModUI.InvokestateHasChanged();
         }
 
-        private void PlaceNodes()
+        public bool IsReadyToRender()
         {
-            if (NotRenderedYet.Count > 0)
-            {
-                return;
-            }
-            PlaceLimiter.AddWork(true);
+            return NodePlacer.IsReadyToPlace();
         }
 
         public void RouteWires(PlacementInfo placements)
@@ -98,6 +79,11 @@ namespace ChiselDebuggerWebUI.Code
         {
             WireRouter.UpdateIOFromNode(updateData.Node, updateData.InputOffsets, updateData.OutputOffsets);
             NodePlacer.SetNodeSize(updateData.Node, updateData.Size);
+
+            if (IsReadyToRender())
+            {
+                PlaceLimiter.AddWork(true);
+            }
         }
 
         public void UpdateIOFromNode(FIRRTLNode node, List<DirectedIO> inputOffsets, List<DirectedIO> outputOffsets)
