@@ -12,10 +12,8 @@ namespace ChiselDebug
     {
         private readonly Module Mod;
         private readonly HashSet<FIRRTLNode> MissingNodeDims;
+        private readonly Dictionary<FIRRTLNode, Point> SizeChanges = new Dictionary<FIRRTLNode, Point>();
         private readonly Dictionary<FIRRTLNode, Point> NodeSizes = new Dictionary<FIRRTLNode, Point>();
-
-        public delegate void ReadyToPlaceHandler();
-        public event ReadyToPlaceHandler OnReadyToPlaceNodes;
 
         public SimplePlacer(Module mod)
         {
@@ -26,156 +24,170 @@ namespace ChiselDebug
 
         public PlacementInfo PositionModuleComponents()
         {
-            try
+            lock (NodeSizes)
             {
-                PlacementInfo placments = new PlacementInfo();
-
-                Graph<FIRRTLNode> graph = new Graph<FIRRTLNode>();
-
-                //Add nodes to graph
-                Dictionary<FIRRTLNode, Node<FIRRTLNode>> firNodeToNode = new Dictionary<FIRRTLNode, Node<FIRRTLNode>>();
-                foreach (var firNode in NodeSizes.Keys)
+                lock (SizeChanges)
                 {
-                    var node = new Node<FIRRTLNode>(firNode);
-                    graph.AddNode(node);
-                    firNodeToNode.Add(firNode, node);
-                }
-
-                //Relate io to FIRRTLNode
-                Dictionary<Input, FIRRTLNode> inputToFirNode = new Dictionary<Input, FIRRTLNode>();
-                Dictionary<Output, FIRRTLNode> outputToFirNode = new Dictionary<Output, FIRRTLNode>();
-                foreach (var firNode in NodeSizes.Keys)
-                {
-                    if (firNode == Mod)
+                    foreach (var change in SizeChanges)
                     {
-                        continue;
+                        NodeSizes[change.Key] = change.Value;
                     }
-                    foreach (var input in firNode.GetInputs())
+
+                    //Changes transferred, now there are no more changed left
+                    SizeChanges.Clear();
+                }
+
+                try
+                {
+                    PlacementInfo placments = new PlacementInfo();
+
+                    Graph<FIRRTLNode> graph = new Graph<FIRRTLNode>();
+
+                    //Add nodes to graph
+                    Dictionary<FIRRTLNode, Node<FIRRTLNode>> firNodeToNode = new Dictionary<FIRRTLNode, Node<FIRRTLNode>>();
+                    foreach (var firNode in NodeSizes.Keys)
                     {
-                        inputToFirNode.Add(input, firNode);
+                        var node = new Node<FIRRTLNode>(firNode);
+                        graph.AddNode(node);
+                        firNodeToNode.Add(firNode, node);
                     }
-                    foreach (var output in firNode.GetOutputs())
+
+                    //Relate io to FIRRTLNode
+                    Dictionary<Input, FIRRTLNode> inputToFirNode = new Dictionary<Input, FIRRTLNode>();
+                    Dictionary<Output, FIRRTLNode> outputToFirNode = new Dictionary<Output, FIRRTLNode>();
+                    foreach (var firNode in NodeSizes.Keys)
                     {
-                        outputToFirNode.Add(output, firNode);
-                    }
-                }
-
-                Dictionary<Input, Node<FIRRTLNode>> inputToNode = new Dictionary<Input, Node<FIRRTLNode>>();
-                Dictionary<Output, Node<FIRRTLNode>> outputToNode = new Dictionary<Output, Node<FIRRTLNode>>();
-                foreach (var keyValue in inputToFirNode)
-                {
-                    inputToNode.Add(keyValue.Key, firNodeToNode[keyValue.Value]);
-                }
-                foreach (var keyValue in outputToFirNode)
-                {
-                    outputToNode.Add(keyValue.Key, firNodeToNode[keyValue.Value]);
-                }
-
-                List<Node<FIRRTLNode>> modInputNodes = new List<Node<FIRRTLNode>>();
-                foreach (var input in Mod.GetInternalInputs())
-                {
-                    if (input.Con == null)
-                    {
-                        continue;
-                    }
-                    Node<FIRRTLNode> modInputNode = new Node<FIRRTLNode>(Mod);
-                    graph.AddNode(modInputNode);
-                    inputToNode.Add(input, modInputNode);
-                    modInputNodes.Add(modInputNode);
-                }
-                List<Node<FIRRTLNode>> modOutputNodes = new List<Node<FIRRTLNode>>();
-                foreach (var output in Mod.GetInternalOutputs())
-                {
-                    if (!output.Con.IsUsed())
-                    {
-                        continue;
-                    }
-                    Node<FIRRTLNode> modOutputNode = new Node<FIRRTLNode>(Mod);
-                    graph.AddNode(modOutputNode);
-                    outputToNode.Add(output, modOutputNode);
-                    modOutputNodes.Add(modOutputNode);
-                }
-
-
-                //Make edges
-                foreach (var output in outputToNode.Keys)
-                {
-                    if (!output.Con.IsUsed())
-                    {
-                        continue;
-                    }
-                    var from = outputToNode[output];
-                    foreach (var input in output.Con.To)
-                    {
-                        var to = inputToNode[input];
-                        graph.AddEdge(from, to);
-                    }
-                }
-                graph.MakeIndirectConnections();
-
-                var placement = GetPlacements(graph, modInputNodes, modOutputNodes);
-                foreach (var modIONode in modInputNodes)
-                {
-                    placement.Remove(modIONode);
-                }
-                foreach (var modIONode in modOutputNodes)
-                {
-                    placement.Remove(modIONode);
-                }
-
-                {
-                    int[] largestSizeInX = placement
-                        .GroupBy(x => x.Value.X)
-                        .OrderBy(x => x.Key)
-                        .Select(x => x
-                            .Select(y => NodeSizes[y.Key.Value].X)
-                            .Aggregate(Math.Max))
-                        .ToArray();
-
-                    int minXOrdering = placement.Values.Min(x => x.X);
-                    int minYOrdering = placement.Values.Min(x => x.Y);
-                    Node<FIRRTLNode>[][] nodePlacements = placement
-                        .GroupBy(x => x.Value.X)
-                        .OrderBy(x => x.Key)
-                        .Select(x => x
-                            .OrderBy(y => y.Value.Y)
-                            .Select(y => y.Key)
-                            .ToArray())
-                        .ToArray();
-
-                    int xOffset = 50;
-                    for (int x = 0; x < nodePlacements.Length; x++)
-                    {
-                        int yOffset = 50;
-                        int largestWidth = 0;
-                        for (int y = 0; y < nodePlacements[x].Length; y++)
+                        if (firNode == Mod)
                         {
-                            Node<FIRRTLNode> node = nodePlacements[x][y];
-
-                            Point offset = new Point(xOffset, yOffset);
-                            Point padding = new Point(200, 100);
-                            Point pos = offset + padding;
-                            Point size = NodeSizes[node.Value];
-                            Point paddedSize = size + padding;
-
-                            placments.AddNodePlacement(node.Value, new Rectangle(pos, NodeSizes[node.Value]));
-
-                            largestWidth = Math.Max(largestWidth, paddedSize.X);
-                            yOffset += paddedSize.Y;
+                            continue;
                         }
-
-                        xOffset += largestWidth;
+                        foreach (var input in firNode.GetInputs())
+                        {
+                            inputToFirNode.Add(input, firNode);
+                        }
+                        foreach (var output in firNode.GetOutputs())
+                        {
+                            outputToFirNode.Add(output, firNode);
+                        }
                     }
-                }
 
-                placments.AddEndStuff();
-                return placments;
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine(e.Message);
-                Debug.WriteLine(e.StackTrace);
-                throw;
+                    Dictionary<Input, Node<FIRRTLNode>> inputToNode = new Dictionary<Input, Node<FIRRTLNode>>();
+                    Dictionary<Output, Node<FIRRTLNode>> outputToNode = new Dictionary<Output, Node<FIRRTLNode>>();
+                    foreach (var keyValue in inputToFirNode)
+                    {
+                        inputToNode.Add(keyValue.Key, firNodeToNode[keyValue.Value]);
+                    }
+                    foreach (var keyValue in outputToFirNode)
+                    {
+                        outputToNode.Add(keyValue.Key, firNodeToNode[keyValue.Value]);
+                    }
+
+                    List<Node<FIRRTLNode>> modInputNodes = new List<Node<FIRRTLNode>>();
+                    foreach (var input in Mod.GetInternalInputs())
+                    {
+                        if (input.Con == null)
+                        {
+                            continue;
+                        }
+                        Node<FIRRTLNode> modInputNode = new Node<FIRRTLNode>(Mod);
+                        graph.AddNode(modInputNode);
+                        inputToNode.Add(input, modInputNode);
+                        modInputNodes.Add(modInputNode);
+                    }
+                    List<Node<FIRRTLNode>> modOutputNodes = new List<Node<FIRRTLNode>>();
+                    foreach (var output in Mod.GetInternalOutputs())
+                    {
+                        if (!output.Con.IsUsed())
+                        {
+                            continue;
+                        }
+                        Node<FIRRTLNode> modOutputNode = new Node<FIRRTLNode>(Mod);
+                        graph.AddNode(modOutputNode);
+                        outputToNode.Add(output, modOutputNode);
+                        modOutputNodes.Add(modOutputNode);
+                    }
+
+
+                    //Make edges
+                    foreach (var output in outputToNode.Keys)
+                    {
+                        if (!output.Con.IsUsed())
+                        {
+                            continue;
+                        }
+                        var from = outputToNode[output];
+                        foreach (var input in output.Con.To)
+                        {
+                            var to = inputToNode[input];
+                            graph.AddEdge(from, to);
+                        }
+                    }
+                    graph.MakeIndirectConnections();
+
+                    var placement = GetPlacements(graph, modInputNodes, modOutputNodes);
+                    foreach (var modIONode in modInputNodes)
+                    {
+                        placement.Remove(modIONode);
+                    }
+                    foreach (var modIONode in modOutputNodes)
+                    {
+                        placement.Remove(modIONode);
+                    }
+
+                    {
+                        int[] largestSizeInX = placement
+                            .GroupBy(x => x.Value.X)
+                            .OrderBy(x => x.Key)
+                            .Select(x => x
+                                .Select(y => NodeSizes[y.Key.Value].X)
+                                .Aggregate(Math.Max))
+                            .ToArray();
+
+                        int minXOrdering = placement.Values.Min(x => x.X);
+                        int minYOrdering = placement.Values.Min(x => x.Y);
+                        Node<FIRRTLNode>[][] nodePlacements = placement
+                            .GroupBy(x => x.Value.X)
+                            .OrderBy(x => x.Key)
+                            .Select(x => x
+                                .OrderBy(y => y.Value.Y)
+                                .Select(y => y.Key)
+                                .ToArray())
+                            .ToArray();
+
+                        int xOffset = 50;
+                        for (int x = 0; x < nodePlacements.Length; x++)
+                        {
+                            int yOffset = 50;
+                            int largestWidth = 0;
+                            for (int y = 0; y < nodePlacements[x].Length; y++)
+                            {
+                                Node<FIRRTLNode> node = nodePlacements[x][y];
+
+                                Point offset = new Point(xOffset, yOffset);
+                                Point padding = new Point(200, 100);
+                                Point pos = offset + padding;
+                                Point size = NodeSizes[node.Value];
+                                Point paddedSize = size + padding;
+
+                                placments.AddNodePlacement(node.Value, new Rectangle(pos, NodeSizes[node.Value]));
+
+                                largestWidth = Math.Max(largestWidth, paddedSize.X);
+                                yOffset += paddedSize.Y;
+                            }
+
+                            xOffset += largestWidth;
+                        }
+                    }
+
+                    placments.AddEndStuff();
+                    return placments;
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e.Message);
+                    Debug.WriteLine(e.StackTrace);
+                    throw;
+                }
             }
         }
 
@@ -398,23 +410,23 @@ namespace ChiselDebug
 
         public void SetNodeSize(FIRRTLNode node, Point size)
         {
-            lock (this)
+            lock (SizeChanges)
             {
                 //If the size hasn't changed then there is no need to
                 //do anything at all as the result will be the same
-                if (NodeSizes.TryGetValue(node, out var oldSize) && oldSize == size)
+                if (SizeChanges.TryGetValue(node, out var oldSize) && oldSize == size)
                 {
                     return;
                 }
 
-                NodeSizes[node] = size;
-
+                SizeChanges[node] = size;
                 MissingNodeDims.Remove(node);
-                if (MissingNodeDims.Count == 0)
-                {
-                    OnReadyToPlaceNodes?.Invoke();
-                }
             }
+        }
+
+        public bool IsReadyToPlace()
+        {
+            return MissingNodeDims.Count == 0 && SizeChanges.Count > 0;
         }
     }
 
