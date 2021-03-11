@@ -15,8 +15,12 @@
     }
 
     <div style="height:20px;" />
-    <div id="@DragEventID" class="Circuit" style="transform: translate(@CircuitOffset.X.ToPixels(), @CircuitOffset.Y.ToPixels()) scale(@CircuitScale.ToHtmlNumber());" @onwheel="HandleScroll">
-        <ModuleUI PosOp="@ModulePosition" />
+    <div id="@DragEventID" @ref="CircuitContainer" style="
+        width: calc(100vw - @CircuitTopLeftParent.X.ToPixels());
+        height: calc(100vh - @CircuitTopLeftParent.Y.ToPixels());">
+        <div class="Circuit" style="transform: translate(@CircuitOffset.X.ToPixels(), @CircuitOffset.Y.ToPixels()) scale(@CircuitScale.ToHtmlNumber());" @onwheel="HandleScroll">
+            <ModuleUI PosOp="@ModulePosition" />
+        </div>
     </div>
 </CascadingValue>
 
@@ -27,7 +31,10 @@
     private Positioned<ChiselDebug.GraphFIR.Module> ModulePosition;
     private float CircuitScale = 1.0f;
     private Point CircuitOffset = Point.Zero;
+
+    private ElementReference CircuitContainer;
     private readonly string DragEventID = UniqueID.UniqueHTMLID();
+    private Point CircuitTopLeftParent = Point.Zero;
 
     protected override void OnInitialized()
     {
@@ -50,6 +57,7 @@
         if (firstRender)
         {
             await JSEvents.AddDragListener(JS, DragEventID, x => InvokeAsync(() => HandleDrag(x)));
+            CircuitTopLeftParent = (await JS.InvokeAsync<ElemWH>("JSUtils.getElementPosition", CircuitContainer)).ToPoint();
         }
 
         await base.OnAfterRenderAsync(firstRender);
