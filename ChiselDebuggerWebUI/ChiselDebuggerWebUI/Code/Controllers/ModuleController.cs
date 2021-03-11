@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks.Dataflow;
 using static ChiselDebug.SimplePlacer;
 
 namespace ChiselDebuggerWebUI.Code
@@ -26,9 +27,8 @@ namespace ChiselDebuggerWebUI.Code
         public delegate void RoutedHandler(List<WirePath> wirePaths);
         public event RoutedHandler OnWiresRouted;
 
-        private readonly ExecuteOnlyLatest<bool> PlaceLimiter = new ExecuteOnlyLatest<bool>();
-        private readonly ExecuteOnlyLatest<PlacementInfo> RouteLimiter = new ExecuteOnlyLatest<PlacementInfo>();
-
+        private readonly BroadcastBlock<Action> PlaceLimiter = new BroadcastBlock<Action>(x => x);
+        private readonly BroadcastBlock<Action> RouteLimiter = new BroadcastBlock<Action>(x => x);
 
         public ModuleController(Module mod, ModuleUI modUI, ModuleController parentModCtrl)
         {
@@ -38,8 +38,8 @@ namespace ChiselDebuggerWebUI.Code
             this.WireRouter = new SimpleRouter(Mod);
             this.NodePlacer = new SimplePlacer(Mod);
 
-            PlaceLimiter.Start(_ => OnPlacedNodes?.Invoke(NodePlacer.PositionModuleComponents()));
-            RouteLimiter.Start(placements => OnWiresRouted?.Invoke(WireRouter.PathLines(placements)));
+            WorkLimiter.LinkSource(PlaceLimiter);
+            WorkLimiter.LinkSource(RouteLimiter);
         }
 
         public void AddUINode(IFIRUINode uiNode)
@@ -70,10 +70,17 @@ namespace ChiselDebuggerWebUI.Code
             return NodePlacer.IsReadyToPlace();
         }
 
+        private void PlaceNodes()
+        {
+            PlaceLimiter.Post(() => OnPlacedNodes?.Invoke(NodePlacer.PositionModuleComponents()));
+        }
+
         public void RouteWires(PlacementInfo placements)
         {
-            RouteLimiter.AddWork(placements);
+            RouteLimiter.Post(() => OnWiresRouted?.Invoke(WireRouter.PathLines(placements)));
         }
+
+
 
         public void UpdateComponentInfo(FIRComponentUpdate updateData)
         {
@@ -82,7 +89,7 @@ namespace ChiselDebuggerWebUI.Code
 
             if (IsReadyToRender())
             {
-                PlaceLimiter.AddWork(true);
+                PlaceNodes();
             }
         }
 
@@ -93,8 +100,8 @@ namespace ChiselDebuggerWebUI.Code
 
         public void Dispose()
         {
-            PlaceLimiter.Dispose();
-            RouteLimiter.Dispose();
+            WorkLimiter.UnlinkSource(PlaceLimiter);
+            WorkLimiter.UnlinkSource(RouteLimiter);
         }
     }
 }
