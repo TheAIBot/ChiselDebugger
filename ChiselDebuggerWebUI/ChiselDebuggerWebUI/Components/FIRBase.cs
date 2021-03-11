@@ -67,10 +67,7 @@ namespace ChiselDebuggerWebUI.Components
             PreviousSize = newSize;
             if (sizeChanged)
             {
-                if (OnResize(newSize.X, newSize.Y))
-                {
-                    StateHasChanged();
-                }
+                OnResize(newSize.X, newSize.Y);
             }
 
             //Debug.WriteLine($"Render: {typeof(T)} sizeChange: {sizeChanged}, Count: {RenderCounter++}");
@@ -81,14 +78,12 @@ namespace ChiselDebuggerWebUI.Components
             HasToRender = true;
         }
 
-        protected virtual bool OnResize(int width, int height)
+        protected virtual void OnResize(int width, int height)
         {
             InputOffsets = OnMakeInputs(width, height);
             OutputOffsets = OnMakeOutputs(width, height);
 
             ParentModCtrl?.UpdateComponentInfo(new FIRComponentUpdate(Operation, new Point(width, height), InputOffsets, OutputOffsets));
-
-            return true;
         }
 
         protected virtual bool OnMove(Point newPos)

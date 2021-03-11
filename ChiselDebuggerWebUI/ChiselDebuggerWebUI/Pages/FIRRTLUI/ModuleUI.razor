@@ -66,14 +66,12 @@
         DebugCtrl.AddModCtrl(CurrModCtrl, Operation.GetAllNodes());
     }
 
-    protected override bool OnResize(int width, int height)
+    protected override void OnResize(int width, int height)
     {
         //Update this module with its internal io positions
         InputOffsets = OnMakeInputs(width, height);
         OutputOffsets = OnMakeOutputs(width, height);
         CurrModCtrl.UpdateIOFromNode(Operation, InputOffsets, OutputOffsets);
-
-        return true;
     }
 
     private void UpdateParentAboutExteriorIO(int width, int height)
