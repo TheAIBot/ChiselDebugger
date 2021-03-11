@@ -62,8 +62,9 @@ namespace ChiselDebuggerWebUI.Components
         {
             ElemWH elemWH = await JS.InvokeAsync<ElemWH>("JSUtils.getElementSize", SizeWatcher);
             Point newSize = elemWH.ToPoint();
-
-            bool sizeChanged = PreviousSize != newSize;
+            
+            //Ignore size changes when they are too small to matter
+            bool sizeChanged = !PreviousSize.ApproxEquals(newSize, 1);
             PreviousSize = newSize;
             if (sizeChanged)
             {

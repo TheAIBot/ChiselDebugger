@@ -25,6 +25,12 @@ namespace ChiselDebug
                    Y == point.Y;
         }
 
+        public bool ApproxEquals(Point other, int allowedDelta)
+        {
+            return X - allowedDelta <= other.X && other.X <= X + allowedDelta &&
+                   Y - allowedDelta <= other.Y && other.Y <= Y + allowedDelta;
+        }
+
         public override int GetHashCode()
         {
             return HashCode.Combine(X, Y);
