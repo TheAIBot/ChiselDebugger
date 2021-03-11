@@ -76,7 +76,10 @@ namespace ChiselDebuggerWebUI.Code
 
         public void Dispose()
         {
-            WorkLimiter.UnlinkSource(TimeChanger);
+            if (TimeChanger != null)
+            {
+                WorkLimiter.UnlinkSource(TimeChanger);
+            }
         }
     }
 }
