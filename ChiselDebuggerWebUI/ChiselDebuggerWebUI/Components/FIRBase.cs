@@ -33,7 +33,6 @@ namespace ChiselDebuggerWebUI.Components
         protected T Operation => PosOp.Value;
 
         private Point PreviousSize = Point.Zero;
-        private Point PreviousPos = Point.Zero;
         private int RenderCounter = 0;
         protected ElementReference SizeWatcher;
         protected List<DirectedIO> InputOffsets = new List<DirectedIO>();
@@ -64,11 +63,6 @@ namespace ChiselDebuggerWebUI.Components
             ElemWH elemWH = await JS.InvokeAsync<ElemWH>("JSUtils.getElementSize", SizeWatcher);
             Point newSize = elemWH.ToPoint();
 
-            if (firstRender)
-            {
-                OnAfterFirstRenderAsync(newSize.X, newSize.Y);
-            }
-
             bool sizeChanged = PreviousSize != newSize;
             PreviousSize = newSize;
             if (sizeChanged)
@@ -79,26 +73,13 @@ namespace ChiselDebuggerWebUI.Components
                 }
             }
 
-            bool hasMoved = PreviousPos != Position;
-            PreviousPos = Position;
-            if (hasMoved)
-            {
-                if (OnMove(Position))
-                {
-                    StateHasChanged();
-                }
-            }
-
-            //Debug.WriteLine($"Render: {typeof(T)} sizeChange: {sizeChanged}, posChange: {hasMoved}, Count: {RenderCounter++}");
+            //Debug.WriteLine($"Render: {typeof(T)} sizeChange: {sizeChanged}, Count: {RenderCounter++}");
         }
 
         public void PrepareForRender()
         {
             HasToRender = true;
         }
-
-        protected virtual void OnAfterFirstRenderAsync(int width, int height)
-        { }
 
         protected virtual bool OnResize(int width, int height)
         {
