@@ -1,4 +1,5 @@
-﻿using PriorityQueue;
+﻿using ChiselDebug.GraphFIR;
+using PriorityQueue;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,9 +13,9 @@ namespace ChiselDebug.Routing
     {
         private readonly ConnectionsHandler Connections;
 
-        public SimpleRouter(ConnectionsHandler connections)
+        public SimpleRouter(Module mod)
         {
-            this.Connections = connections;
+            this.Connections = new ConnectionsHandler(mod);
         }
 
         private record LineInfo(IOInfo Start, IOInfo End)
@@ -23,6 +24,11 @@ namespace ChiselDebug.Routing
             {
                 return new Line(Start.DirIO.Position, End.DirIO.Position).GetManhattanDistance();
             }
+        }
+
+        public void UpdateIOFromNode(FIRRTLNode node, List<DirectedIO> inputOffsets, List<DirectedIO> outputOffsets)
+        {
+            Connections.UpdateIOFromNode(node, inputOffsets, outputOffsets);
         }
 
         public List<WirePath> PathLines(PlacementInfo placements)
@@ -44,7 +50,7 @@ namespace ChiselDebug.Routing
                 List<WirePath> paths = new List<WirePath>();
                 while (linesPriority.Count > 0)
                 {
-                    Debug.WriteLine(linesPriority.Count);
+                    //Debug.WriteLine(linesPriority.Count);
                     (IOInfo start, IOInfo end) = linesPriority.Dequeue();
 
                     Rectangle? startRect = null;
@@ -131,6 +137,10 @@ namespace ChiselDebug.Routing
                     board.SetCellAllowedMoves(endGo, allowedDir);
                     endGo = allowedDir.MovePoint(endGo);
                 } while (endRectRelative.Within(endGo));
+            }
+            else
+            {
+                board.SetCellAllowedMoves(relativeStart, end.DirIO.InitialDir.Reverse());
             }
 
             if (startRect.HasValue)

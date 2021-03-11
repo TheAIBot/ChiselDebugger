@@ -1,8 +1,10 @@
 ﻿.module {
     position: absolute;
     display: inline-block;
-    outline: 2px solid black;
-    outline-offset: -1px;
+    outline: 4px solid blue;
+    outline-offset: -2px;
+    background-color: #9898984a;
+    ;
 }
 
 .moduleHeader {

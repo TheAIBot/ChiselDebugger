@@ -15,7 +15,7 @@ namespace ChiselDebug.GraphFIR
         public ConstBitRange(string name, Output arg1, IFIRType outType) : base(outType)
         {
             this.OpName = name;
-            this.In = new Input(arg1.Type);
+            this.In = new Input(this, arg1.Type);
             arg1.ConnectToInput(In);
         }
 
@@ -35,11 +35,6 @@ namespace ChiselDebug.GraphFIR
 
         public override void InferType()
         {
-            if (In.Type is not FIRRTL.UnknownType)
-            {
-                return;
-            }
-
             In.InferType();
 
             IFIRType type = In.Type switch
@@ -62,11 +57,6 @@ namespace ChiselDebug.GraphFIR
 
         public override void InferType()
         {
-            if (In.Type is not FIRRTL.UnknownType)
-            {
-                return;
-            }
-
             In.InferType();
 
             IFIRType type = In.Type switch
@@ -91,11 +81,6 @@ namespace ChiselDebug.GraphFIR
 
         public override void InferType()
         {
-            if (In.Type is not FIRRTL.UnknownType)
-            {
-                return;
-            }
-
             In.InferType();
 
             IFIRType type = In.Type switch
@@ -118,11 +103,6 @@ namespace ChiselDebug.GraphFIR
 
         public override void InferType()
         {
-            if (In.Type is not FIRRTL.UnknownType)
-            {
-                return;
-            }
-
             In.InferType();
 
             IFIRType type = In.Type switch

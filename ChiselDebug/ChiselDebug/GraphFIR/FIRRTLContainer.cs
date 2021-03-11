@@ -1,55 +1,55 @@
 ﻿using FIRRTL;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace ChiselDebug.GraphFIR
 {
-    public class FIRRTLContainer : FIRRTLNode
+    public abstract class FIRRTLContainer : FIRRTLNode, IContainerIO
     {
-        public readonly List<Input> ExternalInputs = new List<Input>();
-        public readonly List<Output> ExternalOutputs = new List<Output>();
+        public readonly Dictionary<string, FIRIO> ExternalIO = new Dictionary<string, FIRIO>();
 
-        public readonly List<Input> InternalInputs = new List<Input>();
-        public readonly List<Output> InternalOutputs = new List<Output>();       
+        public readonly Dictionary<string, FIRIO> InternalIO = new Dictionary<string, FIRIO>();   
 
-        public void AddExternalInput(string inputName, IFIRType type)
+        public void AddExternalIO(FIRIO io)
         {
-            ExternalInputs.Add(new Input(inputName, type));
-            InternalOutputs.Add(new Output(null, inputName, type));
-        }
-
-        public void AddExternalOutput(string outputName, IFIRType type)
-        {
-            ExternalOutputs.Add(new Output(null, outputName, type));
-            InternalInputs.Add(new Input(outputName, type));
-        }
-
-        public void PropagateSignals()
-        {
-            for (int i = 0; i < ExternalInputs.Count; i++)
-            {
-                InternalOutputs[i].Con.Value = ExternalInputs[i].Con.Value;
-            }
-
-            for (int i = 0; i < ExternalOutputs.Count; i++)
-            {
-                ExternalOutputs[i].Con.Value = InternalInputs[i].Con.Value;
-            }
+            ExternalIO.Add(io.Name, io);
+            InternalIO.Add(io.Name, io.Flip());
         }
 
         public override Input[] GetInputs()
         {
-            return ExternalInputs.ToArray();
+            return FlattenAndFilterIO<Input>(ExternalIO);
         }
 
         public override Output[] GetOutputs()
         {
-            return ExternalOutputs.ToArray();
+            return FlattenAndFilterIO<Output>(ExternalIO);
+        }
+
+        public Input[] GetInternalInputs()
+        {
+            return FlattenAndFilterIO<Input>(InternalIO);
+        }
+
+        public Output[] GetInternalOutputs()
+        {
+            return FlattenAndFilterIO<Output>(InternalIO);
+        }
+
+        private T[] FlattenAndFilterIO<T>(Dictionary<string, FIRIO> io)
+        {
+            return io.Values
+                .SelectMany(x => x is IOBundle bundle ? bundle.Flatten() : new FIRIO[] { x })
+                .OfType<T>()
+                .ToArray();
         }
 
         public override void InferType()
         {
             throw new NotImplementedException();
         }
+
+        public abstract IContainerIO GetIO(string ioName, bool modulesOnly = false);
     }
 }

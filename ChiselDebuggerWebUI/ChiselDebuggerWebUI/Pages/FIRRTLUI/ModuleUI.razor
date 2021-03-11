@@ -1,49 +1,52 @@
 ﻿@inherits FIRBase<Module>
+@implements IDisposable
 
-<div class="module" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();">
-    <div class="moduleHeader">
+<div class="module"  @ref="SizeWatcher" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();">
+    @*<div class="moduleHeader">
         <h2>@Operation.Name</h2>
-    </div>
-    <div style="padding:@ContentPadding.ToPixels();">
-        <div class="moduleContent" @ref="SizeWatcher" style="width:@GetCurrentSize().X.ToPixels();height:@GetCurrentSize().Y.ToPixels();min-width:@MinContentSize.X.ToPixels();min-height:@MinContentSize.Y.ToPixels()">
-            @foreach (var posOp in ModuleOpPoses)
+    </div>*@
+    <div class="moduleContent" style="width:@GetCurrentSize().X.ToPixels();height:@GetCurrentSize().Y.ToPixels();min-width:@MinContentSize.X.ToPixels();min-height:@MinContentSize.Y.ToPixels()">
+        @foreach (var posOp in ModuleOpPoses)
+        {
+            @if (posOp.Value is Mux)
             {
-                @if (posOp.Value is Mux)
-                {
-                    <MuxOp PosOp="@(posOp.Cast<Mux>())" ParentModCtrl="CurrModCtrl"></MuxOp>
-                }
-                else if (posOp.Value is BiArgMonoResPrimOp)
-                {
-                    <BiArgMonoResPrimOpUI PosOp="@(posOp.Cast<BiArgMonoResPrimOp>())" ParentModCtrl="CurrModCtrl"></BiArgMonoResPrimOpUI>
-                }
-                else if (posOp.Value is ConstBitRange)
-                {
-                    <ConstBitRangeUI PosOp="@(posOp.Cast<ConstBitRange>())" ParentModCtrl="CurrModCtrl"></ConstBitRangeUI>
-                }
-                else if (posOp.Value is Register)
-                {
-                    <RegisterUI PosOp="@(posOp.Cast<Register>())" ParentModCtrl="CurrModCtrl"></RegisterUI>
-                }
+                <MuxOp @key=posOp.Value PosOp="@(posOp.Cast<Mux>())" ParentModCtrl="CurrModCtrl"></MuxOp>
             }
-
-            @foreach (var input in InputOffsets)
+            else if (posOp.Value is BiArgMonoResPrimOp)
             {
-                <IOPortUI Position="@input.Position"></IOPortUI>
+                <BiArgMonoResPrimOpUI @key=posOp.Value PosOp="@(posOp.Cast<BiArgMonoResPrimOp>())" ParentModCtrl="CurrModCtrl"></BiArgMonoResPrimOpUI>
             }
-
-            @foreach (var output in OutputOffsets)
+            else if (posOp.Value is ConstBitRange)
             {
-                <IOPortUI Position="@output.Position"></IOPortUI>
+                <ConstBitRangeUI @key=posOp.Value PosOp="@(posOp.Cast<ConstBitRange>())" ParentModCtrl="CurrModCtrl"></ConstBitRangeUI>
             }
+            else if (posOp.Value is Register)
+            {
+                <RegisterUI @key=posOp.Value PosOp="@(posOp.Cast<Register>())" ParentModCtrl="CurrModCtrl"></RegisterUI>
+            }
+            else if (posOp.Value is Module)
+            {
+                <ModuleUI @key=posOp.Value PosOp="@(posOp.Cast<Module>())" ParentModCtrl="CurrModCtrl"></ModuleUI>
+            }
+        }
 
-            <WiresUI ModCtrl="CurrModCtrl"></WiresUI>
-        </div>
+        @foreach (var input in InputOffsets)
+        {
+            <IOPortUI Position="@input.Position"></IOPortUI>
+        }
+
+        @foreach (var output in OutputOffsets)
+        {
+            <IOPortUI Position="@output.Position"></IOPortUI>
+        }
+
+        <WiresUI ModCtrl="CurrModCtrl"></WiresUI>
     </div>
 </div>
 
 @code
 {
-    private const int ContentPadding = 20;
+    private const int ContentPadding = 0;
     private const int MarginForIO = 20;
     private const int MinSpaceBetweenIO = 15;
     private Point MinContentSize;
@@ -56,18 +59,24 @@
 
         MinContentSize = GetMinSizeForIO();
 
-        ModuleOpPoses = Operation.GetAllNodes().Select(x => new Positioned<FIRRTLNode>(new Point(0, 0), x)).ToList();
-        CurrModCtrl = new ModuleController(Operation);
+        ModuleOpPoses = Operation.GetAllNodes().Select(x => new Positioned<FIRRTLNode>(Point.Zero, x)).ToList();
+        CurrModCtrl = new ModuleController(Operation, this, ParentModCtrl);
         CurrModCtrl.OnPlacedNodes += x => InvokeAsync(() => UpdatePlacement(x));
 
-        DebugCtrl.AddModCtrl(CurrModCtrl);
+        DebugCtrl.AddModCtrl(CurrModCtrl, Operation.GetAllNodes());
     }
 
     protected override bool OnResize(int width, int height)
     {
-        base.OnResize(width, height);
-
+        //Update this module with its internal io positions
+        InputOffsets = OnMakeInputs(width, height);
+        OutputOffsets = OnMakeOutputs(width, height);
         CurrModCtrl.UpdateIOFromNode(Operation, InputOffsets, OutputOffsets);
+
+        //Update parent module with this modules external io positions
+        var externalInputs = MakeExternalInputs(width, height);
+        var externalOutputs = MakeExternalOutputs(width, height);
+        ParentModCtrl?.UpdateComponentInfo(new FIRComponentUpdate(Operation, new Point(width, height), externalInputs, externalOutputs));
 
         return true;
     }
@@ -76,7 +85,7 @@
     {
         int requiredWidth = 0;
 
-        int maxIO = Math.Max(Operation.ExternalInputs.Count, Operation.ExternalOutputs.Count);
+        int maxIO = Math.Max(Operation.GetInputs().Length, Operation.GetOutputs().Length);
 
         int requiredIOMargin = MarginForIO * 2;
         int requiredHeight = requiredIOMargin + (maxIO - 1) * MinSpaceBetweenIO;
@@ -91,24 +100,37 @@
         Point moduleSize = Point.Max(MinContentSize, placements.SpaceNeeded);
 
         //With new module size, the io positions need to be updated
-        InputOffsets = OnMakeInputs(moduleSize.X, moduleSize.Y);
-        OutputOffsets = OnMakeOutputs(moduleSize.X, moduleSize.Y);
-        CurrModCtrl.UpdateIOFromNode(Operation, InputOffsets, OutputOffsets);
+        OnResize(moduleSize.X, moduleSize.Y);
 
         CurrModCtrl.RouteWires(placements);
 
-        CurrModCtrl.RerenderModule();
+        CurrModCtrl.PrepareToRerenderModule();
         SetCurrentSize(moduleSize);
         StateHasChanged();
     }
 
     protected override List<DirectedIO> OnMakeInputs(int width, int height)
     {
-        return IOPositionCalc.EvenVertical<Input>(height, Operation.InternalInputs, width + ContentPadding, MarginForIO);
+        return IOPositionCalc.EvenVertical<Input>(height, Operation.GetInternalInputs(), width + ContentPadding, MarginForIO);
     }
 
     protected override List<DirectedIO> OnMakeOutputs(int width, int height)
     {
-        return IOPositionCalc.EvenVertical<Output>(height, Operation.InternalOutputs, -ContentPadding, MarginForIO);
+        return IOPositionCalc.EvenVertical<Output>(height, Operation.GetInternalOutputs(), -ContentPadding, MarginForIO);
+    }
+
+    private List<DirectedIO> MakeExternalInputs(int width, int height)
+    {
+        return IOPositionCalc.EvenVertical<Input>(height, Operation.GetInputs(), -ContentPadding, MarginForIO);
+    }
+
+    private List<DirectedIO> MakeExternalOutputs(int width, int height)
+    {
+        return IOPositionCalc.EvenVertical<Output>(height, Operation.GetOutputs(), width + ContentPadding, MarginForIO);
+    }
+
+    public void Dispose()
+    {
+        CurrModCtrl.Dispose();
     }
 }

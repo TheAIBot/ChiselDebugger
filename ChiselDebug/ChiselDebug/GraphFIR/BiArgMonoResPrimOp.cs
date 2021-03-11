@@ -12,8 +12,8 @@ namespace ChiselDebug.GraphFIR
         public BiArgMonoResPrimOp(string opName, Output aIn, Output bIn, IFIRType outType) : base(outType)
         {
             this.OpName = opName;
-            this.A = new Input("a", aIn.Type);
-            this.B = new Input("b", bIn.Type);
+            this.A = new Input(this, aIn.Type);
+            this.B = new Input(this, bIn.Type);
 
             aIn.ConnectToInput(A);
             bIn.ConnectToInput(B);
@@ -33,6 +33,11 @@ namespace ChiselDebug.GraphFIR
 
             A.InferType();
             B.InferType();
+
+            if (B.Type is UnknownType)
+            {
+                B.InferType();
+            }
 
             Result.SetType(BiArgInferType());
         }

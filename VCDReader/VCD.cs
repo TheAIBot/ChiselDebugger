@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using VCDReader.Parsing;
 
 namespace VCDReader
 {
-    public class VCD
+    public class VCD : IDisposable
     {
         public readonly List<IDeclCmd> Declarations;
         private readonly Dictionary<string, VarDef> IDToVariable;
@@ -34,6 +35,11 @@ namespace VCDReader
             {
                 yield return Visitor.VisitSimCmd(Lexer, IDToVariable);
             }
+        }
+
+        public void Dispose()
+        {
+            Lexer.Dispose();
         }
     }
 }

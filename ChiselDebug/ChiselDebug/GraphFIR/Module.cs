@@ -10,7 +10,9 @@ namespace ChiselDebug.GraphFIR
     {
         public readonly string Name;
         public List<FIRRTLNode> Nodes = new List<FIRRTLNode>();
-        private Dictionary<string, Connection> NameToConnection = new Dictionary<string, Connection>();
+        private readonly Dictionary<string, FIRIO> NameToIO = new Dictionary<string, FIRIO>();
+        private readonly Dictionary<IOBundle, Module> BundleToModule = new Dictionary<IOBundle, Module>();
+        
 
         public Module(string name)
         {
@@ -20,65 +22,62 @@ namespace ChiselDebug.GraphFIR
         public void AddNode(FIRRTLNode node)
         {
             Nodes.Add(node);
-        }
-
-        public void AddOutputRename(string name, Output output)
-        {
-            NameToConnection.Add(name, output.Con);
-        }
-
-        public void FinishModuleSetup()
-        {
-            foreach (var node in Nodes)
+            foreach (var input in node.GetInputs())
             {
-                if (node is FIRRTLPrimOP prim)
+                if (!input.IsAnonymous)
                 {
-                    NameToConnection.Add(prim.Result.Name, prim.Result.Con);
+                    NameToIO.Add(input.Name, input);
+                }
+            }
+            foreach (var output in node.GetOutputs())
+            {
+                if (!output.IsAnonymous)
+                {
+                    NameToIO.Add(output.Name, output);
+                }
+            }
+        }
+
+        public void AddModule(Module mod, string bundleName)
+        {
+            Nodes.Add(mod);
+
+            IOBundle bundle = new IOBundle(bundleName, mod.ExternalIO.Values.ToList(), false);
+            NameToIO.Add(bundleName, bundle);
+            BundleToModule.Add(bundle, mod);
+        }
+
+        public void AddIORename(string name, FIRIO io)
+        {
+            NameToIO.Add(name, io);
+        }
+
+        public override IContainerIO GetIO(string ioName, bool modulesOnly = false)
+        {
+            if (NameToIO.TryGetValue(ioName, out FIRIO innerIO))
+            {
+                if (modulesOnly && innerIO is IOBundle bundle)
+                {
+                    return BundleToModule[bundle];
                 }
                 else
                 {
-                    foreach (var output in node.GetOutputs())
-                    {
-                        NameToConnection.Add(output.Name, output.Con);
-                    }
+                    return innerIO;
                 }
             }
 
-            foreach (var output in ExternalOutputs)
+            if (InternalIO.TryGetValue(ioName, out FIRIO io))
             {
-                NameToConnection.Add(output.Name, output.Con);
+                return io;
             }
-            foreach (var output in InternalOutputs)
-            {
-                NameToConnection.Add(output.Name, output.Con);
-            }
-        }
 
-        public Connection GetConnection(Span<Scope> scopes, string connectionName)
-        {
-            if (scopes.IsEmpty)
-            {
-                return NameToConnection[connectionName];
-            }
-            else
-            {
-                Scope scope = scopes[0];
-                if (scope.Type == ScopeType.Module)
-                {
-                    Module mod = (Module)Nodes.First(x => x is Module mod && mod.Name == scope.Name);
-                    return mod.GetConnection(scopes.Slice(1), connectionName);
-                }
-                else
-                {
-                    throw new NotImplementedException();
-                }
-            }
+            throw new Exception($"Failed to find io. IO name: {ioName}");
         }
 
         public List<Connection> GetAllModuleConnections()
         {
             List<Connection> connestions = new List<Connection>();
-            foreach (var output in InternalOutputs)
+            foreach (var output in GetInternalOutputs())
             {
                 if (output.Con.IsUsed())
                 {
@@ -98,11 +97,6 @@ namespace ChiselDebug.GraphFIR
             }
 
             return connestions;
-        }
-
-        public Input GetInternalInput(string name)
-        {
-            return InternalInputs.Find(x => x.Name == name);
         }
 
         public FIRRTLNode[] GetAllNodes()

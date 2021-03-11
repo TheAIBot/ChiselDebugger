@@ -6,6 +6,7 @@
 
 @inject IJSRuntime JS
 @inherits ManualRenderBase
+@implements IDisposable
 
 <CascadingValue Value="@DebugCtrl" Name="DebugCtrl" IsFixed="true">
     @if (DebugCtrl.Timeline != null)
@@ -15,10 +16,7 @@
 
     <div style="height:20px;" />
     <div id="@DragEventID" class="Circuit" style="transform: translate(@CircuitOffset.X.ToPixels(), @CircuitOffset.Y.ToPixels()) scale(@CircuitScale.ToHtmlNumber());" @onwheel="HandleScroll">
-        @foreach (var modulePos in ModulePositions)
-        {
-            <ModuleUI PosOp="@modulePos" />
-        }
+        <ModuleUI PosOp="@ModulePosition" />
     </div>
 </CascadingValue>
 
@@ -26,26 +24,25 @@
 {
 
     private DebugController DebugCtrl;
-    private List<Positioned<ChiselDebug.GraphFIR.Module>> ModulePositions = new List<Positioned<ChiselDebug.GraphFIR.Module>>();
+    private Positioned<ChiselDebug.GraphFIR.Module> ModulePosition;
     private float CircuitScale = 1.0f;
-    private Point CircuitOffset = new Point(0, 0);
+    private Point CircuitOffset = Point.Zero;
     private readonly string DragEventID = UniqueID.UniqueHTMLID();
 
     protected override void OnInitialized()
     {
         //var circuit = FIRRTL.Parse.FromFile("Examples/MovingAveragePow2.lo.fir");
-        //var vcd = VCDReader.Parse.FromFile("Examples/MovingAveragePow2.vcd");
-        var circuit = FIRRTL.Parse.FromFile("Examples/RegFileVec.lo.fir");
-        var vcd = VCDReader.Parse.FromFile("Examples/RegFileVec.vcd");
-        //var circuit = FIRRTL.Parse.FromFile("Examples/FSM.lo.fir");
-        //VCD vcd = null;
+        //using var vcd = VCDReader.Parse.FromFile("Examples/MovingAveragePow2.vcd");
+        //var circuit = FIRRTL.Parse.FromFile("Examples/RegFileVec.lo.fir");
+        //using var vcd = VCDReader.Parse.FromFile("Examples/RegFileVec.vcd");
+        var circuit = FIRRTL.Parse.FromFile("Examples/FSMDatapath.lo.fir");
+        using VCD vcd = VCDReader.Parse.FromFile("Examples/FSMDatapath.vcd");
         CircuitGraph graph = CircuitToGraph.GetAsGraph(circuit);
         graph.InferTypes();
 
         DebugCtrl = new DebugController(graph, vcd);
-        DebugCtrl.OnReRender += () => InvokeAsync(StateHasChanged);
 
-        ModulePositions.Add(new Positioned<ChiselDebug.GraphFIR.Module>(new Point(0, 0), graph.Modules[0]));
+        ModulePosition = new Positioned<ChiselDebug.GraphFIR.Module>(Point.Zero, graph.MainModule);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -74,5 +71,10 @@
     {
         CircuitOffset += dragged;
         StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        DebugCtrl.Dispose();
     }
 }

@@ -10,20 +10,17 @@ namespace ChiselDebug
     public class CircuitGraph
     {
         public readonly string Name;
-        public readonly List<Module> Modules = new List<Module>();
+        public readonly Module MainModule;
 
-        public CircuitGraph(string name, List<Module> modules)
+        public CircuitGraph(string name, Module mainModule)
         {
             this.Name = name;
-            this.Modules = modules;
+            this.MainModule = mainModule;
         }
 
         public void InferTypes()
         {
-            foreach (var mod in Modules)
-            {
-                mod.InferType();
-            }
+            MainModule.InferType();
         }
 
         public List<Connection> SetState(CircuitState state)
@@ -34,10 +31,21 @@ namespace ChiselDebug
                 Scope scope = varValue.Variable.Scopes[0];
                 if (scope.Type == ScopeType.Module)
                 {
-                    Module mod = Modules.First(x => x.Name == scope.Name);
-                    Connection con = mod.GetConnection(varValue.Variable.Scopes.AsSpan().Slice(1), varValue.Variable.Reference);
+                    string[] modulePath = varValue.Variable.Scopes.Skip(1).Select(x => x.Name).ToArray();
+                    IContainerIO moduleIO = ((IContainerIO)MainModule).GetIO(modulePath, true);
+                    IContainerIO ioLink = moduleIO.GetIO(varValue.Variable.Reference);
 
-                    if (con.Value.UpdateValue(varValue))
+                    //Apparently if a module contains an instance of another module
+                    //then it will also have a wire with the instance name in the vcd
+                    //file. Ends up with a bundle when this happens so just ignore the
+                    //change.
+                    if (ioLink is IOBundle)
+                    {
+                        continue;
+                    }
+                    Connection con = ((ScalarIO)ioLink).Con;
+
+                    if (con != null && con.Value.UpdateValue(varValue))
                     {
                         consWithChanges.Add(con);
                     }

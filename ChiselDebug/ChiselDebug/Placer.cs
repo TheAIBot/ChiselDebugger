@@ -72,7 +72,7 @@ namespace ChiselDebug
                 }
 
                 List<Node<FIRRTLNode>> modInputNodes = new List<Node<FIRRTLNode>>();
-                foreach (var input in Mod.InternalInputs)
+                foreach (var input in Mod.GetInternalInputs())
                 {
                     if (input.Con == null)
                     {
@@ -84,7 +84,7 @@ namespace ChiselDebug
                     modInputNodes.Add(modInputNode);
                 }
                 List<Node<FIRRTLNode>> modOutputNodes = new List<Node<FIRRTLNode>>();
-                foreach (var output in Mod.InternalOutputs)
+                foreach (var output in Mod.GetInternalOutputs())
                 {
                     if (!output.Con.IsUsed())
                     {
@@ -124,17 +124,47 @@ namespace ChiselDebug
                 }
 
                 {
+                    int[] largestSizeInX = placement
+                        .GroupBy(x => x.Value.X)
+                        .OrderBy(x => x.Key)
+                        .Select(x => x
+                            .Select(y => NodeSizes[y.Key.Value].X)
+                            .Aggregate(Math.Max))
+                        .ToArray();
+
                     int minXOrdering = placement.Values.Min(x => x.X);
                     int minYOrdering = placement.Values.Min(x => x.Y);
-                    foreach (var node in placement.Keys)
-                    {
-                        Point size = NodeSizes[node.Value];
-                        Point nodePos = placement[node];
-                        int xOrder = nodePos.X - minXOrdering;
-                        int yOrder = nodePos.Y - minYOrdering;
+                    Node<FIRRTLNode>[][] nodePlacements = placement
+                        .GroupBy(x => x.Value.X)
+                        .OrderBy(x => x.Key)
+                        .Select(x => x
+                            .OrderBy(y => y.Value.Y)
+                            .Select(y => y.Key)
+                            .ToArray())
+                        .ToArray();
 
-                        Point pos = new Point(50 + xOrder * 150, 30 + yOrder * 150);
-                        placments.AddNodePlacement(node.Value, new Rectangle(pos, size));
+                    int xOffset = 50;
+                    for (int x = 0; x < nodePlacements.Length; x++)
+                    {
+                        int yOffset = 50;
+                        int largestWidth = 0;
+                        for (int y = 0; y < nodePlacements[x].Length; y++)
+                        {
+                            Node<FIRRTLNode> node = nodePlacements[x][y];
+
+                            Point offset = new Point(xOffset, yOffset);
+                            Point padding = new Point(200, 100);
+                            Point pos = offset + padding;
+                            Point size = NodeSizes[node.Value];
+                            Point paddedSize = size + padding;
+
+                            placments.AddNodePlacement(node.Value, new Rectangle(pos, NodeSizes[node.Value]));
+
+                            largestWidth = Math.Max(largestWidth, paddedSize.X);
+                            yOffset += paddedSize.Y;
+                        }
+
+                        xOffset += largestWidth;
                     }
                 }
 
@@ -368,19 +398,22 @@ namespace ChiselDebug
 
         public void SetNodeSize(FIRRTLNode node, Point size)
         {
-            //If the size hasn't changed then there is no need to
-            //do anything at all as the result will be the same
-            if (NodeSizes.TryGetValue(node, out var oldSize) && oldSize == size)
+            lock (this)
             {
-                return;
-            }
+                //If the size hasn't changed then there is no need to
+                //do anything at all as the result will be the same
+                if (NodeSizes.TryGetValue(node, out var oldSize) && oldSize == size)
+                {
+                    return;
+                }
 
-            NodeSizes[node] = size;
+                NodeSizes[node] = size;
 
-            MissingNodeDims.Remove(node);
-            if (MissingNodeDims.Count == 0)
-            {
-                OnReadyToPlaceNodes?.Invoke();
+                MissingNodeDims.Remove(node);
+                if (MissingNodeDims.Count == 0)
+                {
+                    OnReadyToPlaceNodes?.Invoke();
+                }
             }
         }
     }
@@ -389,7 +422,7 @@ namespace ChiselDebug
     {
         public readonly List<Positioned<FIRRTLNode>> NodePositions = new List<Positioned<FIRRTLNode>>();
         public readonly Dictionary<FIRRTLNode, Rectangle> UsedSpace = new Dictionary<FIRRTLNode, Rectangle>();
-        public Point SpaceNeeded { get; private set; } = new Point(0, 0);
+        public Point SpaceNeeded { get; private set; } = Point.Zero;
 
         internal void AddNodePlacement(FIRRTLNode node, Rectangle shape)
         {

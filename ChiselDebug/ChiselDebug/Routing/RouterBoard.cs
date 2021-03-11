@@ -18,10 +18,8 @@ namespace ChiselDebug.Routing
 
         public RouterBoard(Point neededBoardSize)
         {
-            Point extra = new Point(20, 20);
-
-            this.TopLeft = -extra;
-            this.BottomRight = neededBoardSize + extra;
+            this.TopLeft = Point.Zero;
+            this.BottomRight = neededBoardSize;
 
             Point boardSize = BottomRight - TopLeft;
             this.CellsWide = CeilDiv(boardSize.X, CellSize) + 1;
@@ -222,7 +220,6 @@ namespace ChiselDebug.Routing
             List<Point> allBoardPoses = new List<Point>();
             List<Point> boardPosTurns = new List<Point>();
 
-            Point zero = new Point(0, 0);
             MoveDirs prevDir = MoveDirs.None;
             Point boardPos = end;
             Point actualPos = end * CellSize + TopLeft;
@@ -238,7 +235,7 @@ namespace ChiselDebug.Routing
                 }
                 prevDir = path.DirFrom;
                 boardPos = path.DirFrom.MovePoint(boardPos);
-                actualPos = actualPos + path.DirFrom.MovePoint(zero) * CellSize;
+                actualPos = actualPos + path.DirFrom.MovePoint(Point.Zero) * CellSize;
             }
 
             allBoardPoses.Add(start);

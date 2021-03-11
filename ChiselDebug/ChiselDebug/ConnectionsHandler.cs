@@ -25,13 +25,16 @@ namespace ChiselDebug
 
         public void UpdateIOFromNode(FIRRTLNode node, List<DirectedIO> inputOffsets, List<DirectedIO> outputOffsets)
         {
-            foreach (var inputPos in inputOffsets)
+            lock (this)
             {
-                IOInfos[inputPos.IO] = new IOInfo(node, inputPos);
-            }
-            foreach (var inputPos in outputOffsets)
-            {
-                IOInfos[inputPos.IO] = new IOInfo(node, inputPos);
+                foreach (var inputPos in inputOffsets)
+                {
+                    IOInfos[inputPos.IO] = new IOInfo(node, inputPos);
+                }
+                foreach (var inputPos in outputOffsets)
+                {
+                    IOInfos[inputPos.IO] = new IOInfo(node, inputPos);
+                }
             }
         }
 
@@ -42,7 +45,7 @@ namespace ChiselDebug
             {
                 nodePoses.Add(nodePos.Value, nodePos.Position);
             }
-            nodePoses.Add(Mod, new Point(0, 0));
+            nodePoses.Add(Mod, Point.Zero);
 
             List<(IOInfo start, IOInfo end)> lines = new List<(IOInfo start, IOInfo end)>();
             foreach (var connection in UsedModuleConnections)

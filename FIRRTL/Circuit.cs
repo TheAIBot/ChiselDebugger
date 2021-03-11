@@ -214,9 +214,9 @@ namespace FIRRTL
 
 
 
-    public record DefModule() : FirrtlNode, IsDeclaration;
+    public record DefModule(string Name) : FirrtlNode, IsDeclaration;
     public record Port(IInfo Info, string Name, Dir Direction, IFIRType Type) : FirrtlNode, IsDeclaration;
-    public record Module(IInfo Info, string Name, List<Port> Ports, Statement Body) : DefModule;
-    public record ExtModule(IInfo Info, string Name, List<Port> Ports, string DefName, List<Param> Params) : DefModule;
+    public record Module(IInfo Info, string Name, List<Port> Ports, Statement Body) : DefModule(Name);
+    public record ExtModule(IInfo Info, string Name, List<Port> Ports, string DefName, List<Param> Params) : DefModule(Name);
     public record Circuit(IInfo Info, List<DefModule> Modules, string Main) : FirrtlNode;
 }

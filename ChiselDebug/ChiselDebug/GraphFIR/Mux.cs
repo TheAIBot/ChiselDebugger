@@ -7,12 +7,13 @@ namespace ChiselDebug.GraphFIR
 {
     public class Mux : FIRRTLPrimOP
     {
-        public List<Input> Choises = new List<Input>();
-        public Input Decider = new Input("Selector", new FIRRTL.UIntType(1));
+        public readonly Input[] Choises;
+        public readonly Input Decider;
 
         public Mux(List<IFIRType> choiseTypes, IFIRType outType) : base(outType)
         {
-            Choises = choiseTypes.Select(x => new Input(x)).ToList();
+            this.Choises = choiseTypes.Select(x => new Input(this, x)).ToArray();
+            this.Decider = new Input(this, new FIRRTL.UIntType(1));
         }
 
         public override Input[] GetInputs()
@@ -25,12 +26,11 @@ namespace ChiselDebug.GraphFIR
 
         public override void InferType()
         {
-            if (Choises.First().Type is not FIRRTL.UnknownType)
+            foreach (var input in Choises)
             {
-                return;
+                input.InferType();
             }
-
-            Choises.First().InferType();
+            Decider.InferType();
 
             Result.SetType(Choises.First().Type);
         }

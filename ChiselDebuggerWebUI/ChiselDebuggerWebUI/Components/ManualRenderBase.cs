@@ -18,10 +18,15 @@ namespace ChiselDebuggerWebUI.Components
             return doRender;
         }
 
-        protected new void StateHasChanged()
+        public new void StateHasChanged()
         {
             HasToRender = true;
             base.StateHasChanged();
+        }
+
+        public void InvokestateHasChanged()
+        {
+            InvokeAsync(StateHasChanged);
         }
 
         protected override Task OnParametersSetAsync()
