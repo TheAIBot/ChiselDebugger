@@ -15,31 +15,9 @@ JSUtils.getElementPosition = function (element) {
     return new ElemWH(elemRect.left, elemRect.top);
 }
 
-JSUtils.addScrollListener = function (elementID) {
-    var isScrollQueued = false;
-    var scrollDelta = 0;
 
-    document.getElementById(elementID).addEventListener("wheel", function (e) {
-        if (e.deltaY > 0) {
-            scrollDelta++;
-        }
-        else {
-            scrollDelta--;
-        }
 
-        if (!isScrollQueued) {
-            isScrollQueued = true;
 
-            window.requestAnimationFrame(function () {
-                isScrollQueued = false;
-
-                let delta = scrollDelta;
-                scrollDelta = 0;
-
-                DotNet.invokeMethodAsync("ChiselDebuggerWebUI", "ScrollEventAsync", elementID, delta);
-            });
-        }
-    });
 }
 
 JSUtils.addDragListener = function (elementID) {
