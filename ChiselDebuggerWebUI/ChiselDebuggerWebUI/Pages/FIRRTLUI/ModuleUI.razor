@@ -1,7 +1,7 @@
 ﻿@inherits FIRBase<Module>
 @implements IDisposable
 
-<div class="module"  @ref="SizeWatcher" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();">
+<div id="@SizeWatcherID" class="module" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();">
     @*<div class="moduleHeader">
         <h2>@Operation.Name</h2>
     </div>*@

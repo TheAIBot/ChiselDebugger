@@ -34,7 +34,7 @@ namespace ChiselDebuggerWebUI.Components
 
         private Point PreviousSize = Point.Zero;
         private int RenderCounter = 0;
-        protected ElementReference SizeWatcher;
+        protected readonly string SizeWatcherID = UniqueID.UniqueHTMLID();
         protected List<DirectedIO> InputOffsets = new List<DirectedIO>();
         protected List<DirectedIO> OutputOffsets = new List<DirectedIO>();
 
@@ -60,18 +60,18 @@ namespace ChiselDebuggerWebUI.Components
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            ElemWH elemWH = await JS.InvokeAsync<ElemWH>("JSUtils.getElementSize", SizeWatcher);
-            Point newSize = elemWH.ToPoint();
-            
-            //Ignore size changes when they are too small to matter
-            bool sizeChanged = !PreviousSize.ApproxEquals(newSize, 1);
-            PreviousSize = newSize;
-            if (sizeChanged)
+            if (firstRender)
             {
-                OnResize(newSize.X, newSize.Y);
+                await JSEvents.AddResizeListener(JS, SizeWatcherID, JSOnResize);
             }
 
             //Debug.WriteLine($"Render: {typeof(T)} sizeChange: {sizeChanged}, Count: {RenderCounter++}");
+        }
+
+        private void JSOnResize(ElemWH size)
+        {
+            PreviousSize = size.ToPoint();
+            OnResize(PreviousSize.X, PreviousSize.Y);
         }
 
         public void PrepareForRender()

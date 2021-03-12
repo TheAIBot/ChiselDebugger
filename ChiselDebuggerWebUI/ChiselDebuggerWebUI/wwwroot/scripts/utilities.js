@@ -3,6 +3,12 @@
         this.Width = width;
         this.Height = height;
     }
+
+    approxEquals(other) {
+        const allowedDelta = 1;
+        return this.Width  - allowedDelta <= other.Width  && other.Width  <= this.Width  + allowedDelta &&
+               this.Height - allowedDelta <= other.Height && other.Height <= this.Height + allowedDelta;
+    }
 }
 
 
@@ -15,9 +21,28 @@ JSUtils.getElementPosition = function (element) {
     return new ElemWH(elemRect.left, elemRect.top);
 }
 
+const oldSizes = {};
+const reObserver = new ResizeObserver(entries => {
+    for (let entry of entries) {
+        onElemResize(entry.target);
+    }
+});
 
+function onElemResize(element) {
+    const elementID = element.id;
 
+    const oldSize = oldSizes[elementID];
+    const newSize = JSUtils.getElementSize(element);
 
+    if (!oldSize.approxEquals(newSize)) {
+        oldSizes[elementID] = newSize;
+        DotNet.invokeMethodAsync("ChiselDebuggerWebUI", "ResizeEventAsync", elementID, newSize);
+    }
+}
+
+JSUtils.addResizeListener = function (elementID) {
+    oldSizes[elementID] = new ElemWH(0, 0);
+    reObserver.observe(document.getElementById(elementID));
 }
 
 JSUtils.addDragListener = function (elementID) {

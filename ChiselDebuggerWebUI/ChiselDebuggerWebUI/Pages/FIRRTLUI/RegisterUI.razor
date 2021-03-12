@@ -1,6 +1,6 @@
 ﻿@inherits FIRBase<Register>
 
-<div class="register" @ref="SizeWatcher" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();min-width:@HEIGHT.ToPixels();min-height;@WIDTH.ToPixels();">
+<div id="@SizeWatcherID" class="register" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();min-width:@HEIGHT.ToPixels();min-height;@WIDTH.ToPixels();">
     <div style="padding:5px;">@Operation.Name</div>
 
     @foreach (var input in InputOffsets)
