@@ -9,18 +9,20 @@
 @implements IDisposable
 
 <CascadingValue Value="@DebugCtrl" Name="DebugCtrl" IsFixed="true">
-    @if (DebugCtrl.Timeline != null)
-    {
-        <TimelineUI />
-    }
+    <div id="@CircuitContainerID">
+        @if (DebugCtrl.Timeline != null)
+        {
+            <TimelineUI />
+        }
 
-    <div style="height:20px;" />
-    <div id="@DragEventID" @ref="CircuitContainer" style="
+        <div style="height:20px;" />
+        <div id="@DragEventID" @ref="CircuitContainer" style="
         width: calc(100vw - @CircuitTopLeftParent.X.ToPixels());
         height: calc(100vh - @CircuitTopLeftParent.Y.ToPixels());
         overflow: hidden;">
-        <div class="Circuit" style="transform: translate(@CircuitOffset.X.ToPixels(), @CircuitOffset.Y.ToPixels()) scale(@CircuitScale.ToHtmlNumber());" @onwheel="HandleScroll">
-            <ModuleUI PosOp="@ModulePosition" />
+            <div class="Circuit" style="transform: translate(@CircuitOffset.X.ToPixels(), @CircuitOffset.Y.ToPixels()) scale(@CircuitScale.ToHtmlNumber());" @onwheel="HandleScroll">
+                <ModuleUI PosOp="@ModulePosition" />
+            </div>
         </div>
     </div>
 </CascadingValue>
@@ -35,7 +37,9 @@
 
     private ElementReference CircuitContainer;
     private readonly string DragEventID = UniqueID.UniqueHTMLID();
+
     private Point CircuitTopLeftParent = Point.Zero;
+    private readonly string CircuitContainerID = UniqueID.UniqueHTMLID();
 
     protected override void OnInitialized()
     {
@@ -58,10 +62,15 @@
         if (firstRender)
         {
             await JSEvents.AddDragListener(JS, DragEventID, x => InvokeAsync(() => HandleDrag(x)));
-            CircuitTopLeftParent = (await JS.InvokeAsync<ElemWH>("JSUtils.getElementPosition", CircuitContainer)).ToPoint();
+            await JSEvents.AddResizeListener(JS, CircuitContainerID, PageResized);
         }
 
         await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private async void PageResized(ElemWH size)
+    {
+        CircuitTopLeftParent = (await JS.InvokeAsync<ElemWH>("JSUtils.getElementPosition", CircuitContainer)).ToPoint();
     }
 
     private void HandleScroll(WheelEventArgs args)
