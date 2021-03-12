@@ -15,7 +15,7 @@
     </div>
     <div class="timelineRangeContent">
         <div class="ticksPadding">
-            <div class="rangeSelect" @ref="RangeDiv" @onmousedown="RangeSelectStarted" @ondblclick="ResetRange">
+            <div id="@RangeDivID" class="rangeSelect" @ref="RangeDiv" @onmousedown="RangeSelectStarted" @ondblclick="ResetRange">
                 <div class="rangeStart" style="width: @GetPixels(Math.Min(StartRangeSelect, EndRangeSelect)).ToPixels();"></div>
                 <div class="rangeStop" style="left: @GetPixels(Math.Max(StartRangeSelect, EndRangeSelect)).ToPixels();"></div>
             </div>
@@ -51,7 +51,8 @@
     private double RangeParentWidth;
     private ulong StartRangeSelect;
     private ulong EndRangeSelect;
-    protected ElementReference RangeDiv;
+    private ElementReference RangeDiv;
+    private readonly string RangeDivID = UniqueID.UniqueHTMLID();
 
     private ulong CurrTime;
     private ulong StartTime;
@@ -93,12 +94,18 @@
     {
         if (firstRender)
         {
-            RangeParentStartX = (await JS.InvokeAsync<ElemWH>("JSUtils.getElementPosition", RangeDiv)).Width;
-            RangeParentWidth = (await JS.InvokeAsync<ElemWH>("JSUtils.getElementSize", RangeDiv)).Width;
-            StateHasChanged();
+            await JSEvents.AddResizeListener(JS, RangeDivID, RangeResized);
         }
 
         await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private async void RangeResized(ElemWH size)
+    {
+        RangeParentStartX = (await JS.InvokeAsync<ElemWH>("JSUtils.getElementPosition", RangeDiv)).Width;
+        RangeParentWidth = size.Width;
+
+        StateHasChanged();
     }
 
     private void MakeTimeTicks()
