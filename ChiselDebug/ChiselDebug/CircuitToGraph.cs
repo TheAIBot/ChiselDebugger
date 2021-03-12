@@ -87,9 +87,9 @@ namespace ChiselDebug
             }
         }
 
-        private static List<GraphFIR.FIRIO> VisitType(VisitHelper helper, FIRRTL.Dir direction, string name, FIRRTL.IFIRType type)
+        private static List<GraphFIR.IO.FIRIO> VisitType(VisitHelper helper, FIRRTL.Dir direction, string name, FIRRTL.IFIRType type)
         {
-            List<GraphFIR.FIRIO> io = new List<GraphFIR.FIRIO>();
+            List<GraphFIR.IO.FIRIO> io = new List<GraphFIR.IO.FIRIO>();
             if (type is FIRRTL.BundleType bundle)
             {
                 io.Add(VisitBundle(helper, direction, name, bundle));
@@ -101,7 +101,7 @@ namespace ChiselDebug
 
             if (direction == FIRRTL.Dir.Input)
             {
-                io.Add(new GraphFIR.Input(null, name, type));
+                io.Add(new GraphFIR.IO.Input(null, name, type));
 
                 //VCD may keep track of the previous clock cycle value even if it doesn't use it.
                 //To keep in line with supporting everything in the VCD, an input representing
@@ -109,27 +109,27 @@ namespace ChiselDebug
                 //a CircuitState from VCD.
                 if (type is FIRRTL.ClockType)
                 {
-                    io.Add(new GraphFIR.Input(null, name + "/prev", type));
+                    io.Add(new GraphFIR.IO.Input(null, name + "/prev", type));
                 }
             }
             else
             {
-                io.Add(new GraphFIR.Output(null, name, type));
+                io.Add(new GraphFIR.IO.Output(null, name, type));
             }
 
             return io;
         }
 
-        private static GraphFIR.FIRIO VisitBundle(VisitHelper helper, FIRRTL.Dir direction, string bundleName, FIRRTL.BundleType bundle)
+        private static GraphFIR.IO.FIRIO VisitBundle(VisitHelper helper, FIRRTL.Dir direction, string bundleName, FIRRTL.BundleType bundle)
         {
-            List<GraphFIR.FIRIO> io = new List<GraphFIR.FIRIO>();
+            List<GraphFIR.IO.FIRIO> io = new List<GraphFIR.IO.FIRIO>();
             foreach (var field in bundle.Fields)
             {
                 FIRRTL.Dir fieldDir = direction.Flip(field.Flip);
                 io.AddRange(VisitType(helper, fieldDir, field.Name, field.Type));
             }
 
-            return new GraphFIR.IOBundle(bundleName, io);
+            return new GraphFIR.IO.IOBundle(bundleName, io);
         }
 
         private static void VisitStatement(VisitHelper helper, FIRRTL.Statement statement)
@@ -164,15 +164,15 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.Connect connect)
             {
-                GraphFIR.FIRIO from = VisitExp(helper, connect.Expr);
+                GraphFIR.IO.FIRIO from = VisitExp(helper, connect.Expr);
 
-                GraphFIR.FIRIO to;
+                GraphFIR.IO.FIRIO to;
                 if (connect.Loc is FIRRTL.Reference firRef)
                 {
                     //The name for a register input is special because /in
                     //is added to the name in the vcd file. If name is a register
                     //then set name to register input name.
-                    if (helper.Mod.GetIO(firRef.Name) is GraphFIR.Output maybeRegOut &&
+                    if (helper.Mod.GetIO(firRef.Name) is GraphFIR.IO.Output maybeRegOut &&
                         maybeRegOut.Node != null &&
                         maybeRegOut.Node is GraphFIR.Register reg)
                     {
@@ -180,12 +180,12 @@ namespace ChiselDebug
                     }
                     else
                     {
-                        to = (GraphFIR.FIRIO)helper.Mod.GetIO(firRef.Name);
+                        to = (GraphFIR.IO.FIRIO)helper.Mod.GetIO(firRef.Name);
                     }
                 }
                 else
                 {
-                    to = (GraphFIR.FIRIO)VisitRef(helper, connect.Loc, helper.Mod);
+                    to = (GraphFIR.IO.FIRIO)VisitRef(helper, connect.Loc, helper.Mod);
                 }
 
                 from.ConnectToInput(to);
@@ -212,7 +212,7 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.DefRegister reg)
             {
-                var clock = (GraphFIR.Output)VisitExp(helper, reg.Clock);
+                var clock = (GraphFIR.IO.Output)VisitExp(helper, reg.Clock);
                 GraphFIR.Register register;
 
                 //if it has no reset then it also has no init value
@@ -222,8 +222,8 @@ namespace ChiselDebug
                 }
                 else
                 {
-                    var reset = (GraphFIR.Output)VisitExp(helper, reg.Reset);
-                    var initValue = (GraphFIR.Output)VisitExp(helper, reg.Init);
+                    var reset = (GraphFIR.IO.Output)VisitExp(helper, reg.Reset);
+                    var initValue = (GraphFIR.IO.Output)VisitExp(helper, reg.Init);
                     register = new GraphFIR.Register(reg.Name, clock, reset, initValue, reg.Type);
                 }
 
@@ -255,11 +255,11 @@ namespace ChiselDebug
             }
         }
 
-        private static GraphFIR.FIRIO VisitExp(VisitHelper helper, FIRRTL.Expression exp)
+        private static GraphFIR.IO.FIRIO VisitExp(VisitHelper helper, FIRRTL.Expression exp)
         {
             if (exp is FIRRTL.RefLikeExpression)
             {
-                return (GraphFIR.FIRIO)VisitRef(helper, exp, helper.Mod);
+                return (GraphFIR.IO.FIRIO)VisitRef(helper, exp, helper.Mod);
             }
 
             if (exp is FIRRTL.Literal lit)
@@ -271,7 +271,7 @@ namespace ChiselDebug
             }
             else if (exp is FIRRTL.DoPrim prim)
             {
-                var args = prim.Args.Select(x => VisitExp(helper, x)).Cast<GraphFIR.Output>().ToArray();
+                var args = prim.Args.Select(x => VisitExp(helper, x)).Cast<GraphFIR.IO.Output>().ToArray();
                 GraphFIR.FIRRTLPrimOP nodePrim;
                 if (prim.Op is FIRRTL.Add)
                 {
@@ -351,9 +351,9 @@ namespace ChiselDebug
             }
             else if (exp is FIRRTL.Mux mux)
             {
-                var cond = (GraphFIR.Output)VisitExp(helper, mux.Cond);
-                var ifTrue = (GraphFIR.Output)VisitExp(helper, mux.TrueValue);
-                var ifFalse = (GraphFIR.Output)VisitExp(helper, mux.FalseValue);
+                var cond = (GraphFIR.IO.Output)VisitExp(helper, mux.Cond);
+                var ifTrue = (GraphFIR.IO.Output)VisitExp(helper, mux.TrueValue);
+                var ifFalse = (GraphFIR.IO.Output)VisitExp(helper, mux.FalseValue);
 
                 GraphFIR.Mux node = new GraphFIR.Mux(new List<FIRRTL.IFIRType>() { ifTrue.Type, ifFalse.Type }, mux.Type);
                 cond.ConnectToInput(node.Decider);
@@ -365,8 +365,8 @@ namespace ChiselDebug
             }
             else if (exp is FIRRTL.ValidIf validIf)
             {
-                var cond = (GraphFIR.Output)VisitExp(helper, validIf.Cond);
-                var ifValid = (GraphFIR.Output)VisitExp(helper, validIf.Value);
+                var cond = (GraphFIR.IO.Output)VisitExp(helper, validIf.Cond);
+                var ifValid = (GraphFIR.IO.Output)VisitExp(helper, validIf.Value);
 
                 GraphFIR.Mux node = new GraphFIR.Mux(new List<FIRRTL.IFIRType>() { ifValid.Type }, validIf.Type);
                 cond.ConnectToInput(node.Decider);
@@ -381,7 +381,7 @@ namespace ChiselDebug
             }
         }
 
-        private static GraphFIR.IContainerIO VisitRef(VisitHelper helper, FIRRTL.Expression exp, GraphFIR.IContainerIO currContainer)
+        private static GraphFIR.IO.IContainerIO VisitRef(VisitHelper helper, FIRRTL.Expression exp, GraphFIR.IO.IContainerIO currContainer)
         {
             if (exp is FIRRTL.Reference reference)
             {

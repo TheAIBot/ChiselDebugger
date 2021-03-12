@@ -5,6 +5,7 @@ using System.Text;
 using ChiselDebug.Graphing;
 using System.Linq;
 using System.Diagnostics;
+using ChiselDebug.GraphFIR.IO;
 
 namespace ChiselDebug
 {
