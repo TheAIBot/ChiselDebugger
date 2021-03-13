@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 
 namespace ChiselDebug.GraphFIR.IO
 {
@@ -22,6 +23,15 @@ namespace ChiselDebug.GraphFIR.IO
         public void SetBundle(IOBundle bundle)
         {
             Bundle = bundle;
+        }
+
+        public virtual FIRIO GetInput()
+        {
+            throw new Exception("Can't get input from this IO.");
+        }
+        public virtual FIRIO GetOutput()
+        {
+            throw new Exception("Can't get output from this IO.");
         }
 
         public abstract void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false);

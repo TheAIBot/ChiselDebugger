@@ -19,6 +19,11 @@ namespace ChiselDebug.GraphFIR.IO
             Con.Value = new ValueType(type);
         }
 
+        public override FIRIO GetOutput()
+        {
+            return this;
+        }
+
         public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false)
         {
             if (input is Input ioIn)

@@ -16,6 +16,11 @@ namespace ChiselDebug.GraphFIR.IO
             Type = type;
         }
 
+        public override FIRIO GetInput()
+        {
+            return this;
+        }
+
         public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false)
         {
             throw new Exception("Input can't be connected to output. Flow is reversed.");

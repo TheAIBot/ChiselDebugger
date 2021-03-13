@@ -24,6 +24,16 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
+        public override FIRIO GetInput()
+        {
+            return this;
+        }
+
+        public override FIRIO GetOutput()
+        {
+            return this;
+        }
+
         public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false)
         {
             if (input is not IOBundle)
