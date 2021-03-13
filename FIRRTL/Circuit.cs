@@ -192,7 +192,7 @@ namespace FIRRTL
     public record Connect(IInfo Info, Expression Loc, Expression Expr) : Statement;
     public record PartialConnect(IInfo Info, Expression Loc, Expression Expr) : Statement;
     public record IsInvalid(IInfo Info, Expression Expr) : Statement;
-    public record CDefMemory(IInfo Info, string Name, IFIRType Type, BigInteger Size, bool Sequence, ReadUnderWrite Ruw) : Statement;
+    public record CDefMemory(IInfo Info, string Name, IFIRType Type, ulong Size, bool Sequence, ReadUnderWrite Ruw) : Statement;
     public record CDefMPort(IInfo Info, string Name, IFIRType Type, string Mem, List<Expression> Exps, MPortDir Direction) : Statement;
 
     public interface IsDeclaration { }
@@ -204,7 +204,7 @@ namespace FIRRTL
         IInfo Info,
         string Name,
         IFIRType Type,
-        BigInteger Depth,
+        ulong Depth,
         int WriteLatency,
         int ReadLatency,
         List<string> Readers,

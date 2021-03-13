@@ -280,12 +280,12 @@ namespace FIRRTL.Parsing
             }
         }
 
-        private (IFIRType Type, BigInteger Size) VisitCMemType([NotNull] FIRRTLParser.TypeContext context)
+        private (IFIRType Type, ulong Size) VisitCMemType([NotNull] FIRRTLParser.TypeContext context)
         {
             if (context.GetChild(0) is FIRRTLParser.TypeContext typeContext)
             {
                 IFIRType type = VisitType(context.type());
-                BigInteger size = StringToBigInteger(context.intLit(0).GetText());
+                ulong size = (ulong)StringToBigInteger(context.intLit(0).GetText());
 
                 return (type, size);
             }
@@ -350,7 +350,7 @@ namespace FIRRTL.Parsing
             List<string> readers = new List<string>();
             List<string> writers = new List<string>();
             List<string> readWriters = new List<string>();
-            var fieldMap = new Dictionary<string, (IFIRType Type, int? Lit, ReadUnderWrite Ruv, bool Unique)>();
+            var fieldMap = new Dictionary<string, (IFIRType Type, ulong? Lit, ReadUnderWrite Ruv, bool Unique)>();
             string memName = context.id(0).GetText();
             IInfo info = VisitInfo(context.info(), context);
 
@@ -381,7 +381,7 @@ namespace FIRRTL.Parsing
                 {
                     "data-type" => (VisitType(field.type()), null, ReadUnderWrite.Undefined, true),
                     "read-under-write" => (null, null, VisitRuw(field.ruw()), true),
-                    _ => (null, int.Parse(field.intLit().GetText(), CultureInfo.InvariantCulture), ReadUnderWrite.Undefined, true)
+                    _ => (null, ulong.Parse(field.intLit().GetText(), CultureInfo.InvariantCulture), ReadUnderWrite.Undefined, true)
                 });
             }
 
@@ -408,8 +408,8 @@ namespace FIRRTL.Parsing
                 memName,
                 fieldMap["data-type"].Type,
                 fieldMap["depth"].Lit.Value,
-                fieldMap["write-latency"].Lit.Value,
-                fieldMap["read-latency"].Lit.Value,
+                (int)fieldMap["write-latency"].Lit.Value,
+                (int)fieldMap["read-latency"].Lit.Value,
                 readers,
                 writers,
                 readWriters,
