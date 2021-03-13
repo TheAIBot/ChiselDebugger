@@ -46,17 +46,27 @@ namespace ChiselDebug
         {
             Mod.AddNode(node);
         }
+
+        public void EnterEnabledScope(GraphFIR.FIRRTLNode enableCond)
+        {
+            ScopeEnabledConditions.Push(enableCond);
+        }
+
+        public void ExitEnabledScope()
+        {
+            ScopeEnabledConditions.Pop();
+        }
+
+        private static long UniqueNumber = 0;
+
+        internal string GetUniqueName()
+        {
+            return $"~{Interlocked.Increment(ref UniqueNumber)}";
+        }
     }
 
     public static class CircuitToGraph
     {
-        private static long UniqueNumber = 0;
-
-        private static string GetUniqueName()
-        {
-            return $"~{Interlocked.Increment(ref UniqueNumber)}";
-        }
-
         public static CircuitGraph GetAsGraph(FIRRTL.Circuit circuit)
         {
             VisitHelper helper = new VisitHelper(null);
@@ -281,7 +291,7 @@ namespace ChiselDebug
 
             if (exp is FIRRTL.Literal lit)
             {
-                GraphFIR.ConstValue value = new GraphFIR.ConstValue(GetUniqueName(), lit);
+                GraphFIR.ConstValue value = new GraphFIR.ConstValue(helper.GetUniqueName(), lit);
 
                 helper.AddNodeToModule(value);
                 return value.Result;
