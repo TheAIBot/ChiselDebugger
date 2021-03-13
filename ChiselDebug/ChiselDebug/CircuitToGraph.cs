@@ -11,6 +11,23 @@ namespace ChiselDebug
         public readonly GraphFIR.Module Mod;
         public readonly Dictionary<string, FIRRTL.DefModule> ModuleRoots;
 
+        private readonly Stack<GraphFIR.FIRRTLNode> ScopeEnabledConditions = new Stack<GraphFIR.FIRRTLNode>();
+        public GraphFIR.FIRRTLNode ScopeEnabledCond 
+        { 
+            get
+            {
+                if (ScopeEnabledConditions.Count == 0)
+                {
+                    GraphFIR.ConstValue constEnabled = new GraphFIR.ConstValue(GetUniqueName(), new FIRRTL.UIntLiteral(1, 1));
+                    AddNodeToModule(constEnabled);
+
+                    ScopeEnabledConditions.Push(constEnabled);
+                }
+
+                return ScopeEnabledConditions.Peek();
+            }
+        }
+
         public VisitHelper(GraphFIR.Module mod) : this(mod, new Dictionary<string, FIRRTL.DefModule>())
         { }
 
