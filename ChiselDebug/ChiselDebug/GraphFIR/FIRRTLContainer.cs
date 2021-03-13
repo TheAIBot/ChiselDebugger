@@ -38,7 +38,7 @@ namespace ChiselDebug.GraphFIR
             return FlattenAndFilterIO<Output>(InternalIO);
         }
 
-        private T[] FlattenAndFilterIO<T>(Dictionary<string, FIRIO> io)
+        internal static T[] FlattenAndFilterIO<T>(Dictionary<string, FIRIO> io)
         {
             return io.Values
                 .SelectMany(x => x is IOBundle bundle ? bundle.Flatten() : new FIRIO[] { x })

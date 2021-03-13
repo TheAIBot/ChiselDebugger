@@ -48,9 +48,30 @@ namespace ChiselDebug.GraphFIR
             BundleToModule.Add(bundle, mod);
         }
 
+        public void AddMemory(Memory mem)
+        {
+            Nodes.Add(mem);
+
+            IOBundle memIO = mem.GetIOAsBundle();
+            NameToIO.Add(memIO.Name, memIO);
+        }
+
         public void AddIORename(string name, FIRIO io)
         {
             NameToIO.Add(name, io);
+        }
+
+        public void AddMemoryPort(Memory mem, MemPort port)
+        {
+            IOBundle memIO = mem.GetIOAsBundle();
+            NameToIO[memIO.Name] = memIO;
+
+            NameToIO.Add(port.Name, port);
+        }
+
+        public Memory GetMemory(string name)
+        {
+            return (Memory)Nodes.Single(x => x is Memory mem && mem.Name == name);
         }
 
         public override IContainerIO GetIO(string ioName, bool modulesOnly = false)

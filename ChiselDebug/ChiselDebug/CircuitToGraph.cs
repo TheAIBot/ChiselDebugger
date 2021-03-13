@@ -225,13 +225,30 @@ namespace ChiselDebug
             {
                 throw new NotImplementedException();
             }
-            else if (statement is FIRRTL.CDefMemory)
+            else if (statement is FIRRTL.CDefMemory cmem)
             {
-                throw new NotImplementedException();
+                GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, string.Empty, cmem.Type).Single();
+                var memory = new GraphFIR.Memory(cmem.Name, inputType, cmem.Size, 0, 0, cmem.Ruw);
+
+                helper.Mod.AddMemory(memory);
             }
-            else if (statement is FIRRTL.CDefMPort)
+            else if (statement is FIRRTL.CDefMPort memPort)
             {
-                throw new NotImplementedException();
+                var memory = helper.Mod.GetMemory(memPort.Mem);
+                GraphFIR.MemPort port = memPort.Direction switch
+                {
+                    FIRRTL.MPortDir.MInfer => throw new NotImplementedException(),
+                    FIRRTL.MPortDir.MRead => memory.AddReadPort(memPort.Name),
+                    FIRRTL.MPortDir.MWrite => memory.AddWritePort(memPort.Name),
+                    FIRRTL.MPortDir.MReadWrite => memory.AddReadWritePort(memPort.Name),
+                    var error => throw new Exception($"Unknown memory port type. Type: {error}")
+                };
+
+                VisitExp(helper, memPort.Exps[0]).ConnectToInput(port.Address);
+                VisitExp(helper, memPort.Exps[1]).ConnectToInput(port.Clock);
+                helper.ScopeEnabledCond.GetOutputs().Single().ConnectToInput(port.Enabled);
+
+                helper.Mod.AddMemoryPort(memory, port);
             }
             else if (statement is FIRRTL.DefWire)
             {
@@ -272,9 +289,25 @@ namespace ChiselDebug
 
                 helper.Mod.AddIORename(node.Name, nodeOut);
             }
-            else if (statement is FIRRTL.DefMemory)
+            else if (statement is FIRRTL.DefMemory mem)
             {
-                throw new NotImplementedException();
+                GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, string.Empty, mem.Type).Single();
+                var memory = new GraphFIR.Memory(mem.Name, inputType, mem.Depth, mem.ReadLatency, mem.WriteLatency, mem.Ruw);
+
+                foreach (var portName in mem.Readers)
+                {
+                    memory.AddReadPort(portName);
+                }
+                foreach (var portName in mem.Writers)
+                {
+                    memory.AddWritePort(portName);
+                }
+                foreach (var portName in mem.ReadWriters)
+                {
+                    memory.AddReadWritePort(portName);
+                }
+
+                helper.Mod.AddMemory(memory);
             }
             else
             {
