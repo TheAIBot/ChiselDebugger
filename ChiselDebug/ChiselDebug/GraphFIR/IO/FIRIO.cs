@@ -26,6 +26,8 @@ namespace ChiselDebug.GraphFIR.IO
 
         public abstract void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false);
         public abstract FIRIO Flip();
+        public abstract FIRIO Copy();
+        public abstract bool IsPassiveOfType<T>();
         public abstract IContainerIO GetIO(string ioName, bool modulesOnly = false);
     }
 }

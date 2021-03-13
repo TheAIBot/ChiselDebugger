@@ -81,6 +81,12 @@ namespace ChiselDebug.GraphFIR.IO
             return new IOBundle(Name, flipped, IO.Values.FirstOrDefault()?.IsPartOfBundle ?? false);
         }
 
+        public override FIRIO Copy()
+        {
+            List<FIRIO> flipped = IO.Values.Select(x => x.Copy()).ToList();
+            return new IOBundle(Name, flipped, IO.Values.FirstOrDefault()?.IsPartOfBundle ?? false);
+        }
+
         public IEnumerable<FIRIO> Flatten()
         {
             foreach (var io in IO.Values)
@@ -99,7 +105,7 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        private bool IsPassiveOfType<T>()
+        public override bool IsPassiveOfType<T>()
         {
             foreach (var io in IO.Values)
             {

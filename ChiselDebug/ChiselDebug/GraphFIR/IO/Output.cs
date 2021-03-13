@@ -36,6 +36,16 @@ namespace ChiselDebug.GraphFIR.IO
             return new Input(Node, Name, Type);
         }
 
+        public override FIRIO Copy()
+        {
+            return new Output(Node, Name, Type);
+        }
+
+        public override bool IsPassiveOfType<T>()
+        {
+            return this is T;
+        }
+
         public void InferType()
         {
             if (Node != null && Type is UnknownType)
