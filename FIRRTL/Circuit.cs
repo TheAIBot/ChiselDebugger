@@ -197,7 +197,16 @@ namespace FIRRTL
 
     public interface IsDeclaration { }
     public record DefWire(IInfo Info, string Name, IFIRType Type) : Statement, IsDeclaration;
-    public record DefRegister(IInfo Info, string Name, IFIRType Type, Expression Clock, Expression Reset, Expression Init) : Statement, IsDeclaration;
+    public record DefRegister(IInfo Info, string Name, IFIRType Type, Expression Clock, Expression Reset, Expression Init) : Statement, IsDeclaration
+    {
+        public bool HasResetAndInit()
+        {
+            bool hasDefaultReset = Reset is UIntLiteral res && res.Value.IsZero;
+            bool hasDefaultInit = Init is Reference reff && reff.Name == Name;
+
+            return !(hasDefaultReset && hasDefaultInit);
+        }
+    }
     public record DefInstance(IInfo Info, string Name, string Module, IFIRType Type) : Statement, IsDeclaration;
     public record DefNode(IInfo Info, string Name, Expression Value) : Statement, IsDeclaration;
     public record DefMemory(

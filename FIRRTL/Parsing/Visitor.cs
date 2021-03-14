@@ -475,8 +475,8 @@ namespace FIRRTL.Parsing
                             }
                             else
                             {
-                                Expression reset = new UIntLiteral(new BigInteger(0), 1);
-                                Expression init = new Reference(name, type, KindType.Unknown, FlowType.Unknown); ;
+                                Expression reset = new UIntLiteral(BigInteger.Zero, 1);
+                                Expression init = new Reference(name, type, KindType.Unknown, FlowType.Unknown);
                                 return new DefRegister(info, name, type, clock, reset, init);
                             }
                         }
