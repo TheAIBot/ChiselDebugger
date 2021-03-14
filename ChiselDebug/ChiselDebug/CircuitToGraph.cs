@@ -192,30 +192,9 @@ namespace ChiselDebug
             else if (statement is FIRRTL.Connect connect)
             {
                 GraphFIR.IO.FIRIO from = VisitExp(helper, connect.Expr);
+                GraphFIR.IO.FIRIO to = (GraphFIR.IO.FIRIO)VisitRef(helper, connect.Loc, helper.Mod);
 
-                GraphFIR.IO.FIRIO to;
-                if (connect.Loc is FIRRTL.Reference firRef)
-                {
-                    //The name for a register input is special because /in
-                    //is added to the name in the vcd file. If name is a register
-                    //then set name to register input name.
-                    if (helper.Mod.GetIO(firRef.Name) is GraphFIR.IO.Output maybeRegOut &&
-                        maybeRegOut.Node != null &&
-                        maybeRegOut.Node is GraphFIR.Register reg)
-                    {
-                        to = reg.In;
-                    }
-                    else
-                    {
-                        to = (GraphFIR.IO.FIRIO)helper.Mod.GetIO(firRef.Name);
-                    }
-                }
-                else
-                {
-                    to = (GraphFIR.IO.FIRIO)VisitRef(helper, connect.Loc, helper.Mod);
-                }
-
-                from.ConnectToInput(to);
+                from.GetOutput().ConnectToInput(to.GetInput());
             }
             else if (statement is FIRRTL.PartialConnect)
             {
