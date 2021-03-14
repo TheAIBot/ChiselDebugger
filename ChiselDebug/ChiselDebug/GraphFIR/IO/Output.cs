@@ -36,9 +36,9 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public override FIRIO Flip()
+        public override FIRIO Flip(FIRRTLNode node = null)
         {
-            return new Input(Node, Name, Type);
+            return new Input(node ?? Node, Name, Type);
         }
 
         public override FIRIO Copy()
