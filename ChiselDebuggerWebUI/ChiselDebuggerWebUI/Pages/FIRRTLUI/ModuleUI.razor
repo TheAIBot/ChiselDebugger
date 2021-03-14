@@ -28,6 +28,10 @@
             {
                 <ModuleUI @key=posOp.Value PosOp="@(posOp.Cast<Module>())" ParentModCtrl="CurrModCtrl"></ModuleUI>
             }
+            else if (posOp.Value is Memory)
+            {
+                <MemoryUI @key=posOp.Value PosOp="@(posOp.Cast<Memory>())" ParentModCtrl="CurrModCtrl"></MemoryUI>
+            }
         }
 
         @foreach (var input in InputOffsets)
