@@ -256,22 +256,18 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.DefRegister reg)
             {
-                var clock = (GraphFIR.IO.Output)VisitExp(helper, reg.Clock);
-                GraphFIR.Register register;
+                GraphFIR.IO.Output clock = (GraphFIR.IO.Output)VisitExp(helper, reg.Clock);
+                GraphFIR.IO.Output reset = null;
+                GraphFIR.IO.Output initValue = null;
 
-                //if it has no reset then it also has no init value
-                if (reg.Reset is FIRRTL.UIntLiteral res && res.Value == 0)
+                if (reg.HasResetAndInit())
                 {
-                    register = new GraphFIR.Register(reg.Name, clock, null, null, reg.Type);
-                }
-                else
-                {
-                    var reset = (GraphFIR.IO.Output)VisitExp(helper, reg.Reset);
-                    var initValue = (GraphFIR.IO.Output)VisitExp(helper, reg.Init);
-                    register = new GraphFIR.Register(reg.Name, clock, reset, initValue, reg.Type);
+                    reset = (GraphFIR.IO.Output)VisitExp(helper, reg.Reset);
+                    initValue = (GraphFIR.IO.Output)VisitExp(helper, reg.Init);
                 }
 
-                helper.AddNodeToModule(register);
+                GraphFIR.Register register = new GraphFIR.Register(reg.Name, clock, reset, initValue, reg.Type);
+                helper.Mod.AddRegister(register);
             }
             else if (statement is FIRRTL.DefInstance instance)
             {

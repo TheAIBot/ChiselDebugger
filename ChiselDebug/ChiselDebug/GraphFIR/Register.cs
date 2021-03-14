@@ -22,15 +22,26 @@ namespace ChiselDebug.GraphFIR
             this.Name = name;
             this.In = new Input(this, name + "/in", outType);
             this.Clock = new Input(this, clock.Type);
+            clock.ConnectToInput(Clock);
+
             if (reset != null)
             {
                 this.Reset = new Input(this, reset.Type);
+                reset.ConnectToInput(Reset);
             }
+
             if (init != null)
             {
                 this.Init = new Input(this, init.Type);
+                init.ConnectToInput(Init);
             }
+
             this.Result = new Output(this, Name, outType);
+        }
+
+        internal IOBundle GetIOAsBundle()
+        {
+            return new RegisterIO(Name, In, Result);
         }
 
         public override Input[] GetInputs()
@@ -56,5 +67,27 @@ namespace ChiselDebug.GraphFIR
 
         public override void InferType()
         { }
+    }
+
+    public class RegisterIO : IOBundle
+    {
+        private readonly FIRIO RegIn;
+        private readonly FIRIO RegOut;
+
+        public RegisterIO(string name, FIRIO regIn, FIRIO regOut) : base(name, new List<FIRIO>() { regIn, regOut }, false)
+        {
+            this.RegIn = regIn;
+            this.RegOut = regOut;
+        }
+
+        public override FIRIO GetInput()
+        {
+            return RegIn;
+        }
+
+        public override FIRIO GetOutput()
+        {
+            return RegOut;
+        }
     }
 }
