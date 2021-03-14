@@ -34,7 +34,16 @@ namespace ChiselDebug
                 {
                     string[] modulePath = varValue.Variable.Scopes.Skip(1).Select(x => x.Name).ToArray();
                     IContainerIO moduleIO = ((IContainerIO)MainModule).GetIO(modulePath, true);
-                    IContainerIO ioLink = moduleIO.GetIO(varValue.Variable.Reference);
+
+                    IContainerIO ioLink = null;
+                    bool foundIO = moduleIO.TryGetIO(varValue.Variable.Reference, false, out ioLink);
+
+                    //Wierd wires are added to memory ports that are not part of the
+                    //firrtl code. Just ignore those wires.
+                    if (!foundIO && moduleIO is MemPort)
+                    {
+                        continue;
+                    }
 
                     //Apparently if a module contains an instance of another module
                     //then it will also have a wire with the instance name in the vcd
