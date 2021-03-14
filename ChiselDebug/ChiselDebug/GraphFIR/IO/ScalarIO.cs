@@ -23,7 +23,7 @@ namespace ChiselDebug.GraphFIR.IO
             return Con != null;
         }
 
-        public override IContainerIO GetIO(string ioName, bool modulesOnly = false)
+        public override bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container)
         {
             throw new Exception("Scalar IO can't contain additional io.");
         }

@@ -132,14 +132,16 @@ namespace ChiselDebug.GraphFIR.IO
             return true;
         }
 
-        public override IContainerIO GetIO(string ioName, bool modulesOnly = false)
+        public override bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container)
         {
             if (IO.TryGetValue(ioName, out FIRIO innerIO))
             {
-                return innerIO;
+                container = innerIO;
+                return true;
             }
 
-            throw new Exception($"Failed to find io. IO name: {ioName}");
+            container = null;
+            return false;
         }
     }
 }

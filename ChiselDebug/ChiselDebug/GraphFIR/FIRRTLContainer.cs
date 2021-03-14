@@ -51,6 +51,16 @@ namespace ChiselDebug.GraphFIR
             throw new NotImplementedException();
         }
 
-        public abstract IContainerIO GetIO(string ioName, bool modulesOnly = false);
+        public abstract bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container);
+
+        public IContainerIO GetIO(string ioName, bool modulesOnly = false)
+        {
+            if (TryGetIO(ioName, modulesOnly, out var container))
+            {
+                return container;
+            }
+
+            throw new Exception($"Failed to find io. IO name: {ioName}");
+        }
     }
 }

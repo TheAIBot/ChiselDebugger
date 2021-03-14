@@ -82,11 +82,23 @@ namespace ChiselDebug.GraphFIR
             
         }
 
+        public bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container)
+        {
+            if (Ports.TryGetValue(ioName, out FIRIO innerIO))
+            {
+                container = innerIO;
+                return true;
+            }
+
+            container = null;
+            return false;
+        }
+
         public IContainerIO GetIO(string ioName, bool modulesOnly = false)
         {
-            if (Ports.TryGetValue(ioName, out FIRIO io))
+            if (TryGetIO(ioName, modulesOnly, out var container))
             {
-                return io;
+                return container;
             }
 
             throw new Exception($"Failed to find io. IO name: {ioName}");

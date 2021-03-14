@@ -74,26 +74,32 @@ namespace ChiselDebug.GraphFIR
             return (Memory)Nodes.Single(x => x is Memory mem && mem.Name == name);
         }
 
-        public override IContainerIO GetIO(string ioName, bool modulesOnly = false)
+        public override bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container)
         {
             if (NameToIO.TryGetValue(ioName, out FIRIO innerIO))
             {
-                if (modulesOnly && innerIO is IOBundle bundle)
+                if (modulesOnly &&
+                    innerIO is IOBundle bundle &&
+                    BundleToModule.TryGetValue(bundle, out var mod))
                 {
-                    return BundleToModule[bundle];
+                    container = mod;
+                    return true;
                 }
                 else
                 {
-                    return innerIO;
+                    container = innerIO;
+                    return true;
                 }
             }
 
             if (InternalIO.TryGetValue(ioName, out FIRIO io))
             {
-                return io;
+                container = io;
+                return true;
             }
 
-            throw new Exception($"Failed to find io. IO name: {ioName}");
+            container = null;
+            return false;
         }
 
         public List<Connection> GetAllModuleConnections()

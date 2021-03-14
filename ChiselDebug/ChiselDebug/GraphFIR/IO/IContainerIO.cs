@@ -4,6 +4,7 @@ namespace ChiselDebug.GraphFIR.IO
 {
     public interface IContainerIO
     {
+        public bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container);
         public IContainerIO GetIO(string ioName, bool modulesOnly = false);
 
         public IContainerIO GetIO(Span<string> names, bool modulesOnly = false)
