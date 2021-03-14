@@ -6,23 +6,47 @@ using System.Linq;
 
 namespace ChiselDebug.GraphFIR
 {
-    public class Mux : FIRRTLPrimOP
+    public class Mux : FIRRTLNode
     {
-        public readonly Input[] Choises;
+        public readonly FIRIO[] Choises;
         public readonly Input Decider;
+        public readonly FIRIO Result;
 
-        public Mux(List<IFIRType> choiseTypes, IFIRType outType) : base(outType)
+        public Mux(List<FIRIO> choises, Output decider, string name, IFIRType outType)
         {
-            this.Choises = choiseTypes.Select(x => new Input(this, x)).ToArray();
+            choises = choises.Select(x => x.GetOutput()).ToList();
+            choises.ForEach(x => x.Flatten().ToList().ForEach(y => y.InferType()));
+            if (!choises.All(x => x.IsPassiveOfType<Output>()))
+            {
+                throw new Exception("Inputs to mux must all be passive output types.");
+            }
+            if (!choises.All(x => x.SameIO(choises.First())))
+            {
+                throw new Exception("All inputs to mux must be of the same type.");
+            }
+
+            this.Choises = choises.Select(x => x.Flip(this)).ToArray();
             this.Decider = new Input(this, new FIRRTL.UIntType(1));
+            this.Result = choises.First().Copy(this);
+
+            for (int i = 0; i < Choises.Length; i++)
+            {
+                choises[i].ConnectToInput(Choises[i]);
+            }
+            decider.ConnectToInput(Decider);
         }
 
         public override ScalarIO[] GetInputs()
         {
             List<ScalarIO> inputs = new List<ScalarIO>();
-            inputs.AddRange(Choises);
+            inputs.AddRange(Choises.SelectMany(x => x.Flatten()));
             inputs.Add(Decider);
             return inputs.ToArray();
+        }
+
+        public override ScalarIO[] GetOutputs()
+        {
+            return Result.Flatten().ToArray();
         }
 
         public override FIRIO[] GetIO()
@@ -37,13 +61,10 @@ namespace ChiselDebug.GraphFIR
 
         public override void InferType()
         {
-            foreach (var input in Choises)
+            foreach (Input input in GetInputs())
             {
                 input.InferType();
             }
-            Decider.InferType();
-
-            Result.SetType(Choises.First().Type);
         }
     }
 }

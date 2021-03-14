@@ -407,26 +407,21 @@ namespace ChiselDebug
             }
             else if (exp is FIRRTL.Mux mux)
             {
-                var cond = (GraphFIR.IO.Output)VisitExp(helper, mux.Cond);
-                var ifTrue = (GraphFIR.IO.Output)VisitExp(helper, mux.TrueValue);
-                var ifFalse = (GraphFIR.IO.Output)VisitExp(helper, mux.FalseValue);
+                var cond = (GraphFIR.IO.Output)VisitExp(helper, mux.Cond).GetOutput();
+                var ifTrue = VisitExp(helper, mux.TrueValue);
+                var ifFalse = VisitExp(helper, mux.FalseValue);
 
-                GraphFIR.Mux node = new GraphFIR.Mux(new List<FIRRTL.IFIRType>() { ifTrue.Type, ifFalse.Type }, mux.Type);
-                cond.ConnectToInput(node.Decider);
-                ifTrue.ConnectToInput(node.Choises[0]);
-                ifFalse.ConnectToInput(node.Choises[1]);
+                GraphFIR.Mux node = new GraphFIR.Mux(new List<GraphFIR.IO.FIRIO>() { ifTrue, ifFalse }, cond, string.Empty, mux.Type);
 
                 helper.AddNodeToModule(node);
                 return node.Result;
             }
             else if (exp is FIRRTL.ValidIf validIf)
             {
-                var cond = (GraphFIR.IO.Output)VisitExp(helper, validIf.Cond);
-                var ifValid = (GraphFIR.IO.Output)VisitExp(helper, validIf.Value);
+                var cond = (GraphFIR.IO.Output)VisitExp(helper, validIf.Cond).GetOutput();
+                var ifValid = VisitExp(helper, validIf.Value);
 
-                GraphFIR.Mux node = new GraphFIR.Mux(new List<FIRRTL.IFIRType>() { ifValid.Type }, validIf.Type);
-                cond.ConnectToInput(node.Decider);
-                ifValid.ConnectToInput(node.Choises[0]);
+                GraphFIR.Mux node = new GraphFIR.Mux(new List<GraphFIR.IO.FIRIO>() { ifValid }, cond, string.Empty, validIf.Type);
 
                 helper.AddNodeToModule(node);
                 return node.Result;
