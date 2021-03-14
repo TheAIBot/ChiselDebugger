@@ -26,7 +26,7 @@
 
     protected override List<DirectedIO> OnMakeInputs(int width, int height)
     {
-        List<DirectedIO> inputs = IOPositionCalc.EvenVertical(height, Operation.Choises, 0, INDENT);
+        List<DirectedIO> inputs = IOPositionCalc.EvenVertical(height, Operation.Choises.Flatten(), 0, INDENT);
 
         //Add chose input
         Point deciderOffset = new Point(WIDTH / 2, INDENT / 2);
@@ -37,13 +37,7 @@
 
     protected override List<DirectedIO> OnMakeOutputs(int width, int height)
     {
-        List<DirectedIO> outputs = new List<DirectedIO>();
-
-        //Add output
-        Point outputOffset = new Point(WIDTH, HEIGHT / 2);
-        outputs.Add(new DirectedIO(Operation.Result, outputOffset, MoveDirs.Right));
-
-        return outputs;
+        return IOPositionCalc.EvenVertical(HEIGHT, Operation.GetOutputs(), width, INDENT);
     }
 
 }
