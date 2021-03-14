@@ -57,7 +57,7 @@ namespace ChiselDebug.GraphFIR.IO
                    Type.Equals(otherOut.Type);
         }
 
-        public void InferType()
+        public override void InferType()
         {
             if (Node != null && Type is UnknownType)
             {

@@ -35,5 +35,7 @@ namespace ChiselDebug.GraphFIR.IO
         }
 
         public abstract void SetType(IFIRType type);
+
+        public abstract void InferType();
     }
 }
