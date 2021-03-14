@@ -54,8 +54,8 @@ namespace ChiselDebug
                     }
 
                     //Relate io to FIRRTLNode
-                    Dictionary<Input, FIRRTLNode> inputToFirNode = new Dictionary<Input, FIRRTLNode>();
-                    Dictionary<Output, FIRRTLNode> outputToFirNode = new Dictionary<Output, FIRRTLNode>();
+                    Dictionary<ScalarIO, FIRRTLNode> inputToFirNode = new Dictionary<ScalarIO, FIRRTLNode>();
+                    Dictionary<ScalarIO, FIRRTLNode> outputToFirNode = new Dictionary<ScalarIO, FIRRTLNode>();
                     foreach (var firNode in NodeSizes.Keys)
                     {
                         if (firNode == Mod)
@@ -72,8 +72,8 @@ namespace ChiselDebug
                         }
                     }
 
-                    Dictionary<Input, Node<FIRRTLNode>> inputToNode = new Dictionary<Input, Node<FIRRTLNode>>();
-                    Dictionary<Output, Node<FIRRTLNode>> outputToNode = new Dictionary<Output, Node<FIRRTLNode>>();
+                    Dictionary<ScalarIO, Node<FIRRTLNode>> inputToNode = new Dictionary<ScalarIO, Node<FIRRTLNode>>();
+                    Dictionary<ScalarIO, Node<FIRRTLNode>> outputToNode = new Dictionary<ScalarIO, Node<FIRRTLNode>>();
                     foreach (var keyValue in inputToFirNode)
                     {
                         inputToNode.Add(keyValue.Key, firNodeToNode[keyValue.Value]);

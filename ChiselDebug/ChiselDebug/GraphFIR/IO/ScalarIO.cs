@@ -1,5 +1,6 @@
 ﻿using FIRRTL;
 using System;
+using System.Collections.Generic;
 
 namespace ChiselDebug.GraphFIR.IO
 {
@@ -21,6 +22,11 @@ namespace ChiselDebug.GraphFIR.IO
         public bool IsConnected()
         {
             return Con != null;
+        }
+
+        public override IEnumerable<ScalarIO> Flatten()
+        {
+            yield return this;
         }
 
         public override bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container)

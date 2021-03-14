@@ -17,14 +17,22 @@ namespace ChiselDebug.GraphFIR
             Result.Con.Value.SetValueString(value.Value.ToSignedBinaryString((FIRRTL.GroundType)value.GetFIRType()));
         }
 
-        public override Input[] GetInputs()
+        public override ScalarIO[] GetInputs()
         {
-            return Array.Empty<Input>();
+            return Array.Empty<ScalarIO>();
         }
 
-        public override Output[] GetOutputs()
+        public override ScalarIO[] GetOutputs()
         {
-            return new Output[] { Result };
+            return new ScalarIO[] { Result };
+        }
+
+        public override FIRIO[] GetIO()
+        {
+            return new FIRIO[]
+            {
+                Result
+            };
         }
 
         public override void InferType()

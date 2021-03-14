@@ -100,20 +100,13 @@ namespace ChiselDebug.GraphFIR.IO
             return new IOBundle(Name, flipped, IO.Values.FirstOrDefault()?.IsPartOfBundle ?? false);
         }
 
-        public IEnumerable<FIRIO> Flatten()
+        public override IEnumerable<ScalarIO> Flatten()
         {
             foreach (var io in IO.Values)
             {
-                if (io is IOBundle bundle)
+                foreach (var nested in io.Flatten())
                 {
-                    foreach (var nested in bundle.Flatten())
-                    {
-                        yield return nested;
-                    }
-                }
-                else
-                {
-                    yield return io;
+                    yield return nested;
                 }
             }
         }

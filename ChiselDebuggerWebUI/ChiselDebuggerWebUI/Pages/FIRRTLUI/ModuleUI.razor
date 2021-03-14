@@ -116,22 +116,22 @@
 
     protected override List<DirectedIO> OnMakeInputs(int width, int height)
     {
-        return IOPositionCalc.EvenVertical<Input>(height, Operation.GetInternalInputs(), width + ContentPadding, MarginForIO);
+        return IOPositionCalc.EvenVertical(height, Operation.GetInternalInputs(), width + ContentPadding, MarginForIO);
     }
 
     protected override List<DirectedIO> OnMakeOutputs(int width, int height)
     {
-        return IOPositionCalc.EvenVertical<Output>(height, Operation.GetInternalOutputs(), -ContentPadding, MarginForIO);
+        return IOPositionCalc.EvenVertical(height, Operation.GetInternalOutputs(), -ContentPadding, MarginForIO);
     }
 
     private List<DirectedIO> MakeExternalInputs(int width, int height)
     {
-        return IOPositionCalc.EvenVertical<Input>(height, Operation.GetInputs(), -ContentPadding, MarginForIO);
+        return IOPositionCalc.EvenVertical(height, Operation.GetInputs(), -ContentPadding, MarginForIO);
     }
 
     private List<DirectedIO> MakeExternalOutputs(int width, int height)
     {
-        return IOPositionCalc.EvenVertical<Output>(height, Operation.GetOutputs(), width + ContentPadding, MarginForIO);
+        return IOPositionCalc.EvenVertical(height, Operation.GetOutputs(), width + ContentPadding, MarginForIO);
     }
 
     public void Dispose()

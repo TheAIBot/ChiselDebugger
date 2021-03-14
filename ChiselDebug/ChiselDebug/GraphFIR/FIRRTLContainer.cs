@@ -18,22 +18,27 @@ namespace ChiselDebug.GraphFIR
             InternalIO.Add(io.Name, io.Flip());
         }
 
-        public override Input[] GetInputs()
+        public override ScalarIO[] GetInputs()
         {
             return FlattenAndFilterIO<Input>(ExternalIO);
         }
 
-        public override Output[] GetOutputs()
+        public override ScalarIO[] GetOutputs()
         {
             return FlattenAndFilterIO<Output>(ExternalIO);
         }
 
-        public Input[] GetInternalInputs()
+        public override FIRIO[] GetIO()
+        {
+            return ExternalIO.Values.ToArray();
+        }
+
+        public ScalarIO[] GetInternalInputs()
         {
             return FlattenAndFilterIO<Input>(InternalIO);
         }
 
-        public Output[] GetInternalOutputs()
+        public ScalarIO[] GetInternalOutputs()
         {
             return FlattenAndFilterIO<Output>(InternalIO);
         }
@@ -41,7 +46,7 @@ namespace ChiselDebug.GraphFIR
         internal static T[] FlattenAndFilterIO<T>(Dictionary<string, FIRIO> io)
         {
             return io.Values
-                .SelectMany(x => x is IOBundle bundle ? bundle.Flatten() : new FIRIO[] { x })
+                .SelectMany(x => x.Flatten())
                 .OfType<T>()
                 .ToArray();
         }

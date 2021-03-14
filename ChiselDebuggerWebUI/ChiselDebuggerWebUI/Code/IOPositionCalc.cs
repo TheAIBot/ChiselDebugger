@@ -12,7 +12,7 @@ namespace ChiselDebuggerWebUI.Code
     {
         private const int MaxSpaceBetweenIO = 40;
 
-        internal static List<DirectedIO> EvenVertical<T>(int height, T[] io, int fixedX, int startY) where T : FIRIO
+        internal static List<DirectedIO> EvenVertical(int height, ScalarIO[] io, int fixedX, int startY)
         {
             int usableHeight = height - startY * 2;
             int spaceBetweenIO;

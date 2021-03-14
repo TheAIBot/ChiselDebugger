@@ -17,12 +17,22 @@ namespace ChiselDebug.GraphFIR
             this.Decider = new Input(this, new FIRRTL.UIntType(1));
         }
 
-        public override Input[] GetInputs()
+        public override ScalarIO[] GetInputs()
         {
-            List<Input> inputs = new List<Input>();
+            List<ScalarIO> inputs = new List<ScalarIO>();
             inputs.AddRange(Choises);
             inputs.Add(Decider);
             return inputs.ToArray();
+        }
+
+        public override FIRIO[] GetIO()
+        {
+            List<FIRIO> io = new List<FIRIO>();
+            io.AddRange(Choises);
+            io.Add(Decider);
+            io.Add(Result);
+
+            return io.ToArray();
         }
 
         public override void InferType()

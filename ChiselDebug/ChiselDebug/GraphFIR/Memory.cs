@@ -67,14 +67,19 @@ namespace ChiselDebug.GraphFIR
             return new IOBundle(Name, Ports.Values.ToList(), false);
         }
 
-        public override Input[] GetInputs()
+        public override ScalarIO[] GetInputs()
         {
             return FIRRTLContainer.FlattenAndFilterIO<Input>(Ports);
         }
 
-        public override Output[] GetOutputs()
+        public override ScalarIO[] GetOutputs()
         {
             return FIRRTLContainer.FlattenAndFilterIO<Output>(Ports);
+        }
+
+        public override FIRIO[] GetIO()
+        {
+            return Ports.Values.ToArray();
         }
 
         public override void InferType()
