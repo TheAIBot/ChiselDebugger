@@ -12,7 +12,7 @@ namespace ChiselDebug.GraphFIR
         public readonly Input Decider;
         public readonly FIRIO Result;
 
-        public Mux(List<FIRIO> choises, Output decider, string name, IFIRType outType)
+        public Mux(List<FIRIO> choises, Output decider, IFIRType outType)
         {
             choises = choises.Select(x => x.GetOutput()).ToList();
             choises.ForEach(x => x.Flatten().ToList().ForEach(y => y.InferType()));
@@ -28,9 +28,11 @@ namespace ChiselDebug.GraphFIR
             this.Choises = choises.Select(x => x.Flip(this)).ToArray();
             this.Decider = new Input(this, new FIRRTL.UIntType(1));
             this.Result = choises.First().Copy(this);
+            Result.SetName(null);
 
             for (int i = 0; i < Choises.Length; i++)
             {
+                Choises[i].SetName(null);
                 choises[i].ConnectToInput(Choises[i]);
             }
             decider.ConnectToInput(Decider);

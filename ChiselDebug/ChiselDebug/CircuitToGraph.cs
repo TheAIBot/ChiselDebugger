@@ -411,7 +411,7 @@ namespace ChiselDebug
                 var ifTrue = VisitExp(helper, mux.TrueValue);
                 var ifFalse = VisitExp(helper, mux.FalseValue);
 
-                GraphFIR.Mux node = new GraphFIR.Mux(new List<GraphFIR.IO.FIRIO>() { ifTrue, ifFalse }, cond, string.Empty, mux.Type);
+                GraphFIR.Mux node = new GraphFIR.Mux(new List<GraphFIR.IO.FIRIO>() { ifTrue, ifFalse }, cond, mux.Type);
 
                 helper.AddNodeToModule(node);
                 return node.Result;
@@ -421,7 +421,7 @@ namespace ChiselDebug
                 var cond = (GraphFIR.IO.Output)VisitExp(helper, validIf.Cond).GetOutput();
                 var ifValid = VisitExp(helper, validIf.Value);
 
-                GraphFIR.Mux node = new GraphFIR.Mux(new List<GraphFIR.IO.FIRIO>() { ifValid }, cond, string.Empty, validIf.Type);
+                GraphFIR.Mux node = new GraphFIR.Mux(new List<GraphFIR.IO.FIRIO>() { ifValid }, cond, validIf.Type);
 
                 helper.AddNodeToModule(node);
                 return node.Result;

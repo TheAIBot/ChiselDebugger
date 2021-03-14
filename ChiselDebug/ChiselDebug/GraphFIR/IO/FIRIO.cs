@@ -18,7 +18,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         public void SetName(string name)
         {
-            Name = name;
+            Name = name ?? string.Empty;
         }
 
         public void SetBundle(IOBundle bundle)
