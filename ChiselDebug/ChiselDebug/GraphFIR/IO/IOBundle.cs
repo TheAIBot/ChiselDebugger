@@ -94,9 +94,9 @@ namespace ChiselDebug.GraphFIR.IO
             return new IOBundle(Name, flipped, IO.Values.FirstOrDefault()?.IsPartOfBundle ?? false);
         }
 
-        public override FIRIO Copy()
+        public override FIRIO Copy(FIRRTLNode node = null)
         {
-            List<FIRIO> flipped = OrderedIO.Select(x => x.Copy()).ToList();
+            List<FIRIO> flipped = OrderedIO.Select(x => x.Copy(node)).ToList();
             return new IOBundle(Name, flipped, IO.Values.FirstOrDefault()?.IsPartOfBundle ?? false);
         }
 

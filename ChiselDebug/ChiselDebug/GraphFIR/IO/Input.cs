@@ -31,9 +31,9 @@ namespace ChiselDebug.GraphFIR.IO
             return new Output(node ?? Node, Name, Type);
         }
 
-        public override FIRIO Copy()
+        public override FIRIO Copy(FIRRTLNode node = null)
         {
-            return new Input(Node, Name, Type);
+            return new Input(node ?? Node, Name, Type);
         }
 
         public override bool IsPassiveOfType<T>()
