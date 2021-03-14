@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks.Dataflow;
 
 namespace ChiselDebuggerWebUI.Code
@@ -7,7 +8,17 @@ namespace ChiselDebuggerWebUI.Code
     public static class WorkLimiter
     {
         private static readonly Dictionary<ISourceBlock<Action>, IDisposable> ActiveLinks = new Dictionary<ISourceBlock<Action>, IDisposable>();
-        private static readonly ActionBlock<Action> Worker = new ActionBlock<Action>(x => x(), new ExecutionDataflowBlockOptions()
+        private static readonly ActionBlock<Action> Worker = new ActionBlock<Action>(x =>
+        {
+            try
+            {
+                x();
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message + Environment.NewLine + e.StackTrace);
+            }
+        }, new ExecutionDataflowBlockOptions()
         {
             MaxDegreeOfParallelism = Environment.ProcessorCount,
             MaxMessagesPerTask = 1
