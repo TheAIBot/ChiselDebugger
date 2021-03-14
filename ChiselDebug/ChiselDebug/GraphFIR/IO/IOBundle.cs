@@ -6,10 +6,13 @@ namespace ChiselDebug.GraphFIR.IO
 {
     public class IOBundle : FIRIO
     {
+        private readonly FIRIO[] OrderedIO;
         private readonly Dictionary<string, FIRIO> IO = new Dictionary<string, FIRIO>();
 
         public IOBundle(string name, List<FIRIO> io, bool twoWayRelationship = true) : base(name)
         {
+            this.OrderedIO = io.ToArray();
+
             foreach (var firIO in io)
             {
                 IO.Add(firIO.Name, firIO);
@@ -119,17 +122,36 @@ namespace ChiselDebug.GraphFIR.IO
         {
             foreach (var io in IO.Values)
             {
-                if (io is IOBundle bundle && !bundle.IsPassiveOfType<T>())
-                {
-                    return false;
-                }
-                else if (io is not T)
+                if (!io.IsPassiveOfType<T>())
                 {
                     return false;
                 }
             }
 
             return true;
+        }
+
+        public override bool SameIO(FIRIO other)
+        {
+            if (other is IOBundle bundle)
+            {
+                if (OrderedIO.Length != bundle.OrderedIO.Length)
+                {
+                    return false;
+                }
+
+                for (int i = 0; i < OrderedIO.Length; i++)
+                {
+                    if (!OrderedIO[i].SameIO(bundle.OrderedIO[i]))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            return false;
         }
 
         public override bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container)

@@ -38,6 +38,7 @@ namespace ChiselDebug.GraphFIR.IO
         public abstract FIRIO Flip();
         public abstract FIRIO Copy();
         public abstract bool IsPassiveOfType<T>();
+        public abstract bool SameIO(FIRIO other);
         public abstract bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container);
 
         public IContainerIO GetIO(string ioName, bool modulesOnly = false)

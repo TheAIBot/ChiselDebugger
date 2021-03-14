@@ -41,6 +41,12 @@ namespace ChiselDebug.GraphFIR.IO
             return this is T;
         }
 
+        public override bool SameIO(FIRIO other)
+        {
+            return other is Input otherIn && 
+                   Type.Equals(otherIn.Type);
+        }
+
         public void InferType()
         {
             if (Con != null && Type is UnknownType)
