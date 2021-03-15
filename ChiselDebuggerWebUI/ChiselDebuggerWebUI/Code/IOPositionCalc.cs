@@ -254,14 +254,6 @@ namespace ChiselDebuggerWebUI.Code
 
         private static void MakeNoScopeIO(List<ScopedDirIO> inputIO, List<ScopedDirIO> outputIO, ScalarIO io, int fixedX, ref int inputYOffset, ref int outputYOffset, int scopeDepth)
         {
-            //Don't visualize inputs that aren't used
-            //as they are just distracting
-            if (!io.IsConnected())
-            {
-                return;
-            }
-
-            
             if (io is Input)
             {
                 int scopeOffset = Math.Max(0, scopeDepth - 1) * ScopeWidth;
