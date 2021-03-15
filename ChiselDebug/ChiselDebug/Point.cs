@@ -60,6 +60,11 @@ namespace ChiselDebug
             return new Point(a.X * b, a.Y * b);
         }
 
+        public static Point operator /(Point a, float b)
+        {
+            return new Point((int)(a.X / b), (int)(a.Y / b));
+        }
+
         public static bool operator ==(Point left, Point right)
         {
             return left.X == right.X && left.Y == right.Y;

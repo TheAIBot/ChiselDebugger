@@ -3,9 +3,14 @@
 
 <div id="@SizeWatcherID" class="module" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();">
     @*<div class="moduleHeader">
-        <h2>@Operation.Name</h2>
-    </div>*@
-    <div class="moduleContent" style="width:@GetCurrentSize().X.ToPixels();height:@GetCurrentSize().Y.ToPixels();min-width:@MinContentSize.X.ToPixels();min-height:@MinContentSize.Y.ToPixels()">
+            <h2>@Operation.Name</h2>
+        </div>*@
+    <div class="moduleContent" style="
+    width:@GetCurrentSize().X.ToPixels();
+    height:@GetCurrentSize().Y.ToPixels();
+    min-width:@MinContentSize.X.ToPixels();
+    min-height:@MinContentSize.Y.ToPixels();
+    transform: scale(@ContentScale.ToHtmlNumber());">
         @foreach (var posOp in ModuleOpPoses)
         {
             @if (posOp.Value is Mux)
@@ -34,18 +39,11 @@
             }
         }
 
-        @foreach (var input in InputOffsets)
-        {
-            <IOPortUI Position="@input.Position"></IOPortUI>
-        }
-
-        @foreach (var output in OutputOffsets)
-        {
-            <IOPortUI Position="@output.Position"></IOPortUI>
-        }
-
         <WiresUI ModCtrl="CurrModCtrl"></WiresUI>
+
+
     </div>
+    <ScopedIOUI NodeIO="@ExternalIO"></ScopedIOUI>
 </div>
 
 @code
@@ -56,6 +54,8 @@
     private Point MinContentSize;
     private List<Positioned<FIRRTLNode>> ModuleOpPoses = new List<Positioned<FIRRTLNode>>();
     private ModuleController CurrModCtrl;
+    private ScopedNodeIO ExternalIO = null;
+    private float ContentScale = 1.0f;
 
     protected override void OnFirstParametersSetAsync()
     {
@@ -73,26 +73,41 @@
     protected override void OnResize(int width, int height)
     {
         //Update this module with its internal io positions
-        InputOffsets = OnMakeInputs(width, height);
-        OutputOffsets = OnMakeOutputs(width, height);
-        CurrModCtrl.UpdateIOFromNode(Operation, InputOffsets, OutputOffsets);
+        ScopedNodeIO internalIO = IOPositionCalc.VerticalScopedIO(Operation.GetInternalIO(), width, MarginForIO, MarginForIO);
+        internalIO.UpdateIOX(width, 0);
+        internalIO.ScaleFillY(height, MarginForIO, MarginForIO);
+
+        CurrModCtrl.UpdateIOFromNode(Operation, internalIO.GetInputDirIO(), internalIO.GetOutputDirIO());
     }
 
-    private void UpdateParentAboutExteriorIO(int width, int height)
+    private Point UpdateParentAboutExteriorIO(int width, int height)
     {
-        var externalInputs = MakeExternalInputs(width, height);
-        var externalOutputs = MakeExternalOutputs(width, height);
-        ParentModCtrl?.UpdateComponentInfo(new FIRComponentUpdate(Operation, new Point(width, height), externalInputs, externalOutputs));
+        ExternalIO = IOPositionCalc.VerticalScopedIO(Operation.GetIO(), width, MarginForIO, MarginForIO);
+
+        Point moduleSize = new Point(width, height);
+        if (ParentModCtrl == null)
+        {
+            return moduleSize;
+        }
+
+        if (height > ExternalIO.HeightNeeded)
+        {
+            float scaling = (float)height / ExternalIO.HeightNeeded;//ExternalIO.ScaleFillY(height, MarginForIO, MarginForIO);
+            ContentScale = 1 / scaling;
+
+            moduleSize /= scaling;
+            ExternalIO.UpdateOutputX(moduleSize.X);
+        }
+
+        ParentModCtrl?.UpdateComponentInfo(new FIRComponentUpdate(Operation, moduleSize, ExternalIO.GetInputDirIO(), ExternalIO.GetOutputDirIO()));
+
+        return moduleSize;
     }
 
     private Point GetMinSizeForIO()
     {
         int requiredWidth = 0;
-
-        int maxIO = Math.Max(Operation.GetInputs().Length, Operation.GetOutputs().Length);
-
-        int requiredIOMargin = MarginForIO * 2;
-        int requiredHeight = requiredIOMargin + (maxIO - 1) * MinSpaceBetweenIO;
+        int requiredHeight = IOPositionCalc.VerticalScopedIO(Operation.GetInternalIO(), 0, MarginForIO, MarginForIO).HeightNeeded;
 
         return new Point(requiredWidth, requiredHeight);
     }
@@ -105,7 +120,7 @@
 
         //With new module size, the io positions need to be updated
         OnResize(moduleSize.X, moduleSize.Y);
-        UpdateParentAboutExteriorIO(moduleSize.X, moduleSize.Y);
+        moduleSize = UpdateParentAboutExteriorIO(moduleSize.X, moduleSize.Y);
 
         CurrModCtrl.RouteWires(placements);
 

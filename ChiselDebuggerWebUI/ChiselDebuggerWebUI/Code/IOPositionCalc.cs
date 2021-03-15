@@ -89,6 +89,20 @@ namespace ChiselDebuggerWebUI.Code
             RemakeScopes();
         }
 
+        public void UpdateIOX(int inputX, int outputX)
+        {
+            foreach (var offset in InputOffsets)
+            {
+                offset.SetX(inputX);
+            }
+            foreach (var offset in OutputOffsets)
+            {
+                offset.SetX(outputX);
+            }
+
+            RemakeScopes();
+        }
+
         public float ScaleFillY(int height, int startYPadding, int endYPadding)
         {
             int availHeight = height - startYPadding - endYPadding;
