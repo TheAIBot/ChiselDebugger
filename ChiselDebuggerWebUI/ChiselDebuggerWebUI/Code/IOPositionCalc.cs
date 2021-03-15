@@ -220,7 +220,7 @@ namespace ChiselDebuggerWebUI.Code
             int inputY = startYPadding;
             int outputY = inputY;
 
-            MakeScopedIO(inputIO, outputIO, io, fixedX, ref startYPadding, ref outputY, 0);
+            MakeScopedIO(inputIO, outputIO, io, fixedX, ref inputY, ref outputY, 0);
 
             int heightNeeded = Math.Max(inputY, outputY) + endYPadding;
             return new ScopedNodeIO(inputIO, outputIO, heightNeeded);
