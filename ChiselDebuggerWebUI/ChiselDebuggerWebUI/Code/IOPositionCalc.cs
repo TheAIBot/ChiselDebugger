@@ -274,7 +274,7 @@ namespace ChiselDebuggerWebUI.Code
             else if (io is Output)
             {
                 int scopeOffset = -scopeDepth * ScopeWidth;
-                Point outputPos = new Point(fixedX, inputYOffset);
+                Point outputPos = new Point(fixedX, outputYOffset);
                 DirectedIO dirIO = new DirectedIO(io, outputPos, MoveDirs.Right);
                 outputIO.Add(new ScopedDirIO(dirIO, scopeOffset));
 
