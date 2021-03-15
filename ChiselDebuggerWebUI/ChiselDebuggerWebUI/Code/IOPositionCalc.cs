@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ChiselDebuggerWebUI.Code
 {
-    internal class ScopedNodeIO
+    public class ScopedNodeIO
     {
         internal readonly List<ScopedDirIO> InputOffsets;
         internal readonly List<ScopedDirIO> OutputOffsets;

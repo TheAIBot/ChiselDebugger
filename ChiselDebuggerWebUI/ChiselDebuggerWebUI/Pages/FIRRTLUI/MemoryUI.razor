@@ -6,19 +6,7 @@
         <div>Memory</div>
     </div>
 
-    @foreach (var input in NodeIO.InputOffsets)
-    {
-        <ScopedIOPortUI ScopedIO="@input" AlwaysShowName=true></ScopedIOPortUI>
-    }
-
-    @foreach (var output in NodeIO.OutputOffsets)
-    {
-        <ScopedIOPortUI ScopedIO="@output" AlwaysShowName=true></ScopedIOPortUI>
-    }
-    @foreach (var scope in NodeIO.Scopes)
-    {
-        <div class="ioScope" style="background-color: @scope.ScopeColor; left: @scope.XStart.ToPixels(); top: @scope.YStart.ToPixels(); width: @scope.Width.ToPixels(); height: @scope.Height.ToPixels()"></div>
-    }
+    <ScopedIOUI NodeIO="@NodeIO" AlwaysShowName="true"></ScopedIOUI>
 </div>
 
 @code {

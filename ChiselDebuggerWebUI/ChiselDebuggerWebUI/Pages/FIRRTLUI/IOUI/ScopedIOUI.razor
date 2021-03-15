@@ -1,0 +1,24 @@
+﻿@if (NodeIO != null)
+{
+    @foreach (var input in NodeIO.InputOffsets)
+    {
+        <ScopedIOPortUI ScopedIO="@input" AlwaysShowName="@AlwaysShowName"></ScopedIOPortUI>
+    }
+
+    @foreach (var output in NodeIO.OutputOffsets)
+    {
+        <ScopedIOPortUI ScopedIO="@output" AlwaysShowName="@AlwaysShowName"></ScopedIOPortUI>
+    }
+    @foreach (var scope in NodeIO.Scopes)
+    {
+        <div class="ioScope" style="background-color: @scope.ScopeColor; left: @scope.XStart.ToPixels(); top: @scope.YStart.ToPixels(); width: @scope.Width.ToPixels(); height: @scope.Height.ToPixels()"></div>
+    }
+}
+
+@code {
+    [Parameter]
+    public ScopedNodeIO NodeIO { get; set; } = null;
+
+    [Parameter]
+    public bool AlwaysShowName { get; set; } = false;
+}
