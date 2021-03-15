@@ -306,7 +306,7 @@ namespace ChiselDebug
             }
             else if (exp is FIRRTL.DoPrim prim)
             {
-                var args = prim.Args.Select(x => VisitExp(helper, x)).Cast<GraphFIR.IO.Output>().ToArray();
+                var args = prim.Args.Select(x => VisitExp(helper, x).GetOutput()).Cast<GraphFIR.IO.Output>().ToArray();
                 GraphFIR.FIRRTLPrimOP nodePrim;
                 if (prim.Op is FIRRTL.Add)
                 {
