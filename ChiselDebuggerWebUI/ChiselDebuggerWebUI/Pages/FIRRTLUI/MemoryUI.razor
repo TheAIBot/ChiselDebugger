@@ -24,11 +24,11 @@
         NodeIO = IOPositionCalc.VerticalScopedIO(Operation.GetIO(), GetCurrentSize().X, 50, 10);
         SetCurrentSize(new Point(GetCurrentSize().X, NodeIO.HeightNeeded));
 
-        return NodeIO.InputOffsets.Select(x => x.DirIO).ToList();
+        return NodeIO.GetInputDirIO();
     }
 
     protected override List<DirectedIO> OnMakeOutputs(int width, int height)
     {
-        return NodeIO.OutputOffsets.Select(x => x.DirIO).ToList();
+        return NodeIO.GetOutputDirIO();
     }
 }

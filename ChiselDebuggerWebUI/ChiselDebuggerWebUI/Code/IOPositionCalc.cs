@@ -62,6 +62,16 @@ namespace ChiselDebuggerWebUI.Code
 
             return scopes;
         }
+
+        public List<DirectedIO> GetInputDirIO()
+        {
+            return InputOffsets.Select(x => x.DirIO).ToList();
+        }
+
+        public List<DirectedIO> GetOutputDirIO()
+        {
+            return OutputOffsets.Select(x => x.DirIO).ToList();
+        }
     }
     public class ScopedDirIO
     {
