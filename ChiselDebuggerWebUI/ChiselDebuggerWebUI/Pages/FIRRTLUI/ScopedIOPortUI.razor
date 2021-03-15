@@ -1,0 +1,37 @@
+﻿<div class="ioDot" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();"></div>
+@if (AlwaysShowName)
+{
+    <div class="@IONameClass" style="left:@ScopedIO.DirIO.Position.X.ToPixels();top:@ScopedIO.DirIO.Position.Y.ToPixels();">@ScopedIO.DirIO.IO.Name</div>
+}
+
+@code {
+    [Parameter]
+    public ScopedDirIO ScopedIO { get; set; }
+
+    [Parameter]
+    public bool AlwaysShowName { get; set; } = false;
+
+    private Point Position = Point.Zero;
+    private bool RightToLeft = false;
+    private string IONameClass
+    {
+        get
+        {
+            return RightToLeft ? " ioNameRev" : "ioName";
+        }
+    }
+
+    private const int DOT_RADIUS = 3;
+
+    protected override Task OnParametersSetAsync()
+    {
+        //When position is set first, it represents the position of
+        //the upper left corner of the dot. In order to center it
+        //the radius is subtracted from the position.
+        Position = ScopedIO.DirIO.Position - new Point(DOT_RADIUS, DOT_RADIUS);
+
+        RightToLeft = ScopedIO.DirIO.IO is Output;
+
+        return base.OnParametersSetAsync();
+    }
+}

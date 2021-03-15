@@ -37,6 +37,11 @@ namespace ChiselDebug.GraphFIR.IO
             return this;
         }
 
+        public FIRIO[] GetIOInOrder()
+        {
+            return OrderedIO.ToArray();
+        }
+
         public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false)
         {
             if (input is not IOBundle)

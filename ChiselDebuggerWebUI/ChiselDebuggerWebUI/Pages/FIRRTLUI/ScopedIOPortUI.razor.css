@@ -1,0 +1,18 @@
+﻿.ioDot {
+    position: absolute;
+    height: 6px;
+    width: 6px;
+    background-color: #aaa;
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.ioName {
+    position: absolute;
+    transform: translate(6px, -50%);
+}
+
+.ioNameRev {
+    position: absolute;
+    transform: translate(calc(-100% - 6px), -50%);
+}

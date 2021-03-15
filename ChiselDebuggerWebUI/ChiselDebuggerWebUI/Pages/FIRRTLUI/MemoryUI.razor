@@ -1,31 +1,40 @@
 ﻿@inherits FIRBase<Memory>
 
-<div id="@SizeWatcherID" class="memory" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();min-width:@WIDTH.ToPixels();min-height:@HEIGHT.ToPixels();">
-    <div style="padding:5px;">@Operation.Name</div>
+<div id="@SizeWatcherID" class="memory" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();width:@GetCurrentSize().X.ToPixels();height:@GetCurrentSize().Y.ToPixels();">
+    <div>@Operation.Name</div>
+    <div>Memory</div>
 
-    @foreach (var input in InputOffsets)
+    @foreach (var input in NodeIO.InputOffsets)
     {
-        <IOPortUI Position="@input.Position"></IOPortUI>
+        <ScopedIOPortUI ScopedIO="@input" AlwaysShowName=true></ScopedIOPortUI>
     }
 
-    @foreach (var output in OutputOffsets)
+    @foreach (var output in NodeIO.OutputOffsets)
     {
-        <IOPortUI Position="@output.Position"></IOPortUI>
+        <ScopedIOPortUI ScopedIO="@output" AlwaysShowName=true></ScopedIOPortUI>
     }
 </div>
 
 @code {
-    private const int HEIGHT = 200;
-    private const int WIDTH = 100;
+    private ScopedNodeIO NodeIO = new ScopedNodeIO(new List<ScopedDirIO>(), new List<ScopedDirIO>(), 10);
 
-    private const int StartY = 12;
+    protected override void OnFirstParametersSetAsync()
+    {
+        SetCurrentSize(new Point(100, 10));
+
+        base.OnFirstParametersSetAsync();
+    }
+
     protected override List<DirectedIO> OnMakeInputs(int width, int height)
     {
-        return IOPositionCalc.EvenVertical(height, Operation.GetInputs(), 0, StartY);
+        NodeIO = IOPositionCalc.VerticalScopedIO(Operation.GetIO(), GetCurrentSize().X, 30, 10);
+        SetCurrentSize(new Point(GetCurrentSize().X, NodeIO.HeightNeeded));
+
+        return NodeIO.InputOffsets.Select(x => x.DirIO).ToList();
     }
 
     protected override List<DirectedIO> OnMakeOutputs(int width, int height)
     {
-        return IOPositionCalc.EvenVertical(height, Operation.GetOutputs(), WIDTH, StartY);
+        return NodeIO.OutputOffsets.Select(x => x.DirIO).ToList();
     }
 }
