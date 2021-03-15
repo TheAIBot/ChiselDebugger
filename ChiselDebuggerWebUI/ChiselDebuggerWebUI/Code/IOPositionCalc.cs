@@ -229,7 +229,8 @@ namespace ChiselDebuggerWebUI.Code
 
         private static void MakeScopedIO(List<ScopedDirIO> inputIO, List<ScopedDirIO> outputIO, FIRIO[] io, int fixedX, ref int inputYOffset, ref int outputYOffset, int scopeDepth)
         {
-            outputYOffset = inputYOffset;
+            inputYOffset = Math.Max(inputYOffset, outputYOffset);
+            outputYOffset = Math.Max(inputYOffset, outputYOffset);
 
             for (int i = 0; i < io.Length; i++)
             {
@@ -240,7 +241,7 @@ namespace ChiselDebuggerWebUI.Code
                     scopeDepth--;
 
                     inputYOffset += ExtraSpaceBetweenBundles;
-                    outputYOffset = inputYOffset;
+                    outputYOffset += ExtraSpaceBetweenBundles;
                 }
                 else if (io[i] is ScalarIO scalar)
                 {
@@ -251,6 +252,9 @@ namespace ChiselDebuggerWebUI.Code
                     throw new Exception($"Can't make scoped io for io of type: {io[i].GetType()}");
                 }
             }
+
+            inputYOffset = Math.Max(inputYOffset, outputYOffset);
+            outputYOffset = Math.Max(inputYOffset, outputYOffset);
         }
 
         private static void MakeNoScopeIO(List<ScopedDirIO> inputIO, List<ScopedDirIO> outputIO, ScalarIO io, int fixedX, ref int inputYOffset, ref int outputYOffset, int scopeDepth)
