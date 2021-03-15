@@ -13,23 +13,81 @@ namespace ChiselDebuggerWebUI.Code
         internal readonly List<ScopedDirIO> InputOffsets;
         internal readonly List<ScopedDirIO> OutputOffsets;
         internal readonly int HeightNeeded;
+        internal readonly List<IOScope> Scopes = new List<IOScope>();
+
+        //Colors from https://www.w3schools.com/colors/colors_2021.asp
+        private static readonly string[] PrettyColors = new string[]
+        {
+            "#FDAC53",
+            "#9BB7D4",
+            "#b55a30",
+            "#F5DF4D",
+            "#0072B5",
+            "#A0DAA9",
+            "#E9897E",
+            "#00A170",
+            "#926AA6",
+            "#D2386C",
+        };
+
 
         public ScopedNodeIO(List<ScopedDirIO> inputs, List<ScopedDirIO> outputs, int heightNeeded)
         {
             this.InputOffsets = inputs;
             this.OutputOffsets = outputs;
             this.HeightNeeded = heightNeeded;
+
+            Scopes.AddRange(MakeScopes(InputOffsets));
+            Scopes.AddRange(MakeScopes(OutputOffsets));
+        }
+
+        private static List<IOScope> MakeScopes(List<ScopedDirIO> io)
+        {
+            List<IOScope> scopes = new List<IOScope>();
+
+            var bundleGroups = io
+                .Where(x => x.DirIO.IO.IsPartOfBundle)
+                .GroupBy(x => x.DirIO.IO.Bundle);
+
+            int colorIndex = 0;
+            foreach (var bundleGroup in bundleGroups)
+            {
+                string color = PrettyColors[colorIndex++ % PrettyColors.Length];
+                int xStart = bundleGroup.First().DirIO.Position.X + bundleGroup.First().ScopeXOffset;
+                int yStart = bundleGroup.Min(x => x.DirIO.Position.Y);
+                int yEnd = bundleGroup.Max(x => x.DirIO.Position.Y);
+
+                scopes.Add(new IOScope(color, xStart, yStart, yEnd));
+            }
+
+            return scopes;
         }
     }
     public class ScopedDirIO
     {
         internal readonly DirectedIO DirIO;
-        internal readonly int ScopeDepth;
+        internal readonly int ScopeXOffset;
 
-        public ScopedDirIO(DirectedIO dirIO, int scopeDepth)
+        public ScopedDirIO(DirectedIO dirIO, int scopeXOffset)
         {
             this.DirIO = dirIO;
-            this.ScopeDepth = scopeDepth;
+            this.ScopeXOffset = scopeXOffset;
+        }
+    }
+    internal class IOScope
+    {
+        internal readonly string ScopeColor;
+        internal readonly int XStart;
+        internal readonly int YStart;
+        internal readonly int Width = IOPositionCalc.ScopeWidth;
+        internal readonly int Height;
+
+        public IOScope(string color, int xStart, int yStart, int yEnd)
+        {
+            this.ScopeColor = color;
+            this.XStart = xStart;
+            this.YStart = yStart - IOPositionCalc.ScopeExtraY;
+            this.Height = (yEnd + IOPositionCalc.ScopeExtraY) - YStart;
         }
     }
 
@@ -38,6 +96,8 @@ namespace ChiselDebuggerWebUI.Code
         private const int MaxSpaceBetweenIO = 40;
         private const int MinSpaceBetweenIO = 20;
         private const int ExtraSpaceBetweenBundles = 10;
+        public const int ScopeExtraY = (MinSpaceBetweenIO + ExtraSpaceBetweenBundles) / 3;
+        public const int ScopeWidth = 5;
 
         internal static List<DirectedIO> EvenVertical(int height, ScalarIO[] io, int fixedX, int startY)
         {
@@ -119,19 +179,22 @@ namespace ChiselDebuggerWebUI.Code
                 return;
             }
 
+            
             if (io is Input)
             {
+                int scopeOffset = Math.Max(0, scopeDepth - 1) * ScopeWidth;
                 Point inputPos = new Point(0, inputYOffset);
                 DirectedIO dirIO = new DirectedIO(io, inputPos, MoveDirs.Right);
-                inputIO.Add(new ScopedDirIO(dirIO, scopeDepth));
+                inputIO.Add(new ScopedDirIO(dirIO, scopeOffset));
 
                 inputYOffset += MinSpaceBetweenIO;
             }
             else if (io is Output)
             {
+                int scopeOffset = -scopeDepth * ScopeWidth;
                 Point outputPos = new Point(fixedX, inputYOffset);
                 DirectedIO dirIO = new DirectedIO(io, outputPos, MoveDirs.Right);
-                outputIO.Add(new ScopedDirIO(dirIO, scopeDepth));
+                outputIO.Add(new ScopedDirIO(dirIO, scopeOffset));
 
                 outputYOffset += MinSpaceBetweenIO;
             }
