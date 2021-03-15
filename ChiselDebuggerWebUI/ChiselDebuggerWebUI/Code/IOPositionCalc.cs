@@ -37,6 +37,12 @@ namespace ChiselDebuggerWebUI.Code
             this.OutputOffsets = outputs;
             this.HeightNeeded = heightNeeded;
 
+            RemakeScopes();
+        }
+
+        private void RemakeScopes()
+        {
+            Scopes.Clear();
             Scopes.AddRange(MakeScopes(InputOffsets));
             Scopes.AddRange(MakeScopes(OutputOffsets));
         }
@@ -72,16 +78,82 @@ namespace ChiselDebuggerWebUI.Code
         {
             return OutputOffsets.Select(x => x.DirIO).ToList();
         }
+
+        public void UpdateOutputX(int newX)
+        {
+            foreach (var offset in OutputOffsets)
+            {
+                offset.SetX(newX);
+            }
+
+            RemakeScopes();
+        }
+
+        public float ScaleFillY(int height, int startYPadding, int endYPadding)
+        {
+            int availHeight = height - startYPadding - endYPadding;
+
+            int inputUsedHeight = InputOffsets.Max(x => x.DirIO.Position.Y);
+            int outputusedHeight = OutputOffsets.Max(x => x.DirIO.Position.Y);
+            int usedHeight = Math.Max(inputUsedHeight, outputusedHeight);
+
+            float scaleFactor = (float)availHeight / usedHeight;
+            foreach (var offset in InputOffsets)
+            {
+                int currY = offset.DirIO.Position.Y;
+                offset.SetY((int)(currY * scaleFactor));
+            }
+            foreach (var offset in OutputOffsets)
+            {
+                int currY = offset.DirIO.Position.Y;
+                offset.SetY((int)(currY * scaleFactor));
+            }
+
+            RemakeScopes();
+
+            return scaleFactor;
+        }
+
+        public ScopedNodeIO Copy()
+        {
+            var inputCopies = InputOffsets.Select(x => x.Copy()).ToList();
+            var outputCopies = OutputOffsets.Select(x => x.Copy()).ToList();
+
+            return new ScopedNodeIO(inputCopies, outputCopies, HeightNeeded);
+        }
     }
     public class ScopedDirIO
     {
-        internal readonly DirectedIO DirIO;
+        internal DirectedIO DirIO { get; private set; }
         internal readonly int ScopeXOffset;
 
         public ScopedDirIO(DirectedIO dirIO, int scopeXOffset)
         {
             this.DirIO = dirIO;
             this.ScopeXOffset = scopeXOffset;
+        }
+
+        public void SetX(int newX)
+        {
+            Point currPos = DirIO.Position;
+            Point newPos = new Point(newX, DirIO.Position.Y);
+            Point offset = newPos - currPos;
+
+            DirIO = DirIO.WithOffsetPosition(offset);
+        }
+
+        public void SetY(int newY)
+        {
+            Point currPos = DirIO.Position;
+            Point newPos = new Point(DirIO.Position.X, newY);
+            Point offset = newPos - currPos;
+
+            DirIO = DirIO.WithOffsetPosition(offset);
+        }
+
+        public ScopedDirIO Copy()
+        {
+            return new ScopedDirIO(DirIO.WithOffsetPosition(Point.Zero), ScopeXOffset);
         }
     }
     internal class IOScope

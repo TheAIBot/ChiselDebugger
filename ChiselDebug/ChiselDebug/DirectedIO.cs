@@ -19,7 +19,7 @@ namespace ChiselDebug
             this.InitialDir = initialDir;
         }
 
-        internal DirectedIO WithOffsetPosition(Point offset)
+        public DirectedIO WithOffsetPosition(Point offset)
         {
             return new DirectedIO(IO, Position + offset, InitialDir);
         }
