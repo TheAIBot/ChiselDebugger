@@ -33,6 +33,11 @@ namespace ChiselDebug.GraphFIR
             return ExternalIO.Values.ToArray();
         }
 
+        public FIRIO[] GetInternalIO()
+        {
+            return InternalIO.Values.ToArray();
+        }
+
         public ScalarIO[] GetInternalInputs()
         {
             return FlattenAndFilterIO<Input>(InternalIO);
