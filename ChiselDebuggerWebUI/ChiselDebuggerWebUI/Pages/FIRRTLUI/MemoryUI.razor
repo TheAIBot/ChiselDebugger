@@ -1,8 +1,10 @@
 ﻿@inherits FIRBase<Memory>
 
 <div id="@SizeWatcherID" class="memory" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();width:@GetCurrentSize().X.ToPixels();height:@GetCurrentSize().Y.ToPixels();">
-    <div>@Operation.Name</div>
-    <div>Memory</div>
+    <div class="memoryName">
+        <div>@Operation.Name</div>
+        <div>Memory</div>
+    </div>
 
     @foreach (var input in NodeIO.InputOffsets)
     {
@@ -27,7 +29,7 @@
 
     protected override List<DirectedIO> OnMakeInputs(int width, int height)
     {
-        NodeIO = IOPositionCalc.VerticalScopedIO(Operation.GetIO(), GetCurrentSize().X, 30, 10);
+        NodeIO = IOPositionCalc.VerticalScopedIO(Operation.GetIO(), GetCurrentSize().X, 50, 10);
         SetCurrentSize(new Point(GetCurrentSize().X, NodeIO.HeightNeeded));
 
         return NodeIO.InputOffsets.Select(x => x.DirIO).ToList();
