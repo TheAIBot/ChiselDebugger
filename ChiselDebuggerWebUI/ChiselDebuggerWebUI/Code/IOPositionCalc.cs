@@ -12,7 +12,7 @@ namespace ChiselDebuggerWebUI.Code
     {
         internal readonly List<ScopedDirIO> InputOffsets;
         internal readonly List<ScopedDirIO> OutputOffsets;
-        internal readonly int HeightNeeded;
+        internal int HeightNeeded { get; private set; }
         internal readonly List<IOScope> Scopes = new List<IOScope>();
 
         //Colors from https://www.w3schools.com/colors/colors_2021.asp
@@ -109,6 +109,7 @@ namespace ChiselDebuggerWebUI.Code
                 offset.SetY((int)(currY * scaleFactor));
             }
 
+            HeightNeeded = height;
             RemakeScopes();
 
             return scaleFactor;
