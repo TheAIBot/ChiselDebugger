@@ -1,5 +1,6 @@
 ﻿using FIRRTL;
 using System;
+using System.Collections.Generic;
 
 namespace ChiselDebug.GraphFIR.IO
 {
@@ -23,11 +24,18 @@ namespace ChiselDebug.GraphFIR.IO
             return Con != null;
         }
 
+        public override IEnumerable<ScalarIO> Flatten()
+        {
+            yield return this;
+        }
+
         public override bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container)
         {
             throw new Exception("Scalar IO can't contain additional io.");
         }
 
         public abstract void SetType(IFIRType type);
+
+        public abstract void InferType();
     }
 }

@@ -45,6 +45,14 @@ namespace ChiselDebug
                         continue;
                     }
 
+                    //Because a register is bi-gender, its io is contained
+                    //within a bundle so it's necessary to do this extra
+                    //step to get the correct io out.
+                    if (ioLink is RegisterIO regIO)
+                    {
+                        ioLink = regIO.GetIO(varValue.Variable.Reference);
+                    }
+
                     //Apparently if a module contains an instance of another module
                     //then it will also have a wire with the instance name in the vcd
                     //file. Ends up with a bundle when this happens so just ignore the

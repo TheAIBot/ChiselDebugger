@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ChiselDebug.GraphFIR.IO;
+using System;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -53,6 +54,11 @@ namespace ChiselDebug.GraphFIR
             {
                 throw new Exception($"Unexpected literal type: {literal}");
             }
+        }
+
+        public static ScalarIO[] Flatten(this FIRIO[] io)
+        {
+            return io.SelectMany(x => x.Flatten()).ToArray();
         }
     }
 }

@@ -13,9 +13,9 @@ namespace ChiselDebug.GraphFIR
             this.Result = new Output(this, type);
         }
 
-        public override Output[] GetOutputs()
+        public override ScalarIO[] GetOutputs()
         {
-            return new Output[] { Result };
+            return new ScalarIO[] { Result };
         }
     }
 }

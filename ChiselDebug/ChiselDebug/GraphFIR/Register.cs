@@ -44,9 +44,9 @@ namespace ChiselDebug.GraphFIR
             return new RegisterIO(Name, In, Result);
         }
 
-        public override Input[] GetInputs()
+        public override ScalarIO[] GetInputs()
         {
-            List<Input> inputs = new List<Input>();
+            List<ScalarIO> inputs = new List<ScalarIO>();
             inputs.Add(In);
             inputs.Add(Clock);
             if (Reset != null)
@@ -60,9 +60,27 @@ namespace ChiselDebug.GraphFIR
             return inputs.ToArray();
         }
 
-        public override Output[] GetOutputs()
+        public override ScalarIO[] GetOutputs()
         {
-            return new Output[] { Result };
+            return new ScalarIO[] { Result };
+        }
+
+        public override FIRIO[] GetIO()
+        {
+            List<FIRIO> io = new List<FIRIO>();
+            io.Add(In);
+            io.Add(Clock);
+            if (Reset != null)
+            {
+                io.Add(Reset);
+            }
+            if (Init != null)
+            {
+                io.Add(Init);
+            }
+            io.Add(Result);
+
+            return io.ToArray();
         }
 
         public override void InferType()

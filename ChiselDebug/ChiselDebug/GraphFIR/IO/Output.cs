@@ -36,14 +36,14 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public override FIRIO Flip()
+        public override FIRIO Flip(FIRRTLNode node = null)
         {
-            return new Input(Node, Name, Type);
+            return new Input(node ?? Node, Name, Type);
         }
 
-        public override FIRIO Copy()
+        public override FIRIO Copy(FIRRTLNode node = null)
         {
-            return new Output(Node, Name, Type);
+            return new Output(node ?? Node, Name, Type);
         }
 
         public override bool IsPassiveOfType<T>()
@@ -57,7 +57,7 @@ namespace ChiselDebug.GraphFIR.IO
                    Type.Equals(otherOut.Type);
         }
 
-        public void InferType()
+        public override void InferType()
         {
             if (Node != null && Type is UnknownType)
             {

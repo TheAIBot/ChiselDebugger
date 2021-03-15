@@ -21,11 +21,11 @@
     private const int StartY = 12;
     protected override List<DirectedIO> OnMakeInputs(int width, int height)
     {
-        return IOPositionCalc.EvenVertical<Input>(height, Operation.GetInputs(), 0, StartY);
+        return IOPositionCalc.EvenVertical(height, Operation.GetInputs(), 0, StartY);
     }
 
     protected override List<DirectedIO> OnMakeOutputs(int width, int height)
     {
-        return IOPositionCalc.EvenVertical<Output>(height, Operation.GetOutputs(), WIDTH, StartY);
+        return IOPositionCalc.EvenVertical(height, Operation.GetOutputs(), WIDTH, StartY);
     }
 }

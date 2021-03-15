@@ -5,8 +5,10 @@ namespace ChiselDebug.GraphFIR
 {
     public abstract class FIRRTLNode
     {
-        public abstract Input[] GetInputs();
-        public abstract Output[] GetOutputs();
+        public abstract ScalarIO[] GetInputs();
+        public abstract ScalarIO[] GetOutputs();
+
+        public abstract FIRIO[] GetIO();
 
         public abstract void InferType();
     }

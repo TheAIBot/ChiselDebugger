@@ -192,30 +192,9 @@ namespace ChiselDebug
             else if (statement is FIRRTL.Connect connect)
             {
                 GraphFIR.IO.FIRIO from = VisitExp(helper, connect.Expr);
+                GraphFIR.IO.FIRIO to = (GraphFIR.IO.FIRIO)VisitRef(helper, connect.Loc, helper.Mod);
 
-                GraphFIR.IO.FIRIO to;
-                if (connect.Loc is FIRRTL.Reference firRef)
-                {
-                    //The name for a register input is special because /in
-                    //is added to the name in the vcd file. If name is a register
-                    //then set name to register input name.
-                    if (helper.Mod.GetIO(firRef.Name) is GraphFIR.IO.Output maybeRegOut &&
-                        maybeRegOut.Node != null &&
-                        maybeRegOut.Node is GraphFIR.Register reg)
-                    {
-                        to = reg.In;
-                    }
-                    else
-                    {
-                        to = (GraphFIR.IO.FIRIO)helper.Mod.GetIO(firRef.Name);
-                    }
-                }
-                else
-                {
-                    to = (GraphFIR.IO.FIRIO)VisitRef(helper, connect.Loc, helper.Mod);
-                }
-
-                from.ConnectToInput(to);
+                from.GetOutput().ConnectToInput(to.GetInput());
             }
             else if (statement is FIRRTL.PartialConnect)
             {
@@ -407,26 +386,21 @@ namespace ChiselDebug
             }
             else if (exp is FIRRTL.Mux mux)
             {
-                var cond = (GraphFIR.IO.Output)VisitExp(helper, mux.Cond);
-                var ifTrue = (GraphFIR.IO.Output)VisitExp(helper, mux.TrueValue);
-                var ifFalse = (GraphFIR.IO.Output)VisitExp(helper, mux.FalseValue);
+                var cond = (GraphFIR.IO.Output)VisitExp(helper, mux.Cond).GetOutput();
+                var ifTrue = VisitExp(helper, mux.TrueValue);
+                var ifFalse = VisitExp(helper, mux.FalseValue);
 
-                GraphFIR.Mux node = new GraphFIR.Mux(new List<FIRRTL.IFIRType>() { ifTrue.Type, ifFalse.Type }, mux.Type);
-                cond.ConnectToInput(node.Decider);
-                ifTrue.ConnectToInput(node.Choises[0]);
-                ifFalse.ConnectToInput(node.Choises[1]);
+                GraphFIR.Mux node = new GraphFIR.Mux(new List<GraphFIR.IO.FIRIO>() { ifTrue, ifFalse }, cond, mux.Type);
 
                 helper.AddNodeToModule(node);
                 return node.Result;
             }
             else if (exp is FIRRTL.ValidIf validIf)
             {
-                var cond = (GraphFIR.IO.Output)VisitExp(helper, validIf.Cond);
-                var ifValid = (GraphFIR.IO.Output)VisitExp(helper, validIf.Value);
+                var cond = (GraphFIR.IO.Output)VisitExp(helper, validIf.Cond).GetOutput();
+                var ifValid = VisitExp(helper, validIf.Value);
 
-                GraphFIR.Mux node = new GraphFIR.Mux(new List<FIRRTL.IFIRType>() { ifValid.Type }, validIf.Type);
-                cond.ConnectToInput(node.Decider);
-                ifValid.ConnectToInput(node.Choises[0]);
+                GraphFIR.Mux node = new GraphFIR.Mux(new List<GraphFIR.IO.FIRIO>() { ifValid }, cond, validIf.Type);
 
                 helper.AddNodeToModule(node);
                 return node.Result;

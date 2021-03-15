@@ -44,7 +44,8 @@ namespace ChiselDebug.GraphFIR
             Nodes.Add(reg);
 
             IOBundle regIO = reg.GetIOAsBundle();
-            NameToIO.Add(regIO.Name, regIO);
+            NameToIO.Add(regIO.GetInput().Name, regIO);
+            NameToIO.Add(regIO.GetOutput().Name, regIO);
         }
 
         public void AddModule(Module mod, string bundleName)

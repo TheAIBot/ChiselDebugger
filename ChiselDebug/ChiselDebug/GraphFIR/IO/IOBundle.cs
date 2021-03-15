@@ -88,32 +88,25 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public override FIRIO Flip()
+        public override FIRIO Flip(FIRRTLNode node = null)
         {
-            List<FIRIO> flipped = IO.Values.Select(x => x.Flip()).ToList();
+            List<FIRIO> flipped = OrderedIO.Select(x => x.Flip(node)).ToList();
             return new IOBundle(Name, flipped, IO.Values.FirstOrDefault()?.IsPartOfBundle ?? false);
         }
 
-        public override FIRIO Copy()
+        public override FIRIO Copy(FIRRTLNode node = null)
         {
-            List<FIRIO> flipped = IO.Values.Select(x => x.Copy()).ToList();
+            List<FIRIO> flipped = OrderedIO.Select(x => x.Copy(node)).ToList();
             return new IOBundle(Name, flipped, IO.Values.FirstOrDefault()?.IsPartOfBundle ?? false);
         }
 
-        public IEnumerable<FIRIO> Flatten()
+        public override IEnumerable<ScalarIO> Flatten()
         {
             foreach (var io in IO.Values)
             {
-                if (io is IOBundle bundle)
+                foreach (var nested in io.Flatten())
                 {
-                    foreach (var nested in bundle.Flatten())
-                    {
-                        yield return nested;
-                    }
-                }
-                else
-                {
-                    yield return io;
+                    yield return nested;
                 }
             }
         }

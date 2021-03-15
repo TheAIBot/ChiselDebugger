@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace ChiselDebug.GraphFIR.IO
@@ -17,7 +18,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         public void SetName(string name)
         {
-            Name = name;
+            Name = name ?? string.Empty;
         }
 
         public void SetBundle(IOBundle bundle)
@@ -35,8 +36,9 @@ namespace ChiselDebug.GraphFIR.IO
         }
 
         public abstract void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false);
-        public abstract FIRIO Flip();
-        public abstract FIRIO Copy();
+        public abstract FIRIO Flip(FIRRTLNode node = null);
+        public abstract FIRIO Copy(FIRRTLNode node = null);
+        public abstract IEnumerable<ScalarIO> Flatten();
         public abstract bool IsPassiveOfType<T>();
         public abstract bool SameIO(FIRIO other);
         public abstract bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container);
