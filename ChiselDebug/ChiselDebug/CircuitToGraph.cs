@@ -121,12 +121,7 @@ namespace ChiselDebug
             {
                 io.Add(VisitBundle(helper, direction, name, bundle));
             }
-            else if (type is FIRRTL.AggregateType)
-            {
-                throw new NotImplementedException();
-            }
-
-            if (direction == FIRRTL.Dir.Input)
+            else if (direction == FIRRTL.Dir.Input)
             {
                 io.Add(new GraphFIR.IO.Input(null, name, type));
 
@@ -139,9 +134,13 @@ namespace ChiselDebug
                     io.Add(new GraphFIR.IO.Input(null, name + "/prev", type));
                 }
             }
-            else
+            else if (direction == FIRRTL.Dir.Output)
             {
                 io.Add(new GraphFIR.IO.Output(null, name, type));
+            }
+            else
+            {
+                throw new NotImplementedException();
             }
 
             return io;
