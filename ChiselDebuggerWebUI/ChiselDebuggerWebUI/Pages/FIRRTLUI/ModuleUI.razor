@@ -75,10 +75,14 @@
     {
         //Update this module with its internal io positions
         ScopedNodeIO internalIO = IOPositionCalc.VerticalScopedIO(Operation.GetInternalIO(), width, MarginForIO, MarginForIO);
+        
+        //X position for internal is flipped i.e. input has output x
+        //and the other way around. This switches the x values around.
         internalIO.UpdateIOX(width, 0);
 
-        float scaling = internalIO.GetMaxScaling(height, MaxContentScaling);
-        internalIO.ScaleFillY(height, scaling);
+        //Scale io the the height of the entire module
+        internalIO.ScaleFillY(height, MaxContentScaling);
+
         internalIO.VerticalRecenter(height);
 
         CurrModCtrl.UpdateIOFromNode(Operation, internalIO.GetInputDirIO(), internalIO.GetOutputDirIO());
