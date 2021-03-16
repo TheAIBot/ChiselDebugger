@@ -51,7 +51,7 @@
     private const int ContentPadding = 0;
     private const int MarginForIO = 20;
     private const int MinSpaceBetweenIO = 15;
-    private const float MaxContentScaling = 3000.0f;
+    private const float MaxContentScaling = 3.0f;
     private Point MinContentSize;
     private List<Positioned<FIRRTLNode>> ModuleOpPoses = new List<Positioned<FIRRTLNode>>();
     private ModuleController CurrModCtrl;
@@ -77,32 +77,37 @@
         ScopedNodeIO internalIO = IOPositionCalc.VerticalScopedIO(Operation.GetInternalIO(), width, MarginForIO, MarginForIO);
         internalIO.UpdateIOX(width, 0);
 
-        float scaling = internalIO.GetMaxScaling(height, MaxContentScaling);// ExternalIO.ScaleFillY(height, MaxContentScaling);
-        scaling = Math.Min(3.0f, scaling);
+        float scaling = internalIO.GetMaxScaling(height, MaxContentScaling);
         internalIO.ScaleFillY(height, scaling);
+        internalIO.VerticalRecenter(height);
 
         CurrModCtrl.UpdateIOFromNode(Operation, internalIO.GetInputDirIO(), internalIO.GetOutputDirIO());
     }
 
-    private Point UpdateParentAboutExteriorIO(int width, int height)
+    private Point UpdateParentAboutExteriorIO(Point moduleSize)
     {
-        ExternalIO = IOPositionCalc.VerticalScopedIO(Operation.GetIO(), width, MarginForIO, MarginForIO);
+        ExternalIO = IOPositionCalc.VerticalScopedIO(Operation.GetIO(), moduleSize.X, MarginForIO, MarginForIO);
 
-        Point moduleSize = new Point(width, height);
-        if (ParentModCtrl == null)
+        if (moduleSize.Y > ExternalIO.HeightNeeded)
         {
-            return moduleSize;
-        }
+            //Top level module will actuall scale its io.
+            //Nested modules will instead Scale the module content
+            //to a size better matching the size of the io.
+            if (ParentModCtrl == null)
+            {
+                ExternalIO.ScaleFillY(moduleSize.Y, MaxContentScaling);
+            }
+            else
+            {
+                float scaling = ExternalIO.GetMaxScaling(moduleSize.Y, MaxContentScaling);
+                ContentScale = 1 / scaling;
+                moduleSize /= scaling;
+            }
 
-        if (height > ExternalIO.HeightNeeded)
-        {
-            float scaling = ExternalIO.GetMaxScaling(height, MaxContentScaling);// ExternalIO.ScaleFillY(height, MaxContentScaling);
-            scaling = Math.Min(3.0f, scaling);
-            ContentScale = 1 / scaling;
-
-            moduleSize /= scaling;
             ExternalIO.UpdateOutputX(moduleSize.X);
         }
+
+        ExternalIO.VerticalRecenter(moduleSize.Y);
 
         ParentModCtrl?.UpdateComponentInfo(new FIRComponentUpdate(Operation, moduleSize, ExternalIO.GetInputDirIO(), ExternalIO.GetOutputDirIO()));
 
@@ -125,9 +130,7 @@
 
         //With new module size, the io positions need to be updated
         OnResize(moduleSize.X, moduleSize.Y);
-        moduleSize = UpdateParentAboutExteriorIO(moduleSize.X, moduleSize.Y);
-
-
+        moduleSize = UpdateParentAboutExteriorIO(moduleSize);
 
         CurrModCtrl.RouteWires(placements);
 

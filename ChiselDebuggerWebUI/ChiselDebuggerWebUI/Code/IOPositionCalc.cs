@@ -3,6 +3,7 @@ using ChiselDebug.GraphFIR;
 using ChiselDebug.GraphFIR.IO;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -13,8 +14,8 @@ namespace ChiselDebuggerWebUI.Code
         internal readonly List<ScopedDirIO> InputOffsets;
         internal readonly List<ScopedDirIO> OutputOffsets;
         internal int HeightNeeded { get; private set; }
-        private readonly int YStartPadding;
-        private readonly int YEndPadding;
+        private int YStartPadding;
+        private int YEndPadding;
         internal readonly List<IOScope> Scopes = new List<IOScope>();
 
         //Colors from https://www.w3schools.com/colors/colors_2021.asp
@@ -109,8 +110,8 @@ namespace ChiselDebuggerWebUI.Code
 
         public float GetMaxScaling(int height, float maxAllowedScaling)
         {
-            int heightNeededWithoutPad = HeightNeeded - YStartPadding - YEndPadding;
-            int heightAvailWithoutPad = height - YStartPadding - YEndPadding;
+            int heightNeededWithoutPad = HeightNeeded;
+            int heightAvailWithoutPad = height;
 
             float maxScaling = (float)heightAvailWithoutPad / heightNeededWithoutPad;
             return Math.Min(maxAllowedScaling, maxScaling);
@@ -119,41 +120,53 @@ namespace ChiselDebuggerWebUI.Code
         public float ScaleFillY(int height, float maxAllowedScaling)
         {
             float scaleFactor = GetMaxScaling(height, maxAllowedScaling);
-            //foreach (var offset in InputOffsets)
-            //{
-            //    int currY = offset.DirIO.Position.Y;
-            //    int yOffset = currY - YStartPadding;
-            //    float yOffsetScaled = yOffset * scaleFactor;
-            //    int newY = (int)yOffsetScaled + YStartPadding;
-            //    offset.SetY(newY);
-            //}
-            //foreach (var offset in OutputOffsets)
-            //{
-            //    int currY = offset.DirIO.Position.Y;
-            //    int yOffset = currY - YStartPadding;
-            //    float yOffsetScaled = yOffset * scaleFactor;
-            //    int newY = (int)yOffsetScaled + YStartPadding;
-            //    offset.SetY(newY);
-            //}
             foreach (var offset in InputOffsets)
             {
                 int currY = offset.DirIO.Position.Y;
-                float yOffsetScaled = currY * scaleFactor;
-                int newY = (int)yOffsetScaled;
-                offset.SetY(newY);
+                offset.SetY((int)(currY * scaleFactor));
             }
             foreach (var offset in OutputOffsets)
             {
                 int currY = offset.DirIO.Position.Y;
-                float yOffsetScaled = currY * scaleFactor;
-                int newY = (int)yOffsetScaled;
-                offset.SetY(newY);
+                offset.SetY((int)(currY * scaleFactor));
             }
 
-            HeightNeeded = height;
+            HeightNeeded = (int)(HeightNeeded * scaleFactor);
+            YStartPadding = (int)(YStartPadding * scaleFactor);
+            YEndPadding = (int)(YEndPadding * scaleFactor);
             RemakeScopes();
 
+            Debug.Assert(height >= HeightNeeded);
             return scaleFactor;
+        }
+
+        public void VerticalRecenter(int height)
+        {
+            if (height == HeightNeeded)
+            {
+                return;
+            }
+
+            Debug.Assert(height >= HeightNeeded);
+
+
+            int heightNeededWithoutPad = HeightNeeded - YStartPadding - YEndPadding;
+            int heightAvailWithoutPad = height - YStartPadding - YEndPadding;
+            int remainingSpace = heightAvailWithoutPad - heightNeededWithoutPad;
+            int startPad = remainingSpace / 2;
+
+            foreach (var offset in InputOffsets)
+            {
+                int currY = offset.DirIO.Position.Y;
+                offset.SetY(currY + startPad);
+            }
+            foreach (var offset in OutputOffsets)
+            {
+                int currY = offset.DirIO.Position.Y;
+                offset.SetY(currY + startPad);
+            }
+
+            RemakeScopes();
         }
 
         public ScopedNodeIO Copy()
