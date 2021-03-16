@@ -88,8 +88,10 @@ namespace ChiselDebug.GraphFIR.IO
                 {
                     aBundle.ConnectToInput(bBundle, allowPartial, asPassive);
                 }
-
-                throw new Exception($"Can't connect IO of type {a.GetType()} to {b.GetType()}.");
+                else
+                {
+                    throw new Exception($"Can't connect IO of type {a.GetType()} to {b.GetType()}.");
+                }
             }
         }
 
