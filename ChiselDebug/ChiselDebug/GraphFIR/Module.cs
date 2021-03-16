@@ -23,18 +23,11 @@ namespace ChiselDebug.GraphFIR
         public void AddNode(FIRRTLNode node)
         {
             Nodes.Add(node);
-            foreach (var input in node.GetInputs())
+            foreach (var io in node.GetIO())
             {
-                if (!input.IsAnonymous)
+                if (!io.IsAnonymous)
                 {
-                    NameToIO.Add(input.Name, input);
-                }
-            }
-            foreach (var output in node.GetOutputs())
-            {
-                if (!output.IsAnonymous)
-                {
-                    NameToIO.Add(output.Name, output);
+                    NameToIO.Add(io.Name, io);
                 }
             }
         }
