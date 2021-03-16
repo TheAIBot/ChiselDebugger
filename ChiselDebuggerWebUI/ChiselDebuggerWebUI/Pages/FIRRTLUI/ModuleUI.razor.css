@@ -15,4 +15,5 @@
 
 .moduleContent {
     position: relative;
+    transform-origin: 0 0;
 }
