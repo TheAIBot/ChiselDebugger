@@ -13,6 +13,8 @@ namespace ChiselDebuggerWebUI.Code
         internal readonly List<ScopedDirIO> InputOffsets;
         internal readonly List<ScopedDirIO> OutputOffsets;
         internal int HeightNeeded { get; private set; }
+        private readonly int YStartPadding;
+        private readonly int YEndPadding;
         internal readonly List<IOScope> Scopes = new List<IOScope>();
 
         //Colors from https://www.w3schools.com/colors/colors_2021.asp
@@ -31,11 +33,13 @@ namespace ChiselDebuggerWebUI.Code
         };
 
 
-        public ScopedNodeIO(List<ScopedDirIO> inputs, List<ScopedDirIO> outputs, int heightNeeded)
+        public ScopedNodeIO(List<ScopedDirIO> inputs, List<ScopedDirIO> outputs, int heightNeeded, int yStartPad, int yEndPad)
         {
             this.InputOffsets = inputs;
             this.OutputOffsets = outputs;
             this.HeightNeeded = heightNeeded;
+            this.YStartPadding = yStartPad;
+            this.YEndPadding = yEndPad;
 
             RemakeScopes();
         }
@@ -103,24 +107,47 @@ namespace ChiselDebuggerWebUI.Code
             RemakeScopes();
         }
 
-        public float ScaleFillY(int height, int startYPadding, int endYPadding)
+        public float GetMaxScaling(int height, float maxAllowedScaling)
         {
-            int availHeight = height - startYPadding - endYPadding;
+            int heightNeededWithoutPad = HeightNeeded - YStartPadding - YEndPadding;
+            int heightAvailWithoutPad = height - YStartPadding - YEndPadding;
 
-            int inputUsedHeight = InputOffsets.Max(x => x.DirIO.Position.Y);
-            int outputusedHeight = OutputOffsets.Max(x => x.DirIO.Position.Y);
-            int usedHeight = Math.Max(inputUsedHeight, outputusedHeight);
+            float maxScaling = (float)heightAvailWithoutPad / heightNeededWithoutPad;
+            return Math.Min(maxAllowedScaling, maxScaling);
+        }
 
-            float scaleFactor = (float)availHeight / usedHeight;
+        public float ScaleFillY(int height, float maxAllowedScaling)
+        {
+            float scaleFactor = GetMaxScaling(height, maxAllowedScaling);
+            //foreach (var offset in InputOffsets)
+            //{
+            //    int currY = offset.DirIO.Position.Y;
+            //    int yOffset = currY - YStartPadding;
+            //    float yOffsetScaled = yOffset * scaleFactor;
+            //    int newY = (int)yOffsetScaled + YStartPadding;
+            //    offset.SetY(newY);
+            //}
+            //foreach (var offset in OutputOffsets)
+            //{
+            //    int currY = offset.DirIO.Position.Y;
+            //    int yOffset = currY - YStartPadding;
+            //    float yOffsetScaled = yOffset * scaleFactor;
+            //    int newY = (int)yOffsetScaled + YStartPadding;
+            //    offset.SetY(newY);
+            //}
             foreach (var offset in InputOffsets)
             {
                 int currY = offset.DirIO.Position.Y;
-                offset.SetY((int)(currY * scaleFactor));
+                float yOffsetScaled = currY * scaleFactor;
+                int newY = (int)yOffsetScaled;
+                offset.SetY(newY);
             }
             foreach (var offset in OutputOffsets)
             {
                 int currY = offset.DirIO.Position.Y;
-                offset.SetY((int)(currY * scaleFactor));
+                float yOffsetScaled = currY * scaleFactor;
+                int newY = (int)yOffsetScaled;
+                offset.SetY(newY);
             }
 
             HeightNeeded = height;
@@ -134,7 +161,7 @@ namespace ChiselDebuggerWebUI.Code
             var inputCopies = InputOffsets.Select(x => x.Copy()).ToList();
             var outputCopies = OutputOffsets.Select(x => x.Copy()).ToList();
 
-            return new ScopedNodeIO(inputCopies, outputCopies, HeightNeeded);
+            return new ScopedNodeIO(inputCopies, outputCopies, HeightNeeded, YStartPadding, YEndPadding);
         }
     }
     public class ScopedDirIO
@@ -238,7 +265,7 @@ namespace ChiselDebuggerWebUI.Code
             MakeScopedIO(inputIO, outputIO, io, fixedX, ref inputY, ref outputY, 0);
 
             int heightNeeded = Math.Max(inputY, outputY) + endYPadding;
-            return new ScopedNodeIO(inputIO, outputIO, heightNeeded);
+            return new ScopedNodeIO(inputIO, outputIO, heightNeeded, startYPadding, endYPadding);
         }
 
         private static void MakeScopedIO(List<ScopedDirIO> inputIO, List<ScopedDirIO> outputIO, FIRIO[] io, int fixedX, ref int inputYOffset, ref int outputYOffset, int scopeDepth)
