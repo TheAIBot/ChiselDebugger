@@ -17,7 +17,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VCDReader", "..\VCDReader\V
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VCDReaderTests", "..\VCDReaderTests\VCDReaderTests.csproj", "{E77F7A53-F289-4375-8632-99EB7F1634BD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChiselDebugTests", "ChiselDebugTests\ChiselDebugTests.csproj", "{2F842CD6-3DC6-437E-9F9D-32367DE2642F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChiselDebugTests", "ChiselDebugTests\ChiselDebugTests.csproj", "{2F842CD6-3DC6-437E-9F9D-32367DE2642F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

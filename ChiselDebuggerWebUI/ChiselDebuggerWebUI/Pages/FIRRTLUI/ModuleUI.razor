@@ -17,6 +17,10 @@
             {
                 <MuxOp @key=posOp.Value PosOp="@(posOp.Cast<Mux>())" ParentModCtrl="CurrModCtrl"></MuxOp>
             }
+            else if (posOp.Value is MonoArgMonoResPrimOp)
+            {
+                <MonoArgPrimOpUI @key=posOp.Value PosOp="@(posOp.Cast<MonoArgMonoResPrimOp>())" ParentModCtrl="CurrModCtrl"></MonoArgPrimOpUI>
+            }
             else if (posOp.Value is BiArgMonoResPrimOp)
             {
                 <BiArgMonoResPrimOpUI @key=posOp.Value PosOp="@(posOp.Cast<BiArgMonoResPrimOp>())" ParentModCtrl="CurrModCtrl"></BiArgMonoResPrimOpUI>
