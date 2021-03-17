@@ -83,4 +83,40 @@ namespace ChiselDebug.GraphFIR
             _ => throw new Exception("Failed to infer type.")
         };
     }
+
+    public class FIRCvt : MonoArgMonoResPrimOp
+    {
+        public FIRCvt(Output aIn, IFIRType outType) : base("cvt", aIn, outType) { }
+
+        public override IFIRType MonoArgInferType() => A.Type switch
+        {
+            UIntType a => new SIntType(a.Width + 1),
+            SIntType a => new SIntType(a.Width),
+            _ => throw new Exception("Failed to infer type.")
+        };
+    }
+
+    public class FIRNeg : MonoArgMonoResPrimOp
+    {
+        public FIRNeg(Output aIn, IFIRType outType) : base("-", aIn, outType) { }
+
+        public override IFIRType MonoArgInferType() => A.Type switch
+        {
+            UIntType a => new SIntType(a.Width + 1),
+            SIntType a => new SIntType(a.Width + 1),
+            _ => throw new Exception("Failed to infer type.")
+        };
+    }
+
+    public class FIRNot : MonoArgMonoResPrimOp
+    {
+        public FIRNot(Output aIn, IFIRType outType) : base("~", aIn, outType) { }
+
+        public override IFIRType MonoArgInferType() => A.Type switch
+        {
+            UIntType a => new UIntType(a.Width),
+            SIntType a => new UIntType(a.Width),
+            _ => throw new Exception("Failed to infer type.")
+        };
+    }
 }
