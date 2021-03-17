@@ -331,4 +331,14 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
+
+# Ignore firrtl test examples
 ChiselDebuggerWebUI/ChiselDebuggerWebUI/Examples/
+
+# Ignore scala tmp project files
+ChiselTestGen/.bloop/
+ChiselTestGen/.metals/
+ChiselTestGen/.vscode/
+ChiselTestGen/project/
+ChiselTestGen/target/
+ChiselTestGen/test_run_dir/
