@@ -411,6 +411,18 @@ namespace ChiselDebug
                 {
                     nodePrim = new GraphFIR.FIRNot(args[0], prim.Type);
                 }
+                else if (prim.Op is FIRRTL.Andr)
+                {
+                    nodePrim = new GraphFIR.FIRAndr(args[0], prim.Type);
+                }
+                else if (prim.Op is FIRRTL.Orr)
+                {
+                    nodePrim = new GraphFIR.FIROrr(args[0], prim.Type);
+                }
+                else if (prim.Op is FIRRTL.Xorr)
+                {
+                    nodePrim = new GraphFIR.FIRXorr(args[0], prim.Type);
+                }
                 else if (prim.Op is FIRRTL.Shl)
                 {
                     nodePrim = new GraphFIR.FIRShl(args[0], (int)prim.Consts[0], prim.Type);
