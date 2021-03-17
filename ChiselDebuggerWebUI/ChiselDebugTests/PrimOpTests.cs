@@ -16,7 +16,7 @@ namespace ChiselDebugTests
         [TestMethod] public void PrimOpSub() => VerifyPrimOpBiArg("sub");
         [TestMethod] public void PrimOpMul() => VerifyPrimOpBiArg("mul");
         [TestMethod] public void PrimOpDiv() => VerifyPrimOpBiArg("div");
-        [TestMethod] public void PrimOpMod() => VerifyPrimOpBiArg("mod");
+        [TestMethod] public void PrimOpMod() => VerifyPrimOpBiArg("rem"); //Name in FIRRTL spec is mod
         [TestMethod] public void PrimOpLt() => VerifyPrimOpBiArg("lt");
         [TestMethod] public void PrimOpLeq() => VerifyPrimOpBiArg("leq");
         [TestMethod] public void PrimOpGt() => VerifyPrimOpBiArg("gt");

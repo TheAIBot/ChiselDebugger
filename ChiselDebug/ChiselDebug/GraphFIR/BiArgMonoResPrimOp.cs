@@ -45,11 +45,6 @@ namespace ChiselDebug.GraphFIR
             A.InferType();
             B.InferType();
 
-            if (B.Type is UnknownType)
-            {
-                B.InferType();
-            }
-
             Result.SetType(BiArgInferType());
         }
         public abstract IFIRType BiArgInferType();
@@ -107,6 +102,20 @@ namespace ChiselDebug.GraphFIR
             (UIntType a, SIntType b) => new SIntType(a.Width + 1),
             (SIntType a, UIntType b) => new SIntType(a.Width),
             (SIntType a, SIntType b) => new SIntType(a.Width + 1),
+            _ => throw new Exception("Failed to infer type.")
+        };
+    }
+
+    public class FIRRem : BiArgMonoResPrimOp
+    {
+        public FIRRem(Output aIn, Output bIn, IFIRType outType) : base("%", aIn, bIn, outType) { }
+
+        public override IFIRType BiArgInferType() => (A.Type, B.Type) switch
+        {
+            (UIntType a, UIntType b) => new UIntType(Math.Min(a.Width, b.Width)),
+            (UIntType a, SIntType b) => new UIntType(Math.Min(a.Width, b.Width)),
+            (SIntType a, UIntType b) => new SIntType(Math.Min(a.Width, b.Width) + 1),
+            (SIntType a, SIntType b) => new SIntType(Math.Min(a.Width, b.Width)),
             _ => throw new Exception("Failed to infer type.")
         };
     }
