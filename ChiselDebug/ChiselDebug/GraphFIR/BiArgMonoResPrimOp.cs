@@ -144,6 +144,20 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
+    public class FIRCat : BiArgMonoResPrimOp
+    {
+        public FIRCat(Output aIn, Output bIn, IFIRType outType) : base("cat", aIn, bIn, outType) { }
+
+        public override IFIRType BiArgInferType() => (A.Type, B.Type) switch
+        {
+            (UIntType a, UIntType b) => new UIntType(a.Width + b.Width),
+            (UIntType a, SIntType b) => new UIntType(a.Width + b.Width),
+            (SIntType a, UIntType b) => new UIntType(a.Width + b.Width),
+            (SIntType a, SIntType b) => new UIntType(a.Width + b.Width),
+            _ => throw new Exception("Failed to infer type.")
+        };
+    }
+
     public abstract class FIRCompOp : BiArgMonoResPrimOp
     {
         public FIRCompOp(string opName, Output aIn, Output bIn, IFIRType outType) : base(opName, aIn, bIn, outType) { }
