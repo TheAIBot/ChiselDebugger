@@ -429,11 +429,13 @@ namespace ChiselDebug
                 }
                 else if (prim.Op is FIRRTL.Shl)
                 {
-                    nodePrim = new GraphFIR.FIRShl(args[0], (int)prim.Consts[0], prim.Type);
+                    var constOutput = (GraphFIR.IO.Output)VisitExp(helper, new FIRRTL.UIntLiteral(prim.Consts[0], 0));
+                    nodePrim = new GraphFIR.FIRShl(args[0], constOutput, prim.Type);
                 }
                 else if (prim.Op is FIRRTL.Shr)
                 {
-                    nodePrim = new GraphFIR.FIRShr(args[0], (int)prim.Consts[0], prim.Type);
+                    var constOutput = (GraphFIR.IO.Output)VisitExp(helper, new FIRRTL.UIntLiteral(prim.Consts[0], 0));
+                    nodePrim = new GraphFIR.FIRShr(args[0], constOutput, prim.Type);
                 }
                 else
                 {
