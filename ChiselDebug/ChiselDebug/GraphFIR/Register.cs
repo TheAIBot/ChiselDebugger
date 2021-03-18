@@ -60,7 +60,7 @@ namespace ChiselDebug.GraphFIR
         public override ScalarIO[] GetInputs()
         {
             List<ScalarIO> inputs = new List<ScalarIO>();
-            inputs.AddRange(In.Flatten());
+            inputs.AddRange(In.Flatten().OfType<Input>());
             inputs.Add(Clock);
             if (Reset != null)
             {
@@ -68,14 +68,14 @@ namespace ChiselDebug.GraphFIR
             }
             if (Init != null)
             {
-                inputs.AddRange(Init.Flatten());
+                inputs.AddRange(Init.Flatten().OfType<Input>());
             }
             return inputs.ToArray();
         }
 
         public override ScalarIO[] GetOutputs()
         {
-            return Result.Flatten().ToArray();
+            return Result.Flatten().OfType<Output>().ToArray();
         }
 
         public override FIRIO[] GetIO()
