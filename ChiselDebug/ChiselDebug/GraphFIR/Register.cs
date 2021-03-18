@@ -26,7 +26,7 @@ namespace ChiselDebug.GraphFIR
 
             this.Name = name;
             this.In = inputType.Copy(this);
-            In.SetName(In.Name + "/in");
+            In.SetName(Name + "/in");
 
             this.Result = In.Flip(this);
             Result.SetName(Name);
