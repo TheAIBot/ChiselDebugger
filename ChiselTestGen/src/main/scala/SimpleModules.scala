@@ -114,3 +114,43 @@ class ModI extends Module {
     vecA(0) <> io.a
     io.b <> vecA(0)
 }
+
+class ModJ extends Module {
+    val io = IO(new Bundle{
+        val din1 = Input(UInt(8.W))
+        val din2 = Input(UInt(8.W))
+        val din3 = Input(UInt(8.W))
+        val din4 = Input(UInt(8.W))
+        val din5 = Input(UInt(8.W))
+        val dout = Output(UInt(8.W))
+    })
+
+    val wir = Wire(UInt(8.W))
+    wir := io.din1
+    wir := io.din2
+    wir := io.din3
+    wir := io.din4
+    wir := io.din5
+
+    io.dout := wir
+}
+
+class ModK extends Module {
+    val io = IO(new Bundle{
+        val din1 = Input(UInt(8.W))
+        val din2 = Input(UInt(8.W))
+        val din3 = Input(UInt(8.W))
+        val din4 = Input(UInt(8.W))
+        val din5 = Input(UInt(8.W))
+        val dout = Output(UInt(8.W))
+    })
+
+    val wir = Wire(UInt(8.W))
+    io.dout := wir
+
+    wir := io.din1
+    wir := io.din2
+    wir := io.din3
+    wir := io.din4
+    wir := io.din5
+}
