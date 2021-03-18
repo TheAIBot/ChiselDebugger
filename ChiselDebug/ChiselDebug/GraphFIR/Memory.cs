@@ -26,7 +26,7 @@ namespace ChiselDebug.GraphFIR
             }
 
             this.Name = name;
-            this.InputType = inputType;
+            this.InputType = inputType.Copy(this);
             this.Size = size;
             this.ReadLatency = readLatency;
             this.WriteLatency = writeLatency;
