@@ -88,6 +88,10 @@ namespace ChiselDebug.GraphFIR.IO
                 {
                     aBundle.ConnectToInput(bBundle, allowPartial, asPassive);
                 }
+                else if (a is Vector aVec && b is Vector bVec)
+                {
+                    aVec.ConnectToInput(bVec, allowPartial, asPassive);
+                }
                 else
                 {
                     throw new Exception($"Can't connect IO of type {a.GetType()} to {b.GetType()}.");
@@ -164,6 +168,15 @@ namespace ChiselDebug.GraphFIR.IO
 
             container = null;
             return false;
+        }
+
+        protected void ChangeIO(FIRIO toChange, FIRIO changeTo)
+        {
+            int index = Array.IndexOf(OrderedIO, toChange);
+            OrderedIO[index] = changeTo;
+
+            IO.Remove(toChange.Name);
+            IO.Add(changeTo.Name, changeTo);
         }
     }
 }

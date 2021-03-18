@@ -121,6 +121,10 @@ namespace ChiselDebug
             {
                 io.Add(VisitBundle(helper, direction, name, bundle));
             }
+            else if (type is FIRRTL.VectorType vec)
+            {
+                io.Add(VisitVector(helper, direction, name, vec));
+            }
             else if (direction == FIRRTL.Dir.Input)
             {
                 io.Add(new GraphFIR.IO.Input(null, name, type));
@@ -156,6 +160,12 @@ namespace ChiselDebug
             }
 
             return new GraphFIR.IO.IOBundle(bundleName, io);
+        }
+
+        private static GraphFIR.IO.FIRIO VisitVector(VisitHelper helper, FIRRTL.Dir direction, string vectorName, FIRRTL.VectorType vec)
+        {
+            var type = VisitType(helper, FIRRTL.Dir.Input, string.Empty, vec.Type).Single();
+            return new GraphFIR.IO.Vector(vectorName, vec.Size, type, null);
         }
 
         private static void VisitStatement(VisitHelper helper, FIRRTL.Statement statement)
@@ -482,6 +492,19 @@ namespace ChiselDebug
             else if (exp is FIRRTL.SubField subField)
             {
                 return VisitExp(helper, subField.Expr).GetIO(subField.Name);
+            }
+            else if (exp is FIRRTL.SubIndex subIndex)
+            {
+                var vec = (GraphFIR.IO.Vector)VisitExp(helper, subIndex.Expr);
+
+                return vec.GetIndex(subIndex.Value);
+            }
+            else if (exp is FIRRTL.SubAccess subAccess)
+            {
+                var vec = (GraphFIR.IO.Vector)VisitExp(helper, subAccess.Expr);
+                var index = (GraphFIR.IO.Output)VisitExp(helper, subAccess.Index).GetOutput();
+
+                return vec.MakeAccess(index);
             }
             else
             {

@@ -297,6 +297,15 @@ namespace ChiselDebuggerWebUI.Code
                     inputYOffset += ExtraSpaceBetweenBundles;
                     outputYOffset += ExtraSpaceBetweenBundles;
                 }
+                else if (io[i] is Vector vec)
+                {
+                    scopeDepth++;
+                    MakeScopedIO(inputIO, outputIO, vec.GetIOInOrder(), fixedX, ref inputYOffset, ref outputYOffset, scopeDepth);
+                    scopeDepth--;
+
+                    inputYOffset += ExtraSpaceBetweenBundles;
+                    outputYOffset += ExtraSpaceBetweenBundles;
+                }
                 else if (io[i] is ScalarIO scalar)
                 {
                     MakeNoScopeIO(inputIO, outputIO, scalar, fixedX, ref inputYOffset, ref outputYOffset, scopeDepth);
