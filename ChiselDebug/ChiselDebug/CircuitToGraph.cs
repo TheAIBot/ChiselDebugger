@@ -244,7 +244,8 @@ namespace ChiselDebug
                     initValue = (GraphFIR.IO.Output)VisitExp(helper, reg.Init);
                 }
 
-                GraphFIR.Register register = new GraphFIR.Register(reg.Name, clock, reset, initValue, reg.Type);
+                GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, string.Empty, reg.Type).Single();
+                GraphFIR.Register register = new GraphFIR.Register(reg.Name, inputType, clock, reset, initValue);
                 helper.Mod.AddRegister(register);
             }
             else if (statement is FIRRTL.DefInstance instance)
