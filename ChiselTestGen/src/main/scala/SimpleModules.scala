@@ -74,11 +74,43 @@ class ModF extends Module {
     io.c := Mux(io.cond, io.a, io.b)
 }
 
+class BunC extends Bundle {
+    val a1 = Vec(5, UInt(8.W))
+    val a2 = Vec(7, UInt(3.W))
+}
+
 class ModG extends Module {
     val io = IO(new Bundle{
-        val din = Input(UInt(8.W))
-        val dout = Output(UInt(8.W))
+        val din = Input(new BunC())
+        val dout = Output(new BunC())
     })
 
-    io.dout := io.din % io.din
+    io.dout <> io.din
+}
+
+class ModH extends Module {
+    val io = IO(new Bundle{
+        val din = Input(new BunC())
+        val dout = Output(new BunC())
+    })
+
+    val a = Module(new ModG())
+
+    io <> a.io
+}
+
+class BunD extends Bundle {
+    val a1 = Input(Vec(5, UInt(8.W)))
+    val a2 = Output(Vec(7, UInt(3.W)))
+}
+
+class ModI extends Module {
+    val io = IO(new Bundle {
+        val a = new BunD()
+        val b = Flipped(new BunD())
+    })
+
+    val vecA = Wire(Vec(1, new BunD()))
+    vecA(0) <> io.a
+    io.b <> vecA(0)
 }
