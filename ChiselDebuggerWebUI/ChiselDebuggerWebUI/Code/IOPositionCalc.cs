@@ -57,8 +57,8 @@ namespace ChiselDebuggerWebUI.Code
             List<IOScope> scopes = new List<IOScope>();
 
             var bundleGroups = io
-                .Where(x => x.DirIO.IO.IsPartOfBundle)
-                .GroupBy(x => x.DirIO.IO.Bundle);
+                .Where(x => x.DirIO.IO.IsPartOfAggregateIO)
+                .GroupBy(x => x.DirIO.IO.ParentIO);
 
             int colorIndex = 0;
             foreach (var bundleGroup in bundleGroups)

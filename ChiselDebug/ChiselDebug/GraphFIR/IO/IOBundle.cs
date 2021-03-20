@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace ChiselDebug.GraphFIR.IO
 {
-    public class IOBundle : FIRIO
+    public class IOBundle : AggregateIO
     {
         private readonly FIRIO[] OrderedIO;
         private readonly Dictionary<string, FIRIO> IO = new Dictionary<string, FIRIO>();
@@ -22,7 +22,7 @@ namespace ChiselDebug.GraphFIR.IO
             {
                 foreach (var firIO in IO.Values)
                 {
-                    firIO.SetBundle(this);
+                    firIO.SetParentIO(this);
                 }
             }
         }
@@ -102,13 +102,13 @@ namespace ChiselDebug.GraphFIR.IO
         public override FIRIO Flip(FIRRTLNode node = null)
         {
             List<FIRIO> flipped = OrderedIO.Select(x => x.Flip(node)).ToList();
-            return new IOBundle(Name, flipped, IO.Values.FirstOrDefault()?.IsPartOfBundle ?? false);
+            return new IOBundle(Name, flipped, IO.Values.FirstOrDefault()?.IsPartOfAggregateIO ?? false);
         }
 
         public override FIRIO Copy(FIRRTLNode node = null)
         {
             List<FIRIO> flipped = OrderedIO.Select(x => x.Copy(node)).ToList();
-            return new IOBundle(Name, flipped, IO.Values.FirstOrDefault()?.IsPartOfBundle ?? false);
+            return new IOBundle(Name, flipped, IO.Values.FirstOrDefault()?.IsPartOfAggregateIO ?? false);
         }
 
         public override IEnumerable<ScalarIO> Flatten()

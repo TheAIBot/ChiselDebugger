@@ -44,6 +44,7 @@ namespace ChiselDebug.GraphFIR.IO
             {
                 IO[i] = firIO.Copy(node);
                 IO[i].SetName(i.ToString());
+                IO[i].SetParentIO(this);
             }
 
             this.Node = node;

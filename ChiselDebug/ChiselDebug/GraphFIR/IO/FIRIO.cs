@@ -8,8 +8,8 @@ namespace ChiselDebug.GraphFIR.IO
     {
         public string Name { get; private set; }
         public bool IsAnonymous => Name == string.Empty;
-        public IOBundle Bundle { get; private set; } = null;
-        public bool IsPartOfBundle => Bundle != null;
+        public AggregateIO ParentIO { get; private set; } = null;
+        public bool IsPartOfAggregateIO => ParentIO != null;
 
         public FIRIO(string name)
         {
@@ -21,9 +21,9 @@ namespace ChiselDebug.GraphFIR.IO
             Name = name ?? string.Empty;
         }
 
-        public void SetBundle(IOBundle bundle)
+        public void SetParentIO(AggregateIO aggIO)
         {
-            Bundle = bundle;
+            ParentIO = aggIO;
         }
 
         public virtual FIRIO GetInput()
