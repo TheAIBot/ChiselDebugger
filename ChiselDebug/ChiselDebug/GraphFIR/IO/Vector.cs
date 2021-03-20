@@ -6,28 +6,6 @@ using System.Threading.Tasks;
 
 namespace ChiselDebug.GraphFIR.IO
 {
-    public class VectorIO : IOBundle
-    {
-        private readonly FIRIO VecIn;
-        private readonly FIRIO VecOut;
-
-        public VectorIO(string name, FIRIO vecIn, FIRIO vecOut) : base(name, new List<FIRIO>() { vecIn, vecOut }, false)
-        {
-            this.VecIn = vecIn;
-            this.VecOut = vecOut;
-        }
-
-        public override FIRIO GetInput()
-        {
-            return VecIn;
-        }
-
-        public override FIRIO GetOutput()
-        {
-            return VecOut;
-        }
-    }
-
     public class VectorAccess : IOBundle
     {
         private readonly FIRIO InputAccess;
@@ -52,25 +30,20 @@ namespace ChiselDebug.GraphFIR.IO
         }
     }
 
-    public class Vector : FIRIO
+    public class Vector : AggregateIO
     {
-        private readonly VectorIO[] IO;
+        private readonly FIRIO[] IO;
         private readonly List<VectorAccess> VectorPorts = new List<VectorAccess>();
         private readonly FIRRTLNode Node;
         public int Length => IO.Length;
 
         public Vector(string name, int length, FIRIO firIO, FIRRTLNode node) : base(name)
         {
-            this.IO = new VectorIO[length];
+            this.IO = new FIRIO[length];
             for (int i = 0; i < IO.Length; i++)
             {
-                var input = firIO.Copy(node);
-                var output = firIO.Flip(node);
-
-                input.SetName(i.ToString());
-                output.SetName(null);
-
-                IO[i] = new VectorIO(i.ToString(), input, output);
+                IO[i] = firIO.Copy(node);
+                IO[i].SetName(i.ToString());
             }
 
             this.Node = node;
@@ -111,18 +84,18 @@ namespace ChiselDebug.GraphFIR.IO
             int longestLength = Math.Max(Length, other.Length);
             for (int i = 0; i < longestLength; i++)
             {
-                IO[i].GetOutput().ConnectToInput(other.IO[i].GetInput());
+                IO[i].ConnectToInput(other.IO[i]);
             }
         }
 
         public override FIRIO Flip(FIRRTLNode node = null)
         {
-            return Copy(node);// new Vector(Name, Length, IO[0].GetInput().Flip(node), node);
+            return new Vector(Name, Length, IO[0].Flip(node), node);
         }
 
         public override FIRIO Copy(FIRRTLNode node = null)
         {
-            return new Vector(Name, Length, IO[0].GetInput().Copy(node), node);
+            return new Vector(Name, Length, IO[0].Copy(node), node);
         }
 
         public override IEnumerable<ScalarIO> Flatten()
@@ -138,7 +111,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         public override bool IsPassiveOfType<T>()
         {
-            return IO[0].GetInput().IsPassiveOfType<T>();
+            return IO[0].IsPassiveOfType<T>();
         }
 
         public override bool SameIO(FIRIO other)
@@ -150,7 +123,7 @@ namespace ChiselDebug.GraphFIR.IO
                     return false;
                 }
 
-                return IO[0].GetInput().SameIO(vec.IO[0].GetInput());
+                return IO[0].SameIO(vec.IO[0]);
             }
 
             return false;
@@ -161,14 +134,14 @@ namespace ChiselDebug.GraphFIR.IO
             throw new NotImplementedException();
         }
 
-        public VectorIO GetIndex(int index)
+        public FIRIO GetIndex(int index)
         {
             return IO[index];
         }
 
         public VectorAccess MakeAccess(Output index)
         {
-            VectorAccess access = new VectorAccess(index, IO[0].GetInput().Copy(), Node);
+            VectorAccess access = new VectorAccess(index, IO[0].Copy(), Node);
             VectorPorts.Add(access);
 
             return access;

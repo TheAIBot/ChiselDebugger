@@ -164,7 +164,7 @@ namespace ChiselDebug
 
         private static GraphFIR.IO.FIRIO VisitVector(VisitHelper helper, FIRRTL.Dir direction, string vectorName, FIRRTL.VectorType vec)
         {
-            var type = VisitType(helper, FIRRTL.Dir.Input, string.Empty, vec.Type).Single();
+            var type = VisitType(helper, direction, string.Empty, vec.Type).Single();
             return new GraphFIR.IO.Vector(vectorName, vec.Size, type, null);
         }
 
