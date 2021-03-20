@@ -10,11 +10,13 @@ namespace ChiselDebugTests
 {
     internal static class TestTools
     {
-        internal static void VerifyCanCreateGraph(string firrtl)
+        internal static CircuitGraph VerifyCanCreateGraph(string firrtl)
         {
             Circuit circuit = FIRRTL.Parse.FromString(firrtl);
             CircuitGraph graph = CircuitToGraph.GetAsGraph(circuit);
             graph.InferTypes();
+
+            return graph;
         }
     }
 }

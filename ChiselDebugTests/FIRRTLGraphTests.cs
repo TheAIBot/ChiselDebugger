@@ -1,111 +1,65 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ChiselDebug;
-using FIRRTL;
 using VCDReader;
-
+using System.IO;
+using ChiselDebug.Timeline;
 
 namespace ChiselDebugTests
 {
     [TestClass]
     public class FIRRTLGraphTests
     {
-        [TestMethod]
-        public void SimpleIO1()
+        [TestMethod] public void SimpleIO_fir() => VerifyChiselTest("ModA", "fir", false);
+        [TestMethod] public void SimpleIO_lo_fir() => VerifyChiselTest("ModA", "lo.fir", false);
+        [TestMethod] public void SimpleIO_treadle_lo_fir() => VerifyChiselTest("ModA", "treadle.lo.fir", false);
+        [TestMethod] public void SimpleIO_vcd_treadle_lo_fir() => VerifyChiselTest("ModA", "treadle.lo.fir", true);
+
+        [TestMethod] public void Nested1Module_fir() => VerifyChiselTest("ModB", "fir", false);
+        [TestMethod] public void Nested1Module_lo_fir() => VerifyChiselTest("ModB", "lo.fir", false);
+        [TestMethod] public void Nested1Module_treadle_lo_fir() => VerifyChiselTest("ModB", "treadle.lo.fir", false);
+        [TestMethod] public void Nested1Module_vcd_treadle_lo_fir() => VerifyChiselTest("ModB", "treadle.lo.fir", true);
+
+        [TestMethod] public void Nested1Module2x_fir() => VerifyChiselTest("ModC", "fir", false);
+        [TestMethod] public void Nested1Module2x_lo_fir() => VerifyChiselTest("ModC", "lo.fir", false);
+        [TestMethod] public void Nested1Module2x_treadle_lo_fir() => VerifyChiselTest("ModC", "treadle.lo.fir", false);
+        [TestMethod] public void Nested1Module2x_vcd_treadle_lo_fir() => VerifyChiselTest("ModC", "treadle.lo.fir", true);
+
+        [TestMethod] public void MuxOnBundles_fir() => VerifyChiselTest("ModD", "fir", false);
+        [TestMethod] public void MuxOnBundles_lo_fir() => VerifyChiselTest("ModD", "lo.fir", false);
+        [TestMethod] public void MuxOnBundles_treadle_lo_fir() => VerifyChiselTest("ModD", "treadle.lo.fir", false);
+        [TestMethod] public void MuxOnBundles_vcd_treadle_lo_fir() => VerifyChiselTest("ModD", "treadle.lo.fir", true);
+
+        [TestMethod] public void SimpleVector_fir() => VerifyChiselTest("ModE", "fir", false);
+        [TestMethod] public void SimpleVector_lo_fir() => VerifyChiselTest("ModE", "lo.fir", false);
+        [TestMethod] public void SimpleVector_treadle_lo_fir() => VerifyChiselTest("ModE", "treadle.lo.fir", false);
+        [TestMethod] public void SimpleVector_vcd_treadle_lo_fir() => VerifyChiselTest("ModE", "treadle.lo.fir", true);
+
+        [TestMethod] public void MuxOnBundlesWithVector_fir() => VerifyChiselTest("ModF", "fir", false);
+        [TestMethod] public void MuxOnBundlesWithVector_lo_fir() => VerifyChiselTest("ModF", "lo.fir", false);
+        [TestMethod] public void MuxOnBundlesWithVector_treadle_lo_fir() => VerifyChiselTest("ModF", "treadle.lo.fir", false);
+        [TestMethod] public void MuxOnBundlesWithVector_vcd_treadle_lo_fir() => VerifyChiselTest("ModF", "treadle.lo.fir", true);
+
+        [TestMethod] public void SimpleBundleWithVector_fir() => VerifyChiselTest("ModG", "fir", false);
+        [TestMethod] public void SimpleBundleWithVector_lo_fir() => VerifyChiselTest("ModG", "lo.fir", false);
+        [TestMethod] public void SimpleBundleWithVector_treadle_lo_fir() => VerifyChiselTest("ModG", "treadle.lo.fir", false);
+        [TestMethod] public void SimpleBundleWithVector_vcd_treadle_lo_fir() => VerifyChiselTest("ModG", "treadle.lo.fir", true);
+
+        [TestMethod] public void Nested1ModuleBundleWithVector_fir() => VerifyChiselTest("ModH", "fir", false);
+        [TestMethod] public void Nested1ModuleBundleWithVector_lo_fir() => VerifyChiselTest("ModH", "lo.fir", false);
+        [TestMethod] public void Nested1ModuleBundleWithVector_treadle_lo_fir() => VerifyChiselTest("ModH", "treadle.lo.fir", false);
+        [TestMethod] public void Nested1ModuleBundleWithVector_vcd_treadle_lo_fir() => VerifyChiselTest("ModH", "treadle.lo.fir", true);
+
+        private void VerifyChiselTest(string moduleName, string extension, bool testVCD)
         {
-            string firrtl = @"
-circuit ModA : 
-  module ModA : 
-    input clock : Clock
-    input reset : UInt<1>
-    output io : {flip din : UInt<8>, dout : UInt<8>}
-    
-    io.dout <= io.din @[Random.scala 15:13]";
+            CircuitGraph graph = TestTools.VerifyCanCreateGraph(File.ReadAllText($"ChiselTests/{moduleName}.{extension}"));
 
-            Circuit circuit = FIRRTL.Parse.FromString(firrtl);
-            CircuitToGraph.GetAsGraph(circuit);
-        }
+            if (testVCD)
+            {
+                VCD vcd = VCDReader.Parse.FromFile($"ChiselTests/{moduleName}.vcd");
+                VCDTimeline timeline = new VCDTimeline(vcd);
 
-        [TestMethod]
-        public void Nested1Module()
-        {
-            string firrtl = @"
-circuit ModB : 
-  module ModA : 
-    input clock : Clock
-    input reset : Reset
-    output io : {flip din : UInt<8>, dout : UInt<8>}
-    
-    io.dout <= io.din @[Random.scala 15:13]
-    
-  module ModB : 
-    input clock : Clock
-    input reset : UInt<1>
-    output io : {flip din : UInt<8>, dout : UInt<8>}
-    
-    inst a of ModA @[Random.scala 24:19]
-    a.clock <= clock
-    a.reset <= reset
-    a.io.din <= io.din @[Random.scala 25:14]
-    io.dout <= a.io.dout @[Random.scala 26:13]";
-
-            Circuit circuit = FIRRTL.Parse.FromString(firrtl);
-            CircuitToGraph.GetAsGraph(circuit);
-        }
-
-        [TestMethod]
-        public void Nested1Module2x()
-        {
-            string firrtl = @"
-circuit ModC : 
-  module ModA : 
-    input clock : Clock
-    input reset : Reset
-    output io : {flip din : UInt<8>, dout : UInt<8>}
-    
-    io.dout <= io.din @[Random.scala 15:13]
-    
-  module ModA_1 : 
-    input clock : Clock
-    input reset : Reset
-    output io : {flip din : UInt<8>, dout : UInt<8>}
-    
-    io.dout <= io.din @[Random.scala 15:13]
-    
-  module ModC : 
-    input clock : Clock
-    input reset : UInt<1>
-    output io : {flip din : UInt<8>, dout : UInt<8>}
-    
-    inst a1 of ModA @[Random.scala 35:20]
-    a1.clock <= clock
-    a1.reset <= reset
-    inst a2 of ModA_1 @[Random.scala 36:20]
-    a2.clock <= clock
-    a2.reset <= reset
-    a1.io.din <= io.din @[Random.scala 37:15]
-    a2.io.din <= a1.io.dout @[Random.scala 38:15]
-    io.dout <= a2.io.dout @[Random.scala 39:13]";
-
-            Circuit circuit = FIRRTL.Parse.FromString(firrtl);
-            CircuitToGraph.GetAsGraph(circuit);
-        }
-
-        [TestMethod]
-        public void MuxOnBundles()
-        {
-            string firrtl = @"
-circuit ModD : 
-  module ModD : 
-    input clock : Clock
-    input reset : UInt<1>
-    output io : {flip a : {a1 : UInt<8>, a2 : SInt<4>}, flip b : {a1 : UInt<8>, a2 : SInt<4>}, flip cond : UInt<1>, c : {a1 : UInt<8>, a2 : SInt<4>}}
-    
-    node _T = mux(io.cond, io.a, io.b) @[Random.scala 55:16]
-    io.c.a2 <= _T.a2 @[Random.scala 55:10]
-    io.c.a1 <= _T.a1 @[Random.scala 55:10]";
-
-            Circuit circuit = FIRRTL.Parse.FromString(firrtl);
-            CircuitToGraph.GetAsGraph(circuit);
+                graph.SetState(timeline.GetStateAtTime(0));
+            }
         }
     }
 }
