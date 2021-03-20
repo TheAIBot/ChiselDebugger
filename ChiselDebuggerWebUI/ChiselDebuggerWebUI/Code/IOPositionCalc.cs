@@ -288,20 +288,10 @@ namespace ChiselDebuggerWebUI.Code
 
             for (int i = 0; i < io.Length; i++)
             {
-                if (io[i] is IOBundle bundle)
+                if (io[i] is AggregateIO aggIO)
                 {
-                    scopeDepth++;
-                    MakeScopedIO(inputIO, outputIO, bundle.GetIOInOrder(), fixedX, ref inputYOffset, ref outputYOffset, scopeDepth);
-                    scopeDepth--;
-
-                    inputYOffset += ExtraSpaceBetweenBundles;
-                    outputYOffset += ExtraSpaceBetweenBundles;
-                }
-                else if (io[i] is Vector vec)
-                {
-                    scopeDepth++;
-                    MakeScopedIO(inputIO, outputIO, vec.GetIOInOrder(), fixedX, ref inputYOffset, ref outputYOffset, scopeDepth);
-                    scopeDepth--;
+                    int inScope = aggIO.IsPartOfAggregateIO ? 1 : 0;
+                    MakeScopedIO(inputIO, outputIO, aggIO.GetIOInOrder(), fixedX, ref inputYOffset, ref outputYOffset, scopeDepth + inScope);
 
                     inputYOffset += ExtraSpaceBetweenBundles;
                     outputYOffset += ExtraSpaceBetweenBundles;

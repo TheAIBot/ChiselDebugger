@@ -50,23 +50,18 @@ namespace ChiselDebug.GraphFIR.IO
             this.Node = node;
         }
 
-        public override FIRIO GetInput()
-        {
-            return this;
-        }
-
-        public override FIRIO GetOutput()
-        {
-            return this;
-        }
-
-        public FIRIO[] GetIOInOrder()
+        public override FIRIO[] GetIOInOrder()
         {
             List<FIRIO> allIO = new List<FIRIO>();
             allIO.AddRange(IO);
             allIO.AddRange(VectorPorts);
 
             return allIO.ToArray();
+        }
+
+        public override bool IsVisibleAggregate()
+        {
+            return IO.FirstOrDefault()?.IsPartOfAggregateIO ?? false;
         }
 
         public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false)

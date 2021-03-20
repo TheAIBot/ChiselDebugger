@@ -27,19 +27,14 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public override FIRIO GetInput()
-        {
-            return this;
-        }
-
-        public override FIRIO GetOutput()
-        {
-            return this;
-        }
-
-        public FIRIO[] GetIOInOrder()
+        public override FIRIO[] GetIOInOrder()
         {
             return OrderedIO.ToArray();
+        }
+
+        public override bool IsVisibleAggregate()
+        {
+            return IO.Values.FirstOrDefault()?.IsPartOfAggregateIO ?? false;
         }
 
         public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false)
@@ -102,13 +97,13 @@ namespace ChiselDebug.GraphFIR.IO
         public override FIRIO Flip(FIRRTLNode node = null)
         {
             List<FIRIO> flipped = OrderedIO.Select(x => x.Flip(node)).ToList();
-            return new IOBundle(Name, flipped, IO.Values.FirstOrDefault()?.IsPartOfAggregateIO ?? false);
+            return new IOBundle(Name, flipped, IsVisibleAggregate());
         }
 
         public override FIRIO Copy(FIRRTLNode node = null)
         {
             List<FIRIO> flipped = OrderedIO.Select(x => x.Copy(node)).ToList();
-            return new IOBundle(Name, flipped, IO.Values.FirstOrDefault()?.IsPartOfAggregateIO ?? false);
+            return new IOBundle(Name, flipped, IsVisibleAggregate());
         }
 
         public override IEnumerable<ScalarIO> Flatten()
