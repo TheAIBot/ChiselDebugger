@@ -14,9 +14,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\ChiselDebug\ChiselDebug\ChiselDebug.csproj" />
-    <ProjectReference Include="..\..\FIRRTL\FIRRTL.csproj" />
-    <ProjectReference Include="..\..\VCDReader\VCDReader.csproj" />
+    <ProjectReference Include="..\ChiselDebug\ChiselDebug\ChiselDebug.csproj" />
+    <ProjectReference Include="..\FIRRTL\FIRRTL.csproj" />
+    <ProjectReference Include="..\VCDReader\VCDReader.csproj" />
   </ItemGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <ItemGroup>
+      <ExampleFiles Include="Examples/*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ExampleFiles)" DestinationFolder="$(TargetDir)/Examples/" />
+  </Target>
 
 </Project>
