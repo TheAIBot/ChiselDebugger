@@ -57,8 +57,8 @@ namespace ChiselDebuggerWebUI.Code
             List<IOScope> scopes = new List<IOScope>();
 
             var bundleGroups = io
-                .Where(x => x.DirIO.IO.IsPartOfBundle)
-                .GroupBy(x => x.DirIO.IO.Bundle);
+                .Where(x => x.DirIO.IO.IsPartOfAggregateIO)
+                .GroupBy(x => x.DirIO.IO.ParentIO);
 
             int colorIndex = 0;
             foreach (var bundleGroup in bundleGroups)
@@ -275,7 +275,7 @@ namespace ChiselDebuggerWebUI.Code
             int inputY = startYPadding;
             int outputY = inputY;
 
-            MakeScopedIO(inputIO, outputIO, io, fixedX, ref inputY, ref outputY, 0);
+            MakeScopedIO(inputIO, outputIO, io, fixedX, ref inputY, ref outputY, -1);
 
             int heightNeeded = Math.Max(inputY, outputY) + endYPadding;
             return new ScopedNodeIO(inputIO, outputIO, heightNeeded, startYPadding, endYPadding);
@@ -288,11 +288,10 @@ namespace ChiselDebuggerWebUI.Code
 
             for (int i = 0; i < io.Length; i++)
             {
-                if (io[i] is IOBundle bundle)
+                if (io[i] is AggregateIO aggIO)
                 {
-                    scopeDepth++;
-                    MakeScopedIO(inputIO, outputIO, bundle.GetIOInOrder(), fixedX, ref inputYOffset, ref outputYOffset, scopeDepth);
-                    scopeDepth--;
+                    int inScope = aggIO.IsPartOfAggregateIO ? 1 : 0;
+                    MakeScopedIO(inputIO, outputIO, aggIO.GetIOInOrder(), fixedX, ref inputYOffset, ref outputYOffset, scopeDepth + inScope);
 
                     inputYOffset += ExtraSpaceBetweenBundles;
                     outputYOffset += ExtraSpaceBetweenBundles;
@@ -313,9 +312,10 @@ namespace ChiselDebuggerWebUI.Code
 
         private static void MakeNoScopeIO(List<ScopedDirIO> inputIO, List<ScopedDirIO> outputIO, ScalarIO io, int fixedX, ref int inputYOffset, ref int outputYOffset, int scopeDepth)
         {
+            scopeDepth = Math.Max(0, scopeDepth);
             if (io is Input)
             {
-                int scopeOffset = Math.Max(0, scopeDepth - 1) * ScopeWidth;
+                int scopeOffset = scopeDepth * ScopeWidth;
                 Point inputPos = new Point(0, inputYOffset);
                 DirectedIO dirIO = new DirectedIO(io, inputPos, MoveDirs.Right);
                 inputIO.Add(new ScopedDirIO(dirIO, scopeOffset));
@@ -324,7 +324,7 @@ namespace ChiselDebuggerWebUI.Code
             }
             else if (io is Output)
             {
-                int scopeOffset = -scopeDepth * ScopeWidth;
+                int scopeOffset = -(scopeDepth + 1) * ScopeWidth;
                 Point outputPos = new Point(fixedX, outputYOffset);
                 DirectedIO dirIO = new DirectedIO(io, outputPos, MoveDirs.Right);
                 outputIO.Add(new ScopedDirIO(dirIO, scopeOffset));

@@ -11,32 +11,46 @@ namespace ChiselDebug.GraphFIR
     public class Register : FIRRTLNode
     {
         public readonly string Name;
-        public readonly Input In;
+        public readonly FIRIO In;
+        public readonly FIRIO Result;
         public readonly Input? Clock;
         public readonly Input? Reset;
-        public readonly Input Init;
-        public readonly Output Result;
+        public readonly FIRIO? Init;
 
-        public Register(string name, Output clock, Output? reset, Output? init, IFIRType outType)
+        public Register(string name, FIRIO inputType, Output clock, Output? reset, FIRIO? init)
         {
+            if (!inputType.IsPassiveOfType<Input>())
+            {
+                throw new Exception("Register must be a passive input type.");
+            }
+
             this.Name = name;
-            this.In = new Input(this, name + "/in", outType);
-            this.Clock = new Input(this, clock.Type);
+            this.In = inputType.Copy(this);
+            In.SetName(Name + "/in");
+
+            this.Result = In.Flip(this);
+            Result.SetName(Name);
+
+            this.Clock = new Input(this, "clock", clock.Type);
             clock.ConnectToInput(Clock);
 
             if (reset != null)
             {
-                this.Reset = new Input(this, reset.Type);
+                this.Reset = new Input(this, "reset", reset.Type);
                 reset.ConnectToInput(Reset);
             }
 
             if (init != null)
             {
-                this.Init = new Input(this, init.Type);
+                if (!init.IsPassiveOfType<Output>())
+                {
+                    throw new Exception("Register init must be of a passive output type.");
+                }
+
+                this.Init = init.Flip(this);
+                Init.SetName("init");
                 init.ConnectToInput(Init);
             }
-
-            this.Result = new Output(this, Name, outType);
         }
 
         internal IOBundle GetIOAsBundle()
@@ -47,7 +61,7 @@ namespace ChiselDebug.GraphFIR
         public override ScalarIO[] GetInputs()
         {
             List<ScalarIO> inputs = new List<ScalarIO>();
-            inputs.Add(In);
+            inputs.AddRange(In.Flatten().OfType<Input>());
             inputs.Add(Clock);
             if (Reset != null)
             {
@@ -55,14 +69,14 @@ namespace ChiselDebug.GraphFIR
             }
             if (Init != null)
             {
-                inputs.Add(Init);
+                inputs.AddRange(Init.Flatten().OfType<Input>());
             }
             return inputs.ToArray();
         }
 
         public override ScalarIO[] GetOutputs()
         {
-            return new ScalarIO[] { Result };
+            return Result.Flatten().OfType<Output>().ToArray();
         }
 
         public override FIRIO[] GetIO()

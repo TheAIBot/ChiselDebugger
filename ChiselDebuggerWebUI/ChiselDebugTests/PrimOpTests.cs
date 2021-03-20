@@ -57,7 +57,7 @@ circuit ModA :
     
     dout <= {opName}(a, b)";
 
-            VerifyCanCreateGraph(firrtl);
+            TestTools.VerifyCanCreateGraph(firrtl);
         }
 
         private void VerifyPrimOpMonoArg(string opName, int outputSize = 8)
@@ -71,7 +71,7 @@ circuit ModA :
     
     dout <= {opName}(a)";
 
-            VerifyCanCreateGraph(firrtl);
+            TestTools.VerifyCanCreateGraph(firrtl);
         }
 
         private void VerifyPrimOpMonoArgMonoConst(string opName, int outputSize = 8)
@@ -85,7 +85,7 @@ circuit ModA :
     
     dout <= {opName}(a, 7)";
 
-            VerifyCanCreateGraph(firrtl);
+            TestTools.VerifyCanCreateGraph(firrtl);
         }
 
         private void VerifyPrimOpMonoArgBiConst(string opName, int outputSize = 8)
@@ -99,14 +99,9 @@ circuit ModA :
     
     dout <= {opName}(a, 7. 4)";
 
-            VerifyCanCreateGraph(firrtl);
+            TestTools.VerifyCanCreateGraph(firrtl);
         }
 
-        private void VerifyCanCreateGraph(string firrtl)
-        {
-            Circuit circuit = FIRRTL.Parse.FromString(firrtl);
-            CircuitGraph graph = CircuitToGraph.GetAsGraph(circuit);
-            graph.InferTypes();
-        }
+
     }
 }
