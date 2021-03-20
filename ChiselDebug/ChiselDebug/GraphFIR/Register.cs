@@ -31,12 +31,12 @@ namespace ChiselDebug.GraphFIR
             this.Result = In.Flip(this);
             Result.SetName(Name);
 
-            this.Clock = new Input(this, clock.Type);
+            this.Clock = new Input(this, "clock", clock.Type);
             clock.ConnectToInput(Clock);
 
             if (reset != null)
             {
-                this.Reset = new Input(this, reset.Type);
+                this.Reset = new Input(this, "reset", reset.Type);
                 reset.ConnectToInput(Reset);
             }
 
@@ -48,6 +48,7 @@ namespace ChiselDebug.GraphFIR
                 }
 
                 this.Init = init.Flip(this);
+                Init.SetName("init");
                 init.ConnectToInput(Init);
             }
         }
