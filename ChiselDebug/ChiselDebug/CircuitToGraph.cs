@@ -528,7 +528,7 @@ namespace ChiselDebug
             //Never return bigender io. Only this method should have to deal
             //with that mess so the rest of the code doesn't have to.
             //Dealing with it is ugly which is why i want to contain it.
-            if (refContainer is GraphFIR.IO.FIRIO firIO)
+            if (refContainer is GraphFIR.IO.FIRIO firIO && refContainer is not GraphFIR.IPreserveDuplex)
             {
                 return firIO.GetAsGender(gender);
             }

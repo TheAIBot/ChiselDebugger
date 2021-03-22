@@ -110,7 +110,7 @@ namespace ChiselDebug.GraphFIR
         }
     }
 
-    public class MemPort : IOBundle
+    public class MemPort : IOBundle, IPreserveDuplex
     {
         internal readonly Input Address;
         internal readonly Input Enabled;
@@ -138,6 +138,8 @@ namespace ChiselDebug.GraphFIR
             }
         }
     }
+
+    internal interface IPreserveDuplex { }
 
     public class MemReadPort : MemPort
     {
