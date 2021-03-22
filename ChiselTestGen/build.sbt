@@ -24,7 +24,6 @@ version := "1.0"
 // Want to use a published library in your project?
 // You can define other libraries as dependencies in your build like this:
 
-libraryDependencies += "edu.berkeley.cs" %% "chisel-iotesters" % "1.4.2"
 libraryDependencies += "edu.berkeley.cs" %% "chiseltest" % "0.2.2"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 libraryDependencies += "edu.berkeley.cs" %% "chisel3" % "3.1.6"
