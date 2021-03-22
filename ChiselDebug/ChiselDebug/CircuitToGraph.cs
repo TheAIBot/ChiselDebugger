@@ -487,33 +487,42 @@ namespace ChiselDebug
 
         private static GraphFIR.IO.IContainerIO VisitRef(VisitHelper helper, FIRRTL.Expression exp, GraphFIR.IO.IContainerIO currContainer, GraphFIR.IO.IOGender gender)
         {
+            GraphFIR.IO.IContainerIO refContainer;
             if (exp is FIRRTL.Reference reference)
             {
-                return currContainer.GetIO(reference.Name);
+                refContainer = currContainer.GetIO(reference.Name);
+
             }
             else if (exp is FIRRTL.SubField subField)
             {
-                return VisitExp(helper, subField.Expr, gender).GetIO(subField.Name);
+                refContainer = VisitExp(helper, subField.Expr, gender).GetIO(subField.Name);
             }
             else if (exp is FIRRTL.SubIndex subIndex)
             {
-                var io = VisitExp(helper, subIndex.Expr, gender);
-                var vec = (GraphFIR.IO.Vector)io.GetAsGender(gender);
+                var vec = (GraphFIR.IO.Vector)VisitExp(helper, subIndex.Expr, gender);
 
-                return vec.GetIndex(subIndex.Value);
+                refContainer = vec.GetIndex(subIndex.Value);
             }
             else if (exp is FIRRTL.SubAccess subAccess)
             {
-                var io = VisitExp(helper, subAccess.Expr, gender);
-                var vec = (GraphFIR.IO.Vector)io.GetAsGender(gender);
+                var vec = (GraphFIR.IO.Vector)VisitExp(helper, subAccess.Expr, gender);
                 var index = (GraphFIR.IO.Output)VisitExp(helper, subAccess.Index, GraphFIR.IO.IOGender.Male).GetOutput();
 
-                return vec.MakeAccess(index);
+                refContainer = vec.MakeAccess(index);
             }
             else
             {
                 throw new NotImplementedException();
             }
+
+            //Never return bigender io. Only this method should have to deal
+            //with that mess so the rest of the code doesn't have to.
+            //Dealing with it is ugly which is why i want to contain it.
+            if (refContainer is GraphFIR.IO.FIRIO firIO)
+            {
+                return firIO.GetAsGender(gender);
+            }
+            return refContainer;
         }
     }
 }
