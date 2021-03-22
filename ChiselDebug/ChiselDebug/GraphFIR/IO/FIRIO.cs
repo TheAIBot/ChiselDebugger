@@ -35,6 +35,17 @@ namespace ChiselDebug.GraphFIR.IO
             throw new Exception("Can't get output from this IO.");
         }
 
+        internal FIRIO GetAsGender(IOGender gender)
+        {
+            return gender switch
+            {
+                IOGender.Male => GetOutput(),
+                IOGender.Female => GetInput(),
+                IOGender.BiGender => this,
+                var error => throw new Exception($"Invalid gender. Gender: {error}")
+            };
+        }
+
         public abstract void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false);
         public abstract FIRIO Flip(FIRRTLNode node = null);
         public abstract FIRIO Copy(FIRRTLNode node = null);
