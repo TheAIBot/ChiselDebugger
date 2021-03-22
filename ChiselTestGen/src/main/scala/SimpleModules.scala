@@ -190,3 +190,21 @@ class ModL extends Module {
         io.dout2 := 7.U
     }
 }
+
+class ModM extends Module {
+    val io = IO(new Bundle {
+        val a = Input(new BunC())
+        val b = Output(new BunC())
+    })
+
+    val regA = Reg(Vec(1, new BunC()))
+    regA(0) <> io.a
+    io.b <> regA(0)
+}
+
+class ModN extends Module {
+    val io = IO(new BunD())
+
+    val regA = Reg(Input(new BunD()))
+    regA <> io
+}

@@ -55,4 +55,12 @@ class RandomTester extends FlatSpec with ChiselScalatestTester with Matchers {
         test(new ModL()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
             {_=> {}}
     }
+    it should "Test M" in {
+        test(new ModM()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
+            {_=> {}}
+    }
+    it should "Test N" in {
+        test(new ModN()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
+            {_=> {}}
+    }
 }
