@@ -227,8 +227,8 @@ namespace ChiselDebug.GraphFIR
         public MemRWPort(Memory mem, string name) : base(name, CreateIO(mem))
         {
             this.DataOut = (FIRIO)GetIO("rdata");
-            this.DataIn = (FIRIO)GetIO("data");
-            this.Mask = (FIRIO)GetIO("mask");
+            this.DataIn = (FIRIO)GetIO("wdata");
+            this.Mask = (FIRIO)GetIO("wmask");
         }
 
         private static List<FIRIO> CreateIO(Memory mem)
@@ -237,10 +237,10 @@ namespace ChiselDebug.GraphFIR
             dataOut.SetName("rdata");
 
             FIRIO dataIn = mem.InputType.Copy();
-            dataIn.SetName("data");
+            dataIn.SetName("wdata");
 
             FIRIO mask = mem.InputType.Copy();
-            mask.SetName("mask");
+            mask.SetName("wmask");
             AsMaskType(mask);
 
             List<FIRIO> io = new List<FIRIO>();
