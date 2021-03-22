@@ -21,9 +21,9 @@
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <ItemGroup>
-      <ExampleFiles Include="Examples/*" />
+      <FIRRTLFiles Include="../ChiselTestGen/test_run_dir/**" />
     </ItemGroup>
-    <Copy SourceFiles="@(ExampleFiles)" DestinationFolder="$(TargetDir)/Examples/" />
+    <Copy SourceFiles="@(FIRRTLFiles)" DestinationFolder="$(TargetDir)/ChiselTests/" />
   </Target>
 
 </Project>
