@@ -13,12 +13,12 @@ namespace FIRRTL.Parsing
 {
     internal class Visitor
     {
-        private const string HexPattern = "\"*h([+-]?[a-zA-Z0-9]+)\"*";
-        private const string OctalPattern = "\"*o([+-]?[0-7]+)\"*";
-        private const string BinaryPattern = "\"*b([+-]?[01]+)\"*";
-        private const string DecPattern = @"([+\-]?[1-9]\d*)";
-        private const string ZeroPattern = "0";
-        private const string DecimalPattern = @"([+-]?[0-9]\d*\.[0-9]\d*)";
+        private const string HexPattern = "^\"*h([+-]?[a-zA-Z0-9]+)\"*$";
+        private const string OctalPattern = "^\"*o([+-]?[0-7]+)\"*$";
+        private const string BinaryPattern = "^\"*b([+-]?[01]+)\"*$";
+        private const string DecPattern = @"^([+\-]?[1-9]\d*)$";
+        private const string ZeroPattern = "^0$";
+        private const string DecimalPattern = @"^([+-]?[0-9]\d*\.[0-9]\d*)$";
         private static readonly Dictionary<string, PrimOp> StringToPrimOp;
 
         private InfoMode InfoM;
