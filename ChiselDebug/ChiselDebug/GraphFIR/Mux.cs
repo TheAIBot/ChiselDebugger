@@ -20,10 +20,10 @@ namespace ChiselDebug.GraphFIR
             {
                 throw new Exception("Inputs to mux must all be passive output types.");
             }
-            if (!choises.All(x => x.SameIO(choises.First())))
-            {
-                throw new Exception("All inputs to mux must be of the same type.");
-            }
+            //if (!choises.All(x => x.SameIO(choises.First())))
+            //{
+            //    throw new Exception("All inputs to mux must be of the same type.");
+            //}
 
             this.Choises = choises.Select(x => x.Flip(this)).ToArray();
             this.Decider = new Input(this, new FIRRTL.UIntType(1));
