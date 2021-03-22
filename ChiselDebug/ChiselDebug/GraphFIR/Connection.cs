@@ -28,6 +28,12 @@ namespace ChiselDebug.GraphFIR
             input.Con = this;
         }
 
+        public void DisconnectInput(Input input)
+        {
+            To.Remove(input);
+            input.Con = null;
+        }
+
         public bool IsUsed()
         {
             return To.Count > 0;

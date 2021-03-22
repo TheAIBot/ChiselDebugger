@@ -134,6 +134,29 @@ namespace ChiselDebug.GraphFIR
             return Nodes.ToArray();
         }
 
+        internal void CorrectIO()
+        {
+            foreach (var node in Nodes)
+            {
+                if (node is Module mod)
+                {
+                    mod.CorrectIO();
+                }
+                else
+                {
+                    foreach (Input input in node.GetInputs())
+                    {
+                        input.MakeSinkOnly();
+                    }
+                }
+            }
+
+            foreach (Input input in GetInternalInputs())
+            {
+                input.MakeSinkOnly();
+            }
+        }
+
         public override void InferType()
         {
             foreach (var node in Nodes)

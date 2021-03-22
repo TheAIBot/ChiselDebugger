@@ -1,10 +1,13 @@
 ﻿using FIRRTL;
 using System;
+using System.Linq;
 
 namespace ChiselDebug.GraphFIR.IO
 {
     public class Input : ScalarIO
     {
+        private Output SinkSource = null;
+
         public Input(FIRRTLNode node, IFIRType type) : this(node, string.Empty, type)
         { }
 
@@ -19,6 +22,43 @@ namespace ChiselDebug.GraphFIR.IO
         public override FIRIO GetInput()
         {
             return this;
+        }
+
+        public override FIRIO GetOutput()
+        {
+            if (SinkSource == null)
+            {
+                SinkSource = (Output)Flip();
+            }
+
+            return SinkSource;
+        }
+
+        public void MakeSinkOnly()
+        {
+            if (SinkSource == null)
+            {
+                return;
+            }
+
+            if (!SinkSource.Con.IsUsed())
+            {
+                throw new Exception("Probably an error when a source is created in a sink but it's not connected to anything.");
+            }
+
+            if (!IsConnected())
+            {
+                throw new Exception("Sink must be connected when it's also used as a source.");
+            }
+
+            Input[] inputs = SinkSource.Con.To.ToArray();
+            foreach (var input in inputs)
+            {
+                SinkSource.Con.DisconnectInput(input);
+                Con.From.ConnectToInput(input);
+            }
+
+            SinkSource = null;
         }
 
         public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false)
