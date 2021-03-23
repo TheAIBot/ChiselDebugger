@@ -21,7 +21,7 @@
         height: calc(100vh - @CircuitTopLeftParent.Y.ToPixels());
         overflow: hidden;
         user-select: none;">
-            <div class="Circuit" style="will-change: transform; transform: translate( @CircuitOffset.X.ToPixels(), @CircuitOffset.Y.ToPixels() ) scale( @CircuitScale.ToHtmlNumber() );" @onwheel="HandleScroll">
+            <div class="Circuit" style="transform: translate( @CircuitOffset.X.ToPixels(), @CircuitOffset.Y.ToPixels() ) scale( @CircuitScale.ToHtmlNumber() );" @onwheel="HandleScroll">
                 <ModuleUI PosOp="@ModulePosition" />
             </div>
         </div>
