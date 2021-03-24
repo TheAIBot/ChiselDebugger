@@ -35,6 +35,7 @@ namespace ChiselDebug.Routing
         {
             try
             {
+                int rerouteCount = 0;
                 PriorityQueue<LineInfo, int> linesPriority = new PriorityQueue<LineInfo, int>();
                 foreach ((IOInfo start, IOInfo end) in Connections.GetAllConnectionLines(placements))
                 {
@@ -87,6 +88,7 @@ namespace ChiselDebug.Routing
 
                         LineInfo line = new LineInfo(repath.EndIO, repath.StartIO);
                         linesPriority.Enqueue(line, line.GetScore());
+                        rerouteCount++;
                     }
                     paths.Add(path);
 
@@ -99,6 +101,11 @@ namespace ChiselDebug.Routing
                         List<WirePath> startPdwaaths = new List<WirePath>();
                         startPdwaaths.Add(path);
                         startPosPaths.Add(start.DirIO.Position, startPdwaaths);
+                    }
+
+                    if (rerouteCount > 100)
+                    {
+                        break;
                     }
                 }
 
