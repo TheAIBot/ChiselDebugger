@@ -75,12 +75,6 @@ namespace ChiselDebug
                 helper.ModuleRoots.Add(moduleDef.Name, moduleDef);
             }
 
-            List<GraphFIR.Module> modules = new List<GraphFIR.Module>();
-            foreach (var moduleDef in circuit.Modules)
-            {
-                modules.Add(VisitModule(helper, moduleDef));
-            }
-
             FIRRTL.DefModule mainModDef = circuit.Modules.Single(x => x.Name == circuit.Main);
             GraphFIR.Module mainModule = VisitModule(helper, mainModDef);
             return new CircuitGraph(circuit.Main, mainModule);
