@@ -108,7 +108,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         public override IEnumerable<ScalarIO> Flatten()
         {
-            foreach (var io in IO.Values)
+            foreach (var io in OrderedIO)
             {
                 foreach (var nested in io.Flatten())
                 {
