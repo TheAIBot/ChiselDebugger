@@ -42,7 +42,7 @@
     private Point CircuitTopLeftParent = Point.Zero;
     private readonly string CircuitContainerID = UniqueID.UniqueHTMLID();
 
-    protected override void OnInitialized()
+    protected override Task OnInitializedAsync()
     {
         //var circuit = FIRRTL.Parse.FromFile("Examples/MovingAveragePow2.lo.fir");
         //using var vcd = VCDReader.Parse.FromFile("Examples/MovingAveragePow2.vcd");
@@ -56,6 +56,8 @@
         DebugCtrl = new DebugController(graph, vcd);
 
         ModulePosition = new Positioned<ChiselDebug.GraphFIR.Module>(Point.Zero, graph.MainModule);
+
+        return base.OnInitializedAsync();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

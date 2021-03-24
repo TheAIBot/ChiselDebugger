@@ -468,9 +468,19 @@ namespace ChiselDebug
 
     public class PlacementInfo
     {
-        public readonly List<Positioned<FIRRTLNode>> NodePositions = new List<Positioned<FIRRTLNode>>();
-        public readonly Dictionary<FIRRTLNode, Rectangle> UsedSpace = new Dictionary<FIRRTLNode, Rectangle>();
-        public Point SpaceNeeded { get; private set; } = Point.Zero;
+        public readonly List<Positioned<FIRRTLNode>> NodePositions;
+        public readonly Dictionary<FIRRTLNode, Rectangle> UsedSpace;
+        public Point SpaceNeeded { get; private set; }
+        
+        public PlacementInfo() : this(new List<Positioned<FIRRTLNode>>(), new Dictionary<FIRRTLNode, Rectangle>(), Point.Zero)
+        { }
+
+        public PlacementInfo(List<Positioned<FIRRTLNode>> nodePoses, Dictionary<FIRRTLNode, Rectangle> usedSpace, Point spaceNeeded)
+        {
+            this.NodePositions = nodePoses;
+            this.UsedSpace = usedSpace;
+            this.SpaceNeeded = spaceNeeded;
+        }
 
         internal void AddNodePlacement(FIRRTLNode node, Rectangle shape)
         {

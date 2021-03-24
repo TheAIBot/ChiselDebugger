@@ -41,35 +41,38 @@ namespace ChiselDebug
 
         internal List<(IOInfo start, IOInfo end)> GetAllConnectionLines(PlacementInfo placements)
         {
-            Dictionary<FIRRTLNode, Point> nodePoses = new Dictionary<FIRRTLNode, Point>();
-            foreach (var nodePos in placements.NodePositions)
+            lock (this)
             {
-                nodePoses.Add(nodePos.Value, nodePos.Position);
-            }
-            nodePoses.Add(Mod, Point.Zero);
-
-            List<(IOInfo start, IOInfo end)> lines = new List<(IOInfo start, IOInfo end)>();
-            foreach (var connection in UsedModuleConnections)
-            {
-                if (IOInfos.TryGetValue(connection.From, out IOInfo outputInfo))
+                Dictionary<FIRRTLNode, Point> nodePoses = new Dictionary<FIRRTLNode, Point>();
+                foreach (var nodePos in placements.NodePositions)
                 {
-                    foreach (var input in connection.To)
+                    nodePoses.Add(nodePos.Value, nodePos.Position);
+                }
+                nodePoses.Add(Mod, Point.Zero);
+
+                List<(IOInfo start, IOInfo end)> lines = new List<(IOInfo start, IOInfo end)>();
+                foreach (var connection in UsedModuleConnections)
+                {
+                    if (IOInfos.TryGetValue(connection.From, out IOInfo outputInfo))
                     {
-                        if (IOInfos.TryGetValue(input, out IOInfo inputInfo))
+                        foreach (var input in connection.To)
                         {
-                            Point startOffset = nodePoses[outputInfo.Node];
-                            Point endOffset = nodePoses[inputInfo.Node];
+                            if (IOInfos.TryGetValue(input, out IOInfo inputInfo))
+                            {
+                                Point startOffset = nodePoses[outputInfo.Node];
+                                Point endOffset = nodePoses[inputInfo.Node];
 
-                            IOInfo offsetStartIO = new IOInfo(outputInfo.Node, outputInfo.DirIO.WithOffsetPosition(startOffset));
-                            IOInfo offsetEndIO = new IOInfo(inputInfo.Node, inputInfo.DirIO.WithOffsetPosition(endOffset));
+                                IOInfo offsetStartIO = new IOInfo(outputInfo.Node, outputInfo.DirIO.WithOffsetPosition(startOffset));
+                                IOInfo offsetEndIO = new IOInfo(inputInfo.Node, inputInfo.DirIO.WithOffsetPosition(endOffset));
 
-                            lines.Add((offsetStartIO, offsetEndIO));
+                                lines.Add((offsetStartIO, offsetEndIO));
+                            }
                         }
                     }
                 }
-            }
 
-            return lines;
+                return lines;
+            }
         }
     }
 }

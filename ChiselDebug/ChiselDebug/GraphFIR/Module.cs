@@ -134,6 +134,20 @@ namespace ChiselDebug.GraphFIR
             return Nodes.ToArray();
         }
 
+        public FIRRTLNode[] GetAllNodesIncludeModule()
+        {
+            return GetAllNodes().Append(this).ToArray();
+        }
+
+        public override FIRIO[] GetAllIOOrdered()
+        {
+            List<FIRIO> allOrdered = new List<FIRIO>();
+            allOrdered.AddRange(base.GetAllIOOrdered());
+            allOrdered.AddRange(Nodes.SelectMany(x => x.GetIO().SelectMany(x => x.Flatten())));
+
+            return allOrdered.ToArray();
+        }
+
         internal void CorrectIO()
         {
             foreach (var node in Nodes)

@@ -8,14 +8,17 @@ namespace ChiselDebug.GraphFIR
 {
     public abstract class FIRRTLContainer : FIRRTLNode, IContainerIO
     {
+        private readonly List<FIRIO> AllIOInOrder = new List<FIRIO>();
         public readonly Dictionary<string, FIRIO> ExternalIO = new Dictionary<string, FIRIO>();
 
         public readonly Dictionary<string, FIRIO> InternalIO = new Dictionary<string, FIRIO>();   
 
         public void AddExternalIO(FIRIO io)
         {
+            FIRIO flipped = io.Flip();
             ExternalIO.Add(io.Name, io);
-            InternalIO.Add(io.Name, io.Flip());
+            InternalIO.Add(io.Name, flipped);
+            AllIOInOrder.Add(flipped);
         }
 
         public override ScalarIO[] GetInputs()
@@ -54,6 +57,11 @@ namespace ChiselDebug.GraphFIR
                 .SelectMany(x => x.Flatten())
                 .OfType<T>()
                 .ToArray();
+        }
+
+        public virtual FIRIO[] GetAllIOOrdered()
+        {
+            return AllIOInOrder.SelectMany(x => x.Flatten()).ToArray();
         }
 
         public override void InferType()

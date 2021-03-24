@@ -1,6 +1,9 @@
 ﻿using ChiselDebug;
 using ChiselDebug.GraphFIR;
+using ChiselDebug.GraphFIR.IO;
+using ChiselDebug.Routing;
 using ChiselDebug.Timeline;
+using ChiselDebuggerWebUI.Code.Templates;
 using ChiselDebuggerWebUI.Components;
 using ChiselDebuggerWebUI.Pages.FIRRTLUI;
 using System;
@@ -17,6 +20,8 @@ namespace ChiselDebuggerWebUI.Code
         private readonly Dictionary<FIRRTLNode, ModuleController> FIRNodeToModCtrl = new Dictionary<FIRRTLNode, ModuleController>();
         private readonly List<ModuleController> ModControllers = new List<ModuleController>();
         private readonly BroadcastBlock<Action> TimeChanger = null;
+        private readonly PlacementTemplator PlacementTemplates = new PlacementTemplator();
+        private readonly RouteTemplator RouteTemplates = new RouteTemplator();
 
         public DebugController(CircuitGraph graph, VCD vcd)
         {
@@ -30,13 +35,26 @@ namespace ChiselDebuggerWebUI.Code
             }
         }
 
-        public void AddModCtrl(ModuleController modCtrl, FIRRTLNode[] modNodes)
+        public void AddModCtrl(string moduleName, ModuleController modCtrl, FIRRTLNode[] modNodes, FIRRTLNode[] modNodesIncludeMod, FIRIO[] modIO)
         {
             ModControllers.Add(modCtrl);
             foreach (var node in modNodes)
             {
                 FIRNodeToModCtrl.Add(node, modCtrl);
             }
+
+            PlacementTemplates.SubscribeToTemplate(moduleName, modCtrl, modNodes);
+            RouteTemplates.SubscribeToTemplate(moduleName, modCtrl, modNodesIncludeMod, modIO);
+        }
+
+        internal void AddPlaceTemplateParameters(string moduleName, SimplePlacer placer, FIRRTLNode[] nodeOrder)
+        {
+            PlacementTemplates.AddTemplateParameters(moduleName, placer, nodeOrder);
+        }
+
+        internal void AddRouteTemplateParameters(string moduleName, SimpleRouter router, PlacementInfo placeInfo, FIRRTLNode[] nodeOrder, FIRIO[] ioOrder)
+        {
+            RouteTemplates.AddTemplateParameters(moduleName, router, placeInfo, nodeOrder, ioOrder);
         }
 
         public void SetCircuitState(ulong time)

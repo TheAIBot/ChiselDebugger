@@ -20,9 +20,15 @@ namespace ChiselDebuggerWebUI.Code
             }
         }, new ExecutionDataflowBlockOptions()
         {
-            MaxDegreeOfParallelism = Environment.ProcessorCount,
+            //Leave two processors for UI updates
+            MaxDegreeOfParallelism = Math.Max(1, Environment.ProcessorCount - 2),
             MaxMessagesPerTask = 1
         });
+
+        public static void AddWork(Action work)
+        {
+            Worker.Post(work);
+        }
 
         public static void LinkSource(ISourceBlock<Action> workSource)
         {

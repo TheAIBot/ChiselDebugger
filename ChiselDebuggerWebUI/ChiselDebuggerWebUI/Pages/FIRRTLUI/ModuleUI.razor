@@ -69,17 +69,15 @@
         MinContentSize = GetMinSizeForIO();
 
         ModuleOpPoses = Operation.GetAllNodes().Select(x => new Positioned<FIRRTLNode>(Point.Zero, x)).ToList();
-        CurrModCtrl = new ModuleController(Operation, this, ParentModCtrl);
+        CurrModCtrl = new ModuleController(DebugCtrl, Operation, this, ParentModCtrl);
         CurrModCtrl.OnPlacedNodes += x => InvokeAsync(() => UpdatePlacement(x));
-
-        DebugCtrl.AddModCtrl(CurrModCtrl, Operation.GetAllNodes());
     }
 
     protected override void OnResize(int width, int height)
     {
         //Update this module with its internal io positions
         ScopedNodeIO internalIO = IOPositionCalc.VerticalScopedIO(Operation.GetInternalIO(), width, MarginForIO, MarginForIO);
-        
+
         //X position for internal is flipped i.e. input has output x
         //and the other way around. This switches the x values around.
         internalIO.UpdateIOX(width, 0);
