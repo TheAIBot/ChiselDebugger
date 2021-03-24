@@ -116,6 +116,22 @@ namespace ChiselDebug.Routing
             }
         }
 
+        private readonly struct MoveData
+        {
+            public readonly MoveDirs Dir;
+            public readonly MoveDirs RevDir;
+            public readonly Point DirVec;
+            public readonly Point RevDirVec;
+
+            public MoveData(MoveDirs dir)
+            {
+                this.Dir = dir;
+                this.RevDir = dir.Reverse();
+                this.DirVec = Dir.MovePoint(Point.Zero);
+                this.RevDirVec = RevDir.MovePoint(Point.Zero);
+            }
+        }
+
         private WirePath PathLine(RouterBoard board, IOInfo start, IOInfo end, Rectangle? startRect, Rectangle? endRect, Dictionary<Point, List<WirePath>> allPaths)
         {
             board.PrepareForSearchFromCheckpoint();
@@ -181,10 +197,16 @@ namespace ChiselDebug.Routing
             ref ScorePath startScore = ref board.GetCellScorePath(relativeStart);
             startScore = new ScorePath(0, 0, MoveDirs.None);
 
-            PriorityQueue<Point, int> toSee = new PriorityQueue<Point, int>();
+            PriorityQueue<Point> toSee = new PriorityQueue<Point>();
             toSee.Enqueue(relativeStart, 0);
 
-            MoveDirs[] moves = new MoveDirs[] { MoveDirs.Up, MoveDirs.Down, MoveDirs.Left, MoveDirs.Right };
+            MoveData[] moves = new MoveData[] 
+            { 
+                new MoveData(MoveDirs.Up),
+                new MoveData(MoveDirs.Down),
+                new MoveData(MoveDirs.Left),
+                new MoveData(MoveDirs.Right)
+            };
 
             while (toSee.Count > 0)
             {
@@ -205,20 +227,28 @@ namespace ChiselDebug.Routing
 
                 bool onEnemyWire = allowedMoves.HasFlag(MoveDirs.EnemyWire);
                 bool onWireCorner = allowedMoves.HasFlag(MoveDirs.WireCorner);
-                foreach (var move in moves)
+                for (int i = 0; i < moves.Length; i++)
                 {
-                    //Penalty for turning while on another wire
-                    bool isTurningOnEnemyWire = onEnemyWire && currentScorePath.DirFrom != MoveDirs.None && move != currentScorePath.DirFrom.Reverse();
-                    if (allowedMoves.HasFlag(move))
+                    if (allowedMoves.HasFlag(moves[i].Dir))
                     {
-                        ScorePath neighborScoreFromCurrent = currentScorePath.Move(move, onEnemyWire, onWireCorner, isTurningOnEnemyWire);
-
-                        Point neighborPos = move.MovePoint(current);
+                        Point neighborPos = current + moves[i].DirVec;
                         ref ScorePath neighborScore = ref board.GetCellScorePath(neighborPos);
 
+                        if (neighborScore.DirFrom != MoveDirs.None)
+                        {
+                            continue;
+                        }
+
+                        //Penalty for turning while on another wire
+                        bool isTurningOnEnemyWire = onEnemyWire && currentScorePath.DirFrom != MoveDirs.None && moves[i].Dir != currentScorePath.DirFrom.Reverse();
+
+                        ScorePath neighborScoreFromCurrent = currentScorePath.Move(moves[i].RevDir, onEnemyWire, onWireCorner, isTurningOnEnemyWire);
                         if (neighborScoreFromCurrent.IsBetterScoreThan(neighborScore))
                         {
-                            toSee.Enqueue(neighborPos, neighborScoreFromCurrent.GetTotalScore());
+                            Point diff = (current - relativeEnd).Abs();
+                            int dist = diff.X + diff.Y;
+
+                            toSee.Enqueue(neighborPos, neighborScoreFromCurrent.GetTotalScore() + dist / 2);
                             neighborScore = neighborScoreFromCurrent;
                         }
                     }
