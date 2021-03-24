@@ -480,9 +480,9 @@ namespace ChiselDebug
             UsedSpace.Add(node, shape);
         }
 
-        internal void AddEndStuff()
+        internal void AddEndStuff(Point endPadding)
         {
-            SpaceNeeded += new Point(50, 50);
+            SpaceNeeded += endPadding;
         }
     }
 }
