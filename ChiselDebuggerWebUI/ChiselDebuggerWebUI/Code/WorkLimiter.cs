@@ -24,6 +24,11 @@ namespace ChiselDebuggerWebUI.Code
             MaxMessagesPerTask = 1
         });
 
+        public static void AddWork(Action work)
+        {
+            Worker.Post(work);
+        }
+
         public static void LinkSource(ISourceBlock<Action> workSource)
         {
             lock (ActiveLinks)

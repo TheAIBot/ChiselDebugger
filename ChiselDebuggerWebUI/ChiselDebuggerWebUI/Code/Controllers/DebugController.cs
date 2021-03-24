@@ -1,6 +1,7 @@
 ﻿using ChiselDebug;
 using ChiselDebug.GraphFIR;
 using ChiselDebug.Timeline;
+using ChiselDebuggerWebUI.Code.Templates;
 using ChiselDebuggerWebUI.Components;
 using ChiselDebuggerWebUI.Pages.FIRRTLUI;
 using System;
@@ -17,6 +18,7 @@ namespace ChiselDebuggerWebUI.Code
         private readonly Dictionary<FIRRTLNode, ModuleController> FIRNodeToModCtrl = new Dictionary<FIRRTLNode, ModuleController>();
         private readonly List<ModuleController> ModControllers = new List<ModuleController>();
         private readonly BroadcastBlock<Action> TimeChanger = null;
+        private readonly PlacementTemplator PlacementTemplates = new PlacementTemplator();
 
         public DebugController(CircuitGraph graph, VCD vcd)
         {
@@ -30,13 +32,20 @@ namespace ChiselDebuggerWebUI.Code
             }
         }
 
-        public void AddModCtrl(ModuleController modCtrl, FIRRTLNode[] modNodes)
+        public void AddModCtrl(string moduleName, ModuleController modCtrl, FIRRTLNode[] modNodes)
         {
             ModControllers.Add(modCtrl);
             foreach (var node in modNodes)
             {
                 FIRNodeToModCtrl.Add(node, modCtrl);
             }
+
+            PlacementTemplates.SubscribeToTemplate(moduleName, modCtrl, modNodes);
+        }
+
+        internal void AddTemplateParameters(string moduleName, SimplePlacer placer, FIRRTLNode[] nodeOrder)
+        {
+            PlacementTemplates.AddTemplateParameters(moduleName, placer, nodeOrder);
         }
 
         public void SetCircuitState(ulong time)

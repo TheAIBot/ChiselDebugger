@@ -5,6 +5,7 @@ using ChiselDebuggerWebUI.Components;
 using ChiselDebuggerWebUI.Pages.FIRRTLUI;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks.Dataflow;
@@ -14,12 +15,14 @@ namespace ChiselDebuggerWebUI.Code
 {
     public class ModuleController : IDisposable
     {
+        private readonly DebugController DebugCtrl;
         private readonly Module Mod;
         private readonly ModuleUI ModUI;
         private readonly ModuleController ParentModCtrl;
         private readonly SimpleRouter WireRouter;
         private readonly SimplePlacer NodePlacer;
         private readonly List<IFIRUINode> UINodes = new List<IFIRUINode>();
+        private readonly FIRRTLNode[] ModuleNodes;
 
         public delegate void PlacedHandler(PlacementInfo placements);
         public event PlacedHandler OnPlacedNodes;
@@ -27,18 +30,18 @@ namespace ChiselDebuggerWebUI.Code
         public delegate void RoutedHandler(List<WirePath> wirePaths);
         public event RoutedHandler OnWiresRouted;
 
-        private readonly BroadcastBlock<Action> PlaceLimiter = new BroadcastBlock<Action>(x => x);
         private readonly BroadcastBlock<Action> RouteLimiter = new BroadcastBlock<Action>(x => x);
 
-        public ModuleController(Module mod, ModuleUI modUI, ModuleController parentModCtrl)
+        public ModuleController(DebugController debugCtrl, Module mod, ModuleUI modUI, ModuleController parentModCtrl)
         {
+            this.DebugCtrl = debugCtrl;
             this.Mod = mod;
             this.ModUI = modUI;
             this.ParentModCtrl = parentModCtrl;
             this.WireRouter = new SimpleRouter(Mod);
             this.NodePlacer = new SimplePlacer(Mod);
+            this.ModuleNodes = Mod.GetAllNodes();
 
-            WorkLimiter.LinkSource(PlaceLimiter);
             WorkLimiter.LinkSource(RouteLimiter);
         }
 
@@ -70,9 +73,9 @@ namespace ChiselDebuggerWebUI.Code
             return NodePlacer.IsReadyToPlace();
         }
 
-        private void PlaceNodes()
+        public void PlaceNodes(PlacementInfo placements)
         {
-            PlaceLimiter.Post(() => OnPlacedNodes?.Invoke(NodePlacer.PositionModuleComponents()));
+            OnPlacedNodes?.Invoke(placements);
         }
 
         public void RouteWires(PlacementInfo placements)
@@ -89,7 +92,7 @@ namespace ChiselDebuggerWebUI.Code
 
             if (IsReadyToRender())
             {
-                PlaceNodes();
+                DebugCtrl.AddTemplateParameters(Mod.Name, NodePlacer, ModuleNodes);
             }
         }
 
@@ -100,7 +103,6 @@ namespace ChiselDebuggerWebUI.Code
 
         public void Dispose()
         {
-            WorkLimiter.UnlinkSource(PlaceLimiter);
             WorkLimiter.UnlinkSource(RouteLimiter);
         }
     }
