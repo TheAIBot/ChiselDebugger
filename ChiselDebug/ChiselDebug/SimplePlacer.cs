@@ -135,42 +135,79 @@ namespace ChiselDebug
                         placement.Remove(modIONode);
                     }
 
+
+                    Point min = new Point(int.MaxValue, int.MaxValue);
+                    Point max = new Point(int.MinValue, int.MinValue);
+                    foreach (var keyVal in placement)
                     {
-                        FIRRTLNode[][] nodePlacements = placement
-                            .GroupBy(x => x.Value.X)
-                            .OrderBy(x => x.Key)
-                            .Select(x => x
-                                .OrderBy(y => y.Value.Y)
-                                .Select(y => y.Key.Value)
-                                .ToArray())
-                            .ToArray();
+                        min = Point.Min(min, keyVal.Value);
+                        max = Point.Max(max, keyVal.Value);
+                    }
 
-                        int xOffset = 50;
-                        for (int x = 0; x < nodePlacements.Length; x++)
+                    int columns = max.X - min.X + 1;
+                    int rows = max.Y - min.Y + 1;
+
+                    FIRRTLNode[][] nodePlacements = new FIRRTLNode[columns][];
+                    for (int i = 0; i < nodePlacements.Length; i++)
+                    {
+                        nodePlacements[i] = new FIRRTLNode[rows];
+                    }
+
+                    foreach (var keyVal in placement)
+                    {
+                        Point pos = keyVal.Value - min;
+                        nodePlacements[pos.X][pos.Y] = keyVal.Key.Value;
+                    }
+
+                    int[] xOffsets = new int[columns];
+                    int[] yOffsets = new int[rows];
+
+                    var xGroups = placement.GroupBy(x => x.Value.X).ToArray();
+                    var yGroups = placement.GroupBy(x => x.Value.Y).ToArray();
+
+                    Point borderPadding = new Point(200, 200);
+                    Point padding = new Point(300, 200);
+                    int xOffset = borderPadding.X;
+                    int yOffset = borderPadding.Y;
+
+                    foreach (var xGroup in placement.GroupBy(x => x.Value.X).OrderBy(x => x.Key))
+                    {
+                        int widest = xGroup.Max(x => NodeSizes[x.Key.Value].X);
+                        int xIndex = xGroup.Key - min.X;
+
+                        xOffsets[xIndex] = xOffset;
+
+                        xOffset += widest + padding.X;
+                    }
+
+                    foreach (var yGroup in placement.GroupBy(x => x.Value.Y).OrderBy(x => x.Key))
+                    {
+                        int widest = yGroup.Max(x => NodeSizes[x.Key.Value].Y);
+                        int yIndex = yGroup.Key - min.Y;
+
+                        yOffsets[yIndex] = yOffset;
+
+                        yOffset += widest + padding.Y;
+                    }
+
+                    for (int x = 0; x < columns; x++)
+                    {
+                        for (int y = 0; y < rows; y++)
                         {
-                            int yOffset = 50;
-                            int largestWidth = 0;
-                            for (int y = 0; y < nodePlacements[x].Length; y++)
+                            FIRRTLNode node = nodePlacements[x][y];
+                            if (node == null)
                             {
-                                FIRRTLNode node = nodePlacements[x][y];
-
-                                Point offset = new Point(xOffset, yOffset);
-                                Point padding = new Point(200, 100);
-                                Point pos = offset + padding;
-                                Point size = NodeSizes[node];
-                                Point paddedSize = size + padding;
-
-                                placments.AddNodePlacement(node, new Rectangle(pos, NodeSizes[node]));
-
-                                largestWidth = Math.Max(largestWidth, paddedSize.X);
-                                yOffset += paddedSize.Y;
+                                continue;
                             }
 
-                            xOffset += largestWidth;
+                            Point pos = new Point(xOffsets[x], yOffsets[y]);
+
+                            placments.AddNodePlacement(node, new Rectangle(pos, NodeSizes[node]));
                         }
                     }
 
-                    placments.AddEndStuff();
+
+                    placments.AddEndStuff(borderPadding);
                     return placments;
                 }
                 catch (Exception e)
