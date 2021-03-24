@@ -385,7 +385,7 @@ namespace ChiselDebug
                 }
             }
 
-            for (int x = 0; x < 5; x++)
+            //for (int x = 0; x < 5; x++)
             {
                 OptimizeXOrdering(xOrdering);
                 xGroups = GetXGroups(xOrdering);
