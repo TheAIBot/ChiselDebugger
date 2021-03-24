@@ -1,5 +1,6 @@
 ﻿using ChiselDebug;
 using ChiselDebug.GraphFIR;
+using ChiselDebug.GraphFIR.IO;
 using ChiselDebug.Routing;
 using ChiselDebuggerWebUI.Components;
 using ChiselDebuggerWebUI.Pages.FIRRTLUI;
@@ -23,14 +24,14 @@ namespace ChiselDebuggerWebUI.Code
         private readonly SimplePlacer NodePlacer;
         private readonly List<IFIRUINode> UINodes = new List<IFIRUINode>();
         private readonly FIRRTLNode[] ModuleNodes;
+        private readonly FIRRTLNode[] ModuleNodesWithModule;
+        private readonly FIRIO[] ModuleIO;
 
         public delegate void PlacedHandler(PlacementInfo placements);
         public event PlacedHandler OnPlacedNodes;
 
         public delegate void RoutedHandler(List<WirePath> wirePaths);
         public event RoutedHandler OnWiresRouted;
-
-        private readonly BroadcastBlock<Action> RouteLimiter = new BroadcastBlock<Action>(x => x);
 
         public ModuleController(DebugController debugCtrl, Module mod, ModuleUI modUI, ModuleController parentModCtrl)
         {
@@ -41,8 +42,10 @@ namespace ChiselDebuggerWebUI.Code
             this.WireRouter = new SimpleRouter(Mod);
             this.NodePlacer = new SimplePlacer(Mod);
             this.ModuleNodes = Mod.GetAllNodes();
+            this.ModuleNodesWithModule = Mod.GetAllNodesIncludeModule();
+            this.ModuleIO = Mod.GetAllIOOrdered();
 
-            WorkLimiter.LinkSource(RouteLimiter);
+            DebugCtrl.AddModCtrl(Mod.Name, this, ModuleNodes, ModuleNodesWithModule, ModuleIO);
         }
 
         public void AddUINode(IFIRUINode uiNode)
@@ -78,12 +81,18 @@ namespace ChiselDebuggerWebUI.Code
             OnPlacedNodes?.Invoke(placements);
         }
 
-        public void RouteWires(PlacementInfo placements)
+        public void PlaceWires(List<WirePath> wires)
         {
-            RouteLimiter.Post(() => OnWiresRouted?.Invoke(WireRouter.PathLines(placements)));
+            OnWiresRouted?.Invoke(wires);
         }
 
-
+        public void RouteWires(PlacementInfo placements)
+        {
+            if (WireRouter.IsReadyToRoute())
+            {
+                DebugCtrl.AddRouteTemplateParameters(Mod.Name, WireRouter, placements, ModuleNodesWithModule, ModuleIO);
+            }
+        }
 
         public void UpdateComponentInfo(FIRComponentUpdate updateData)
         {
@@ -92,7 +101,7 @@ namespace ChiselDebuggerWebUI.Code
 
             if (IsReadyToRender())
             {
-                DebugCtrl.AddTemplateParameters(Mod.Name, NodePlacer, ModuleNodes);
+                DebugCtrl.AddPlaceTemplateParameters(Mod.Name, NodePlacer, ModuleNodes);
             }
         }
 
@@ -103,7 +112,6 @@ namespace ChiselDebuggerWebUI.Code
 
         public void Dispose()
         {
-            WorkLimiter.UnlinkSource(RouteLimiter);
         }
     }
 }

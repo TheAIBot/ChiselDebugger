@@ -143,7 +143,7 @@ namespace ChiselDebuggerWebUI.Code.Templates
             lock (Templates)
             {
                 Templates.Add(moduleName, template);
-                Debug.WriteLine($"Added template for {moduleName}");
+                Debug.WriteLine($"Added place template for {moduleName}");
             }
 
             lock (Converters)

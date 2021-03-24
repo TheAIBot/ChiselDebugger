@@ -12,10 +12,13 @@ namespace ChiselDebug.Routing
     public class SimpleRouter
     {
         private readonly ConnectionsHandler Connections;
+        private readonly HashSet<FIRRTLNode> MissingNodeIO;
 
         public SimpleRouter(Module mod)
         {
             this.Connections = new ConnectionsHandler(mod);
+            this.MissingNodeIO = new HashSet<FIRRTLNode>(mod.GetAllNodesIncludeModule());
+            MissingNodeIO.RemoveWhere(x => x is INoPlaceAndRoute);
         }
 
         private record LineInfo(IOInfo Start, IOInfo End)
@@ -29,6 +32,11 @@ namespace ChiselDebug.Routing
         public void UpdateIOFromNode(FIRRTLNode node, List<DirectedIO> inputOffsets, List<DirectedIO> outputOffsets)
         {
             Connections.UpdateIOFromNode(node, inputOffsets, outputOffsets);
+
+            lock (MissingNodeIO)
+            {
+                MissingNodeIO.Remove(node);
+            }
         }
 
         public List<WirePath> PathLines(PlacementInfo placements)
@@ -265,6 +273,11 @@ namespace ChiselDebug.Routing
             Debug.WriteLine(board.BoardAllowedMovesToString(relativeStart, relativeEnd));
             Debug.WriteLine(board.BoardStateToString(relativeStart, relativeEnd));
             throw new Exception("Failed to find a path.");
+        }
+
+        public bool IsReadyToRoute()
+        {
+            return MissingNodeIO.Count == 0;
         }
     }
 }

@@ -95,14 +95,40 @@ namespace ChiselDebug.Routing
             return true;
         }
 
+        public WirePath CopyWithNewNodes(FIRRTLNode start, FIRIO startIO, FIRRTLNode end, FIRIO endIO)
+        {
+            DirectedIO startDir = new DirectedIO(startIO, StartIO.DirIO.Position, StartIO.DirIO.InitialDir);
+            DirectedIO endDir = new DirectedIO(endIO, EndIO.DirIO.Position, EndIO.DirIO.InitialDir);
+
+            IOInfo startInfo = new IOInfo(start, startDir);
+            IOInfo endInfo = new IOInfo(end, endDir);
+
+            return new WirePath(startInfo, endInfo, new List<Point>(Path), new List<Point>(BoardPositions), new List<Point>(BoardPosTurns), StartsFromWire);
+        }
+
         public Point GetEndPos()
         {
             return Path[^1];
         }
 
+        public FIRIO GetStartIO()
+        {
+            return StartIO.DirIO.IO;
+        }
+
         public FIRIO GetEndIO()
         {
             return EndIO.DirIO.IO;
+        }
+
+        public FIRRTLNode GetStartNode()
+        {
+            return StartIO.Node;
+        }
+
+        public FIRRTLNode GetEndNode()
+        {
+            return EndIO.Node;
         }
 
         public string ToSVGPathString()
