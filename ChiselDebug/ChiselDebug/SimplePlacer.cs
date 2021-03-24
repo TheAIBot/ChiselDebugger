@@ -268,6 +268,14 @@ namespace ChiselDebug
                     Dictionary<Node<FIRRTLNode>, float> prefYPoses = new Dictionary<Node<FIRRTLNode>, float>();
                     foreach (var node in group)
                     {
+                        if (node.Incomming.Count == 0 &&
+                            node.Outgoing.Count == 0 &&
+                            node.Indirectly.Count == 0)
+                        {
+                            prefYPoses.Add(node, yOrdering[node]);
+                            continue;
+                        }
+
                         float parentWeight = 1;
                         float childWeight = 1;
                         float indirectweight = 5;
