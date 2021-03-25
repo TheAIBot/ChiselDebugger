@@ -149,7 +149,7 @@ namespace ChiselDebug.Routing
 
         private WirePath PathLine(RouterBoard board, IOInfo start, IOInfo end, Rectangle? startRect, Rectangle? endRect, Dictionary<Point, List<WirePath>> allPaths)
         {
-            board.PrepareForSearchFromCheckpoint();
+            board.ReloadCheckpoint();
 
             Point relativeStart = board.GetRelativeBoardPos(end.DirIO.Position);
             Point relativeEnd = board.GetRelativeBoardPos(start.DirIO.Position);

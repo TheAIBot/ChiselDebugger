@@ -11,8 +11,9 @@ namespace ChiselDebug.Routing
         private readonly int CellsWide;
         private readonly int CellsHigh;
         private readonly MoveDirs[] CellAllowedDirs;
-        private readonly MoveDirs[] CheckpointAllowedDirs;
         private readonly ScorePath[] CellScoreAndPath;
+        private readonly MoveDirs[] CheckpointAllowedDirs;
+        private readonly ScorePath[] CheckpointScoreAndPath;
 
         private const int CellSize = 10;
 
@@ -26,8 +27,10 @@ namespace ChiselDebug.Routing
             this.CellsHigh = CeilDiv(boardSize.Y, CellSize) + 1;
 
             this.CellAllowedDirs = new MoveDirs[CellsWide * CellsHigh];
-            this.CheckpointAllowedDirs = new MoveDirs[CellAllowedDirs.Length];
             this.CellScoreAndPath = new ScorePath[CellAllowedDirs.Length];
+
+            this.CheckpointAllowedDirs = new MoveDirs[CellAllowedDirs.Length];
+            this.CheckpointScoreAndPath = new ScorePath[CellAllowedDirs.Length];
         }
 
         private static int CeilDiv(int x, int y)
@@ -65,6 +68,7 @@ namespace ChiselDebug.Routing
             //Start with all moves are legal
             MoveDirs allDirs = MoveDirs.All;
             Array.Fill(CellAllowedDirs, allDirs);
+            Array.Fill(CellScoreAndPath, ScorePath.NotReachedYet());
 
             //Moves that go outside the board are not allowed
             for (int x = 0; x < CellsWide; x++)
@@ -117,17 +121,13 @@ namespace ChiselDebug.Routing
         internal void CreateCheckpoint()
         {
             Array.Copy(CellAllowedDirs, CheckpointAllowedDirs, CellAllowedDirs.Length);
+            Array.Copy(CellScoreAndPath, CheckpointScoreAndPath, CellScoreAndPath.Length);
         }
 
         internal void ReloadCheckpoint()
         {
             Array.Copy(CheckpointAllowedDirs, CellAllowedDirs, CellAllowedDirs.Length);
-        }
-
-        internal void PrepareForSearchFromCheckpoint()
-        {
-            ReloadCheckpoint();
-            Array.Fill(CellScoreAndPath, ScorePath.NotReachedYet());
+            Array.Copy(CheckpointScoreAndPath, CellScoreAndPath, CellScoreAndPath.Length);
         }
 
         internal void SetAllOutgoingMoves(Point pos)
