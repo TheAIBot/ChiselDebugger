@@ -58,12 +58,14 @@ namespace ChiselDebuggerWebUI.Components
             ParentModCtrl?.AddUINode(this);
         }
 
-        protected override async Task OnAfterRenderAsync(bool firstRender)
+        protected override Task OnAfterRenderAsync(bool firstRender)
         {
             if (firstRender)
             {
-                await JSEvents.AddResizeListener(JS, SizeWatcherID, JSOnResize);
+                JSEvents.AddResizeListener(JS, SizeWatcherID, JSOnResize);
             }
+
+            return base.OnAfterRenderAsync(firstRender);
 
             //Debug.WriteLine($"Render: {typeof(T)} sizeChange: {sizeChanged}, Count: {RenderCounter++}");
         }

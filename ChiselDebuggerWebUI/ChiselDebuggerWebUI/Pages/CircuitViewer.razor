@@ -65,7 +65,7 @@
         if (firstRender)
         {
             await JSEvents.AddDragListener(JS, DragEventID, x => InvokeAsync(() => HandleDrag(x)));
-            await JSEvents.AddResizeListener(JS, CircuitContainerID, PageResized);
+            JSEvents.AddResizeListener(JS, CircuitContainerID, PageResized);
         }
 
         await base.OnAfterRenderAsync(firstRender);

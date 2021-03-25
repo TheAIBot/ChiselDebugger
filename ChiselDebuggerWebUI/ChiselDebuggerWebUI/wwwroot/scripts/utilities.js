@@ -11,6 +11,13 @@
     }
 }
 
+class ElemResizes {
+    constructor(ids, sizes) {
+        this.IDs = ids;
+        this.Sizes = sizes;
+    }
+}
+
 
 var JSUtils = JSUtils || {};
 JSUtils.getElementSize = function(element) {
@@ -22,27 +29,42 @@ JSUtils.getElementPosition = function (element) {
 }
 
 const oldSizes = {};
-const reObserver = new ResizeObserver(entries => {
+const reObserver = new ResizeObserver(async entries => {
+    var elemID = []
+    var sizes = []
     for (let entry of entries) {
-        onElemResize(entry.target);
+        const elementID = entry.target.id;
+
+        const oldSize = oldSizes[elementID];
+        const newSize = JSUtils.getElementSize(entry.target);
+
+        if (!oldSize.approxEquals(newSize)) {
+            oldSizes[elementID] = newSize;
+            elemID.push(elementID);
+            sizes.push(newSize);
+        }
     }
+
+    var toWait = []
+    while (elemID.length > 0) {
+        var elemIDsPart = []
+        var sizesPart = []
+        for (var i = 0; i < Math.min(elemID.length, 500); i++) {
+            elemIDsPart.push(elemID.pop())
+            sizesPart.push(sizes.pop())
+        }
+
+        toWait.push(DotNet.invokeMethodAsync("ChiselDebuggerWebUI", "ResizeEventsAsync", new ElemResizes(elemIDsPart, sizesPart)));
+    }
+
+    await Promise.all(toWait);
 });
 
-function onElemResize(element) {
-    const elementID = element.id;
-
-    const oldSize = oldSizes[elementID];
-    const newSize = JSUtils.getElementSize(element);
-
-    if (!oldSize.approxEquals(newSize)) {
-        oldSizes[elementID] = newSize;
-        DotNet.invokeMethodAsync("ChiselDebuggerWebUI", "ResizeEventAsync", elementID, newSize);
+JSUtils.addResizeListeners = function (elementIDs) {
+    for (let elementID of elementIDs) {
+        oldSizes[elementID] = new ElemWH(0, 0);
+        reObserver.observe(document.getElementById(elementID));
     }
-}
-
-JSUtils.addResizeListener = function (elementID) {
-    oldSizes[elementID] = new ElemWH(0, 0);
-    reObserver.observe(document.getElementById(elementID));
 }
 
 JSUtils.addDragListener = function (elementID) {
