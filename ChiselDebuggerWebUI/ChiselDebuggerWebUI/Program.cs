@@ -22,5 +22,10 @@ namespace ChiselDebuggerWebUI
                 {
                     webBuilder.UseStartup<Startup>();
                 });
+                //.ConfigureLogging(logging =>
+                //{
+                //    logging.AddFilter("Microsoft.AspNetCore.SignalR", LogLevel.Debug);
+                //    logging.AddFilter("Microsoft.AspNetCore.Http.Connections", LogLevel.Debug);
+                //});
     }
 }
