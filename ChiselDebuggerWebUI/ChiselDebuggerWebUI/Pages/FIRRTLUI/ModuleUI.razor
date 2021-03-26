@@ -115,7 +115,17 @@
 
         ExternalIO.VerticalRecenter(moduleSize.Y);
 
-        ParentModCtrl?.UpdateComponentInfo(new FIRComponentUpdate(Operation, moduleSize, ExternalIO.GetInputDirIO(), ExternalIO.GetOutputDirIO()));
+        //Circuit size is the same as the size of the top level
+        //module. Only the top level module doesn't have a
+        //parent controller.
+        if (ParentModCtrl == null)
+        {
+            DebugCtrl.SetCircuitSize(moduleSize);
+        }
+        else
+        {
+            ParentModCtrl.UpdateComponentInfo(new FIRComponentUpdate(Operation, moduleSize, ExternalIO.GetInputDirIO(), ExternalIO.GetOutputDirIO()));
+        }
 
         return moduleSize;
     }

@@ -76,14 +76,57 @@
         CircuitTopLeftParent = (await JS.InvokeAsync<ElemWH>("JSUtils.getElementPosition", CircuitContainer)).ToPoint();
     }
 
+    /// <summary>
+    /// Handles zooming in on the circuit while preserving the mouse relative
+    /// position on the circuit while doing so. It does this by translating
+    /// the circuit as needed.
+    /// </summary>
+    /// <param name="args"></param>
     private void HandleScroll(WheelEventArgs args)
     {
-        float scaleDelta = args.DeltaY > 0 ? 0.1f : -0.1f;
-        CircuitScale -= scaleDelta;
-        CircuitScale = Math.Clamp(CircuitScale, 0.1f, 10.0f);
+        //No matter how much is scrolled, handle it as if it has only
+        //scrolled once. This is done to prevent Accidentally zooming
+        //too fast.
+        float delta = args.DeltaY > 0 ? 0.9f : 1.1f;
 
-        CircuitOffset.X += (int)(args.OffsetX * scaleDelta);
-        CircuitOffset.Y += (int)(args.OffsetY * scaleDelta);
+        //Limit zooming to some reasonable range
+        float newScale = Math.Clamp(CircuitScale * delta, 0.00005f, 200.0f);
+        float scaleDelta = CircuitScale - newScale;
+
+        //ClientX and ClientY are relative to the viewport.
+        //relMouse should be relative to the circuit itself which is why it's
+        //translated by the circuit starting position and its current offset.
+        float relMouseX = (float)args.ClientX - CircuitOffset.X - CircuitTopLeftParent.X;
+        float relMouseY = (float)args.ClientY - CircuitOffset.Y - CircuitTopLeftParent.Y;
+
+
+        float circuitSizeX = DebugCtrl.CircuitSize.X * CircuitScale;
+        float circuitSizeY = DebugCtrl.CircuitSize.Y * CircuitScale;
+
+        //These represent the position of the mouse as a percentage distance
+        //to the bottom right of the circuit. Is used to know how much
+        //the circuit should be translated in order to preserve the mouse
+        //relative position on the circuit.
+        float moveX = relMouseX / circuitSizeX;
+        float moveY = relMouseY / circuitSizeY;
+
+        //If the mouse is outside the circuit then handle as if the mouse
+        //is on the border of the circuit. Prevents translating the circuit
+        //completely off the screen if scrolling too far from the circuit.
+        moveX = Math.Clamp(moveX, 0, 1);
+        moveY = Math.Clamp(moveY, 0, 1);
+
+        //When zooming in, the circuits top left position is unchanged.
+        //In order to preserve the mouse relative position, the circuit
+        //is translated by however much the circuit size would increase
+        //by multiplied by the mouse position relative to the circuits
+        //top left position.
+        float xOffset = moveX * DebugCtrl.CircuitSize.X * scaleDelta;
+        float yOffset = moveY * DebugCtrl.CircuitSize.Y * scaleDelta;
+
+        CircuitScale = newScale;
+        CircuitOffset.X += (int)xOffset;
+        CircuitOffset.Y += (int)yOffset;
 
         StateHasChanged();
     }

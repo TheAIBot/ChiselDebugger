@@ -22,6 +22,7 @@ namespace ChiselDebuggerWebUI.Code
         private readonly BroadcastBlock<Action> TimeChanger = null;
         private readonly PlacementTemplator PlacementTemplates = new PlacementTemplator();
         private readonly RouteTemplator RouteTemplates = new RouteTemplator();
+        public Point CircuitSize { get; private set; } = Point.Zero;
 
         public DebugController(CircuitGraph graph, VCD vcd)
         {
@@ -55,6 +56,11 @@ namespace ChiselDebuggerWebUI.Code
         internal void AddRouteTemplateParameters(string moduleName, SimpleRouter router, PlacementInfo placeInfo, FIRRTLNode[] nodeOrder, FIRIO[] ioOrder)
         {
             RouteTemplates.AddTemplateParameters(moduleName, router, placeInfo, nodeOrder, ioOrder);
+        }
+
+        public void SetCircuitSize(Point size)
+        {
+            CircuitSize = size;
         }
 
         public void SetCircuitState(ulong time)
