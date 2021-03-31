@@ -41,6 +41,14 @@ namespace ChiselDebug.GraphFIR
             NameToIO.Add(regIO.GetOutput().Name, regIO);
         }
 
+        public void AddWire(Wire wire)
+        {
+            Nodes.Add(wire);
+
+            IOBundle wireIO = wire.GetIOAsBundle();
+            NameToIO.Add(wireIO.Name, wireIO);
+        }
+
         public void AddModule(Module mod, string bundleName)
         {
             Nodes.Add(mod);
@@ -146,6 +154,24 @@ namespace ChiselDebug.GraphFIR
             allOrdered.AddRange(Nodes.SelectMany(x => x.GetIO().SelectMany(x => x.Flatten())));
 
             return allOrdered.ToArray();
+        }
+
+        internal void RemoveAllWires()
+        {
+            for (int i = Nodes.Count - 1; i >= 0 ; i--)
+            {
+                FIRRTLNode node = Nodes[i];
+                if (node is Wire wire)
+                {
+                    wire.BypassWireIO();
+                    Nodes.RemoveAt(i);
+                    NameToIO.Remove(wire.Name);
+                }
+                else if (node is Module mod)
+                {
+                    mod.RemoveAllWires();
+                }
+            }
         }
 
         internal void CorrectIO()

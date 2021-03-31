@@ -49,20 +49,20 @@ namespace ChiselDebugTests
         [TestMethod] public void Nested1ModuleBundleWithVector_treadle_lo_fir() => VerifyChiselTest("ModH", "treadle.lo.fir", false);
         [TestMethod] public void Nested1ModuleBundleWithVector_vcd_treadle_lo_fir() => VerifyChiselTest("ModH", "treadle.lo.fir", true);
 
-        //[TestMethod] public void InOutWireVecBundle_fir() => VerifyChiselTest("ModI", "fir", false);
-        //[TestMethod] public void InOutWireVecBundle_lo_fir() => VerifyChiselTest("ModI", "lo.fir", false);
-        //[TestMethod] public void InOutWireVecBundle_treadle_lo_fir() => VerifyChiselTest("ModI", "treadle.lo.fir", false);
-        //[TestMethod] public void InOutWireVecBundle_vcd_treadle_lo_fir() => VerifyChiselTest("ModI", "treadle.lo.fir", true);
+        [TestMethod] public void InOutWireVecBundle_fir() => VerifyChiselTest("ModI", "fir", false);
+        [TestMethod] public void InOutWireVecBundle_lo_fir() => VerifyChiselTest("ModI", "lo.fir", false);
+        [TestMethod] public void InOutWireVecBundle_treadle_lo_fir() => VerifyChiselTest("ModI", "treadle.lo.fir", false);
+        [TestMethod] public void InOutWireVecBundle_vcd_treadle_lo_fir() => VerifyChiselTest("ModI", "treadle.lo.fir", true);
 
-        //[TestMethod] public void WireConnectInBeforeOut_fir() => VerifyChiselTest("ModJ", "fir", false);
-        //[TestMethod] public void WireConnectInBeforeOut_lo_fir() => VerifyChiselTest("ModJ", "lo.fir", false);
-        //[TestMethod] public void WireConnectInBeforeOut_treadle_lo_fir() => VerifyChiselTest("ModJ", "treadle.lo.fir", false);
-        //[TestMethod] public void WireConnectInBeforeOut_vcd_treadle_lo_fir() => VerifyChiselTest("ModJ", "treadle.lo.fir", true);
+        [TestMethod] public void WireConnectInBeforeOut_fir() => VerifyChiselTest("ModJ", "fir", false);
+        [TestMethod] public void WireConnectInBeforeOut_lo_fir() => VerifyChiselTest("ModJ", "lo.fir", false);
+        [TestMethod] public void WireConnectInBeforeOut_treadle_lo_fir() => VerifyChiselTest("ModJ", "treadle.lo.fir", false);
+        [TestMethod] public void WireConnectInBeforeOut_vcd_treadle_lo_fir() => VerifyChiselTest("ModJ", "treadle.lo.fir", true);
 
-        //[TestMethod] public void WireConnectOutBeforeIn_fir() => VerifyChiselTest("ModK", "fir", false);
-        //[TestMethod] public void WireConnectOutBeforeIn_lo_fir() => VerifyChiselTest("ModK", "lo.fir", false);
-        //[TestMethod] public void WireConnectOutBeforeIn_treadle_lo_fir() => VerifyChiselTest("ModK", "treadle.lo.fir", false);
-        //[TestMethod] public void WireConnectOutBeforeIn_vcd_treadle_lo_fir() => VerifyChiselTest("ModK", "treadle.lo.fir", true);
+        [TestMethod] public void WireConnectOutBeforeIn_fir() => VerifyChiselTest("ModK", "fir", false);
+        [TestMethod] public void WireConnectOutBeforeIn_lo_fir() => VerifyChiselTest("ModK", "lo.fir", false);
+        [TestMethod] public void WireConnectOutBeforeIn_treadle_lo_fir() => VerifyChiselTest("ModK", "treadle.lo.fir", false);
+        [TestMethod] public void WireConnectOutBeforeIn_vcd_treadle_lo_fir() => VerifyChiselTest("ModK", "treadle.lo.fir", true);
 
         //[TestMethod] public void WireConnectConditionalOrder_fir() => VerifyChiselTest("ModL", "fir", false);
         //[TestMethod] public void WireConnectConditionalOrder_lo_fir() => VerifyChiselTest("ModL", "lo.fir", false);

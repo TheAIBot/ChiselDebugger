@@ -51,13 +51,7 @@ namespace ChiselDebug.GraphFIR.IO
                 throw new Exception("Sink must be connected when it's also used as a source.");
             }
 
-            Input[] inputs = SinkSource.Con.To.ToArray();
-            foreach (var input in inputs)
-            {
-                SinkSource.Con.DisconnectInput(input);
-                Con.From.ConnectToInput(input);
-            }
-
+            IOHelper.BypassIO(SinkSource, Con.From);
             SinkSource = null;
         }
 
