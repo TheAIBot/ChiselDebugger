@@ -21,7 +21,7 @@ namespace ChiselDebug.GraphFIR
         {
             if (input.IsConnected())
             {
-                throw new Exception("An input can't be connected to two wires at once.");
+                input.Disconnect();
             }
 
             To.Add(input);

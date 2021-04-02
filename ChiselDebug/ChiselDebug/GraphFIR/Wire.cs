@@ -14,6 +14,11 @@ namespace ChiselDebug.GraphFIR
 
         public Wire(string name, FIRIO inputType)
         {
+            if (!inputType.IsPassiveOfType<Input>())
+            {
+                throw new Exception("Wire input type must be a passive input type.");
+            }
+
             this.Name = name;
             this.In = inputType.Copy(this);
             this.Result = inputType.Flip(this);

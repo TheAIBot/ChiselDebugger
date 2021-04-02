@@ -247,6 +247,7 @@ namespace ChiselDebug
             else if (statement is FIRRTL.DefWire defWire)
             {
                 GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Output, string.Empty, defWire.Type).Single();
+                inputType = inputType.ToFlow(GraphFIR.IO.FlowChange.Sink);
                 GraphFIR.Wire wire = new GraphFIR.Wire(defWire.Name, inputType);
 
                 helper.Mod.AddWire(wire);

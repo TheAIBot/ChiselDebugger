@@ -94,16 +94,10 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public override FIRIO Flip(FIRRTLNode node = null)
+        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node = null)
         {
-            List<FIRIO> flipped = OrderedIO.Select(x => x.Flip(node)).ToList();
-            return new IOBundle(Name, flipped, IsVisibleAggregate());
-        }
-
-        public override FIRIO Copy(FIRRTLNode node = null)
-        {
-            List<FIRIO> flipped = OrderedIO.Select(x => x.Copy(node)).ToList();
-            return new IOBundle(Name, flipped, IsVisibleAggregate());
+            List<FIRIO> changedFlow = OrderedIO.Select(x => x.ToFlow(flow, node)).ToList();
+            return new IOBundle(Name, changedFlow, IsVisibleAggregate());
         }
 
         public override IEnumerable<ScalarIO> Flatten()
