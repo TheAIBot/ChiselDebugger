@@ -102,6 +102,8 @@ namespace ChiselDebug
                 //connections from a source to a sink are possible.
                 helper.Mod.CorrectIO();
 
+                helper.Mod.RemoveAllWires();
+
                 return helper.Mod;
             }
             else
@@ -242,9 +244,13 @@ namespace ChiselDebug
 
                 helper.Mod.AddMemoryPort(memory, port);
             }
-            else if (statement is FIRRTL.DefWire)
+            else if (statement is FIRRTL.DefWire defWire)
             {
-                throw new NotImplementedException();
+                GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Output, string.Empty, defWire.Type).Single();
+                inputType = inputType.ToFlow(GraphFIR.IO.FlowChange.Sink);
+                GraphFIR.Wire wire = new GraphFIR.Wire(defWire.Name, inputType);
+
+                helper.Mod.AddWire(wire);
             }
             else if (statement is FIRRTL.DefRegister reg)
             {

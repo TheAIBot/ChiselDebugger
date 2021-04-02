@@ -51,14 +51,13 @@ namespace ChiselDebug.GraphFIR.IO
                 throw new Exception("Sink must be connected when it's also used as a source.");
             }
 
-            Input[] inputs = SinkSource.Con.To.ToArray();
-            foreach (var input in inputs)
-            {
-                SinkSource.Con.DisconnectInput(input);
-                Con.From.ConnectToInput(input);
-            }
-
+            IOHelper.BypassIO(SinkSource, Con.From);
             SinkSource = null;
+        }
+
+        public void Disconnect()
+        {
+            Con.DisconnectInput(this);
         }
 
         public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false)
@@ -66,14 +65,16 @@ namespace ChiselDebug.GraphFIR.IO
             throw new Exception("Input can't be connected to output. Flow is reversed.");
         }
 
-        public override FIRIO Flip(FIRRTLNode node = null)
+        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node = null)
         {
-            return new Output(node ?? Node, Name, Type);
-        }
-
-        public override FIRIO Copy(FIRRTLNode node = null)
-        {
-            return new Input(node ?? Node, Name, Type);
+            return flow switch
+            {
+                FlowChange.Source => new Output(node ?? Node, Name, Type),
+                FlowChange.Sink => new Input(node ?? Node, Name, Type),
+                FlowChange.Flipped => new Output(node ?? Node, Name, Type),
+                FlowChange.Preserve => new Input(node ?? Node, Name, Type),
+                var error => throw new Exception($"Unknown flow. Flow: {flow}")
+            };
         }
 
         public override bool IsPassiveOfType<T>()

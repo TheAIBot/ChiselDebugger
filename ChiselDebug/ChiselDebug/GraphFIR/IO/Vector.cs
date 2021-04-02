@@ -84,14 +84,9 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public override FIRIO Flip(FIRRTLNode node = null)
+        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node = null)
         {
-            return new Vector(Name, Length, IO[0].Flip(node), node);
-        }
-
-        public override FIRIO Copy(FIRRTLNode node = null)
-        {
-            return new Vector(Name, Length, IO[0].Copy(node), node);
+            return new Vector(Name, Length, IO[0].ToFlow(flow, node), node);
         }
 
         public override IEnumerable<ScalarIO> Flatten()

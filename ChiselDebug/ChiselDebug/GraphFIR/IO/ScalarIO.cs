@@ -24,6 +24,11 @@ namespace ChiselDebug.GraphFIR.IO
             return Con != null;
         }
 
+        public bool IsConnectedToAnything()
+        {
+            return Con != null && Con.To.Count > 0;
+        }
+
         public override IEnumerable<ScalarIO> Flatten()
         {
             yield return this;

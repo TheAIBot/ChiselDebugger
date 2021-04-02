@@ -36,14 +36,16 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public override FIRIO Flip(FIRRTLNode node = null)
+        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node = null)
         {
-            return new Input(node ?? Node, Name, Type);
-        }
-
-        public override FIRIO Copy(FIRRTLNode node = null)
-        {
-            return new Output(node ?? Node, Name, Type);
+            return flow switch
+            {
+                FlowChange.Source => new Output(node ?? Node, Name, Type),
+                FlowChange.Sink => new Input(node ?? Node, Name, Type),
+                FlowChange.Flipped => new Input(node ?? Node, Name, Type),
+                FlowChange.Preserve => new Output(node ?? Node, Name, Type),
+                var error => throw new Exception($"Unknown flow. Flow: {flow}")
+            };
         }
 
         public override bool IsPassiveOfType<T>()
