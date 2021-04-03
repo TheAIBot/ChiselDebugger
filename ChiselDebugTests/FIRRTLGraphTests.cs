@@ -64,10 +64,10 @@ namespace ChiselDebugTests
         [TestMethod] public void WireConnectOutBeforeIn_treadle_lo_fir() => VerifyChiselTest("ModK", "treadle.lo.fir", false);
         [TestMethod] public void WireConnectOutBeforeIn_vcd_treadle_lo_fir() => VerifyChiselTest("ModK", "treadle.lo.fir", true);
 
-        //[TestMethod] public void WireConnectConditionalOrder_fir() => VerifyChiselTest("ModL", "fir", false);
-        //[TestMethod] public void WireConnectConditionalOrder_lo_fir() => VerifyChiselTest("ModL", "lo.fir", false);
-        //[TestMethod] public void WireConnectConditionalOrder_treadle_lo_fir() => VerifyChiselTest("ModL", "treadle.lo.fir", false);
-        //[TestMethod] public void WireConnectConditionalOrder_vcd_treadle_lo_fir() => VerifyChiselTest("ModL", "treadle.lo.fir", true);
+        [TestMethod] public void WireConnectConditionalOrder_fir() => VerifyChiselTest("ModL", "fir", false);
+        [TestMethod] public void WireConnectConditionalOrder_lo_fir() => VerifyChiselTest("ModL", "lo.fir", false);
+        [TestMethod] public void WireConnectConditionalOrder_treadle_lo_fir() => VerifyChiselTest("ModL", "treadle.lo.fir", false);
+        [TestMethod] public void WireConnectConditionalOrder_vcd_treadle_lo_fir() => VerifyChiselTest("ModL", "treadle.lo.fir", true);
 
         [TestMethod] public void RegConnectVecBundleVec_fir() => VerifyChiselTest("ModM", "fir", false);
         [TestMethod] public void RegConnectVecBundleVec_lo_fir() => VerifyChiselTest("ModM", "lo.fir", false);
