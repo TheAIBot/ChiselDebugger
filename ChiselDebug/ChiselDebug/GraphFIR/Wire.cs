@@ -32,9 +32,9 @@ namespace ChiselDebug.GraphFIR
             IOHelper.BypassIO(In, Result);
         }
 
-        internal IOBundle GetIOAsBundle()
+        internal DuplexIO GetAsDuplex()
         {
-            return new WireIO(Name, In, Result);
+            return new DuplexIO(Name, In, Result);
         }
 
         public override ScalarIO[] GetInputs()
@@ -58,28 +58,6 @@ namespace ChiselDebug.GraphFIR
             {
                 input.InferType();
             }
-        }
-    }
-
-        public class WireIO : IOBundle
-    {
-        private readonly FIRIO WireIn;
-        private readonly FIRIO WireOut;
-
-        public WireIO(string name, FIRIO wireIn, FIRIO wireOut) : base(name, new List<FIRIO>() { wireIn, wireOut }, false)
-        {
-            this.WireIn = wireIn;
-            this.WireOut = wireOut;
-        }
-
-        public override FIRIO GetInput()
-        {
-            return WireIn;
-        }
-
-        public override FIRIO GetOutput()
-        {
-            return WireOut;
         }
     }
 }

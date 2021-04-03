@@ -36,7 +36,7 @@ namespace ChiselDebug.GraphFIR
         {
             Nodes.Add(reg);
 
-            IOBundle regIO = reg.GetIOAsBundle();
+            DuplexIO regIO = reg.GetAsDuplex();
             NameToIO.Add(regIO.GetInput().Name, regIO);
             NameToIO.Add(regIO.GetOutput().Name, regIO);
         }
@@ -45,7 +45,7 @@ namespace ChiselDebug.GraphFIR
         {
             Nodes.Add(wire);
 
-            IOBundle wireIO = wire.GetIOAsBundle();
+            DuplexIO wireIO = wire.GetAsDuplex();
             NameToIO.Add(wireIO.Name, wireIO);
         }
 

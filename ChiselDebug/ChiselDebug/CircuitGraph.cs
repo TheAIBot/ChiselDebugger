@@ -45,10 +45,10 @@ namespace ChiselDebug
                         continue;
                     }
 
-                    //Because a register is bi-gender, its io is contained
+                    //Because a register is Duplex, its io is contained
                     //within a bundle so it's necessary to do this extra
                     //step to get the correct io out.
-                    if (ioLink is RegisterIO regIO)
+                    if (ioLink is DuplexIO regIO)
                     {
                         ioLink = regIO.GetIO(varValue.Variable.Reference);
                     }

@@ -53,9 +53,9 @@ namespace ChiselDebug.GraphFIR
             }
         }
 
-        internal IOBundle GetIOAsBundle()
+        internal DuplexIO GetAsDuplex()
         {
-            return new RegisterIO(Name, In, Result);
+            return new DuplexIO(Name, In, Result);
         }
 
         public override ScalarIO[] GetInputs()
@@ -99,27 +99,5 @@ namespace ChiselDebug.GraphFIR
 
         public override void InferType()
         { }
-    }
-
-    public class RegisterIO : IOBundle
-    {
-        private readonly FIRIO RegIn;
-        private readonly FIRIO RegOut;
-
-        public RegisterIO(string name, FIRIO regIn, FIRIO regOut) : base(name, new List<FIRIO>() { regIn, regOut }, false)
-        {
-            this.RegIn = regIn;
-            this.RegOut = regOut;
-        }
-
-        public override FIRIO GetInput()
-        {
-            return RegIn;
-        }
-
-        public override FIRIO GetOutput()
-        {
-            return RegOut;
-        }
     }
 }
