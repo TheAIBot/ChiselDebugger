@@ -183,7 +183,17 @@ namespace FIRRTL
     public record Statement() : FirrtlNode;
     public record EmptyStmt() : Statement;
     public record Block(List<Statement> Statements) : Statement;
-    public record Conditionally(IInfo Info,  Expression Pred, Statement WhenTrue, Statement Alt) : Statement;
+    public record Conditionally(IInfo Info,  Expression Pred, Statement WhenTrue, Statement Alt) : Statement
+    {
+        public bool HasIf()
+        {
+            return WhenTrue is not EmptyStmt;
+        }
+        public bool HasElse()
+        {
+            return Alt is not EmptyStmt;
+        }
+    }
 
     public record Stop(IInfo Info, int Ret, Expression Clk, Expression Enabled) : Statement;
     public record Attach(IInfo Info, List<Expression> Exprs) : Statement;
