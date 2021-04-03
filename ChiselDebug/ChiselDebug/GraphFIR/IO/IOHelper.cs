@@ -67,5 +67,35 @@ namespace ChiselDebug.GraphFIR.IO
             Debug.Assert(bypassFromIO.All(x => !x.IsConnectedToAnything()));
             Debug.Assert(bypassToIO.All(x => !x.IsConnectedToAnything()));
         }
+
+        public static void BiDirFullyConnectIO(FIRIO a, FIRIO b)
+        {
+            ScalarIO[] aFlat = a.Flatten().ToArray();
+            ScalarIO[] bFlat = b.Flatten().ToArray();
+
+            if (aFlat.Length != bFlat.Length)
+            {
+                throw new Exception($"Can't fully connect {nameof(a)} and {nameof(b)} because they do not contain the same number of IO.");
+            }
+
+            for (int i = 0; i < aFlat.Length; i++)
+            {
+                FIRIO aIO = aFlat[i];
+                FIRIO bIO = bFlat[i];
+
+                if (aIO is Input aIn && bIO is Output bOut)
+                {
+                    bOut.ConnectToInput(aIn);
+                }
+                else if (aIO is Output aOut && bIO is Input bIn)
+                {
+                    aOut.ConnectToInput(bIn);
+                }
+                else
+                {
+                    throw new Exception($"Can't connect IO of type {a.GetType()} to {b.GetType()}.");
+                }
+            }
+        }
     }
 }

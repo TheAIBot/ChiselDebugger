@@ -84,6 +84,11 @@ namespace ChiselDebug.GraphFIR
             return (Memory)Nodes.Single(x => x is Memory mem && mem.Name == name);
         }
 
+        public void AddConditional(Conditional cond)
+        {
+            Nodes.Add(cond);
+        }
+
         public override bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container)
         {
             if (NameToIO.TryGetValue(ioName, out FIRIO innerIO))
@@ -194,6 +199,26 @@ namespace ChiselDebug.GraphFIR
             foreach (Input input in GetInternalInputs())
             {
                 input.MakeSinkOnly();
+            }
+        }
+
+        internal void CopyInternalAsExternalIO(Module mod)
+        {
+            foreach (var inIO in GetInternalIO())
+            {
+                var copy = inIO.Flip(null);
+                IOHelper.BiDirFullyConnectIO(inIO, copy);
+
+                mod.AddExternalIO(copy);
+            }
+
+            foreach (var nodeIO in NameToIO)
+            {
+                FIRIO copy = nodeIO.Value.Flip(null);
+                copy.SetName(nodeIO.Key);
+                IOHelper.BiDirFullyConnectIO(nodeIO.Value, copy);
+
+                mod.AddExternalIO(copy);
             }
         }
 

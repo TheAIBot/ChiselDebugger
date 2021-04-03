@@ -11,8 +11,8 @@ namespace ChiselDebug
         public readonly GraphFIR.Module Mod;
         public readonly Dictionary<string, FIRRTL.DefModule> ModuleRoots;
 
-        private readonly Stack<GraphFIR.FIRRTLNode> ScopeEnabledConditions = new Stack<GraphFIR.FIRRTLNode>();
-        public GraphFIR.FIRRTLNode ScopeEnabledCond 
+        private readonly Stack<GraphFIR.IO.Output> ScopeEnabledConditions = new Stack<GraphFIR.IO.Output>();
+        public GraphFIR.IO.Output ScopeEnabledCond 
         { 
             get
             {
@@ -21,7 +21,7 @@ namespace ChiselDebug
                     GraphFIR.ConstValue constEnabled = new GraphFIR.ConstValue(GetUniqueName(), new FIRRTL.UIntLiteral(1, 1));
                     AddNodeToModule(constEnabled);
 
-                    ScopeEnabledConditions.Push(constEnabled);
+                    ScopeEnabledConditions.Push(constEnabled.Result);
                 }
 
                 return ScopeEnabledConditions.Peek();
@@ -47,7 +47,7 @@ namespace ChiselDebug
             Mod.AddNode(node);
         }
 
-        public void EnterEnabledScope(GraphFIR.FIRRTLNode enableCond)
+        public void EnterEnabledScope(GraphFIR.IO.Output enableCond)
         {
             ScopeEnabledConditions.Push(enableCond);
         }
@@ -92,17 +92,7 @@ namespace ChiselDebug
 
                 VisitStatement(helper, mod.Body);
 
-                //In a truely stupid move, FIRRTL supports connecting
-                //Sinks to other sinks. In order to support that case
-                //a sink can pretend to be a source. It's important 
-                //that they stop pretending after the module graph
-                //has been made because this hack shouldn't be
-                //visible outside of graph creation. Everything else
-                //should still work on the assumption that only
-                //connections from a source to a sink are possible.
-                helper.Mod.CorrectIO();
-
-                helper.Mod.RemoveAllWires();
+                CleanupModule(helper);
 
                 return helper.Mod;
             }
@@ -110,6 +100,21 @@ namespace ChiselDebug
             {
                 throw new NotImplementedException();
             }
+        }
+
+        private static void CleanupModule(VisitHelper helper)
+        {
+            //In a truely stupid move, FIRRTL supports connecting
+            //Sinks to other sinks. In order to support that case
+            //a sink can pretend to be a source. It's important 
+            //that they stop pretending after the module graph
+            //has been made because this hack shouldn't be
+            //visible outside of graph creation. Everything else
+            //should still work on the assumption that only
+            //connections from a source to a sink are possible.
+            helper.Mod.CorrectIO();
+
+            helper.Mod.RemoveAllWires();
         }
 
         private static void VisitPort(VisitHelper helper, FIRRTL.Port port)
@@ -184,9 +189,9 @@ namespace ChiselDebug
             {
                 block.Statements.ForEach(x => VisitStatement(helper, x));
             }
-            else if (statement is FIRRTL.Conditionally)
+            else if (statement is FIRRTL.Conditionally conditional)
             {
-                throw new NotImplementedException();
+                VisitConditional(helper, conditional);
             }
             else if (statement is FIRRTL.Stop)
             {
@@ -240,7 +245,7 @@ namespace ChiselDebug
 
                 VisitExp(helper, memPort.Exps[0], GraphFIR.IO.IOGender.Male).ConnectToInput(port.Address);
                 VisitExp(helper, memPort.Exps[1], GraphFIR.IO.IOGender.Male).ConnectToInput(port.Clock);
-                helper.ScopeEnabledCond.GetOutputs().Single().ConnectToInput(port.Enabled);
+                helper.ScopeEnabledCond.ConnectToInput(port.Enabled);
 
                 helper.Mod.AddMemoryPort(memory, port);
             }
@@ -308,6 +313,47 @@ namespace ChiselDebug
             {
                 throw new NotImplementedException();
             }
+        }
+
+        private static void VisitConditional(VisitHelper parentHelper, FIRRTL.Conditionally conditional)
+        {
+            GraphFIR.Conditional cond = new GraphFIR.Conditional();
+
+            void AddCondModule(GraphFIR.IO.Output ena, FIRRTL.Statement body)
+            {
+                VisitHelper helper = parentHelper.ForNewModule(parentHelper.GetUniqueName());
+                helper.EnterEnabledScope(ena);
+
+                parentHelper.Mod.CopyInternalAsExternalIO(helper.Mod);
+                VisitStatement(helper, body);
+
+                //Todo: Remove unused IO here
+
+                CleanupModule(helper);
+
+                //Todo: connect external Outputs to parent module components
+
+                cond.AddConditionalModule(ena, helper.Mod);
+
+                helper.ExitEnabledScope();
+            }
+
+            GraphFIR.IO.Output enableCond = (GraphFIR.IO.Output)VisitExp(parentHelper, conditional.Pred, GraphFIR.IO.IOGender.Male);
+
+            if (conditional.HasIf())
+            {
+                AddCondModule(enableCond, conditional.WhenTrue);
+            }
+            if (conditional.HasElse())
+            {
+                GraphFIR.FIRNot notEnableComponent = new GraphFIR.FIRNot(enableCond, new FIRRTL.UIntType(1));
+                parentHelper.AddNodeToModule(notEnableComponent);
+                GraphFIR.IO.Output elseEnableCond = notEnableComponent.Result;
+
+                AddCondModule(elseEnableCond, conditional.Alt);
+            }
+
+            parentHelper.Mod.AddConditional(cond);
         }
 
         private static GraphFIR.IO.FIRIO VisitExp(VisitHelper helper, FIRRTL.Expression exp, GraphFIR.IO.IOGender gender)
