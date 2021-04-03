@@ -1,0 +1,12 @@
+﻿@inherits FIRBase<Conditional>
+
+<div class="conditional" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();">
+    @foreach (var modPos in CondModules)
+    {
+        <ModuleUI @key=modPos.Value PosOp="modPos" ParentModCtrl="CurrModCtrl"></ModuleUI>
+    }
+</div>
+
+@code {
+    private readonly List<Positioned<Module>> CondModules = new List<Positioned<Module>>();
+}
