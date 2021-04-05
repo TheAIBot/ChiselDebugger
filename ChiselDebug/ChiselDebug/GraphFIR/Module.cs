@@ -242,7 +242,7 @@ namespace ChiselDebug.GraphFIR
                         FIRIO parentIO = (FIRIO)parentMod.GetIO(intKeyVal.Key);
                         ScalarIO[] parentIOFlat = parentIO.Flatten().ToArray();
 
-                        ((Output)extFlat[x]).ConnectToInput(parentIOFlat[x]);
+                        ((Output)extFlat[x]).ConnectToInput(parentIOFlat[x], false, false, true);
                     }
                 }
             }
@@ -265,7 +265,8 @@ namespace ChiselDebug.GraphFIR
                 {
                     if (intFlat[x] is Output intOut && !intOut.IsConnectedToAnything())
                     {
-                        ((Input)extFlat[x]).Disconnect();
+                        Input extIn = (Input)extFlat[x];
+                        extIn.Con.DisconnectInput(extIn);
                     }
                 }
             }

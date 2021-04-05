@@ -29,7 +29,7 @@ namespace ChiselDebug.GraphFIR.IO
 
             for (int i = 0; i < bypassFromIO.Length; i++)
             {
-                Output connectFrom;
+                Connection[] connectFromCons;
                 Input[] connectTo;
 
                 //They must both either be connected or not.
@@ -41,15 +41,15 @@ namespace ChiselDebug.GraphFIR.IO
 
                 if (bypassFromIO[i] is Input fromIn && bypassToIO[i] is Output toOut)
                 {
-                    connectFrom = fromIn.Con.From;
+                    connectFromCons = fromIn.GetAllConnections();
                     connectTo = toOut.Con.To.ToArray();
-                    fromIn.Con.DisconnectInput(fromIn);
+                    fromIn.DisconnectAll();
                 }
                 else if (bypassFromIO[i] is Output fromOut && bypassToIO[i] is Input toIn)
                 {
-                    connectFrom = toIn.Con.From;
+                    connectFromCons = toIn.GetAllConnections();
                     connectTo = fromOut.Con.To.ToArray();
-                    toIn.Con.DisconnectInput(toIn);
+                    toIn.DisconnectAll();
                 }
                 else 
                 {
@@ -58,8 +58,11 @@ namespace ChiselDebug.GraphFIR.IO
                 
                 foreach (var input in connectTo)
                 {
-                    input.Con.DisconnectInput(input);
-                    connectFrom.ConnectToInput(input);
+                    input.DisconnectAll();
+                    foreach (var connection in connectFromCons)
+                    {
+                        connection.From.ConnectToInput(input, false, false, true);
+                    }
                 }
             }
             

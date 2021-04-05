@@ -64,7 +64,7 @@ namespace ChiselDebug.GraphFIR.IO
             return IO.FirstOrDefault()?.IsPartOfAggregateIO ?? false;
         }
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false)
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, bool isConditional = false)
         {
             if (input is not Vector)
             {
@@ -80,7 +80,7 @@ namespace ChiselDebug.GraphFIR.IO
             int longestLength = Math.Max(Length, other.Length);
             for (int i = 0; i < longestLength; i++)
             {
-                IO[i].ConnectToInput(other.IO[i]);
+                IO[i].ConnectToInput(other.IO[i], allowPartial, asPassive, isConditional);
             }
         }
 

@@ -24,11 +24,11 @@ namespace ChiselDebug.GraphFIR.IO
             return this;
         }
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false)
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, bool isConditional = false)
         {
             if (input is Input ioIn)
             {
-                Con.ConnectToInput(ioIn);
+                Con.ConnectToInput(ioIn, isConditional);
             }
             else
             {

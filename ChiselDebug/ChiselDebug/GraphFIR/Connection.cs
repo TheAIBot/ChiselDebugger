@@ -17,21 +17,21 @@ namespace ChiselDebug.GraphFIR
             this.Value = new ValueType(From.Type);
         }
 
-        public void ConnectToInput(Input input)
+        public void ConnectToInput(Input input, bool isConditional)
         {
-            if (input.IsConnected())
+            if (!isConditional && input.IsConnected())
             {
-                input.Disconnect();
+                input.Disconnect(this);
             }
 
             To.Add(input);
-            input.Con = this;
+            input.Connect(this, isConditional);
         }
 
         public void DisconnectInput(Input input)
         {
             To.Remove(input);
-            input.Con = null;
+            input.Disconnect(this);
         }
 
         public bool IsUsed()

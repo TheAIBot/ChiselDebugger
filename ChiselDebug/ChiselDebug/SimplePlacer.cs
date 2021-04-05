@@ -86,7 +86,7 @@ namespace ChiselDebug
                     List<Node<FIRRTLNode>> modInputNodes = new List<Node<FIRRTLNode>>();
                     foreach (var input in Mod.GetInternalInputs())
                     {
-                        if (input.Con == null)
+                        if (!input.IsConnectedToAnything())
                         {
                             continue;
                         }
@@ -98,7 +98,7 @@ namespace ChiselDebug
                     List<Node<FIRRTLNode>> modOutputNodes = new List<Node<FIRRTLNode>>();
                     foreach (var output in Mod.GetInternalOutputs())
                     {
-                        if (!output.Con.IsUsed())
+                        if (!output.IsConnectedToAnything())
                         {
                             continue;
                         }
@@ -112,7 +112,7 @@ namespace ChiselDebug
                     //Make edges
                     foreach (var output in outputToNode.Keys)
                     {
-                        if (!output.Con.IsUsed())
+                        if (!output.IsConnectedToAnything())
                         {
                             continue;
                         }

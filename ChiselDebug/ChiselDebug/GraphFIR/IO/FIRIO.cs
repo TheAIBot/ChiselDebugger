@@ -46,7 +46,7 @@ namespace ChiselDebug.GraphFIR.IO
             };
         }
 
-        public abstract void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false);
+        public abstract void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, bool isConditional = false);
         public abstract FIRIO ToFlow(FlowChange flow, FIRRTLNode node = null);
         public FIRIO Flip(FIRRTLNode node = null)
         {

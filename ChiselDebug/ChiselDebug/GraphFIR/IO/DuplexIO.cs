@@ -14,7 +14,7 @@ namespace ChiselDebug.GraphFIR.IO
             this.OutIO = outIO;
         }
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false)
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, bool isConditional = false)
         {
             throw new Exception("Duplex can't be connected to anything.");
         }

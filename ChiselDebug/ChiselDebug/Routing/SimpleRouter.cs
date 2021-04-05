@@ -80,7 +80,8 @@ namespace ChiselDebug.Routing
                     List<WirePath> needsRepathing = new List<WirePath>();
                     foreach (var oldPath in paths)
                     {
-                        if (oldPath.EndIO.DirIO.Position == path.EndIO.DirIO.Position)
+                        if (oldPath.EndIO.DirIO.Position == path.EndIO.DirIO.Position ||
+                            oldPath.StartIO.DirIO.Position == path.StartIO.DirIO.Position)
                         {
                             continue;
                         }
@@ -189,7 +190,7 @@ namespace ChiselDebug.Routing
             foreach (var keyValue in allPaths)
             {
                 MoveDirs wireType;
-                if (keyValue.Key == start.DirIO.Position)
+                if (keyValue.Key == start.DirIO.Position || keyValue.Key == end.DirIO.Position)
                 {
                     wireType = MoveDirs.FriendWire;
                 }

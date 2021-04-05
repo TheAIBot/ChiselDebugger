@@ -26,12 +26,12 @@ namespace ChiselDebug.GraphFIR.IO
             EnabledCond = enabledCond;
         }
 
-        public bool IsConnected()
+        public virtual bool IsConnected()
         {
             return Con != null;
         }
 
-        public bool IsConnectedToAnything()
+        public virtual bool IsConnectedToAnything()
         {
             return Con != null && Con.To.Count > 0;
         }

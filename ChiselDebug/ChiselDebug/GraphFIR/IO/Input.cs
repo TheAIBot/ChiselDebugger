@@ -1,5 +1,6 @@
 ﻿using FIRRTL;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace ChiselDebug.GraphFIR.IO
@@ -7,12 +8,35 @@ namespace ChiselDebug.GraphFIR.IO
     public class Input : ScalarIO
     {
         private Output SinkSource = null;
+        private readonly HashSet<Connection> CondCons = new HashSet<Connection>();
 
         public Input(FIRRTLNode node, IFIRType type) : this(node, string.Empty, type)
         { }
 
         public Input(FIRRTLNode node, string name, IFIRType type) : base(node, name, type)
         { }
+
+        public override bool IsConnected()
+        {
+            return Con != null || CondCons.Count > 0;
+        }
+
+        public override bool IsConnectedToAnything()
+        {
+            return Con != null || CondCons.Count > 0;
+        }
+
+        public Connection[] GetAllConnections()
+        {
+            List<Connection> cons = new List<Connection>();
+            if (Con != null)
+            {
+                cons.Add(Con);
+            }
+            cons.AddRange(CondCons);
+
+            return cons.ToArray();
+        }
 
         public override void SetType(IFIRType type)
         {
@@ -52,15 +76,54 @@ namespace ChiselDebug.GraphFIR.IO
             }
 
             IOHelper.BypassIO(SinkSource, Con.From);
+            foreach (var condCond in CondCons)
+            {
+                IOHelper.BypassIO(SinkSource, condCond.From);
+            }
             SinkSource = null;
         }
 
-        public void Disconnect()
+        public void Disconnect(Connection toDisconnect)
         {
-            Con.DisconnectInput(this);
+            if (Con == toDisconnect)
+            {
+                Con = null;
+            }
+            else
+            {
+                if (!CondCons.Remove(toDisconnect))
+                {
+                    throw new Exception("Can't disconnect from a connection is wasn't connected to.");
+                }
+            }
         }
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false)
+        public void DisconnectAll()
+        {
+            if (Con != null)
+            {
+                Con.DisconnectInput(this);
+            }
+
+            foreach (var con in CondCons.ToArray())
+            {
+                con.DisconnectInput(this);
+            }
+        }
+
+        public void Connect(Connection con, bool isConditional)
+        {
+            if (isConditional)
+            {
+                CondCons.Add(con);
+            }
+            else
+            {
+                Con = con;
+            }
+        }
+
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, bool isConditional = false)
         {
             throw new Exception("Input can't be connected to output. Flow is reversed.");
         }
