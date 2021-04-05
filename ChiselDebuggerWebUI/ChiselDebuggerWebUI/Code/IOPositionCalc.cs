@@ -267,7 +267,7 @@ namespace ChiselDebuggerWebUI.Code
             return posIO;
         }
 
-        internal static ScopedNodeIO VerticalScopedIO(FIRIO[] io, int fixedX, int startYPadding, int endYPadding)
+        internal static ScopedNodeIO VerticalScopedIO(FIRIO[] io, int fixedX, int startYPadding, int endYPadding, bool ignoreDisconnectedIO = false)
         {
             List<ScopedDirIO> inputIO = new List<ScopedDirIO>();
             List<ScopedDirIO> outputIO = new List<ScopedDirIO>();
@@ -275,13 +275,13 @@ namespace ChiselDebuggerWebUI.Code
             int inputY = startYPadding;
             int outputY = inputY;
 
-            MakeScopedIO(inputIO, outputIO, io, fixedX, ref inputY, ref outputY, -1);
+            MakeScopedIO(inputIO, outputIO, io, fixedX, ref inputY, ref outputY, -1, ignoreDisconnectedIO);
 
             int heightNeeded = Math.Max(inputY, outputY) + endYPadding;
             return new ScopedNodeIO(inputIO, outputIO, heightNeeded, startYPadding, endYPadding);
         }
 
-        private static void MakeScopedIO(List<ScopedDirIO> inputIO, List<ScopedDirIO> outputIO, FIRIO[] io, int fixedX, ref int inputYOffset, ref int outputYOffset, int scopeDepth)
+        private static void MakeScopedIO(List<ScopedDirIO> inputIO, List<ScopedDirIO> outputIO, FIRIO[] io, int fixedX, ref int inputYOffset, ref int outputYOffset, int scopeDepth, bool ignoreDisconnectedIO)
         {
             inputYOffset = Math.Max(inputYOffset, outputYOffset);
             outputYOffset = Math.Max(inputYOffset, outputYOffset);
@@ -291,14 +291,14 @@ namespace ChiselDebuggerWebUI.Code
                 if (io[i] is AggregateIO aggIO)
                 {
                     int inScope = aggIO.IsPartOfAggregateIO ? 1 : 0;
-                    MakeScopedIO(inputIO, outputIO, aggIO.GetIOInOrder(), fixedX, ref inputYOffset, ref outputYOffset, scopeDepth + inScope);
+                    MakeScopedIO(inputIO, outputIO, aggIO.GetIOInOrder(), fixedX, ref inputYOffset, ref outputYOffset, scopeDepth + inScope, ignoreDisconnectedIO);
 
                     inputYOffset += ExtraSpaceBetweenBundles;
                     outputYOffset += ExtraSpaceBetweenBundles;
                 }
                 else if (io[i] is ScalarIO scalar)
                 {
-                    MakeNoScopeIO(inputIO, outputIO, scalar, fixedX, ref inputYOffset, ref outputYOffset, scopeDepth);
+                    MakeNoScopeIO(inputIO, outputIO, scalar, fixedX, ref inputYOffset, ref outputYOffset, scopeDepth, ignoreDisconnectedIO);
                 }
                 else
                 {
@@ -310,8 +310,13 @@ namespace ChiselDebuggerWebUI.Code
             outputYOffset = Math.Max(inputYOffset, outputYOffset);
         }
 
-        private static void MakeNoScopeIO(List<ScopedDirIO> inputIO, List<ScopedDirIO> outputIO, ScalarIO io, int fixedX, ref int inputYOffset, ref int outputYOffset, int scopeDepth)
+        private static void MakeNoScopeIO(List<ScopedDirIO> inputIO, List<ScopedDirIO> outputIO, ScalarIO io, int fixedX, ref int inputYOffset, ref int outputYOffset, int scopeDepth, bool ignoreDisconnectedIO)
         {
+            if (ignoreDisconnectedIO && !io.IsConnectedToAnything())
+            {
+                return;
+            }
+
             scopeDepth = Math.Max(0, scopeDepth);
             if (io is Input)
             {

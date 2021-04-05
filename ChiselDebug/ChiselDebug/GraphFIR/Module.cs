@@ -207,7 +207,7 @@ namespace ChiselDebug.GraphFIR
             foreach (var inIO in GetInternalIO())
             {
                 var copy = inIO.Flip(null);
-                IOHelper.BiDirFullyConnectIO(inIO, copy);
+                IOHelper.OneWayOnlyConnect(inIO, copy);
 
                 mod.AddExternalIO(copy);
             }
@@ -216,9 +216,58 @@ namespace ChiselDebug.GraphFIR
             {
                 FIRIO copy = nodeIO.Value.Flip(null);
                 copy.SetName(nodeIO.Key);
-                IOHelper.BiDirFullyConnectIO(nodeIO.Value, copy);
+                IOHelper.OneWayOnlyConnect(nodeIO.Value, copy);
 
                 mod.AddExternalIO(copy);
+            }
+        }
+
+        internal void ExternalConnectUsedIO(Module parentMod)
+        {
+            var extKeyVals = ExternalIO.ToArray();
+            var intKeyVals = InternalIO.ToArray();
+
+            for (int i = 0; i < extKeyVals.Length; i++)
+            {
+                var extKeyVal = extKeyVals[i];
+                var intKeyVal = intKeyVals[i];
+
+                ScalarIO[] extFlat = extKeyVal.Value.Flatten().ToArray();
+                ScalarIO[] intFlat = intKeyVal.Value.Flatten().ToArray();
+
+                for (int x = 0; x < extFlat.Length; x++)
+                {
+                    if (intFlat[x] is Input intIn && intIn.IsConnectedToAnything())
+                    {
+                        FIRIO parentIO = (FIRIO)parentMod.GetIO(intKeyVal.Key);
+                        ScalarIO[] parentIOFlat = parentIO.Flatten().ToArray();
+
+                        ((Output)extFlat[x]).ConnectToInput(parentIOFlat[x]);
+                    }
+                }
+            }
+        }
+
+        internal void DisconnectUnusedIO()
+        {
+            var extKeyVals = ExternalIO.ToArray();
+            var intKeyVals = InternalIO.ToArray();
+
+            for (int i = 0; i < extKeyVals.Length; i++)
+            {
+                var extKeyVal = extKeyVals[i];
+                var intKeyVal = intKeyVals[i];
+
+                ScalarIO[] extFlat = extKeyVal.Value.Flatten().ToArray();
+                ScalarIO[] intFlat = intKeyVal.Value.Flatten().ToArray();
+
+                for (int x = 0; x < extFlat.Length; x++)
+                {
+                    if (intFlat[x] is Output intOut && !intOut.IsConnectedToAnything())
+                    {
+                        ((Input)extFlat[x]).Disconnect();
+                    }
+                }
             }
         }
 

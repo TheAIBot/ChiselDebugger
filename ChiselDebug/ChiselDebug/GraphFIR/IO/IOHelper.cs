@@ -97,5 +97,27 @@ namespace ChiselDebug.GraphFIR.IO
                 }
             }
         }
+
+        public static void OneWayOnlyConnect(FIRIO fromIO, FIRIO toIO)
+        {
+            ScalarIO[] fromFlat = fromIO.Flatten().ToArray();
+            ScalarIO[] toFlat = toIO.Flatten().ToArray();
+
+            if (fromFlat.Length != toFlat.Length)
+            {
+                throw new Exception($"Can't connect {nameof(fromIO)} to {nameof(toIO)} because they do not contain the same number of IO.");
+            }
+
+            for (int i = 0; i < fromFlat.Length; i++)
+            {
+                ScalarIO from = fromFlat[i];
+                ScalarIO to = toFlat[i];
+
+                if (from is Output fromOutput && to is Input toInput)
+                {
+                    fromOutput.ConnectToInput(toInput);
+                }
+            }
+        }
     }
 }

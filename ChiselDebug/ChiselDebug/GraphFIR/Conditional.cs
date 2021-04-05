@@ -7,17 +7,19 @@ using System.Threading.Tasks;
 
 namespace ChiselDebug.GraphFIR
 {
+    public record ConditionalModule(Input Enable, Module Mod);
 
     public class Conditional : FIRRTLNode, IContainerIO
     {
-        private readonly List<(Input enable, Module mod)> ConditionalModules = new List<(Input enable, Module mod)>();
+        private readonly List<ConditionalModule> ConditionalModules = new List<ConditionalModule>();
+        public IReadOnlyList<ConditionalModule> CondMods => ConditionalModules;
 
         public void AddConditionalModule(Output enable, Module mod)
         {
             Input input = new Input(this, new FIRRTL.UIntType(1));
             enable.ConnectToInput(input);
 
-            ConditionalModules.Add((input, mod));
+            ConditionalModules.Add(new ConditionalModule(input, mod));
         }
 
         public override ScalarIO[] GetInputs()
@@ -25,8 +27,8 @@ namespace ChiselDebug.GraphFIR
             List<ScalarIO> inputs = new List<ScalarIO>();
             foreach (var condMod in ConditionalModules)
             {
-                inputs.Add(condMod.enable);
-                inputs.AddRange(condMod.mod.GetInputs());
+                inputs.Add(condMod.Enable);
+                inputs.AddRange(condMod.Mod.GetInputs());
             }
 
             return inputs.ToArray();
@@ -37,7 +39,7 @@ namespace ChiselDebug.GraphFIR
             List<ScalarIO> outputs = new List<ScalarIO>();
             foreach (var condMod in ConditionalModules)
             {
-                outputs.AddRange(condMod.mod.GetOutputs());
+                outputs.AddRange(condMod.Mod.GetOutputs());
             }
 
             return outputs.ToArray();
@@ -48,8 +50,8 @@ namespace ChiselDebug.GraphFIR
             List<FIRIO> io = new List<FIRIO>();
             foreach (var condMod in ConditionalModules)
             {
-                io.Add(condMod.enable);
-                io.AddRange(condMod.mod.GetIO());
+                io.Add(condMod.Enable);
+                io.AddRange(condMod.Mod.GetIO());
             }
 
             return io.ToArray();
@@ -59,7 +61,7 @@ namespace ChiselDebug.GraphFIR
         {
             foreach (var condMod in ConditionalModules)
             {
-                if (condMod.mod.TryGetIO(ioName, modulesOnly, out container))
+                if (condMod.Mod.TryGetIO(ioName, modulesOnly, out container))
                 {
                     return true;
                 }
@@ -83,8 +85,8 @@ namespace ChiselDebug.GraphFIR
         {
             foreach (var condMod in ConditionalModules)
             {
-                condMod.enable.InferType();
-                condMod.mod.InferType();
+                condMod.Enable.InferType();
+                condMod.Mod.InferType();
             }
         }
     }

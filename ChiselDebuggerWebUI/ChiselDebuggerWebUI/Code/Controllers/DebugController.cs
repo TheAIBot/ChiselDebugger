@@ -17,8 +17,8 @@ namespace ChiselDebuggerWebUI.Code
     {
         private readonly CircuitGraph Graph;
         public VCDTimeline Timeline { get; init; } = null;
-        private readonly Dictionary<FIRRTLNode, ModuleController> FIRNodeToModCtrl = new Dictionary<FIRRTLNode, ModuleController>();
-        private readonly List<ModuleController> ModControllers = new List<ModuleController>();
+        private readonly Dictionary<FIRRTLNode, ModuleLayout> FIRNodeToModCtrl = new Dictionary<FIRRTLNode, ModuleLayout>();
+        private readonly List<ModuleLayout> ModControllers = new List<ModuleLayout>();
         private readonly BroadcastBlock<Action> TimeChanger = null;
         private readonly PlacementTemplator PlacementTemplates = new PlacementTemplator();
         private readonly RouteTemplator RouteTemplates = new RouteTemplator();
@@ -36,7 +36,7 @@ namespace ChiselDebuggerWebUI.Code
             }
         }
 
-        public void AddModCtrl(string moduleName, ModuleController modCtrl, FIRRTLNode[] modNodes, FIRRTLNode[] modNodesIncludeMod, FIRIO[] modIO)
+        public void AddModCtrl(string moduleName, ModuleLayout modCtrl, FIRRTLNode[] modNodes, FIRRTLNode[] modNodesIncludeMod, FIRIO[] modIO)
         {
             ModControllers.Add(modCtrl);
             foreach (var node in modNodes)
@@ -69,7 +69,7 @@ namespace ChiselDebuggerWebUI.Code
             {
                 List<Connection> changedConnections = Graph.SetState(Timeline.GetStateAtTime(time));
 
-                HashSet<ModuleController> modulesToReRender = new HashSet<ModuleController>();
+                HashSet<ModuleLayout> modulesToReRender = new HashSet<ModuleLayout>();
 
                 //Only rerender the uiNodes that are connected to a connection
                 //that changed value. UiNodes are not rerendered here, but they

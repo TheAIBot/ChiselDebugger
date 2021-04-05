@@ -23,5 +23,27 @@ namespace ChiselDebug
         {
             return new DirectedIO(IO, Position + offset, InitialDir);
         }
+
+        public static bool operator ==(DirectedIO a, DirectedIO b)
+        {
+            return a.IO == b.IO &&
+                   a.Position == b.Position &&
+                   a.InitialDir == b.InitialDir;
+        }
+
+        public static bool operator !=(DirectedIO a, DirectedIO b)
+        {
+            return !(a == b);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is DirectedIO dirIO && this == dirIO;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(IO, Position, InitialDir);
+        }
     }
 }

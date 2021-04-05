@@ -324,14 +324,27 @@ namespace ChiselDebug
                 VisitHelper helper = parentHelper.ForNewModule(parentHelper.GetUniqueName());
                 helper.EnterEnabledScope(ena);
 
+                //Make io from parent module visible to child module
+                //and connect all the io to the child module
                 parentHelper.Mod.CopyInternalAsExternalIO(helper.Mod);
+
+                //Fill out module
                 VisitStatement(helper, body);
 
-                //Todo: Remove unused IO here
+                //If external input wasn't used internally then disconnect
+                //external input. Removing IO from a module isn't currently
+                //possible. In order to avoid visualing all this unused IO,
+                //unused is hidden in the visualization but that can only work
+                //if it's not connected to anything.
+                helper.Mod.DisconnectUnusedIO();
 
+                //If internal input was used then connect its external IO
+                //to parent modules corresponding input
+                helper.Mod.ExternalConnectUsedIO(parentHelper.Mod);
+
+
+                //Default things to do when a module is finished
                 CleanupModule(helper);
-
-                //Todo: connect external Outputs to parent module components
 
                 cond.AddConditionalModule(ena, helper.Mod);
 

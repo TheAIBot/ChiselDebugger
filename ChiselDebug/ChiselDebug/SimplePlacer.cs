@@ -494,5 +494,10 @@ namespace ChiselDebug
         {
             SpaceNeeded += endPadding;
         }
+
+        public void SetSpaceNeeded(Point spaceNeeded)
+        {
+            SpaceNeeded = spaceNeeded;
+        }
     }
 }

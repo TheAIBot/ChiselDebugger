@@ -16,7 +16,7 @@ namespace ChiselDebuggerWebUI.Code.Templates
         private readonly Dictionary<string, List<RouteTemplateConversion>> Converters = new Dictionary<string, List<RouteTemplateConversion>>();
         private readonly HashSet<string> TemplateGenerating = new HashSet<string>();
 
-        public void SubscribeToTemplate(string moduleName, ModuleController ctrl, FIRRTLNode[] nodeOrder, FIRIO[] ioOrder)
+        public void SubscribeToTemplate(string moduleName, ModuleLayout ctrl, FIRRTLNode[] nodeOrder, FIRIO[] ioOrder)
         {
             RouteTemplateConversion conversion = new RouteTemplateConversion(ctrl, nodeOrder, ioOrder);
             lock (Converters)

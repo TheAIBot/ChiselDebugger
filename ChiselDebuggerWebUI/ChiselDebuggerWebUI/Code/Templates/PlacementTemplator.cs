@@ -16,7 +16,7 @@ namespace ChiselDebuggerWebUI.Code.Templates
         private readonly Dictionary<string, List<PlaceTemplateConversion>> Converters = new Dictionary<string, List<PlaceTemplateConversion>>();
         private readonly HashSet<string> TemplateGenerating = new HashSet<string>();
 
-        public void SubscribeToTemplate(string moduleName, ModuleController ctrl, FIRRTLNode[] nodeOrder)
+        public void SubscribeToTemplate(string moduleName, ModuleLayout ctrl, FIRRTLNode[] nodeOrder)
         {
             PlaceTemplateConversion conversion = new PlaceTemplateConversion(ctrl, nodeOrder);
             lock (Converters)

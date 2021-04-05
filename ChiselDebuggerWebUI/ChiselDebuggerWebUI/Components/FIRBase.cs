@@ -24,7 +24,7 @@ namespace ChiselDebuggerWebUI.Components
         public Positioned<T> PosOp { get; set; }
 
         [Parameter]
-        public ModuleController ParentModCtrl { get; set; }
+        public FIRLayout ParentLayoutCtrl { get; set; }
 
         [CascadingParameter(Name = "DebugCtrl")]
         protected DebugController DebugCtrl { get; set; }
@@ -55,7 +55,7 @@ namespace ChiselDebuggerWebUI.Components
 
         protected override void OnFirstParametersSetAsync()
         {
-            ParentModCtrl?.AddUINode(this);
+            ParentLayoutCtrl?.AddUINode(this);
         }
 
         protected override Task OnAfterRenderAsync(bool firstRender)
@@ -86,7 +86,7 @@ namespace ChiselDebuggerWebUI.Components
             InputOffsets = OnMakeInputs(width, height);
             OutputOffsets = OnMakeOutputs(width, height);
 
-            ParentModCtrl?.UpdateComponentInfo(new FIRComponentUpdate(Operation, new Point(width, height), InputOffsets, OutputOffsets));
+            ParentLayoutCtrl?.UpdateComponentInfo(new FIRComponentUpdate(Operation, new Point(width, height), InputOffsets, OutputOffsets));
         }
 
         protected virtual bool OnMove(Point newPos)

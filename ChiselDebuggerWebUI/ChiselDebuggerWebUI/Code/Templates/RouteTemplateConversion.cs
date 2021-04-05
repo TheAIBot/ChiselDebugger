@@ -7,11 +7,11 @@ namespace ChiselDebuggerWebUI.Code.Templates
 {
     public class RouteTemplateConversion
     {
-        private readonly ModuleController Ctrl;
+        private readonly ModuleLayout Ctrl;
         private readonly FIRRTLNode[] NodeOrder;
         private readonly FIRIO[] IOOrder;
 
-        public RouteTemplateConversion(ModuleController ctrl, FIRRTLNode[] nodeOrder, FIRIO[] ioOrder)
+        public RouteTemplateConversion(ModuleLayout ctrl, FIRRTLNode[] nodeOrder, FIRIO[] ioOrder)
         {
             this.Ctrl = ctrl;
             this.NodeOrder = nodeOrder;

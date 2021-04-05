@@ -22,13 +22,13 @@
 @code
 {
     [Parameter]
-    public ModuleController ModCtrl { get; set; }
+    public ModuleLayout ModLayout { get; set; }
 
     private List<WirePath> WirePaths = new List<WirePath>();
 
     protected override void OnFirstParametersSetAsync()
     {
-        ModCtrl.OnWiresRouted += x => InvokeAsync(() => UpdateWires(x));
+        ModLayout.OnWiresRouted += x => InvokeAsync(() => UpdateWires(x));
     }
 
     private void UpdateWires(List<WirePath> wirePaths)
