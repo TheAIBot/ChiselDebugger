@@ -324,6 +324,19 @@ namespace ChiselDebug
                 VisitHelper helper = parentHelper.ForNewModule(parentHelper.GetUniqueName());
                 helper.EnterEnabledScope(ena);
 
+                //Connect wire that enables condition to module
+                GraphFIR.IO.Input enaInput = new GraphFIR.IO.Input(null, new FIRRTL.UIntType(1));
+                const string enaName = "ena module";
+                enaInput.SetName(enaName);
+                ena.ConnectToInput(enaInput);
+                helper.Mod.AddExternalIO(enaInput);
+
+                //Connect internal enable wire to dummy component so it's
+                //not disconnected later because it isn't used
+                var internalEna = (GraphFIR.IO.Output)helper.Mod.GetIO(enaName);
+                var internalEnaDummy = new GraphFIR.DummySink(internalEna);
+                helper.AddNodeToModule(internalEnaDummy);
+
                 //Make io from parent module visible to child module
                 //and connect all the io to the child module
                 parentHelper.Mod.CopyInternalAsExternalIO(helper.Mod);
@@ -346,7 +359,7 @@ namespace ChiselDebug
                 //Default things to do when a module is finished
                 CleanupModule(helper);
 
-                cond.AddConditionalModule(ena, helper.Mod);
+                cond.AddConditionalModule((GraphFIR.IO.Input)internalEnaDummy.InIO, helper.Mod);
 
                 helper.ExitEnabledScope();
             }

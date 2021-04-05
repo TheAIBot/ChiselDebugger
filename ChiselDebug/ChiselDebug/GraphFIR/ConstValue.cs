@@ -29,10 +29,7 @@ namespace ChiselDebug.GraphFIR
 
         public override FIRIO[] GetIO()
         {
-            return new FIRIO[]
-            {
-                Result
-            };
+            return new FIRIO[] { Result };
         }
 
         public override void InferType()

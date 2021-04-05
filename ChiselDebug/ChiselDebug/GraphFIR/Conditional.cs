@@ -14,12 +14,11 @@ namespace ChiselDebug.GraphFIR
         private readonly List<ConditionalModule> ConditionalModules = new List<ConditionalModule>();
         public IReadOnlyList<ConditionalModule> CondMods => ConditionalModules;
 
-        public void AddConditionalModule(Output enable, Module mod)
+        public void AddConditionalModule(Input enable, Module mod)
         {
-            Input input = new Input(this, new FIRRTL.UIntType(1));
-            enable.ConnectToInput(input);
 
-            ConditionalModules.Add(new ConditionalModule(input, mod));
+
+            ConditionalModules.Add(new ConditionalModule(enable, mod));
         }
 
         public override ScalarIO[] GetInputs()
