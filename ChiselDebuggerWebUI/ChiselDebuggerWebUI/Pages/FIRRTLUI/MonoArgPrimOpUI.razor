@@ -50,7 +50,7 @@
         int ioYStart = (contentHeight / 4) + ContentPadding;
         int ioYDistance = contentHeight / 2;
 
-        Point outputPos = new Point(width, ioYStart + ioYDistance * 2);
+        Point outputPos = new Point(width, ioYStart + ioYDistance);
         outputs.Add(new DirectedIO(Operation.Result, outputPos, MoveDirs.Right));
 
         return outputs;
