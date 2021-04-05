@@ -89,6 +89,13 @@
         }
     }
 
+    private float ComputeMaxScaling(int width, int height)
+    {
+        float maxScalingX = Math.Min(MaxContentScaling, width / MinContentSize.X);
+        float maxScalingY = Math.Min(MaxContentScaling, height / MinContentSize.Y);
+        return Math.Min(maxScalingX, maxScalingY);
+    }
+
     protected override void OnResize(int width, int height)
     {
         //Update this module with its internal io positions
@@ -99,7 +106,7 @@
         internalIO.UpdateIOX(width, 0);
 
         //Scale io the the height of the entire module
-        internalIO.ScaleFillY(height, MaxContentScaling);
+        internalIO.ScaleFillY(height, ComputeMaxScaling(width, height));
 
         internalIO.VerticalRecenter(height);
 
@@ -112,18 +119,19 @@
 
         if (moduleSize.Y > ExternalIO.HeightNeeded)
         {
+            float maxScaling = ComputeMaxScaling(moduleSize.X, moduleSize.Y);
+
             //Top level module will actuall scale its io.
             //Nested modules will instead Scale the module content
             //to a size better matching the size of the io.
             if (ParentLayoutCtrl == null)
             {
-                ExternalIO.ScaleFillY(moduleSize.Y, MaxContentScaling);
+                ExternalIO.ScaleFillY(moduleSize.Y, maxScaling);
             }
             else
             {
-                float scaling = ExternalIO.GetMaxScaling(moduleSize.Y, MaxContentScaling);
-                ContentScale = 1 / scaling;
-                moduleSize /= scaling;
+                ContentScale = 1 / maxScaling;
+                moduleSize /= maxScaling;
             }
 
             ExternalIO.UpdateOutputX(moduleSize.X);
