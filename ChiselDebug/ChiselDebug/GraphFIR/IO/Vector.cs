@@ -167,14 +167,14 @@ namespace ChiselDebug.GraphFIR.IO
             return IO[index];
         }
 
-        internal VectorAccess MakeWriteAccess(Output index)
+        internal VectorAccess MakeWriteAccess(Output index, IOGender gender)
         {
             FIRIO accessIO = IO[0].Copy();
-            //if (gender == IOGender.Male && !accessIO.IsPassiveOfType<Output>() ||
-            //    gender == IOGender.Female && !accessIO.IsPassiveOfType<Input>())
-            //{
-            //    accessIO = accessIO.Flip();
-            //}
+            if (gender == IOGender.Male && !accessIO.IsPassiveOfType<Output>() ||
+                gender == IOGender.Female && !accessIO.IsPassiveOfType<Input>())
+            {
+                accessIO = accessIO.Flip();
+            }
 
             FIRIO accessIndex = index.Flip(Node);
             accessIndex.SetName("index");

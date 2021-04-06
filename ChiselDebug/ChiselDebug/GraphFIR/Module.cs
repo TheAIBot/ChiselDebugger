@@ -248,8 +248,7 @@ namespace ChiselDebug.GraphFIR
                 HashSet<Vector> handledVectors = new HashSet<Vector>();
                 for (int x = 0; x < extFlat.Length; x++)
                 {
-                    if (intFlat[x].IsPassiveOfType<Input>() &&
-                        intFlat[x].IsPartOfAggregateIO && 
+                    if (intFlat[x].IsPartOfAggregateIO && 
                         intFlat[x].ParentIO is Vector internalVec)
                     {
                         //Make sure it's only done once for each vector
