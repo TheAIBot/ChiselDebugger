@@ -7,7 +7,7 @@
 </div>
 
 @code {
-    private ScopedNodeIO NodeIO = new ScopedNodeIO(new List<ScopedDirIO>(), new List<ScopedDirIO>(), 10, 10, 10);
+    private ScopedNodeIO NodeIO = null;
 
     protected override void OnFirstParametersSetAsync()
     {
