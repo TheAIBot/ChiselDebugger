@@ -86,7 +86,7 @@ namespace ChiselDebuggerWebUI.Components
             InputOffsets = OnMakeInputs(width, height);
             OutputOffsets = OnMakeOutputs(width, height);
 
-            ParentLayoutCtrl?.UpdateComponentInfo(new FIRComponentUpdate(Operation, new Point(width, height), InputOffsets, OutputOffsets));
+            ParentLayoutCtrl?.UpdateComponentInfo(new FIRComponentUpdate(Operation, GetCurrentSize(), InputOffsets, OutputOffsets));
         }
 
         protected virtual bool OnMove(Point newPos)
