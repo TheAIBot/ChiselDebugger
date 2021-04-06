@@ -119,6 +119,11 @@ namespace ChiselDebug
                         var from = outputToNode[output];
                         foreach (var input in output.Con.To)
                         {
+                            if (input.Node != null && input.Node is INoPlaceAndRoute)
+                            {
+                                continue;
+                            }
+
                             var to = inputToNode[input];
                             graph.AddEdge(from, to);
                         }

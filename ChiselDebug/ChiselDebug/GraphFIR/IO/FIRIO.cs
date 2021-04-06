@@ -58,6 +58,10 @@ namespace ChiselDebug.GraphFIR.IO
         }
         public abstract IEnumerable<ScalarIO> Flatten();
         public abstract bool IsPassiveOfType<T>();
+        public bool IsPassive()
+        {
+            return IsPassiveOfType<Input>() || IsPassiveOfType<Output>();
+        }
         public abstract bool SameIO(FIRIO other);
         public abstract bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container);
 

@@ -58,28 +58,7 @@ namespace ChiselDebug.GraphFIR
             return new DuplexIO(Name, In, Result);
         }
 
-        public override ScalarIO[] GetInputs()
-        {
-            List<ScalarIO> inputs = new List<ScalarIO>();
-            inputs.AddRange(In.Flatten().OfType<Input>());
-            inputs.Add(Clock);
-            if (Reset != null)
-            {
-                inputs.Add(Reset);
-            }
-            if (Init != null)
-            {
-                inputs.AddRange(Init.Flatten().OfType<Input>());
-            }
-            return inputs.ToArray();
-        }
-
-        public override ScalarIO[] GetOutputs()
-        {
-            return Result.Flatten().OfType<Output>().ToArray();
-        }
-
-        public override FIRIO[] GetIO()
+        private List<FIRIO> GetAllIO()
         {
             List<FIRIO> io = new List<FIRIO>();
             io.Add(In);
@@ -94,7 +73,26 @@ namespace ChiselDebug.GraphFIR
             }
             io.Add(Result);
 
-            return io.ToArray();
+            return io;
+        }
+
+        public override ScalarIO[] GetInputs()
+        {
+            return GetAllIO().SelectMany(x => x.Flatten())
+                             .OfType<Input>()
+                             .ToArray();
+        }
+
+        public override ScalarIO[] GetOutputs()
+        {
+            return GetAllIO().SelectMany(x => x.Flatten())
+                             .OfType<Output>()
+                             .ToArray();
+        }
+
+        public override FIRIO[] GetIO()
+        {
+            return GetAllIO().ToArray();
         }
 
         public override void InferType()

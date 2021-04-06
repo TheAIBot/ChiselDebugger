@@ -546,7 +546,7 @@ namespace ChiselDebug
                 var ifTrue = VisitExp(helper, mux.TrueValue, GraphFIR.IO.IOGender.Male);
                 var ifFalse = VisitExp(helper, mux.FalseValue, GraphFIR.IO.IOGender.Male);
 
-                GraphFIR.Mux node = new GraphFIR.Mux(new List<GraphFIR.IO.FIRIO>() { ifTrue, ifFalse }, cond, mux.Type);
+                GraphFIR.Mux node = new GraphFIR.Mux(new List<GraphFIR.IO.FIRIO>() { ifTrue, ifFalse }, cond);
 
                 helper.AddNodeToModule(node);
                 return node.Result;
@@ -556,7 +556,7 @@ namespace ChiselDebug
                 var cond = (GraphFIR.IO.Output)VisitExp(helper, validIf.Cond, GraphFIR.IO.IOGender.Male);
                 var ifValid = VisitExp(helper, validIf.Value, GraphFIR.IO.IOGender.Male);
 
-                GraphFIR.Mux node = new GraphFIR.Mux(new List<GraphFIR.IO.FIRIO>() { ifValid }, cond, validIf.Type);
+                GraphFIR.Mux node = new GraphFIR.Mux(new List<GraphFIR.IO.FIRIO>() { ifValid }, cond);
 
                 helper.AddNodeToModule(node);
                 return node.Result;
@@ -590,7 +590,17 @@ namespace ChiselDebug
                 var vec = (GraphFIR.IO.Vector)VisitExp(helper, subAccess.Expr, gender);
                 var index = (GraphFIR.IO.Output)VisitExp(helper, subAccess.Index, GraphFIR.IO.IOGender.Male);
 
-                refContainer = vec.MakeAccess(index);
+                if (gender == GraphFIR.IO.IOGender.Male)
+                {
+                    GraphFIR.Mux node = new GraphFIR.Mux(vec.GetIOInOrder().ToList(), index);
+                    helper.AddNodeToModule(node);
+
+                    refContainer = node.Result;
+                }
+                else
+                {
+                    refContainer = vec.MakeWriteAccess(index);
+                }
             }
             else
             {

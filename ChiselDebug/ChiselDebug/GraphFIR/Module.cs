@@ -200,6 +200,15 @@ namespace ChiselDebug.GraphFIR
             {
                 input.MakeSinkOnly();
             }
+
+            foreach (ScalarIO scalarIO in GetAllIOOrdered())
+            {
+                if (scalarIO.IsPartOfAggregateIO &&
+                    scalarIO.ParentIO is Vector vec)
+                {
+                    vec.MakePortsVisible();
+                }
+            }
         }
 
         internal void CopyInternalAsExternalIO(Module mod)
@@ -234,6 +243,45 @@ namespace ChiselDebug.GraphFIR
 
                 ScalarIO[] extFlat = extKeyVal.Value.Flatten().ToArray();
                 ScalarIO[] intFlat = intKeyVal.Value.Flatten().ToArray();
+
+                //Handle propagating vector ports externally
+                HashSet<Vector> handledVectors = new HashSet<Vector>();
+                for (int x = 0; x < extFlat.Length; x++)
+                {
+                    if (intFlat[x].IsPassiveOfType<Input>() &&
+                        intFlat[x].IsPartOfAggregateIO && 
+                        intFlat[x].ParentIO is Vector internalVec)
+                    {
+                        //Make sure it's only done once for each vector
+                        if (!handledVectors.Add(internalVec))
+                        {
+                            continue;
+                        }
+
+                        if (!internalVec.HasPorts())
+                        {
+                            continue;
+                        }
+
+                        Vector externalVec = (Vector)extFlat[x].ParentIO;
+
+                        //Add internal ports to external vector
+                        List<VectorAccess> newExtPorts = externalVec.CopyPortsFrom(internalVec);
+
+                        //Find vector it's externally connecting to
+                        FIRIO parentIO = (FIRIO)parentMod.GetIO(intKeyVal.Key);
+                        ScalarIO[] parentIOFlat = parentIO.Flatten().ToArray();
+                        Vector parentModVec = (Vector)parentIOFlat[x].ParentIO;
+
+                        //Add external ports to whatever vector it's connecting to
+                        List<VectorAccess> newParentPorts = parentModVec.CopyPortsFrom(externalVec);
+
+                        for (int y = 0; y < newExtPorts.Count; y++)
+                        {
+                            newExtPorts[y].ConnectToInput(newParentPorts[y]);
+                        }
+                    }
+                }
 
                 for (int x = 0; x < extFlat.Length; x++)
                 {

@@ -158,14 +158,5 @@ namespace ChiselDebug.GraphFIR.IO
             container = null;
             return false;
         }
-
-        protected void ChangeIO(FIRIO toChange, FIRIO changeTo)
-        {
-            int index = Array.IndexOf(OrderedIO, toChange);
-            OrderedIO[index] = changeTo;
-
-            IO.Remove(toChange.Name);
-            IO.Add(changeTo.Name, changeTo);
-        }
     }
 }
