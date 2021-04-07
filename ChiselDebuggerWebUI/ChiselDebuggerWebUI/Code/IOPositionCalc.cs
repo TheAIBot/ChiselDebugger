@@ -281,24 +281,34 @@ namespace ChiselDebuggerWebUI.Code
             return new ScopedNodeIO(inputIO, outputIO, heightNeeded, startYPadding, endYPadding);
         }
 
-        private static void MakeScopedIO(List<ScopedDirIO> inputIO, List<ScopedDirIO> outputIO, FIRIO[] io, int fixedX, ref int inputYOffset, ref int outputYOffset, int scopeDepth, bool ignoreDisconnectedIO)
+        private static bool MakeScopedIO(List<ScopedDirIO> inputIO, List<ScopedDirIO> outputIO, FIRIO[] io, int fixedX, ref int inputYOffset, ref int outputYOffset, int scopeDepth, bool ignoreDisconnectedIO)
         {
-            inputYOffset = Math.Max(inputYOffset, outputYOffset);
-            outputYOffset = Math.Max(inputYOffset, outputYOffset);
+            FIRIO[] allIO = io.SelectMany(x => x.Flatten()).ToArray();
+            if (allIO.Any(x => x is Input) && allIO.Any(x => x is Output))
+            {
+                inputYOffset = Math.Max(inputYOffset, outputYOffset);
+                outputYOffset = Math.Max(inputYOffset, outputYOffset);
+            }
 
+            bool addedIO = false;
             for (int i = 0; i < io.Length; i++)
             {
                 if (io[i] is AggregateIO aggIO)
                 {
                     int inScope = aggIO.IsPartOfAggregateIO ? 1 : 0;
-                    MakeScopedIO(inputIO, outputIO, aggIO.GetIOInOrder(), fixedX, ref inputYOffset, ref outputYOffset, scopeDepth + inScope, ignoreDisconnectedIO);
+                    bool addedAtleastOne = MakeScopedIO(inputIO, outputIO, aggIO.GetIOInOrder(), fixedX, ref inputYOffset, ref outputYOffset, scopeDepth + inScope, ignoreDisconnectedIO);
 
-                    inputYOffset += ExtraSpaceBetweenBundles;
-                    outputYOffset += ExtraSpaceBetweenBundles;
+                    //Only add padding if aggregate added some io and if
+                    //there might be more io to follow
+                    if (addedAtleastOne && i + 1 != io.Length)
+                    {
+                        inputYOffset += ExtraSpaceBetweenBundles;
+                        outputYOffset += ExtraSpaceBetweenBundles;
+                    }
                 }
                 else if (io[i] is ScalarIO scalar)
                 {
-                    MakeNoScopeIO(inputIO, outputIO, scalar, fixedX, ref inputYOffset, ref outputYOffset, scopeDepth, ignoreDisconnectedIO);
+                    addedIO |= MakeNoScopeIO(inputIO, outputIO, scalar, fixedX, ref inputYOffset, ref outputYOffset, scopeDepth, ignoreDisconnectedIO);
                 }
                 else
                 {
@@ -306,15 +316,17 @@ namespace ChiselDebuggerWebUI.Code
                 }
             }
 
-            inputYOffset = Math.Max(inputYOffset, outputYOffset);
-            outputYOffset = Math.Max(inputYOffset, outputYOffset);
+            //inputYOffset = Math.Max(inputYOffset, outputYOffset);
+            //outputYOffset = Math.Max(inputYOffset, outputYOffset);
+
+            return addedIO;
         }
 
-        private static void MakeNoScopeIO(List<ScopedDirIO> inputIO, List<ScopedDirIO> outputIO, ScalarIO io, int fixedX, ref int inputYOffset, ref int outputYOffset, int scopeDepth, bool ignoreDisconnectedIO)
+        private static bool MakeNoScopeIO(List<ScopedDirIO> inputIO, List<ScopedDirIO> outputIO, ScalarIO io, int fixedX, ref int inputYOffset, ref int outputYOffset, int scopeDepth, bool ignoreDisconnectedIO)
         {
             if (ignoreDisconnectedIO && !io.IsConnectedToAnything())
             {
-                return;
+                return false;
             }
 
             scopeDepth = Math.Max(0, scopeDepth);
@@ -326,6 +338,7 @@ namespace ChiselDebuggerWebUI.Code
                 inputIO.Add(new ScopedDirIO(dirIO, scopeOffset));
 
                 inputYOffset += MinSpaceBetweenIO;
+                return true;
             }
             else if (io is Output)
             {
@@ -335,6 +348,11 @@ namespace ChiselDebuggerWebUI.Code
                 outputIO.Add(new ScopedDirIO(dirIO, scopeOffset));
 
                 outputYOffset += MinSpaceBetweenIO;
+                return true;
+            }
+            else
+            {
+                throw new Exception($"Unknown scalar io type. Type: {io}");
             }
         }
     }

@@ -61,7 +61,7 @@ namespace ChiselDebug.GraphFIR
         private List<FIRIO> GetAllIO()
         {
             List<FIRIO> io = new List<FIRIO>();
-            io.Add(In);
+            io.Add(GetAsDuplex());
             io.Add(Clock);
             if (Reset != null)
             {
@@ -71,7 +71,6 @@ namespace ChiselDebug.GraphFIR
             {
                 io.Add(Init);
             }
-            io.Add(Result);
 
             return io;
         }
