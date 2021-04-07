@@ -43,12 +43,12 @@ namespace ChiselDebug.GraphFIR.IO
         }
     }
 
-    public class Vector : AggregateIO
+    public class Vector : AggregateIO, IHiddenPorts
     {
         private readonly FIRIO[] IO;
-        private readonly List<VectorAccess> VectorPorts = new List<VectorAccess>();
+        private readonly List<VectorAccess> VisiblePorts = new List<VectorAccess>();
+        private readonly List<VectorAccess> HiddenPorts = new List<VectorAccess>();
         private readonly FIRRTLNode Node;
-        private bool IsPortsExternallyVisible = false;
         public int Length => IO.Length;
 
         public Vector(string name, int length, FIRIO firIO, FIRRTLNode node) : base(name)
@@ -73,10 +73,7 @@ namespace ChiselDebug.GraphFIR.IO
         {
             List<FIRIO> allIO = new List<FIRIO>();
             allIO.AddRange(IO);
-            if (IsPortsExternallyVisible)
-            {
-                allIO.AddRange(VectorPorts);
-            }
+            allIO.AddRange(VisiblePorts);
 
             return allIO.ToArray();
         }
@@ -120,21 +117,13 @@ namespace ChiselDebug.GraphFIR.IO
                     yield return nested;
                 }
             }
-            if (IsPortsExternallyVisible)
+            for (int i = 0; i < VisiblePorts.Count; i++)
             {
-                for (int i = 0; i < VectorPorts.Count; i++)
+                foreach (var nested in VisiblePorts[i].Flatten())
                 {
-                    foreach (var nested in VectorPorts[i].Flatten())
-                    {
-                        yield return nested;
-                    }
+                    yield return nested;
                 }
             }
-        }
-
-        public void MakePortsVisible()
-        {
-            IsPortsExternallyVisible = true;
         }
 
         public override bool IsPassiveOfType<T>()
@@ -210,34 +199,43 @@ namespace ChiselDebug.GraphFIR.IO
             index.ConnectToInput(accessIndex);
 
             VectorAccess access = new VectorAccess(accessIndex, accessIO);
-            VectorPorts.Add(access);
+            access.SetParentIO(this);
+            HiddenPorts.Add(access);
 
             return access;
         }
 
-        internal List<VectorAccess> CopyPortsFrom(Vector vec)
+        bool IHiddenPorts.HasHiddenPorts()
         {
-            List<VectorAccess> newPorts = new List<VectorAccess>();
-            foreach (var port in vec.VectorPorts)
+            return HiddenPorts.Count > 0;
+        }
+
+        FIRIO[] IHiddenPorts.GetHiddenPorts()
+        {
+            return HiddenPorts.ToArray();
+        }
+
+        List<FIRIO> IHiddenPorts.CopyHiddenPortsFrom(IHiddenPorts otherWithPorts)
+        {
+            List<FIRIO> newPorts = new List<FIRIO>();
+            foreach (var port in otherWithPorts.GetHiddenPorts())
             {
                 VectorAccess newPort = (VectorAccess)port.Flip(Node);
-                VectorPorts.Add(newPort);
+                HiddenPorts.Add(newPort);
                 newPorts.Add(newPort);
             }
 
             return newPorts;
         }
 
-        public bool HasPorts()
+        void IHiddenPorts.MakePortsVisible()
         {
-            //This check should not be necessary
-            if (Flatten().Any(x => x.IsConnectedToAnything()))
+            foreach (var port in HiddenPorts)
             {
-                return true;
+                VisiblePorts.Add(port);
             }
 
-            //Port is always connected with index
-            return VectorPorts.Count > 0;
+            HiddenPorts.Clear();
         }
     }
 }

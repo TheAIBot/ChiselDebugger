@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace ChiselDebug.GraphFIR.IO
 {
-    public class MemoryIO : IOBundle
+    public class MemoryIO : IOBundle, IHiddenPorts
     {
         private readonly List<MemPort> HiddenPorts = new List<MemPort>();
         private readonly FIRIO InputType;
@@ -48,15 +48,20 @@ namespace ChiselDebug.GraphFIR.IO
             return port;
         }
 
-        internal bool HasHiddenPorts()
+        bool IHiddenPorts.HasHiddenPorts()
         {
             return HiddenPorts.Count > 0;
         }
 
-        internal List<MemPort> CopyHiddenPortsFrom(MemoryIO otherMem)
+        FIRIO[] IHiddenPorts.GetHiddenPorts()
         {
-            List<MemPort> newPorts = new List<MemPort>();
-            foreach (var port in otherMem.HiddenPorts)
+            return HiddenPorts.ToArray();
+        }
+
+        List<FIRIO> IHiddenPorts.CopyHiddenPortsFrom(IHiddenPorts otherWithPorts)
+        {
+            List<FIRIO> newPorts = new List<FIRIO>();
+            foreach (var port in otherWithPorts.GetHiddenPorts())
             {
                 MemPort newPort = (MemPort)port.Flip(Node);
                 HiddenPorts.Add(newPort);
@@ -66,7 +71,7 @@ namespace ChiselDebug.GraphFIR.IO
             return newPorts;
         }
 
-        internal void MakePortsVisible()
+        void IHiddenPorts.MakePortsVisible()
         {
             foreach (var port in HiddenPorts)
             {

@@ -63,7 +63,7 @@ namespace ChiselDebug.GraphFIR.IO
             return IsPassiveOfType<Input>() || IsPassiveOfType<Output>();
         }
         public abstract bool SameIO(FIRIO other);
-        public abstract IEnumerable<T> GetAllIOOfType<T>() where T : FIRIO;
+        public abstract IEnumerable<T> GetAllIOOfType<T>();
         public abstract IEnumerable<FIRIO> WalkIOTree();
         public abstract bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container);
 
