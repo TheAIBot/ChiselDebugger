@@ -62,7 +62,9 @@ namespace ChiselDebug.GraphFIR
         {
             Nodes.Add(mem);
 
-            IOBundle memIO = mem.GetIOAsBundle();
+            MemoryIO memIO = mem.GetIOAsBundle();
+            memIO.MakePortsVisible();
+
             NameToIO.Add(memIO.Name, memIO);
         }
 
@@ -71,17 +73,14 @@ namespace ChiselDebug.GraphFIR
             NameToIO.Add(name, io);
         }
 
-        public void AddMemoryPort(Memory mem, MemPort port)
+        public void AddMemoryPort(MemPort port)
         {
-            IOBundle memIO = mem.GetIOAsBundle();
-            NameToIO[memIO.Name] = memIO;
-
             NameToIO.Add(port.Name, port);
         }
 
-        public Memory GetMemory(string name)
+        public MemoryIO GetMemory(string name)
         {
-            return (Memory)Nodes.Single(x => x is Memory mem && mem.Name == name);
+            return (MemoryIO)NameToIO[name];
         }
 
         public void AddConditional(Conditional cond)

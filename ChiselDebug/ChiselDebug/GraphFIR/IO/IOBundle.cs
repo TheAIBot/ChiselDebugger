@@ -6,12 +6,12 @@ namespace ChiselDebug.GraphFIR.IO
 {
     public class IOBundle : AggregateIO
     {
-        private readonly FIRIO[] OrderedIO;
+        private readonly List<FIRIO> OrderedIO;
         private readonly Dictionary<string, FIRIO> IO = new Dictionary<string, FIRIO>();
 
         public IOBundle(string name, List<FIRIO> io, bool twoWayRelationship = true) : base(name)
         {
-            this.OrderedIO = io.ToArray();
+            this.OrderedIO = io.ToList();
 
             foreach (var firIO in io)
             {
@@ -128,12 +128,12 @@ namespace ChiselDebug.GraphFIR.IO
         {
             if (other is IOBundle bundle)
             {
-                if (OrderedIO.Length != bundle.OrderedIO.Length)
+                if (OrderedIO.Count != bundle.OrderedIO.Count)
                 {
                     return false;
                 }
 
-                for (int i = 0; i < OrderedIO.Length; i++)
+                for (int i = 0; i < OrderedIO.Count; i++)
                 {
                     if (!OrderedIO[i].SameIO(bundle.OrderedIO[i]))
                     {
@@ -157,6 +157,12 @@ namespace ChiselDebug.GraphFIR.IO
 
             container = null;
             return false;
+        }
+
+        protected void AddIO(string name, FIRIO io)
+        {
+            OrderedIO.Add(io);
+            IO.Add(name, io);
         }
     }
 }

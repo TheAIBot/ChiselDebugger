@@ -201,6 +201,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         public bool HasPorts()
         {
+            //This check should not be necessary
             if (Flatten().Any(x => x.IsConnectedToAnything()))
             {
                 return true;

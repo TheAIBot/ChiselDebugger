@@ -247,7 +247,7 @@ namespace ChiselDebug
                 VisitExp(helper, memPort.Exps[1], GraphFIR.IO.IOGender.Male).ConnectToInput(port.Clock);
                 helper.ScopeEnabledCond.ConnectToInput(port.Enabled);
 
-                helper.Mod.AddMemoryPort(memory, port);
+                helper.Mod.AddMemoryPort(port);
             }
             else if (statement is FIRRTL.DefWire defWire)
             {
