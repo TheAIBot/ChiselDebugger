@@ -214,6 +214,14 @@ namespace ChiselDebug
                 GraphFIR.IO.FIRIO from = VisitExp(helper, connect.Expr, GraphFIR.IO.IOGender.Male);
                 GraphFIR.IO.FIRIO to = (GraphFIR.IO.FIRIO)VisitRef(helper, connect.Loc, helper.Mod, GraphFIR.IO.IOGender.Female);
 
+                //Can only connect two aggregates. If any of the two are not an
+                //aggregate type then try convert both to scalar io and connect them.
+                if (from is not GraphFIR.IO.AggregateIO || to is not GraphFIR.IO.AggregateIO)
+                {
+                    from = from.GetOutput();
+                    to = to.GetInput();
+                }
+
                 from.ConnectToInput(to);
             }
             else if (statement is FIRRTL.PartialConnect)
