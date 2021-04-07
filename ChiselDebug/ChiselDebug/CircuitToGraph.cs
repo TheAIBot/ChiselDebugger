@@ -11,8 +11,8 @@ namespace ChiselDebug
         public readonly GraphFIR.Module Mod;
         public readonly Dictionary<string, FIRRTL.DefModule> ModuleRoots;
 
-        private readonly Stack<GraphFIR.FIRRTLNode> ScopeEnabledConditions = new Stack<GraphFIR.FIRRTLNode>();
-        public GraphFIR.FIRRTLNode ScopeEnabledCond 
+        private readonly Stack<GraphFIR.IO.Output> ScopeEnabledConditions = new Stack<GraphFIR.IO.Output>();
+        public GraphFIR.IO.Output ScopeEnabledCond 
         { 
             get
             {
@@ -21,7 +21,7 @@ namespace ChiselDebug
                     GraphFIR.ConstValue constEnabled = new GraphFIR.ConstValue(GetUniqueName(), new FIRRTL.UIntLiteral(1, 1));
                     AddNodeToModule(constEnabled);
 
-                    ScopeEnabledConditions.Push(constEnabled);
+                    ScopeEnabledConditions.Push(constEnabled.Result);
                 }
 
                 return ScopeEnabledConditions.Peek();
@@ -47,7 +47,7 @@ namespace ChiselDebug
             Mod.AddNode(node);
         }
 
-        public void EnterEnabledScope(GraphFIR.FIRRTLNode enableCond)
+        public void EnterEnabledScope(GraphFIR.IO.Output enableCond)
         {
             ScopeEnabledConditions.Push(enableCond);
         }
@@ -92,17 +92,7 @@ namespace ChiselDebug
 
                 VisitStatement(helper, mod.Body);
 
-                //In a truely stupid move, FIRRTL supports connecting
-                //Sinks to other sinks. In order to support that case
-                //a sink can pretend to be a source. It's important 
-                //that they stop pretending after the module graph
-                //has been made because this hack shouldn't be
-                //visible outside of graph creation. Everything else
-                //should still work on the assumption that only
-                //connections from a source to a sink are possible.
-                helper.Mod.CorrectIO();
-
-                helper.Mod.RemoveAllWires();
+                CleanupModule(helper);
 
                 return helper.Mod;
             }
@@ -110,6 +100,21 @@ namespace ChiselDebug
             {
                 throw new NotImplementedException();
             }
+        }
+
+        private static void CleanupModule(VisitHelper helper)
+        {
+            //In a truely stupid move, FIRRTL supports connecting
+            //Sinks to other sinks. In order to support that case
+            //a sink can pretend to be a source. It's important 
+            //that they stop pretending after the module graph
+            //has been made because this hack shouldn't be
+            //visible outside of graph creation. Everything else
+            //should still work on the assumption that only
+            //connections from a source to a sink are possible.
+            helper.Mod.CorrectIO();
+
+            helper.Mod.RemoveAllWires();
         }
 
         private static void VisitPort(VisitHelper helper, FIRRTL.Port port)
@@ -134,15 +139,6 @@ namespace ChiselDebug
             else if (direction == FIRRTL.Dir.Input)
             {
                 io.Add(new GraphFIR.IO.Input(null, name, type));
-
-                //VCD may keep track of the previous clock cycle value even if it doesn't use it.
-                //To keep in line with supporting everything in the VCD, an input representing
-                //the previous clock cycle value is added so there isn't an issue when loading
-                //a CircuitState from VCD.
-                if (type is FIRRTL.ClockType)
-                {
-                    io.Add(new GraphFIR.IO.Input(null, name + "/prev", type));
-                }
             }
             else if (direction == FIRRTL.Dir.Output)
             {
@@ -184,9 +180,9 @@ namespace ChiselDebug
             {
                 block.Statements.ForEach(x => VisitStatement(helper, x));
             }
-            else if (statement is FIRRTL.Conditionally)
+            else if (statement is FIRRTL.Conditionally conditional)
             {
-                throw new NotImplementedException();
+                VisitConditional(helper, conditional);
             }
             else if (statement is FIRRTL.Stop)
             {
@@ -209,6 +205,14 @@ namespace ChiselDebug
                 GraphFIR.IO.FIRIO from = VisitExp(helper, connect.Expr, GraphFIR.IO.IOGender.Male);
                 GraphFIR.IO.FIRIO to = (GraphFIR.IO.FIRIO)VisitRef(helper, connect.Loc, helper.Mod, GraphFIR.IO.IOGender.Female);
 
+                //Can only connect two aggregates. If any of the two are not an
+                //aggregate type then try convert both to scalar io and connect them.
+                if (from is not GraphFIR.IO.AggregateIO || to is not GraphFIR.IO.AggregateIO)
+                {
+                    from = from.GetOutput();
+                    to = to.GetInput();
+                }
+
                 from.ConnectToInput(to);
             }
             else if (statement is FIRRTL.PartialConnect)
@@ -228,8 +232,8 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.CDefMPort memPort)
             {
-                var memory = helper.Mod.GetMemory(memPort.Mem);
-                GraphFIR.MemPort port = memPort.Direction switch
+                var memory = (GraphFIR.IO.MemoryIO)helper.Mod.GetIO(memPort.Mem);
+                GraphFIR.IO.MemPort port = memPort.Direction switch
                 {
                     FIRRTL.MPortDir.MInfer => throw new NotImplementedException(),
                     FIRRTL.MPortDir.MRead => memory.AddReadPort(memPort.Name),
@@ -240,9 +244,20 @@ namespace ChiselDebug
 
                 VisitExp(helper, memPort.Exps[0], GraphFIR.IO.IOGender.Male).ConnectToInput(port.Address);
                 VisitExp(helper, memPort.Exps[1], GraphFIR.IO.IOGender.Male).ConnectToInput(port.Clock);
-                helper.ScopeEnabledCond.GetOutputs().Single().ConnectToInput(port.Enabled);
+                helper.ScopeEnabledCond.ConnectToInput(port.Enabled);
 
-                helper.Mod.AddMemoryPort(memory, port);
+                //if port has mask then by default set whole mask to true
+                if (port.HasMask())
+                {
+                    GraphFIR.IO.FIRIO mask = port.GetMask();
+                    GraphFIR.IO.Output const1 = (GraphFIR.IO.Output)VisitExp(helper, new FIRRTL.UIntLiteral(1, 1), GraphFIR.IO.IOGender.Male);
+                    foreach (var maskInput in mask.Flatten())
+                    {
+                        const1.ConnectToInput(maskInput);
+                    }
+                }
+
+                helper.Mod.AddMemoryPort(port);
             }
             else if (statement is FIRRTL.DefWire defWire)
             {
@@ -308,6 +323,76 @@ namespace ChiselDebug
             {
                 throw new NotImplementedException();
             }
+        }
+
+        private static void VisitConditional(VisitHelper parentHelper, FIRRTL.Conditionally conditional)
+        {
+            GraphFIR.Conditional cond = new GraphFIR.Conditional();
+
+            void AddCondModule(GraphFIR.IO.Output ena, FIRRTL.Statement body)
+            {
+                VisitHelper helper = parentHelper.ForNewModule(parentHelper.GetUniqueName());
+
+                //Connect wire that enables condition to module
+                GraphFIR.IO.Input enaInput = new GraphFIR.IO.Input(null, new FIRRTL.UIntType(1));
+                string enaName = "ena module " + helper.GetUniqueName();
+                enaInput.SetName(enaName);
+                ena.ConnectToInput(enaInput);
+                helper.Mod.AddExternalIO(enaInput);
+
+                //Connect internal enable wire to dummy component so it's
+                //not disconnected later because it isn't used
+                var internalEna = (GraphFIR.IO.Output)helper.Mod.GetIO(enaName);
+                var internalEnaDummy = new GraphFIR.DummySink(internalEna);
+                helper.AddNodeToModule(internalEnaDummy);
+
+                //Set signal that enables this scope as things like memory
+                //ports need it
+                helper.EnterEnabledScope(internalEna);
+
+                //Make io from parent module visible to child module
+                //and connect all the io to the child module
+                parentHelper.Mod.CopyInternalAsExternalIO(helper.Mod);
+
+                //Fill out module
+                VisitStatement(helper, body);
+
+                //If external input wasn't used internally then disconnect
+                //external input. Removing IO from a module isn't currently
+                //possible. In order to avoid visualing all this unused IO,
+                //unused is hidden in the visualization but that can only work
+                //if it's not connected to anything.
+                helper.Mod.DisconnectUnusedIO();
+
+                //If internal input was used then connect its external IO
+                //to parent modules corresponding input
+                helper.Mod.ExternalConnectUsedIO(parentHelper.Mod);
+
+
+                //Default things to do when a module is finished
+                CleanupModule(helper);
+
+                cond.AddConditionalModule((GraphFIR.IO.Input)internalEnaDummy.InIO, helper.Mod);
+
+                helper.ExitEnabledScope();
+            }
+
+            GraphFIR.IO.Output enableCond = (GraphFIR.IO.Output)VisitExp(parentHelper, conditional.Pred, GraphFIR.IO.IOGender.Male);
+
+            if (conditional.HasIf())
+            {
+                AddCondModule(enableCond, conditional.WhenTrue);
+            }
+            if (conditional.HasElse())
+            {
+                GraphFIR.FIRNot notEnableComponent = new GraphFIR.FIRNot(enableCond, new FIRRTL.UIntType(1));
+                parentHelper.AddNodeToModule(notEnableComponent);
+                GraphFIR.IO.Output elseEnableCond = notEnableComponent.Result;
+
+                AddCondModule(elseEnableCond, conditional.Alt);
+            }
+
+            parentHelper.Mod.AddConditional(cond);
         }
 
         private static GraphFIR.IO.FIRIO VisitExp(VisitHelper helper, FIRRTL.Expression exp, GraphFIR.IO.IOGender gender)
@@ -474,7 +559,7 @@ namespace ChiselDebug
                 var ifTrue = VisitExp(helper, mux.TrueValue, GraphFIR.IO.IOGender.Male);
                 var ifFalse = VisitExp(helper, mux.FalseValue, GraphFIR.IO.IOGender.Male);
 
-                GraphFIR.Mux node = new GraphFIR.Mux(new List<GraphFIR.IO.FIRIO>() { ifTrue, ifFalse }, cond, mux.Type);
+                GraphFIR.Mux node = new GraphFIR.Mux(new List<GraphFIR.IO.FIRIO>() { ifTrue, ifFalse }, cond);
 
                 helper.AddNodeToModule(node);
                 return node.Result;
@@ -484,7 +569,7 @@ namespace ChiselDebug
                 var cond = (GraphFIR.IO.Output)VisitExp(helper, validIf.Cond, GraphFIR.IO.IOGender.Male);
                 var ifValid = VisitExp(helper, validIf.Value, GraphFIR.IO.IOGender.Male);
 
-                GraphFIR.Mux node = new GraphFIR.Mux(new List<GraphFIR.IO.FIRIO>() { ifValid }, cond, validIf.Type);
+                GraphFIR.Mux node = new GraphFIR.Mux(new List<GraphFIR.IO.FIRIO>() { ifValid }, cond);
 
                 helper.AddNodeToModule(node);
                 return node.Result;
@@ -518,7 +603,7 @@ namespace ChiselDebug
                 var vec = (GraphFIR.IO.Vector)VisitExp(helper, subAccess.Expr, gender);
                 var index = (GraphFIR.IO.Output)VisitExp(helper, subAccess.Index, GraphFIR.IO.IOGender.Male);
 
-                refContainer = vec.MakeAccess(index);
+                refContainer = vec.MakeWriteAccess(index, gender);
             }
             else
             {
@@ -528,7 +613,7 @@ namespace ChiselDebug
             //Never return bigender io. Only this method should have to deal
             //with that mess so the rest of the code doesn't have to.
             //Dealing with it is ugly which is why i want to contain it.
-            if (refContainer is GraphFIR.IO.FIRIO firIO && refContainer is not GraphFIR.IPreserveDuplex)
+            if (refContainer is GraphFIR.IO.FIRIO firIO && refContainer is not GraphFIR.IO.IPreserveDuplex)
             {
                 return firIO.GetAsGender(gender);
             }

@@ -46,7 +46,7 @@ namespace ChiselDebug.GraphFIR.IO
             };
         }
 
-        public abstract void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false);
+        public abstract void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, bool isConditional = false);
         public abstract FIRIO ToFlow(FlowChange flow, FIRRTLNode node = null);
         public FIRIO Flip(FIRRTLNode node = null)
         {
@@ -58,7 +58,13 @@ namespace ChiselDebug.GraphFIR.IO
         }
         public abstract IEnumerable<ScalarIO> Flatten();
         public abstract bool IsPassiveOfType<T>();
+        public bool IsPassive()
+        {
+            return IsPassiveOfType<Input>() || IsPassiveOfType<Output>();
+        }
         public abstract bool SameIO(FIRIO other);
+        public abstract IEnumerable<T> GetAllIOOfType<T>();
+        public abstract IEnumerable<FIRIO> WalkIOTree();
         public abstract bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container);
 
         public IContainerIO GetIO(string ioName, bool modulesOnly = false)

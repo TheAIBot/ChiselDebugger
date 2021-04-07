@@ -1,4 +1,5 @@
 ﻿using FIRRTL;
+using System;
 using VCDReader;
 
 namespace ChiselDebug.GraphFIR
@@ -33,6 +34,17 @@ namespace ChiselDebug.GraphFIR
         public void SetValueString(string valueString)
         {
             ValueString = valueString;
+        }
+
+        public bool IsTrue()
+        {
+            var binValue = (BinaryVarValue)Value;
+            if (binValue.Bits.Length > 1)
+            {
+                throw new Exception("Value must be a single bit when asking if it's true.");
+            }
+
+            return binValue.Bits[0] == BitState.One;
         }
 
         public string ToBinaryString()

@@ -6,10 +6,10 @@ namespace ChiselDebuggerWebUI.Code.Templates
 {
     public class PlaceTemplateConversion
     {
-        private readonly ModuleController Ctrl;
+        private readonly ModuleLayout Ctrl;
         private readonly FIRRTLNode[] NodeOrder;
 
-        public PlaceTemplateConversion(ModuleController ctrl, FIRRTLNode[] nodeOrder)
+        public PlaceTemplateConversion(ModuleLayout ctrl, FIRRTLNode[] nodeOrder)
         {
             this.Ctrl = ctrl;
             this.NodeOrder = nodeOrder;

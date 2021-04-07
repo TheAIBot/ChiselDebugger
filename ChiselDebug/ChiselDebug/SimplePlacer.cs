@@ -86,7 +86,7 @@ namespace ChiselDebug
                     List<Node<FIRRTLNode>> modInputNodes = new List<Node<FIRRTLNode>>();
                     foreach (var input in Mod.GetInternalInputs())
                     {
-                        if (input.Con == null)
+                        if (!input.IsConnectedToAnything())
                         {
                             continue;
                         }
@@ -98,7 +98,7 @@ namespace ChiselDebug
                     List<Node<FIRRTLNode>> modOutputNodes = new List<Node<FIRRTLNode>>();
                     foreach (var output in Mod.GetInternalOutputs())
                     {
-                        if (!output.Con.IsUsed())
+                        if (!output.IsConnectedToAnything())
                         {
                             continue;
                         }
@@ -112,13 +112,18 @@ namespace ChiselDebug
                     //Make edges
                     foreach (var output in outputToNode.Keys)
                     {
-                        if (!output.Con.IsUsed())
+                        if (!output.IsConnectedToAnything())
                         {
                             continue;
                         }
                         var from = outputToNode[output];
                         foreach (var input in output.Con.To)
                         {
+                            if (input.Node != null && input.Node is INoPlaceAndRoute)
+                            {
+                                continue;
+                            }
+
                             var to = inputToNode[input];
                             graph.AddEdge(from, to);
                         }
@@ -493,6 +498,11 @@ namespace ChiselDebug
         internal void AddEndStuff(Point endPadding)
         {
             SpaceNeeded += endPadding;
+        }
+
+        public void SetSpaceNeeded(Point spaceNeeded)
+        {
+            SpaceNeeded = spaceNeeded;
         }
     }
 }

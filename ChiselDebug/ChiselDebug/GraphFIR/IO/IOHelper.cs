@@ -29,7 +29,7 @@ namespace ChiselDebug.GraphFIR.IO
 
             for (int i = 0; i < bypassFromIO.Length; i++)
             {
-                Output connectFrom;
+                Connection[] connectFromCons;
                 Input[] connectTo;
 
                 //They must both either be connected or not.
@@ -41,15 +41,15 @@ namespace ChiselDebug.GraphFIR.IO
 
                 if (bypassFromIO[i] is Input fromIn && bypassToIO[i] is Output toOut)
                 {
-                    connectFrom = fromIn.Con.From;
+                    connectFromCons = fromIn.GetAllConnections();
                     connectTo = toOut.Con.To.ToArray();
-                    fromIn.Con.DisconnectInput(fromIn);
+                    fromIn.DisconnectAll();
                 }
                 else if (bypassFromIO[i] is Output fromOut && bypassToIO[i] is Input toIn)
                 {
-                    connectFrom = toIn.Con.From;
+                    connectFromCons = toIn.GetAllConnections();
                     connectTo = fromOut.Con.To.ToArray();
-                    toIn.Con.DisconnectInput(toIn);
+                    toIn.DisconnectAll();
                 }
                 else 
                 {
@@ -58,14 +58,69 @@ namespace ChiselDebug.GraphFIR.IO
                 
                 foreach (var input in connectTo)
                 {
-                    input.Con.DisconnectInput(input);
-                    connectFrom.ConnectToInput(input);
+                    input.DisconnectAll();
+                    foreach (var connection in connectFromCons)
+                    {
+                        connection.From.ConnectToInput(input, false, false, true);
+                    }
                 }
             }
             
             //After bypassing, the io shouldn't be connected to anything
             Debug.Assert(bypassFromIO.All(x => !x.IsConnectedToAnything()));
             Debug.Assert(bypassToIO.All(x => !x.IsConnectedToAnything()));
+        }
+
+        public static void BiDirFullyConnectIO(FIRIO a, FIRIO b)
+        {
+            ScalarIO[] aFlat = a.Flatten().ToArray();
+            ScalarIO[] bFlat = b.Flatten().ToArray();
+
+            if (aFlat.Length != bFlat.Length)
+            {
+                throw new Exception($"Can't fully connect {nameof(a)} and {nameof(b)} because they do not contain the same number of IO.");
+            }
+
+            for (int i = 0; i < aFlat.Length; i++)
+            {
+                FIRIO aIO = aFlat[i];
+                FIRIO bIO = bFlat[i];
+
+                if (aIO is Input aIn && bIO is Output bOut)
+                {
+                    bOut.ConnectToInput(aIn);
+                }
+                else if (aIO is Output aOut && bIO is Input bIn)
+                {
+                    aOut.ConnectToInput(bIn);
+                }
+                else
+                {
+                    throw new Exception($"Can't connect IO of type {a.GetType()} to {b.GetType()}.");
+                }
+            }
+        }
+
+        public static void OneWayOnlyConnect(FIRIO fromIO, FIRIO toIO)
+        {
+            ScalarIO[] fromFlat = fromIO.Flatten().ToArray();
+            ScalarIO[] toFlat = toIO.Flatten().ToArray();
+
+            if (fromFlat.Length != toFlat.Length)
+            {
+                throw new Exception($"Can't connect {nameof(fromIO)} to {nameof(toIO)} because they do not contain the same number of IO.");
+            }
+
+            for (int i = 0; i < fromFlat.Length; i++)
+            {
+                ScalarIO from = fromFlat[i];
+                ScalarIO to = toFlat[i];
+
+                if (from is Output fromOutput && to is Input toInput)
+                {
+                    fromOutput.ConnectToInput(toInput);
+                }
+            }
         }
     }
 }

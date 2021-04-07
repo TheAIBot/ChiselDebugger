@@ -1,5 +1,4 @@
 ﻿@inherits FIRBase<Module>
-@implements IDisposable
 
 <div id="@SizeWatcherID" class="module" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();">
     @*<div class="moduleHeader">
@@ -15,35 +14,39 @@
         {
             @if (posOp.Value is Mux)
             {
-                <MuxOp @key=posOp.Value PosOp="@(posOp.Cast<Mux>())" ParentModCtrl="CurrModCtrl"></MuxOp>
+                <MuxOp @key=posOp.Value PosOp="@(posOp.Cast<Mux>())" ParentLayoutCtrl="CurrModLayout"></MuxOp>
             }
             else if (posOp.Value is MonoArgMonoResPrimOp)
             {
-                <MonoArgPrimOpUI @key=posOp.Value PosOp="@(posOp.Cast<MonoArgMonoResPrimOp>())" ParentModCtrl="CurrModCtrl"></MonoArgPrimOpUI>
+                <MonoArgPrimOpUI @key=posOp.Value PosOp="@(posOp.Cast<MonoArgMonoResPrimOp>())" ParentLayoutCtrl="CurrModLayout"></MonoArgPrimOpUI>
             }
             else if (posOp.Value is BiArgMonoResPrimOp)
             {
-                <BiArgMonoResPrimOpUI @key=posOp.Value PosOp="@(posOp.Cast<BiArgMonoResPrimOp>())" ParentModCtrl="CurrModCtrl"></BiArgMonoResPrimOpUI>
+                <BiArgMonoResPrimOpUI @key=posOp.Value PosOp="@(posOp.Cast<BiArgMonoResPrimOp>())" ParentLayoutCtrl="CurrModLayout"></BiArgMonoResPrimOpUI>
             }
             else if (posOp.Value is ConstBitRange)
             {
-                <ConstBitRangeUI @key=posOp.Value PosOp="@(posOp.Cast<ConstBitRange>())" ParentModCtrl="CurrModCtrl"></ConstBitRangeUI>
+                <ConstBitRangeUI @key=posOp.Value PosOp="@(posOp.Cast<ConstBitRange>())" ParentLayoutCtrl="CurrModLayout"></ConstBitRangeUI>
             }
             else if (posOp.Value is Register)
             {
-                <RegisterUI @key=posOp.Value PosOp="@(posOp.Cast<Register>())" ParentModCtrl="CurrModCtrl"></RegisterUI>
+                <RegisterUI @key=posOp.Value PosOp="@(posOp.Cast<Register>())" ParentLayoutCtrl="CurrModLayout"></RegisterUI>
             }
             else if (posOp.Value is Module)
             {
-                <ModuleUI @key=posOp.Value PosOp="@(posOp.Cast<Module>())" ParentModCtrl="CurrModCtrl"></ModuleUI>
+                <ModuleUI @key=posOp.Value PosOp="@(posOp.Cast<Module>())" ParentLayoutCtrl="CurrModLayout"></ModuleUI>
             }
             else if (posOp.Value is Memory)
             {
-                <MemoryUI @key=posOp.Value PosOp="@(posOp.Cast<Memory>())" ParentModCtrl="CurrModCtrl"></MemoryUI>
+                <MemoryUI @key=posOp.Value PosOp="@(posOp.Cast<Memory>())" ParentLayoutCtrl="CurrModLayout"></MemoryUI>
+            }
+            else if (posOp.Value is Conditional)
+            {
+                <ConditionalUI @key=posOp.Value PosOp="@(posOp.Cast<Conditional>())" ParentLayoutCtrl="CurrModLayout"></ConditionalUI>
             }
         }
 
-        <WiresUI ModCtrl="CurrModCtrl"></WiresUI>
+        <WiresUI ModLayout="CurrModLayout"></WiresUI>
 
 
     </div>
@@ -58,9 +61,12 @@
     private const float MaxContentScaling = 6.0f;
     private Point MinContentSize;
     private List<Positioned<FIRRTLNode>> ModuleOpPoses = new List<Positioned<FIRRTLNode>>();
-    private ModuleController CurrModCtrl;
+    private ModuleLayout CurrModLayout;
     private ScopedNodeIO ExternalIO = null;
     private float ContentScale = 1.0f;
+
+    [Parameter]
+    public bool IgnoreUnusedIO { get; set; } = false;
 
     protected override void OnFirstParametersSetAsync()
     {
@@ -69,45 +75,63 @@
         MinContentSize = GetMinSizeForIO();
 
         ModuleOpPoses = Operation.GetAllNodes().Select(x => new Positioned<FIRRTLNode>(Point.Zero, x)).ToList();
-        CurrModCtrl = new ModuleController(DebugCtrl, Operation, this, ParentModCtrl);
-        CurrModCtrl.OnPlacedNodes += x => InvokeAsync(() => UpdatePlacement(x));
+        CurrModLayout = new ModuleLayout(DebugCtrl, Operation, this);
+        CurrModLayout.OnPlacedNodes += x => InvokeAsync(() => UpdatePlacement(x));
+
+        //If the module contain no nodes then the module will never
+        //be rendered as it's waiting for at least one thing to
+        //update before it can do so. If it contains no nodes then
+        //it's ready to render immediately so just check if it
+        //doesn't contain any nodes.
+        if (CurrModLayout.IsEmpty())
+        {
+            UpdatePlacement(new PlacementInfo());
+        }
+    }
+
+    private float ComputeMaxScaling(int width, int height)
+    {
+        float maxScalingX = Math.Min(MaxContentScaling, width / MinContentSize.X);
+        float maxScalingY = Math.Min(MaxContentScaling, height / MinContentSize.Y);
+        return Math.Min(maxScalingX, maxScalingY);
     }
 
     protected override void OnResize(int width, int height)
     {
         //Update this module with its internal io positions
-        ScopedNodeIO internalIO = IOPositionCalc.VerticalScopedIO(Operation.GetInternalIO(), width, MarginForIO, MarginForIO);
+        ScopedNodeIO internalIO = IOPositionCalc.VerticalScopedIO(Operation.GetInternalIO(), width, MarginForIO, MarginForIO, IgnoreUnusedIO);
 
         //X position for internal is flipped i.e. input has output x
         //and the other way around. This switches the x values around.
         internalIO.UpdateIOX(width, 0);
 
         //Scale io the the height of the entire module
-        internalIO.ScaleFillY(height, MaxContentScaling);
+        internalIO.ScaleFillY(height, ComputeMaxScaling(width, height));
 
         internalIO.VerticalRecenter(height);
 
-        CurrModCtrl.UpdateIOFromNode(Operation, internalIO.GetInputDirIO(), internalIO.GetOutputDirIO());
+        CurrModLayout.UpdateIOFromNode(Operation, internalIO.GetInputDirIO(), internalIO.GetOutputDirIO());
     }
 
     private Point UpdateParentAboutExteriorIO(Point moduleSize)
     {
-        ExternalIO = IOPositionCalc.VerticalScopedIO(Operation.GetIO(), moduleSize.X, MarginForIO, MarginForIO);
+        ExternalIO = IOPositionCalc.VerticalScopedIO(Operation.GetIO(), moduleSize.X, MarginForIO, MarginForIO, IgnoreUnusedIO);
 
         if (moduleSize.Y > ExternalIO.HeightNeeded)
         {
+            float maxScaling = ComputeMaxScaling(moduleSize.X, moduleSize.Y);
+
             //Top level module will actuall scale its io.
             //Nested modules will instead Scale the module content
             //to a size better matching the size of the io.
-            if (ParentModCtrl == null)
+            if (ParentLayoutCtrl == null)
             {
-                ExternalIO.ScaleFillY(moduleSize.Y, MaxContentScaling);
+                ExternalIO.ScaleFillY(moduleSize.Y, maxScaling);
             }
             else
             {
-                float scaling = ExternalIO.GetMaxScaling(moduleSize.Y, MaxContentScaling);
-                ContentScale = 1 / scaling;
-                moduleSize /= scaling;
+                ContentScale = 1 / maxScaling;
+                moduleSize /= maxScaling;
             }
 
             ExternalIO.UpdateOutputX(moduleSize.X);
@@ -118,13 +142,13 @@
         //Circuit size is the same as the size of the top level
         //module. Only the top level module doesn't have a
         //parent controller.
-        if (ParentModCtrl == null)
+        if (ParentLayoutCtrl == null)
         {
             DebugCtrl.SetCircuitSize(moduleSize);
         }
         else
         {
-            ParentModCtrl.UpdateComponentInfo(new FIRComponentUpdate(Operation, moduleSize, ExternalIO.GetInputDirIO(), ExternalIO.GetOutputDirIO()));
+            ParentLayoutCtrl.UpdateComponentInfo(new FIRComponentUpdate(Operation, moduleSize, ExternalIO.GetInputDirIO(), ExternalIO.GetOutputDirIO()));
         }
 
         return moduleSize;
@@ -132,8 +156,8 @@
 
     private Point GetMinSizeForIO()
     {
-        int requiredWidth = 0;
-        int requiredHeight = IOPositionCalc.VerticalScopedIO(Operation.GetInternalIO(), 0, MarginForIO, MarginForIO).HeightNeeded;
+        int requiredWidth = 50;
+        int requiredHeight = IOPositionCalc.VerticalScopedIO(Operation.GetInternalIO(), 0, MarginForIO, MarginForIO, IgnoreUnusedIO).HeightNeeded;
 
         return new Point(requiredWidth, requiredHeight);
     }
@@ -142,15 +166,17 @@
     {
         ModuleOpPoses = placements.NodePositions;
 
+        //Must use at least the minimum required that the module needs
         Point moduleSize = Point.Max(MinContentSize, placements.SpaceNeeded);
+        placements.SetSpaceNeeded(moduleSize);
 
         //With new module size, the io positions need to be updated
         OnResize(moduleSize.X, moduleSize.Y);
         moduleSize = UpdateParentAboutExteriorIO(moduleSize);
 
-        CurrModCtrl.RouteWires(placements);
+        CurrModLayout.RouteWires(placements);
 
-        CurrModCtrl.PrepareToRerenderModule();
+        CurrModLayout.PrepareToRerenderLayout();
         SetCurrentSize(moduleSize);
         StateHasChanged();
     }
@@ -173,10 +199,5 @@
     private List<DirectedIO> MakeExternalOutputs(int width, int height)
     {
         return IOPositionCalc.EvenVertical(height, Operation.GetOutputs(), width + ContentPadding, MarginForIO);
-    }
-
-    public void Dispose()
-    {
-        CurrModCtrl.Dispose();
     }
 }

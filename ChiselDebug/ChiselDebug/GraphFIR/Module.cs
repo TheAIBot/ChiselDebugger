@@ -2,6 +2,7 @@
 using FIRRTL;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using VCDReader;
 
@@ -36,7 +37,7 @@ namespace ChiselDebug.GraphFIR
         {
             Nodes.Add(reg);
 
-            IOBundle regIO = reg.GetIOAsBundle();
+            DuplexIO regIO = reg.GetAsDuplex();
             NameToIO.Add(regIO.GetInput().Name, regIO);
             NameToIO.Add(regIO.GetOutput().Name, regIO);
         }
@@ -45,7 +46,7 @@ namespace ChiselDebug.GraphFIR
         {
             Nodes.Add(wire);
 
-            IOBundle wireIO = wire.GetIOAsBundle();
+            DuplexIO wireIO = wire.GetAsDuplex();
             NameToIO.Add(wireIO.Name, wireIO);
         }
 
@@ -62,7 +63,9 @@ namespace ChiselDebug.GraphFIR
         {
             Nodes.Add(mem);
 
-            IOBundle memIO = mem.GetIOAsBundle();
+            MemoryIO memIO = mem.GetIOAsBundle();
+            ((IHiddenPorts)memIO).MakePortsVisible();
+
             NameToIO.Add(memIO.Name, memIO);
         }
 
@@ -71,17 +74,14 @@ namespace ChiselDebug.GraphFIR
             NameToIO.Add(name, io);
         }
 
-        public void AddMemoryPort(Memory mem, MemPort port)
+        public void AddMemoryPort(MemPort port)
         {
-            IOBundle memIO = mem.GetIOAsBundle();
-            NameToIO[memIO.Name] = memIO;
-
             NameToIO.Add(port.Name, port);
         }
 
-        public Memory GetMemory(string name)
+        public void AddConditional(Conditional cond)
         {
-            return (Memory)Nodes.Single(x => x is Memory mem && mem.Name == name);
+            Nodes.Add(cond);
         }
 
         public override bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container)
@@ -194,6 +194,135 @@ namespace ChiselDebug.GraphFIR
             foreach (Input input in GetInternalInputs())
             {
                 input.MakeSinkOnly();
+            }
+
+            foreach (var hiddenPorts in InternalIO.Values.SelectMany(x => x.GetAllIOOfType<IHiddenPorts>()))
+            {
+                hiddenPorts.MakePortsVisible();
+            }
+            foreach (var hiddenPorts in ExternalIO.Values.SelectMany(x => x.GetAllIOOfType<IHiddenPorts>()))
+            {
+                hiddenPorts.MakePortsVisible();
+            }
+            foreach (var hiddenPorts in Nodes.SelectMany(x => x.GetIO().SelectMany(y => y.GetAllIOOfType<IHiddenPorts>())))
+            {
+                hiddenPorts.MakePortsVisible();
+            }
+            foreach (var hiddenPorts in NameToIO.Values.SelectMany(x => x.GetAllIOOfType<IHiddenPorts>()))
+            {
+                hiddenPorts.MakePortsVisible();
+            }
+        }
+
+        internal void CopyInternalAsExternalIO(Module mod)
+        {
+            foreach (var inIO in GetInternalIO())
+            {
+                var copy = inIO.Flip(null);
+                IOHelper.OneWayOnlyConnect(inIO, copy);
+
+                mod.AddExternalIO(copy);
+            }
+
+            foreach (var nodeIO in NameToIO)
+            {
+                FIRIO copy = nodeIO.Value.Flip(null);
+                copy.SetName(nodeIO.Key);
+                IOHelper.OneWayOnlyConnect(nodeIO.Value, copy);
+
+                mod.AddExternalIO(copy);
+            }
+        }
+
+        internal void ExternalConnectUsedIO(Module parentMod)
+        {
+            var extKeyVals = ExternalIO.ToArray();
+            var intKeyVals = InternalIO.ToArray();
+
+            for (int i = 0; i < extKeyVals.Length; i++)
+            {
+                var extKeyVal = extKeyVals[i];
+                var intKeyVal = intKeyVals[i];
+
+                ScalarIO[] extFlat = extKeyVal.Value.Flatten().ToArray();
+                ScalarIO[] intFlat = intKeyVal.Value.Flatten().ToArray();
+
+                for (int x = 0; x < extFlat.Length; x++)
+                {
+                    if (intFlat[x] is Input intIn && intIn.IsConnectedToAnything())
+                    {
+                        FIRIO parentIO = (FIRIO)parentMod.GetIO(intKeyVal.Key);
+                        ScalarIO[] parentIOFlat = parentIO.Flatten().ToArray();
+
+                        ((Output)extFlat[x]).ConnectToInput(parentIOFlat[x], false, false, true);
+                    }
+                }
+            }
+
+            //Propagate hidden ports
+            foreach (var intKeyVal in InternalIO)
+            {
+                var intIO = intKeyVal.Value;
+                var extIO = ExternalIO[intKeyVal.Key];
+
+                var intHidesPorts = intIO.GetAllIOOfType<IHiddenPorts>().ToArray();
+                var extHidesPorts = extIO.GetAllIOOfType<IHiddenPorts>().ToArray();
+                Debug.Assert(intHidesPorts.Length == extHidesPorts.Length, $"Internal and external module io did not contain the same amount of IHiddenPorts. Internal: {intHidesPorts.Length}, External: {extHidesPorts.Length}");
+
+                if (intHidesPorts.Length == 0)
+                {
+                    continue;
+                }
+
+                FIRIO parentIO = (FIRIO)parentMod.GetIO(intKeyVal.Key);
+                var parentHidesPorts = parentIO.GetAllIOOfType<IHiddenPorts>().ToArray();
+
+                for (int i = 0; i < intHidesPorts.Length; i++)
+                {
+                    IHiddenPorts internalHidden = intHidesPorts[i];
+                    IHiddenPorts externalHidden = extHidesPorts[i];
+                    IHiddenPorts parentModHidden = parentHidesPorts[i];
+
+                    if (!internalHidden.HasHiddenPorts())
+                    {
+                        continue;
+                    }
+
+                    //Add internal ports to external io
+                    List<FIRIO> newExtPorts = externalHidden.CopyHiddenPortsFrom(internalHidden);
+
+                    //Add external ports to whatever io it's connecting to
+                    List<FIRIO> newParentPorts = parentModHidden.CopyHiddenPortsFrom(externalHidden);
+
+                    for (int y = 0; y < newExtPorts.Count; y++)
+                    {
+                        newExtPorts[y].ConnectToInput(newParentPorts[y]);
+                    }
+                }
+            }
+        }
+
+        internal void DisconnectUnusedIO()
+        {
+            var extKeyVals = ExternalIO.ToArray();
+            var intKeyVals = InternalIO.ToArray();
+
+            for (int i = 0; i < extKeyVals.Length; i++)
+            {
+                var extKeyVal = extKeyVals[i];
+                var intKeyVal = intKeyVals[i];
+
+                ScalarIO[] extFlat = extKeyVal.Value.Flatten().ToArray();
+                ScalarIO[] intFlat = intKeyVal.Value.Flatten().ToArray();
+
+                for (int x = 0; x < extFlat.Length; x++)
+                {
+                    if (intFlat[x] is Output intOut && !intOut.IsConnectedToAnything())
+                    {
+                        Input extIn = (Input)extFlat[x];
+                        extIn.Con.DisconnectInput(extIn);
+                    }
+                }
             }
         }
 

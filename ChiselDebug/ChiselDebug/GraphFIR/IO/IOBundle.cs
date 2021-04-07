@@ -6,12 +6,12 @@ namespace ChiselDebug.GraphFIR.IO
 {
     public class IOBundle : AggregateIO
     {
-        private readonly FIRIO[] OrderedIO;
+        private readonly List<FIRIO> OrderedIO;
         private readonly Dictionary<string, FIRIO> IO = new Dictionary<string, FIRIO>();
 
         public IOBundle(string name, List<FIRIO> io, bool twoWayRelationship = true) : base(name)
         {
-            this.OrderedIO = io.ToArray();
+            this.OrderedIO = io.ToList();
 
             foreach (var firIO in io)
             {
@@ -37,7 +37,7 @@ namespace ChiselDebug.GraphFIR.IO
             return IO.Values.FirstOrDefault()?.IsPartOfAggregateIO ?? false;
         }
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false)
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, bool isConditional = false)
         {
             if (input is not IOBundle)
             {
@@ -73,19 +73,19 @@ namespace ChiselDebug.GraphFIR.IO
 
                 if (a is Output aOut && b is Input bIn)
                 {
-                    aOut.ConnectToInput(bIn);
+                    aOut.ConnectToInput(bIn, allowPartial, asPassive, isConditional);
                 }
                 else if (a is Input aIn && b is Output bOut)
                 {
-                    bOut.ConnectToInput(aIn);
+                    bOut.ConnectToInput(aIn, allowPartial, asPassive, isConditional);
                 }
                 else if (a is IOBundle aBundle && b is IOBundle bBundle)
                 {
-                    aBundle.ConnectToInput(bBundle, allowPartial, asPassive);
+                    aBundle.ConnectToInput(bBundle, allowPartial, asPassive, isConditional);
                 }
                 else if (a is Vector aVec && b is Vector bVec)
                 {
-                    aVec.ConnectToInput(bVec, allowPartial, asPassive);
+                    aVec.ConnectToInput(bVec, allowPartial, asPassive, isConditional);
                 }
                 else
                 {
@@ -128,12 +128,12 @@ namespace ChiselDebug.GraphFIR.IO
         {
             if (other is IOBundle bundle)
             {
-                if (OrderedIO.Length != bundle.OrderedIO.Length)
+                if (OrderedIO.Count != bundle.OrderedIO.Count)
                 {
                     return false;
                 }
 
-                for (int i = 0; i < OrderedIO.Length; i++)
+                for (int i = 0; i < OrderedIO.Count; i++)
                 {
                     if (!OrderedIO[i].SameIO(bundle.OrderedIO[i]))
                     {
@@ -145,6 +145,35 @@ namespace ChiselDebug.GraphFIR.IO
             }
 
             return false;
+        }
+
+        public override IEnumerable<T> GetAllIOOfType<T>()
+        {
+            if (this is T thisIsT)
+            {
+                yield return thisIsT;
+            }
+
+            foreach (var io in OrderedIO)
+            {
+                foreach (var nested in io.GetAllIOOfType<T>())
+                {
+                    yield return nested;
+                }
+            }
+        }
+
+        public override IEnumerable<FIRIO> WalkIOTree()
+        {
+            yield return this;
+
+            foreach (var io in OrderedIO)
+            {
+                foreach (var nested in io.WalkIOTree())
+                {
+                    yield return nested;
+                }
+            }
         }
 
         public override bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container)
@@ -159,13 +188,15 @@ namespace ChiselDebug.GraphFIR.IO
             return false;
         }
 
-        protected void ChangeIO(FIRIO toChange, FIRIO changeTo)
+        protected void AddIO(string name, FIRIO io)
         {
-            int index = Array.IndexOf(OrderedIO, toChange);
-            OrderedIO[index] = changeTo;
+            if (IsVisibleAggregate())
+            {
+                io.SetParentIO(this);
+            }
 
-            IO.Remove(toChange.Name);
-            IO.Add(changeTo.Name, changeTo);
+            OrderedIO.Add(io);
+            IO.Add(name, io);
         }
     }
 }

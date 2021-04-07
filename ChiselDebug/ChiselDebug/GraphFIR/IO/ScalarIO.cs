@@ -9,6 +9,8 @@ namespace ChiselDebug.GraphFIR.IO
         public readonly FIRRTLNode Node;
         public IFIRType Type { get; protected set; }
         public Connection Con = null;
+        private Connection EnabledCond = null;
+        public bool IsEnabled => EnabledCond == null || EnabledCond.Value.IsTrue();
 
         public ScalarIO(FIRRTLNode node, IFIRType type) : this(node, string.Empty, type)
         { }
@@ -19,17 +21,27 @@ namespace ChiselDebug.GraphFIR.IO
             this.Type = type;
         }
 
-        public bool IsConnected()
+        public void SetEnabledCondition(Connection enabledCond)
+        {
+            EnabledCond = enabledCond;
+        }
+
+        public virtual bool IsConnected()
         {
             return Con != null;
         }
 
-        public bool IsConnectedToAnything()
+        public virtual bool IsConnectedToAnything()
         {
             return Con != null && Con.To.Count > 0;
         }
 
         public override IEnumerable<ScalarIO> Flatten()
+        {
+            yield return this;
+        }
+
+        public override IEnumerable<FIRIO> WalkIOTree()
         {
             yield return this;
         }
