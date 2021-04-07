@@ -71,7 +71,7 @@ namespace ChiselDebug.GraphFIR
 
         public override FIRIO[] GetIO()
         {
-            return MemIO.GetIOInOrder();
+            return new FIRIO[] { MemIO };
         }
 
         public override void InferType()
@@ -174,17 +174,17 @@ namespace ChiselDebug.GraphFIR
         }
     }
 
-    public class MemPort : IOBundle, IPreserveDuplex
+    public abstract class MemPort : IOBundle, IPreserveDuplex
     {
-        internal readonly Input Address;
-        internal readonly Input Enabled;
-        internal readonly Input Clock;
+        internal readonly FIRIO Address;
+        internal readonly FIRIO Enabled;
+        internal readonly FIRIO Clock;
 
         public MemPort(string name, List<FIRIO> io) : base(name, io)
         {
-            this.Address = (Input)GetIO("addr");
-            this.Enabled = (Input)GetIO("en");
-            this.Clock = (Input)GetIO("clk");
+            this.Address = (FIRIO)GetIO("addr");
+            this.Enabled = (FIRIO)GetIO("en");
+            this.Clock = (FIRIO)GetIO("clk");
         }
 
         protected static void AsMaskType(FIRIO maskFrom)
@@ -201,6 +201,9 @@ namespace ChiselDebug.GraphFIR
                 scalar.SetType(new UIntType(1));
             }
         }
+
+        internal abstract bool HasMask();
+        internal abstract FIRIO GetMask();
     }
 
     internal interface IPreserveDuplex { }
@@ -244,6 +247,16 @@ namespace ChiselDebug.GraphFIR
         public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node = null)
         {
             return new MemReadPort(Name, GetIOInOrder().Select(x => x.ToFlow(flow, node)).ToList());
+        }
+
+        internal override bool HasMask()
+        {
+            return false;
+        }
+
+        internal override FIRIO GetMask()
+        {
+            throw new Exception("This memory port does not have a mask.");
         }
     }
 
@@ -293,6 +306,16 @@ namespace ChiselDebug.GraphFIR
         public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node = null)
         {
             return new MemWritePort(Name, GetIOInOrder().Select(x => x.ToFlow(flow, node)).ToList());
+        }
+
+        internal override bool HasMask()
+        {
+            return true;
+        }
+
+        internal override FIRIO GetMask()
+        {
+            return Mask;
         }
     }
 
@@ -349,6 +372,16 @@ namespace ChiselDebug.GraphFIR
         public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node = null)
         {
             return new MemRWPort(Name, GetIOInOrder().Select(x => x.ToFlow(flow, node)).ToList());
+        }
+
+        internal override bool HasMask()
+        {
+            return true;
+        }
+
+        internal override FIRIO GetMask()
+        {
+            return Mask;
         }
     }
 }

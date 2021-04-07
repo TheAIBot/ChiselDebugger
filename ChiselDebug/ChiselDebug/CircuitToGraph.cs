@@ -232,7 +232,7 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.CDefMPort memPort)
             {
-                var memory = helper.Mod.GetMemory(memPort.Mem);
+                var memory = (GraphFIR.MemoryIO)helper.Mod.GetIO(memPort.Mem);
                 GraphFIR.MemPort port = memPort.Direction switch
                 {
                     FIRRTL.MPortDir.MInfer => throw new NotImplementedException(),
@@ -245,6 +245,17 @@ namespace ChiselDebug
                 VisitExp(helper, memPort.Exps[0], GraphFIR.IO.IOGender.Male).ConnectToInput(port.Address);
                 VisitExp(helper, memPort.Exps[1], GraphFIR.IO.IOGender.Male).ConnectToInput(port.Clock);
                 helper.ScopeEnabledCond.ConnectToInput(port.Enabled);
+
+                //if port has mask then by default set whole mask to true
+                if (port.HasMask())
+                {
+                    GraphFIR.IO.FIRIO mask = port.GetMask();
+                    GraphFIR.IO.Output const1 = (GraphFIR.IO.Output)VisitExp(helper, new FIRRTL.UIntLiteral(1, 1), GraphFIR.IO.IOGender.Male);
+                    foreach (var maskInput in mask.Flatten())
+                    {
+                        const1.ConnectToInput(maskInput);
+                    }
+                }
 
                 helper.Mod.AddMemoryPort(port);
             }

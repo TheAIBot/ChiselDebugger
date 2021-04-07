@@ -190,6 +190,11 @@ namespace ChiselDebug.GraphFIR.IO
 
         protected void AddIO(string name, FIRIO io)
         {
+            if (IsVisibleAggregate())
+            {
+                io.SetParentIO(this);
+            }
+
             OrderedIO.Add(io);
             IO.Add(name, io);
         }
