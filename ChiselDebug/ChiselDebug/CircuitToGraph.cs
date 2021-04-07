@@ -333,7 +333,7 @@ namespace ChiselDebug
 
                 //Connect wire that enables condition to module
                 GraphFIR.IO.Input enaInput = new GraphFIR.IO.Input(null, new FIRRTL.UIntType(1));
-                const string enaName = "ena module";
+                string enaName = "ena module " + helper.GetUniqueName();
                 enaInput.SetName(enaName);
                 ena.ConnectToInput(enaInput);
                 helper.Mod.AddExternalIO(enaInput);
