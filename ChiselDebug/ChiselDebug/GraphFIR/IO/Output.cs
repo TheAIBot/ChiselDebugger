@@ -1,5 +1,6 @@
 ﻿using FIRRTL;
 using System;
+using System.Collections.Generic;
 
 namespace ChiselDebug.GraphFIR.IO
 {
@@ -59,6 +60,14 @@ namespace ChiselDebug.GraphFIR.IO
                    Type.Equals(otherOut.Type);
         }
 
+        public override IEnumerable<T> GetAllIOOfType<T>()
+        {
+            if (this is T thisIsT)
+            {
+                yield return thisIsT;
+            }
+        }
+
         public override void InferType()
         {
             if (Node != null && Type is UnknownType)
@@ -66,7 +75,5 @@ namespace ChiselDebug.GraphFIR.IO
                 Node.InferType();
             }
         }
-
-
     }
 }

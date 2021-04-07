@@ -41,6 +41,11 @@ namespace ChiselDebug.GraphFIR.IO
             yield return this;
         }
 
+        public override IEnumerable<FIRIO> WalkIOTree()
+        {
+            yield return this;
+        }
+
         public override bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container)
         {
             throw new Exception("Scalar IO can't contain additional io.");

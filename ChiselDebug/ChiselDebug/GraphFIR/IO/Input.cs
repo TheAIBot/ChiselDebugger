@@ -151,6 +151,14 @@ namespace ChiselDebug.GraphFIR.IO
                    Type.Equals(otherIn.Type);
         }
 
+        public override IEnumerable<T> GetAllIOOfType<T>()
+        {
+            if (this is T thisIsT)
+            {
+                yield return thisIsT;
+            }
+        }
+
         public override void InferType()
         {
             if (Con != null && Type is UnknownType)

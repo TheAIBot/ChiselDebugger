@@ -78,6 +78,37 @@ namespace ChiselDebug.GraphFIR.IO
             };
         }
 
+        public override IEnumerable<T> GetAllIOOfType<T>()
+        {
+            if (this is T thisIsT)
+            {
+                yield return thisIsT;
+            }
+
+            foreach (var inOfT in InIO.GetAllIOOfType<T>())
+            {
+                yield return inOfT;
+            }
+            foreach (var outOfT in OutIO.GetAllIOOfType<T>())
+            {
+                yield return outOfT;
+            }
+        }
+
+        public override IEnumerable<FIRIO> WalkIOTree()
+        {
+            yield return this;
+
+            foreach (var nested in InIO.WalkIOTree())
+            {
+                yield return nested;
+            }
+            foreach (var nested in OutIO.WalkIOTree())
+            {
+                yield return nested;
+            }
+        }
+
         public override bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container)
         {
             if (InIO.Name == ioName)
