@@ -232,8 +232,8 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.CDefMPort memPort)
             {
-                var memory = (GraphFIR.MemoryIO)helper.Mod.GetIO(memPort.Mem);
-                GraphFIR.MemPort port = memPort.Direction switch
+                var memory = (GraphFIR.IO.MemoryIO)helper.Mod.GetIO(memPort.Mem);
+                GraphFIR.IO.MemPort port = memPort.Direction switch
                 {
                     FIRRTL.MPortDir.MInfer => throw new NotImplementedException(),
                     FIRRTL.MPortDir.MRead => memory.AddReadPort(memPort.Name),
@@ -613,7 +613,7 @@ namespace ChiselDebug
             //Never return bigender io. Only this method should have to deal
             //with that mess so the rest of the code doesn't have to.
             //Dealing with it is ugly which is why i want to contain it.
-            if (refContainer is GraphFIR.IO.FIRIO firIO && refContainer is not GraphFIR.IPreserveDuplex)
+            if (refContainer is GraphFIR.IO.FIRIO firIO && refContainer is not GraphFIR.IO.IPreserveDuplex)
             {
                 return firIO.GetAsGender(gender);
             }
