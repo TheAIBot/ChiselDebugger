@@ -64,7 +64,7 @@ namespace ChiselDebug.GraphFIR
             Nodes.Add(mem);
 
             MemoryIO memIO = mem.GetIOAsBundle();
-            memIO.MakePortsVisible();
+            ((IHiddenPorts)memIO).MakePortsVisible();
 
             NameToIO.Add(memIO.Name, memIO);
         }
@@ -196,53 +196,26 @@ namespace ChiselDebug.GraphFIR
                 input.MakeSinkOnly();
             }
 
-
-            foreach (var vec in InternalIO.Values.SelectMany(x => x.GetAllIOOfType<Vector>()))
+            foreach (var hiddenPorts in InternalIO.Values.SelectMany(x => x.GetAllIOOfType<IHiddenPorts>()))
             {
-                vec.MakePortsVisible();
+                hiddenPorts.MakePortsVisible();
             }
-            foreach (var vec in ExternalIO.Values.SelectMany(x => x.GetAllIOOfType<Vector>()))
+            foreach (var hiddenPorts in ExternalIO.Values.SelectMany(x => x.GetAllIOOfType<IHiddenPorts>()))
             {
-                vec.MakePortsVisible();
+                hiddenPorts.MakePortsVisible();
             }
-            foreach (var vec in Nodes.SelectMany(x => x.GetIO().SelectMany(y => y.GetAllIOOfType<Vector>())))
+            foreach (var hiddenPorts in Nodes.SelectMany(x => x.GetIO().SelectMany(y => y.GetAllIOOfType<IHiddenPorts>())))
             {
-                vec.MakePortsVisible();
+                hiddenPorts.MakePortsVisible();
             }
-            foreach (var vec in NameToIO.Values.SelectMany(x => x.GetAllIOOfType<Vector>()))
+            foreach (var hiddenPorts in NameToIO.Values.SelectMany(x => x.GetAllIOOfType<IHiddenPorts>()))
             {
-                vec.MakePortsVisible();
-            }
-
-            foreach (var mem in InternalIO.Values.SelectMany(x => x.GetAllIOOfType<MemoryIO>()))
-            {
-                mem.MakePortsVisible();
-            }
-            foreach (var mem in ExternalIO.Values.SelectMany(x => x.GetAllIOOfType<MemoryIO>()))
-            {
-                mem.MakePortsVisible();
-            }
-            foreach (var mem in Nodes.SelectMany(x => x.GetIO().SelectMany(y => y.GetAllIOOfType<MemoryIO>())))
-            {
-                mem.MakePortsVisible();
-            }
-            foreach (var mem in NameToIO.Values.SelectMany(x => x.GetAllIOOfType<MemoryIO>()))
-            {
-                mem.MakePortsVisible();
+                hiddenPorts.MakePortsVisible();
             }
         }
 
         internal void CopyInternalAsExternalIO(Module mod)
         {
-            //foreach (ScalarIO scalarIO in GetAllIOOrdered())
-            //{
-            //    if (scalarIO.IsPartOfAggregateIO &&
-            //        scalarIO.ParentIO is MemoryIO mem)
-            //    {
-            //        mem.MakePortsVisible();
-            //    }
-            //}
-
             foreach (var inIO in GetInternalIO())
             {
                 var copy = inIO.Flip(null);
@@ -274,81 +247,6 @@ namespace ChiselDebug.GraphFIR
                 ScalarIO[] extFlat = extKeyVal.Value.Flatten().ToArray();
                 ScalarIO[] intFlat = intKeyVal.Value.Flatten().ToArray();
 
-                //Handle propagating vector ports externally
-                HashSet<Vector> handledVectors = new HashSet<Vector>();
-                for (int x = 0; x < extFlat.Length; x++)
-                {
-                    if (intFlat[x].IsPartOfAggregateIO && 
-                        intFlat[x].ParentIO is Vector internalVec)
-                    {
-                        //Make sure it's only done once for each vector
-                        if (!handledVectors.Add(internalVec))
-                        {
-                            continue;
-                        }
-
-                        if (!internalVec.HasPorts())
-                        {
-                            continue;
-                        }
-
-                        Vector externalVec = (Vector)extFlat[x].ParentIO;
-
-                        //Add internal ports to external vector
-                        List<VectorAccess> newExtPorts = externalVec.CopyPortsFrom(internalVec);
-
-                        //Find vector it's externally connecting to
-                        FIRIO parentIO = (FIRIO)parentMod.GetIO(intKeyVal.Key);
-                        ScalarIO[] parentIOFlat = parentIO.Flatten().ToArray();
-                        Vector parentModVec = (Vector)parentIOFlat[x].ParentIO;
-
-                        //Add external ports to whatever vector it's connecting to
-                        List<VectorAccess> newParentPorts = parentModVec.CopyPortsFrom(externalVec);
-
-                        for (int y = 0; y < newExtPorts.Count; y++)
-                        {
-                            newExtPorts[y].ConnectToInput(newParentPorts[y]);
-                        }
-                    }
-                }
-
-                //HashSet<MemoryIO> handledMems = new HashSet<MemoryIO>();
-                //for (int x = 0; x < extFlat.Length; x++)
-                //{
-                //    if (intFlat[x].IsPartOfAggregateIO &&
-                //        intFlat[x].ParentIO is MemoryIO internalMem)
-                //    {
-                //        //Make sure it's only done once for each memory io
-                //        if (!handledMems.Add(internalMem))
-                //        {
-                //            continue;
-                //        }
-
-                //        if (!internalMem.HasHiddenPorts())
-                //        {
-                //            continue;
-                //        }
-
-                //        MemoryIO externalMem = (MemoryIO)extFlat[x].ParentIO;
-
-                //        //Add internal ports to external vector
-                //        List<MemPort> newExtPorts = externalMem.CopyHiddenPortsFrom(internalMem);
-
-                //        //Find vector it's externally connecting to
-                //        FIRIO parentIO = (FIRIO)parentMod.GetIO(intKeyVal.Key);
-                //        ScalarIO[] parentIOFlat = parentIO.Flatten().ToArray();
-                //        MemoryIO parentModMem = (MemoryIO)parentIOFlat[x].ParentIO;
-
-                //        //Add external ports to whatever vector it's connecting to
-                //        List<MemPort> newParentPorts = parentModMem.CopyHiddenPortsFrom(externalMem);
-
-                //        for (int y = 0; y < newExtPorts.Count; y++)
-                //        {
-                //            newExtPorts[y].ConnectToInput(newParentPorts[y]);
-                //        }
-                //    }
-                //}
-
                 for (int x = 0; x < extFlat.Length; x++)
                 {
                     if (intFlat[x] is Input intIn && intIn.IsConnectedToAnything())
@@ -361,46 +259,40 @@ namespace ChiselDebug.GraphFIR
                 }
             }
 
+            //Propagate hidden ports
             foreach (var intKeyVal in InternalIO)
             {
                 var intIO = intKeyVal.Value;
                 var extIO = ExternalIO[intKeyVal.Key];
 
-                var intMems = intIO.GetAllIOOfType<MemoryIO>().ToArray();
-                var extMems = extIO.GetAllIOOfType<MemoryIO>().ToArray();
-                Debug.Assert(intMems.Length == extMems.Length, $"Internal and external module io did not contain the same amount of MemoryIO. Internal: {intMems.Length}, External: {extMems.Length}");
+                var intHidesPorts = intIO.GetAllIOOfType<IHiddenPorts>().ToArray();
+                var extHidesPorts = extIO.GetAllIOOfType<IHiddenPorts>().ToArray();
+                Debug.Assert(intHidesPorts.Length == extHidesPorts.Length, $"Internal and external module io did not contain the same amount of IHiddenPorts. Internal: {intHidesPorts.Length}, External: {extHidesPorts.Length}");
 
-                if (intMems.Length == 0)
+                if (intHidesPorts.Length == 0)
                 {
                     continue;
                 }
 
                 FIRIO parentIO = (FIRIO)parentMod.GetIO(intKeyVal.Key);
-                var parentMems = parentIO.GetAllIOOfType<MemoryIO>().ToArray();
+                var parentHidesPorts = parentIO.GetAllIOOfType<IHiddenPorts>().ToArray();
 
-                HashSet<MemoryIO> handledMems = new HashSet<MemoryIO>();
-                for (int i = 0; i < intMems.Length; i++)
+                for (int i = 0; i < intHidesPorts.Length; i++)
                 {
-                    MemoryIO internalMem = intMems[i];
-                    MemoryIO externalMem = extMems[i];
-                    MemoryIO parentModMem = parentMems[i];
+                    IHiddenPorts internalHidden = intHidesPorts[i];
+                    IHiddenPorts externalHidden = extHidesPorts[i];
+                    IHiddenPorts parentModHidden = parentHidesPorts[i];
 
-                    //Make sure it's only done once for each memory io
-                    if (!handledMems.Add(internalMem))
+                    if (!internalHidden.HasHiddenPorts())
                     {
                         continue;
                     }
 
-                    if (!internalMem.HasHiddenPorts())
-                    {
-                        continue;
-                    }
+                    //Add internal ports to external io
+                    List<FIRIO> newExtPorts = externalHidden.CopyHiddenPortsFrom(internalHidden);
 
-                    //Add internal ports to external vector
-                    List<MemPort> newExtPorts = externalMem.CopyHiddenPortsFrom(internalMem);
-
-                    //Add external ports to whatever vector it's connecting to
-                    List<MemPort> newParentPorts = parentModMem.CopyHiddenPortsFrom(externalMem);
+                    //Add external ports to whatever io it's connecting to
+                    List<FIRIO> newParentPorts = parentModHidden.CopyHiddenPortsFrom(externalHidden);
 
                     for (int y = 0; y < newExtPorts.Count; y++)
                     {
