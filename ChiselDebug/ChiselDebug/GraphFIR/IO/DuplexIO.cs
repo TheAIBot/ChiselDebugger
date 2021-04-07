@@ -73,7 +73,7 @@ namespace ChiselDebug.GraphFIR.IO
                 FlowChange.Source => OutIO.ToFlow(flow, node),
                 FlowChange.Sink => InIO.ToFlow(flow, node),
                 FlowChange.Flipped => new DuplexIO(Name, InIO.ToFlow(flow, node), OutIO.ToFlow(flow, node)),
-                FlowChange.Preserve => this,
+                FlowChange.Preserve => new DuplexIO(Name, InIO, OutIO),
                 var error => throw new Exception($"Unknown flow. Flow: {flow}")
             };
         }
