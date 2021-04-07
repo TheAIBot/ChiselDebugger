@@ -330,7 +330,6 @@ namespace ChiselDebug
             void AddCondModule(GraphFIR.IO.Output ena, FIRRTL.Statement body)
             {
                 VisitHelper helper = parentHelper.ForNewModule(parentHelper.GetUniqueName());
-                helper.EnterEnabledScope(ena);
 
                 //Connect wire that enables condition to module
                 GraphFIR.IO.Input enaInput = new GraphFIR.IO.Input(null, new FIRRTL.UIntType(1));
@@ -344,6 +343,10 @@ namespace ChiselDebug
                 var internalEna = (GraphFIR.IO.Output)helper.Mod.GetIO(enaName);
                 var internalEnaDummy = new GraphFIR.DummySink(internalEna);
                 helper.AddNodeToModule(internalEnaDummy);
+
+                //Set signal that enables this scope as things like memory
+                //ports need it
+                helper.EnterEnabledScope(internalEna);
 
                 //Make io from parent module visible to child module
                 //and connect all the io to the child module
