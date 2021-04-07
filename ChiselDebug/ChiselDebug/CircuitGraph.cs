@@ -29,6 +29,14 @@ namespace ChiselDebug
             List<Connection> consWithChanges = new List<Connection>();
             foreach (BinaryVarValue varValue in state.VariableValues.Values)
             {
+                //VCD adds wires that contain the previous clock value.
+                //These wires are not part of the circuit and therefore
+                //there is no circuit state for them to update.
+                if (varValue.Variable.Reference.EndsWith("/prev"))
+                {
+                    continue;
+                }
+
                 Scope scope = varValue.Variable.Scopes[0];
                 if (scope.Type == ScopeType.Module)
                 {

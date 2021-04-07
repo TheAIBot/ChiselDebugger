@@ -227,7 +227,6 @@ namespace ChiselDebug.GraphFIR
             io.Add(new Input(node, "addr", new UIntType(addressWidth)));
             io.Add(new Input(node, "en", new UIntType(1)));
             io.Add(new Input(node, "clk", new ClockType()));
-            io.Add(new Input(node, "clk/prev", new ClockType()));
 
             return io;
         }
@@ -277,7 +276,6 @@ namespace ChiselDebug.GraphFIR
             io.Add(new Input(node, "addr", new UIntType(addressWidth)));
             io.Add(new Input(node, "en", new UIntType(1)));
             io.Add(new Input(node, "clk", new ClockType()));
-            io.Add(new Input(node, "clk/prev", new ClockType()));
 
             return io;
         }
@@ -334,7 +332,6 @@ namespace ChiselDebug.GraphFIR
             io.Add(new Input(node, "addr", new UIntType(addressWidth)));
             io.Add(new Input(node, "en", new UIntType(1)));
             io.Add(new Input(node, "clk", new ClockType()));
-            io.Add(new Input(node, "clk/prev", new ClockType()));
 
             return io;
         }

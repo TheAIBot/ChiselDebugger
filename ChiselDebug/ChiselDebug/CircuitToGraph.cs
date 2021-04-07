@@ -139,15 +139,6 @@ namespace ChiselDebug
             else if (direction == FIRRTL.Dir.Input)
             {
                 io.Add(new GraphFIR.IO.Input(null, name, type));
-
-                //VCD may keep track of the previous clock cycle value even if it doesn't use it.
-                //To keep in line with supporting everything in the VCD, an input representing
-                //the previous clock cycle value is added so there isn't an issue when loading
-                //a CircuitState from VCD.
-                if (type is FIRRTL.ClockType)
-                {
-                    io.Add(new GraphFIR.IO.Input(null, name + "/prev", type));
-                }
             }
             else if (direction == FIRRTL.Dir.Output)
             {
