@@ -212,15 +212,17 @@ namespace ChiselDebug.GraphFIR.IO
             return HiddenPorts.ToArray();
         }
 
-        List<FIRIO> IHiddenPorts.CopyHiddenPortsFrom(IHiddenPorts otherWithPorts)
+        FIRIO[] IHiddenPorts.CopyHiddenPortsFrom(IHiddenPorts otherWithPorts)
         {
-            List<FIRIO> newPorts = new List<FIRIO>();
-            foreach (var port in otherWithPorts.GetHiddenPorts())
+            FIRIO[] otherPorts = otherWithPorts.GetHiddenPorts();
+            FIRIO[] newPorts = new FIRIO[otherPorts.Length];
+
+            for (int i = 0; i < newPorts.Length; i++)
             {
-                VectorAccess newPort = (VectorAccess)port.Flip(Node);
+                VectorAccess newPort = (VectorAccess)otherPorts[i].Flip(Node);
                 newPort.SetParentIO(this);
                 HiddenPorts.Add(newPort);
-                newPorts.Add(newPort);
+                newPorts[i] = newPort;
             }
 
             return newPorts;

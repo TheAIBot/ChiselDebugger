@@ -289,14 +289,33 @@ namespace ChiselDebug.GraphFIR
                     }
 
                     //Add internal ports to external io
-                    List<FIRIO> newExtPorts = externalHidden.CopyHiddenPortsFrom(internalHidden);
+                    FIRIO[] newExtPorts = externalHidden.CopyHiddenPortsFrom(internalHidden);
 
                     //Add external ports to whatever io it's connecting to
-                    List<FIRIO> newParentPorts = parentModHidden.CopyHiddenPortsFrom(externalHidden);
+                    FIRIO[] newParentPorts = parentModHidden.CopyHiddenPortsFrom(externalHidden);
 
-                    for (int y = 0; y < newExtPorts.Count; y++)
+                    for (int y = 0; y < newExtPorts.Length; y++)
                     {
                         newExtPorts[y].ConnectToInput(newParentPorts[y]);
+                    }
+
+                    HashSet<FIRRTLNode> seenDestinations = new HashSet<FIRRTLNode>();
+                    FIRRTLNode dstNode = ((FIRIO)parentModHidden).Node;
+                    IHiddenPorts fromHidden = parentModHidden;
+                    while (seenDestinations.Add(dstNode) && dstNode is Module dstMod)// || dstNode is Wire)
+                    {
+                        IHiddenPorts toHidden = (IHiddenPorts)dstMod.GetPairedIO((FIRIO)fromHidden);
+
+                        FIRIO[] fromPorts = fromHidden.GetHiddenPorts();
+                        FIRIO[] toPorts = toHidden.CopyHiddenPortsFrom(fromHidden);
+
+                        for (int y = 0; y < fromPorts.Length; y++)
+                        {
+                            fromPorts[y].ConnectToInput(toPorts[y]);
+                        }
+
+                        dstNode = ((FIRIO)toHidden).Node;
+                        fromHidden = toHidden;
                     }
                 }
             }

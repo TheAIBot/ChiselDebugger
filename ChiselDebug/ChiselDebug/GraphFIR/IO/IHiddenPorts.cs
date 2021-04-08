@@ -8,7 +8,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         internal FIRIO[] GetHiddenPorts();
 
-        internal List<FIRIO> CopyHiddenPortsFrom(IHiddenPorts otherWithPorts);
+        internal FIRIO[] CopyHiddenPortsFrom(IHiddenPorts otherWithPorts);
 
         internal void MakePortsVisible();
     }
