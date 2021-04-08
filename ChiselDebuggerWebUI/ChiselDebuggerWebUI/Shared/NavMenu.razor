@@ -1,4 +1,6 @@
-﻿<div class="top-row pl-4 navbar navbar-dark">
+﻿@inject NavigationManager Navigator;
+
+<div class="top-row pl-4 navbar navbar-dark">
     <a class="navbar-brand" href="">ChiselDebuggerWebUI</a>
     <button class="navbar-toggler" @onclick="ToggleNavMenu">
         <span class="navbar-toggler-icon"></span>
@@ -10,9 +12,9 @@
         <li class="nav-item px-3">
             @foreach (var firrtlFilename in FIRRTLFilenames)
             {
-                <NavLink class="nav-link" href="@($"circuitviewer/{firrtlFilename.Replace('.', '-')}")">
-                    <span class="oi oi-list-rich" aria-hidden="true"></span> @firrtlFilename
-                </NavLink>
+            <a class="nav-link" @onclick="_ => ShowCircuit(firrtlFilename)">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> @firrtlFilename
+            </a>
             }
         </li>
     </ul>
@@ -39,5 +41,10 @@
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    private void ShowCircuit(string firrtlFilename)
+    {
+        Navigator.NavigateTo($"circuitviewer/{firrtlFilename.Replace('.', '-')}", true);
     }
 }
