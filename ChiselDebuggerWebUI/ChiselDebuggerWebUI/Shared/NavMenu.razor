@@ -8,9 +8,12 @@
 <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
     <ul class="nav flex-column">
         <li class="nav-item px-3">
-            <NavLink class="nav-link" href="circuitviewer">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> View circuit
-            </NavLink>
+            @foreach (var firrtlFilename in FIRRTLFilenames)
+            {
+                <NavLink class="nav-link" href="@($"circuitviewer/{firrtlFilename.Replace('.', '-')}")">
+                    <span class="oi oi-list-rich" aria-hidden="true"></span> @firrtlFilename
+                </NavLink>
+            }
         </li>
     </ul>
 </div>
@@ -19,6 +22,19 @@
     private bool collapseNavMenu = true;
 
     private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private readonly string[] FIRRTLFilenames = new string[]
+    {
+        "Alu.lo.fir",
+        "FSMDatapath.lo.fir",
+        "MovingAveragePow2.fir",
+        "MovingAveragePow2.lo.fir",
+        "NeuromorphicProcessor.lo.fir",
+        "RegFileMem.fir",
+        "RegFileMem.lo.fir",
+        "RegFileVec.fir",
+        "RegFileVec.lo.fir",
+        "Tile.fir"
+    };
 
     private void ToggleNavMenu()
     {
