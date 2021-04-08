@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using ChiselDebug.GraphFIR.IO;
+using System.Diagnostics;
 
 namespace ChiselDebug.GraphFIR
 {
@@ -17,7 +18,9 @@ namespace ChiselDebug.GraphFIR
 
         public void AddExternalIO(FIRIO io)
         {
-            FIRIO flipped = io.Flip();
+            Debug.Assert(io.Flatten().All(x => x.Node == this));
+
+            FIRIO flipped = io.Flip(this);
             ExternalIO.Add(io.Name, io);
             InternalIO.Add(io.Name, flipped);
             AllIOInOrder.Add(flipped);

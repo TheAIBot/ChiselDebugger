@@ -192,7 +192,7 @@ namespace ChiselDebug
         {
             foreach (var io in VisitType(helper, port.Direction, port.Name, port.Type))
             {
-                helper.Mod.AddExternalIO(io);
+                helper.Mod.AddExternalIO(io.Copy(helper.Mod));
             }
         }
 
@@ -426,7 +426,7 @@ namespace ChiselDebug
                 VisitHelper helper = parentHelper.ForNewModule(parentHelper.GetUniqueName(), null, true);
 
                 //Connect wire that enables condition to module
-                GraphFIR.IO.Input enaInput = new GraphFIR.IO.Input(null, new FIRRTL.UIntType(1));
+                GraphFIR.IO.Input enaInput = new GraphFIR.IO.Input(helper.Mod, new FIRRTL.UIntType(1));
                 string enaName = "ena module " + helper.GetUniqueName();
                 enaInput.SetName(enaName);
                 ena.ConnectToInput(enaInput);

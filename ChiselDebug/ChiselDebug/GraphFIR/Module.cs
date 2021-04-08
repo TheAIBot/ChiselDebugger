@@ -218,7 +218,7 @@ namespace ChiselDebug.GraphFIR
         {
             foreach (var inIO in GetInternalIO())
             {
-                var copy = inIO.Flip(null);
+                var copy = inIO.Flip(mod);
                 IOHelper.OneWayOnlyConnect(inIO, copy);
 
                 mod.AddExternalIO(copy);
@@ -226,7 +226,7 @@ namespace ChiselDebug.GraphFIR
 
             foreach (var nodeIO in NameToIO)
             {
-                FIRIO copy = nodeIO.Value.Flip(null);
+                FIRIO copy = nodeIO.Value.Flip(mod);
                 copy.SetName(nodeIO.Key);
                 IOHelper.OneWayOnlyConnect(nodeIO.Value, copy);
 

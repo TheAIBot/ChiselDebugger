@@ -70,10 +70,20 @@ namespace ChiselDebug.GraphFIR.IO
 
         public override void InferType()
         {
-            if (Node != null && Type is UnknownType)
+            if (Node == null)
             {
-                Node.InferType();
+                return;
             }
+            if (Node is Module)
+            {
+                return;
+            }
+            if (Type is not UnknownType)
+            {
+                return;
+            }
+
+            Node.InferType();
         }
     }
 }
