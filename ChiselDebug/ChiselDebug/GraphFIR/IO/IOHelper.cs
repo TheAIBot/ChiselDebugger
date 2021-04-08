@@ -122,5 +122,26 @@ namespace ChiselDebug.GraphFIR.IO
                 }
             }
         }
+
+        internal static void PropegatePorts(IHiddenPorts fromHidden)
+        {
+            HashSet<FIRRTLNode> seenDestinations = new HashSet<FIRRTLNode>();
+            FIRRTLNode fromNode = ((FIRIO)fromHidden).Node;
+            while (seenDestinations.Add(fromNode) && fromNode is Module dstMod)// || dstNode is Wire)
+            {
+                IHiddenPorts toHidden = (IHiddenPorts)dstMod.GetPairedIO((FIRIO)fromHidden);
+
+                FIRIO[] fromPorts = fromHidden.GetHiddenPorts();
+                FIRIO[] toPorts = toHidden.CopyHiddenPortsFrom(fromHidden);
+
+                for (int y = 0; y < fromPorts.Length; y++)
+                {
+                    fromPorts[y].ConnectToInput(toPorts[y]);
+                }
+
+                fromNode = ((FIRIO)toHidden).Node;
+                fromHidden = toHidden;
+            }
+        }
     }
 }

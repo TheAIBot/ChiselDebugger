@@ -299,24 +299,7 @@ namespace ChiselDebug.GraphFIR
                         newExtPorts[y].ConnectToInput(newParentPorts[y]);
                     }
 
-                    HashSet<FIRRTLNode> seenDestinations = new HashSet<FIRRTLNode>();
-                    FIRRTLNode dstNode = ((FIRIO)parentModHidden).Node;
-                    IHiddenPorts fromHidden = parentModHidden;
-                    while (seenDestinations.Add(dstNode) && dstNode is Module dstMod)// || dstNode is Wire)
-                    {
-                        IHiddenPorts toHidden = (IHiddenPorts)dstMod.GetPairedIO((FIRIO)fromHidden);
-
-                        FIRIO[] fromPorts = fromHidden.GetHiddenPorts();
-                        FIRIO[] toPorts = toHidden.CopyHiddenPortsFrom(fromHidden);
-
-                        for (int y = 0; y < fromPorts.Length; y++)
-                        {
-                            fromPorts[y].ConnectToInput(toPorts[y]);
-                        }
-
-                        dstNode = ((FIRIO)toHidden).Node;
-                        fromHidden = toHidden;
-                    }
+                    IOHelper.PropegatePorts(parentModHidden);
                 }
             }
         }
