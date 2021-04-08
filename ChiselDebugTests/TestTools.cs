@@ -1,10 +1,13 @@
 ﻿using ChiselDebug;
+using ChiselDebug.Timeline;
 using FIRRTL;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VCDReader;
 
 namespace ChiselDebugTests
 {
@@ -17,6 +20,19 @@ namespace ChiselDebugTests
             graph.InferTypes();
 
             return graph;
+        }
+
+        internal static void VerifyChiselTest(string moduleName, string extension, bool testVCD)
+        {
+            CircuitGraph graph = TestTools.VerifyCanCreateGraph(File.ReadAllText($"ChiselTests/{moduleName}.{extension}"));
+
+            if (testVCD)
+            {
+                VCD vcd = VCDReader.Parse.FromFile($"ChiselTests/{moduleName}.vcd");
+                VCDTimeline timeline = new VCDTimeline(vcd);
+
+                graph.SetState(timeline.GetStateAtTime(0));
+            }
         }
     }
 }
