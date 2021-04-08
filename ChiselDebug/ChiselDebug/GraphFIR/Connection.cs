@@ -21,7 +21,7 @@ namespace ChiselDebug.GraphFIR
         {
             if (!isConditional && input.IsConnected())
             {
-                input.Disconnect(this);
+                input.Con.DisconnectInput(input);
             }
 
             To.Add(input);
