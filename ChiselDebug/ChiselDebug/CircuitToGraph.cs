@@ -9,7 +9,10 @@ namespace ChiselDebug
     internal class VisitHelper
     {
         public readonly GraphFIR.Module Mod;
+        private readonly CircuitGraph LowFirGraph;
         public readonly Dictionary<string, FIRRTL.DefModule> ModuleRoots;
+        public readonly bool IsConditionalModule;
+        private readonly VisitHelper ParentHelper;
 
         private readonly Stack<GraphFIR.IO.Output> ScopeEnabledConditions = new Stack<GraphFIR.IO.Output>();
         public GraphFIR.IO.Output ScopeEnabledCond 
@@ -28,18 +31,21 @@ namespace ChiselDebug
             }
         }
 
-        public VisitHelper(GraphFIR.Module mod) : this(mod, new Dictionary<string, FIRRTL.DefModule>())
+        public VisitHelper(GraphFIR.Module mod, CircuitGraph lowFirGraph) : this(mod, lowFirGraph, new Dictionary<string, FIRRTL.DefModule>(), null, false)
         { }
 
-        public VisitHelper(GraphFIR.Module mod, Dictionary<string, FIRRTL.DefModule> roots)
+        private VisitHelper(GraphFIR.Module mod, CircuitGraph lowFirGraph, Dictionary<string, FIRRTL.DefModule> roots, VisitHelper parentHelper, bool isConditional)
         {
             this.Mod = mod;
+            this.LowFirGraph = lowFirGraph;
             this.ModuleRoots = roots;
+            this.ParentHelper = parentHelper;
+            this.IsConditionalModule = isConditional;
         }
 
-        public VisitHelper ForNewModule(string moduleName)
+        public VisitHelper ForNewModule(string moduleName, bool isConditional)
         {
-            return new VisitHelper(new GraphFIR.Module(moduleName), ModuleRoots);
+            return new VisitHelper(new GraphFIR.Module(moduleName), LowFirGraph, ModuleRoots, this, isConditional);
         }
 
         public void AddNodeToModule(GraphFIR.FIRRTLNode node)
@@ -57,6 +63,22 @@ namespace ChiselDebug
             ScopeEnabledConditions.Pop();
         }
 
+        private string GetActualModuleName()
+        {
+            VisitHelper helper = this;
+            while (helper.IsConditionalModule)
+            {
+                helper = helper.ParentHelper;
+            }
+
+            return helper.Mod.Name;
+        }
+
+        public FIRRTL.DefMemory GetMemoryDefFromLowFirrtl()
+        {
+
+        }
+
         private static long UniqueNumber = 0;
 
         internal string GetUniqueName()
@@ -67,9 +89,9 @@ namespace ChiselDebug
 
     public static class CircuitToGraph
     {
-        public static CircuitGraph GetAsGraph(FIRRTL.Circuit circuit)
+        public static CircuitGraph GetAsGraph(FIRRTL.Circuit circuit, CircuitGraph graphLowFir = null)
         {
-            VisitHelper helper = new VisitHelper(null);
+            VisitHelper helper = new VisitHelper(null, graphLowFir);
             foreach (var moduleDef in circuit.Modules)
             {
                 helper.ModuleRoots.Add(moduleDef.Name, moduleDef);
@@ -84,7 +106,7 @@ namespace ChiselDebug
         {
             if (moduleDef is FIRRTL.Module mod)
             {
-                VisitHelper helper = parentHelper.ForNewModule(mod.Name);
+                VisitHelper helper = parentHelper.ForNewModule(mod.Name, false);
                 foreach (var port in mod.Ports)
                 {
                     VisitPort(helper, port);
@@ -331,7 +353,7 @@ namespace ChiselDebug
 
             void AddCondModule(GraphFIR.IO.Output ena, FIRRTL.Statement body)
             {
-                VisitHelper helper = parentHelper.ForNewModule(parentHelper.GetUniqueName());
+                VisitHelper helper = parentHelper.ForNewModule(parentHelper.GetUniqueName(), true);
 
                 //Connect wire that enables condition to module
                 GraphFIR.IO.Input enaInput = new GraphFIR.IO.Input(null, new FIRRTL.UIntType(1));
