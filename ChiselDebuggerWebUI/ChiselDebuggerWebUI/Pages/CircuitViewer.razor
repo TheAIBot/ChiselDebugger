@@ -1,4 +1,4 @@
-﻿@page "/circuitviewer"
+﻿@page "/circuitviewer/{filename?}"
 @page "/"
 @using FIRRTL
 @using VCDReader
@@ -30,6 +30,8 @@
 
 @code
 {
+    [Parameter]
+    public string Filename { get; set; }
 
     private DebugController DebugCtrl;
     private Positioned<ChiselDebug.GraphFIR.Module> ModulePosition;
@@ -44,12 +46,44 @@
 
     protected override Task OnInitializedAsync()
     {
-        //var circuit = FIRRTL.Parse.FromFile("Examples/MovingAveragePow2.lo.fir");
-        //using var vcd = VCDReader.Parse.FromFile("Examples/MovingAveragePow2.vcd");
-        //var circuit = FIRRTL.Parse.FromFile("Examples/RegFileVec.lo.fir");
-        //using var vcd = VCDReader.Parse.FromFile("Examples/RegFileVec.vcd");
-        var circuit = FIRRTL.Parse.FromFile("Examples/FSMDatapath.lo.fir");
-        using VCD vcd = VCDReader.Parse.FromFile("Examples/FSMDatapath.vcd");
+        string firrtl = @"
+circuit ModL :
+    module ModL :
+        input clock : Clock
+        input reset : UInt<1>
+        output io : {flip en1 : UInt<1>, flip en2 : UInt<1>, flip din1 : UInt<8>, dout1 : UInt<8>, flip en3 : UInt<1>, flip en4 : UInt<1>, flip din2 : UInt<8>, dout2 : UInt<8>}
+
+        wire wir : UInt<8> @[SimpleModules.scala 170:19]
+        wir <= UInt<1>(""h00"") @[SimpleModules.scala 171:9]
+        when io.en1: @[SimpleModules.scala 173:18]
+            wir <= io.din1 @[SimpleModules.scala 174:13]
+            skip @[SimpleModules.scala 173:18]
+        when io.en2: @[SimpleModules.scala 177:18]
+            io.dout1 <= wir @[SimpleModules.scala 178:18]
+            skip @[SimpleModules.scala 177:18]
+        else : @[SimpleModules.scala 179:17]
+            io.dout1 <= UInt<2>(""h03"") @[SimpleModules.scala 180:18]
+            skip @[SimpleModules.scala 179:17]
+        when io.en3 : @[SimpleModules.scala 183:18]
+            wir <= io.din2 @[SimpleModules.scala 184:13]
+            skip @[SimpleModules.scala 183:18]
+        when io.en4 : @[SimpleModules.scala 187:18]
+            io.dout2 <= wir @[SimpleModules.scala 188:18]
+            skip @[SimpleModules.scala 187:18]
+        else : @[SimpleModules.scala 189:17]
+            io.dout2 <= UInt<3>(""h07"") @[SimpleModules.scala 190:18]
+            skip @[SimpleModules.scala 189:17]";
+
+        Circuit circuit;
+        if (Filename == null)
+        {
+            circuit = FIRRTL.Parse.FromString(firrtl);
+        }
+        else
+        {
+            circuit = FIRRTL.Parse.FromFile(System.IO.Path.Combine("Examples", Filename.Replace('-', '.')));
+        }
+        using VCD vcd = null;// VCDReader.Parse.FromFile("Examples/FSMDatapath.vcd");
         CircuitGraph graph = CircuitToGraph.GetAsGraph(circuit);
         graph.InferTypes();
 
