@@ -16,7 +16,7 @@ namespace ChiselDebug.GraphFIR
         private readonly Dictionary<IOBundle, Module> BundleToModule = new Dictionary<IOBundle, Module>();
         
 
-        public Module(string name)
+        public Module(string name, FirrtlNode defNode) : base(defNode)
         {
             this.Name = name;
         }

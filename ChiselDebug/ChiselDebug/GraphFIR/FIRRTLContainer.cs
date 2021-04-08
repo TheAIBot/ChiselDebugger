@@ -13,6 +13,8 @@ namespace ChiselDebug.GraphFIR
 
         public readonly Dictionary<string, FIRIO> InternalIO = new Dictionary<string, FIRIO>();   
 
+        public FIRRTLContainer(FirrtlNode defNode) : base(defNode) { }
+
         public void AddExternalIO(FIRIO io)
         {
             FIRIO flipped = io.Flip();

@@ -9,7 +9,7 @@ namespace ChiselDebug.GraphFIR
         public readonly string OpName;
         public readonly Input A;
 
-        public MonoArgMonoResPrimOp(string opName, Output aIn, IFIRType outType) : base(outType)
+        public MonoArgMonoResPrimOp(string opName, Output aIn, IFIRType outType, FirrtlNode defNode) : base(outType, defNode)
         {
             this.OpName = opName;
             this.A = new Input(this, aIn.Type);
@@ -47,7 +47,7 @@ namespace ChiselDebug.GraphFIR
 
     public class FIRAsUInt : MonoArgMonoResPrimOp
     {
-        public FIRAsUInt(Output aIn, IFIRType outType) : base("asUInt", aIn, outType) { }
+        public FIRAsUInt(Output aIn, IFIRType outType, FirrtlNode defNode) : base("asUInt", aIn, outType, defNode) { }
 
         public override IFIRType MonoArgInferType() => A.Type switch
         {
@@ -60,7 +60,7 @@ namespace ChiselDebug.GraphFIR
 
     public class FIRAsSInt : MonoArgMonoResPrimOp
     {
-        public FIRAsSInt(Output aIn, IFIRType outType) : base("asSInt", aIn, outType) { }
+        public FIRAsSInt(Output aIn, IFIRType outType, FirrtlNode defNode) : base("asSInt", aIn, outType, defNode) { }
 
         public override IFIRType MonoArgInferType() => A.Type switch
         {
@@ -73,7 +73,7 @@ namespace ChiselDebug.GraphFIR
 
     public class FIRAsClock : MonoArgMonoResPrimOp
     {
-        public FIRAsClock(Output aIn, IFIRType outType) : base("asClock", aIn, outType) { }
+        public FIRAsClock(Output aIn, IFIRType outType, FirrtlNode defNode) : base("asClock", aIn, outType, defNode) { }
 
         public override IFIRType MonoArgInferType() => A.Type switch
         {
@@ -86,7 +86,7 @@ namespace ChiselDebug.GraphFIR
 
     public class FIRCvt : MonoArgMonoResPrimOp
     {
-        public FIRCvt(Output aIn, IFIRType outType) : base("cvt", aIn, outType) { }
+        public FIRCvt(Output aIn, IFIRType outType, FirrtlNode defNode) : base("cvt", aIn, outType, defNode) { }
 
         public override IFIRType MonoArgInferType() => A.Type switch
         {
@@ -98,7 +98,7 @@ namespace ChiselDebug.GraphFIR
 
     public class FIRNeg : MonoArgMonoResPrimOp
     {
-        public FIRNeg(Output aIn, IFIRType outType) : base("-", aIn, outType) { }
+        public FIRNeg(Output aIn, IFIRType outType, FirrtlNode defNode) : base("-", aIn, outType, defNode) { }
 
         public override IFIRType MonoArgInferType() => A.Type switch
         {
@@ -110,7 +110,7 @@ namespace ChiselDebug.GraphFIR
 
     public class FIRNot : MonoArgMonoResPrimOp
     {
-        public FIRNot(Output aIn, IFIRType outType) : base("~", aIn, outType) { }
+        public FIRNot(Output aIn, IFIRType outType, FirrtlNode defNode) : base("~", aIn, outType, defNode) { }
 
         public override IFIRType MonoArgInferType() => A.Type switch
         {
@@ -122,7 +122,7 @@ namespace ChiselDebug.GraphFIR
 
     public class FIRAndr : MonoArgMonoResPrimOp
     {
-        public FIRAndr(Output aIn, IFIRType outType) : base("andr", aIn, outType) { }
+        public FIRAndr(Output aIn, IFIRType outType, FirrtlNode defNode) : base("andr", aIn, outType, defNode) { }
 
         public override IFIRType MonoArgInferType() => A.Type switch
         {
@@ -134,7 +134,7 @@ namespace ChiselDebug.GraphFIR
 
     public class FIROrr : MonoArgMonoResPrimOp
     {
-        public FIROrr(Output aIn, IFIRType outType) : base("orr", aIn, outType) { }
+        public FIROrr(Output aIn, IFIRType outType, FirrtlNode defNode) : base("orr", aIn, outType, defNode) { }
 
         public override IFIRType MonoArgInferType() => A.Type switch
         {
@@ -146,7 +146,7 @@ namespace ChiselDebug.GraphFIR
 
     public class FIRXorr : MonoArgMonoResPrimOp
     {
-        public FIRXorr(Output aIn, IFIRType outType) : base("xorr", aIn, outType) { }
+        public FIRXorr(Output aIn, IFIRType outType, FirrtlNode defNode) : base("xorr", aIn, outType, defNode) { }
 
         public override IFIRType MonoArgInferType() => A.Type switch
         {

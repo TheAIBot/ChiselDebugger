@@ -6,10 +6,10 @@ namespace ChiselDebug.GraphFIR
 {
     public class ConstValue : FIRRTLNode, INoPlaceAndRoute
     {
-        public readonly FIRRTL.Literal Value;
+        public readonly Literal Value;
         public readonly Output Result;
 
-        public ConstValue(string outputName, FIRRTL.Literal value)
+        public ConstValue(string outputName, Literal value) : base(value)
         {
             this.Value = value;
 

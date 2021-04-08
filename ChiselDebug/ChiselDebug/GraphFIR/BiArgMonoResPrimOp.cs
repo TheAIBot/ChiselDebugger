@@ -10,7 +10,7 @@ namespace ChiselDebug.GraphFIR
         public readonly Input A;
         public readonly Input B;
 
-        public BiArgMonoResPrimOp(string opName, Output aIn, Output bIn, IFIRType outType) : base(outType)
+        public BiArgMonoResPrimOp(string opName, Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base(outType, defNode)
         {
             this.OpName = opName;
             this.A = new Input(this, aIn.Type);
@@ -52,7 +52,7 @@ namespace ChiselDebug.GraphFIR
 
     public class FIRAdd : BiArgMonoResPrimOp
     {
-        public FIRAdd(Output aIn, Output bIn, IFIRType outType) : base("+", aIn, bIn, outType) { }
+        public FIRAdd(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("+", aIn, bIn, outType, defNode) { }
 
         public override IFIRType BiArgInferType() => (A.Type, B.Type) switch
         {
@@ -66,7 +66,7 @@ namespace ChiselDebug.GraphFIR
 
     public class FIRSub : BiArgMonoResPrimOp
     {
-        public FIRSub(Output aIn, Output bIn, IFIRType outType) : base("-", aIn, bIn, outType) { }
+        public FIRSub(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("-", aIn, bIn, outType, defNode) { }
 
         public override IFIRType BiArgInferType() => (A.Type, B.Type) switch
         {
@@ -80,7 +80,7 @@ namespace ChiselDebug.GraphFIR
 
     public class FIRMul : BiArgMonoResPrimOp
     {
-        public FIRMul(Output aIn, Output bIn, IFIRType outType) : base("*", aIn, bIn, outType) { }
+        public FIRMul(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("*", aIn, bIn, outType, defNode) { }
 
         public override IFIRType BiArgInferType() => (A.Type, B.Type) switch
         {
@@ -94,7 +94,7 @@ namespace ChiselDebug.GraphFIR
 
     public class FIRDiv : BiArgMonoResPrimOp
     {
-        public FIRDiv(Output aIn, Output bIn, IFIRType outType) : base("/", aIn, bIn, outType) { }
+        public FIRDiv(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("/", aIn, bIn, outType, defNode) { }
 
         public override IFIRType BiArgInferType() => (A.Type, B.Type) switch
         {
@@ -108,7 +108,7 @@ namespace ChiselDebug.GraphFIR
 
     public class FIRRem : BiArgMonoResPrimOp
     {
-        public FIRRem(Output aIn, Output bIn, IFIRType outType) : base("%", aIn, bIn, outType) { }
+        public FIRRem(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("%", aIn, bIn, outType, defNode) { }
 
         public override IFIRType BiArgInferType() => (A.Type, B.Type) switch
         {
@@ -122,7 +122,7 @@ namespace ChiselDebug.GraphFIR
 
     public class FIRDshl : BiArgMonoResPrimOp
     {
-        public FIRDshl(Output aIn, Output bIn, IFIRType outType) : base("<<", aIn, bIn, outType) { }
+        public FIRDshl(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("<<", aIn, bIn, outType, defNode) { }
 
         public override IFIRType BiArgInferType() => (A.Type, B.Type) switch
         {
@@ -134,7 +134,7 @@ namespace ChiselDebug.GraphFIR
 
     public class FIRDshr : BiArgMonoResPrimOp
     {
-        public FIRDshr(Output aIn, Output bIn, IFIRType outType) : base(">>", aIn, bIn, outType) { }
+        public FIRDshr(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base(">>", aIn, bIn, outType, defNode) { }
 
         public override IFIRType BiArgInferType() => (A.Type, B.Type) switch
         {
@@ -146,7 +146,7 @@ namespace ChiselDebug.GraphFIR
 
     public class FIRCat : BiArgMonoResPrimOp
     {
-        public FIRCat(Output aIn, Output bIn, IFIRType outType) : base("cat", aIn, bIn, outType) { }
+        public FIRCat(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("cat", aIn, bIn, outType, defNode) { }
 
         public override IFIRType BiArgInferType() => (A.Type, B.Type) switch
         {
@@ -160,7 +160,7 @@ namespace ChiselDebug.GraphFIR
 
     public abstract class FIRCompOp : BiArgMonoResPrimOp
     {
-        public FIRCompOp(string opName, Output aIn, Output bIn, IFIRType outType) : base(opName, aIn, bIn, outType) { }
+        public FIRCompOp(string opName, Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base(opName, aIn, bIn, outType, defNode) { }
 
         public override IFIRType BiArgInferType() => (A.Type, B.Type) switch
         {
@@ -174,37 +174,37 @@ namespace ChiselDebug.GraphFIR
 
     public class FIREq : FIRCompOp
     {
-        public FIREq(Output aIn, Output bIn, IFIRType outType) : base("=", aIn, bIn, outType){ }
+        public FIREq(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("=", aIn, bIn, outType, defNode) { }
     }
     
     public class FIRNeq : FIRCompOp
     {
-        public FIRNeq(Output aIn, Output bIn, IFIRType outType) : base("≠", aIn, bIn, outType) { }
+        public FIRNeq(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("≠", aIn, bIn, outType, defNode) { }
     }
     
     public class FIRGeq : FIRCompOp
     {
-        public FIRGeq(Output aIn, Output bIn, IFIRType outType) : base("≥", aIn, bIn, outType) { }
+        public FIRGeq(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("≥", aIn, bIn, outType, defNode) { }
     }
     
     public class FIRLeq : FIRCompOp
     {
-        public FIRLeq(Output aIn, Output bIn, IFIRType outType) : base("≤", aIn, bIn, outType) { }
+        public FIRLeq(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("≤", aIn, bIn, outType, defNode) { }
     }
     
     public class FIRGt : FIRCompOp
     {
-        public FIRGt(Output aIn, Output bIn, IFIRType outType) : base(">", aIn, bIn, outType) { }
+        public FIRGt(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base(">", aIn, bIn, outType, defNode) { }
     }
     
     public class FIRLt : FIRCompOp
     {
-        public FIRLt(Output aIn, Output bIn, IFIRType outType) : base("<", aIn, bIn, outType) { }
+        public FIRLt(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("<", aIn, bIn, outType, defNode) { }
     }
 
     public abstract class FIRBitwise : BiArgMonoResPrimOp
     {
-        public FIRBitwise(string opName, Output aIn, Output bIn, IFIRType outType) : base(opName, aIn, bIn, outType) { }
+        public FIRBitwise(string opName, Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base(opName, aIn, bIn, outType, defNode) { }
 
         public override IFIRType BiArgInferType() => (A.Type, B.Type) switch
         {
@@ -218,23 +218,23 @@ namespace ChiselDebug.GraphFIR
 
     public class FIRAnd : FIRBitwise
     {
-        public FIRAnd(Output aIn, Output bIn, IFIRType outType) : base("&", aIn, bIn, outType) { }
+        public FIRAnd(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("&", aIn, bIn, outType, defNode) { }
     }
 
     public class FIROr : FIRBitwise
     {
-        public FIROr(Output aIn, Output bIn, IFIRType outType) : base("|", aIn, bIn, outType) { }
+        public FIROr(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("|", aIn, bIn, outType, defNode) { }
     }
 
     public class FIRXor : FIRBitwise
     {
-        public FIRXor(Output aIn, Output bIn, IFIRType outType) : base("^", aIn, bIn, outType) { }
+        public FIRXor(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("^", aIn, bIn, outType, defNode) { }
     }
 
     public class FIRShl : BiArgMonoResPrimOp
     {
         private readonly int ShiftBy;
-        public FIRShl(Output aIn, Output bIn, IFIRType outType) : base("<<", aIn, bIn, outType) 
+        public FIRShl(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("<<", aIn, bIn, outType, defNode) 
         {
             this.ShiftBy = (int)((ConstValue)bIn.Node).Value.Value;
         }
@@ -250,7 +250,7 @@ namespace ChiselDebug.GraphFIR
     public class FIRShr : BiArgMonoResPrimOp
     {
         private readonly int ShiftBy;
-        public FIRShr(Output aIn, Output bIn, IFIRType outType) : base(">>", aIn, bIn, outType)
+        public FIRShr(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base(">>", aIn, bIn, outType, defNode)
         {
             this.ShiftBy = (int)((ConstValue)bIn.Node).Value.Value;
         }

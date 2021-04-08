@@ -8,7 +8,7 @@ namespace ChiselDebug.GraphFIR
     {
         public readonly FIRIO InIO;
 
-        public DummySink(Output outIO)
+        public DummySink(Output outIO) : base(null)
         {
             this.InIO = outIO.Flip(this);
             InIO.SetName(null);

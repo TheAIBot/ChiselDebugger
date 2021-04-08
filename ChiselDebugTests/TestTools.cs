@@ -13,10 +13,10 @@ namespace ChiselDebugTests
 {
     internal static class TestTools
     {
-        internal static CircuitGraph VerifyCanCreateGraph(string firrtl)
+        internal static CircuitGraph VerifyCanCreateGraph(string firrtl, CircuitGraph lowFirGraph = null)
         {
             Circuit circuit = FIRRTL.Parse.FromString(firrtl);
-            CircuitGraph graph = CircuitToGraph.GetAsGraph(circuit);
+            CircuitGraph graph = CircuitToGraph.GetAsGraph(circuit, lowFirGraph);
             graph.InferTypes();
 
             return graph;
@@ -24,7 +24,13 @@ namespace ChiselDebugTests
 
         internal static void VerifyChiselTest(string moduleName, string extension, bool testVCD)
         {
-            CircuitGraph graph = TestTools.VerifyCanCreateGraph(File.ReadAllText($"ChiselTests/{moduleName}.{extension}"));
+            CircuitGraph lowFirGraph = null;
+            if (extension == "fir")
+            {
+                lowFirGraph = VerifyCanCreateGraph(File.ReadAllText($"ChiselTests/{moduleName}.lo.fir"));
+            }
+
+            CircuitGraph graph = VerifyCanCreateGraph(File.ReadAllText($"ChiselTests/{moduleName}.{extension}"), lowFirGraph);
 
             if (testVCD)
             {

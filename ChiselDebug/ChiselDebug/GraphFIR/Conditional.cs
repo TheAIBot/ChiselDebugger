@@ -1,4 +1,5 @@
 ﻿using ChiselDebug.GraphFIR.IO;
+using FIRRTL;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,8 @@ namespace ChiselDebug.GraphFIR
     {
         private readonly List<ConditionalModule> ConditionalModules = new List<ConditionalModule>();
         public IReadOnlyList<ConditionalModule> CondMods => ConditionalModules;
+
+        public Conditional(FirrtlNode defNode) : base(defNode) { }
 
         public void AddConditionalModule(Input enable, Module mod)
         {
