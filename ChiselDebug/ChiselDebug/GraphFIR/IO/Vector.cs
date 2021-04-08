@@ -221,6 +221,7 @@ namespace ChiselDebug.GraphFIR.IO
             foreach (var port in otherWithPorts.GetHiddenPorts())
             {
                 VectorAccess newPort = (VectorAccess)port.Flip(Node);
+                newPort.SetParentIO(this);
                 HiddenPorts.Add(newPort);
                 newPorts.Add(newPort);
             }

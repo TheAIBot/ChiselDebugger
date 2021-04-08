@@ -27,6 +27,7 @@ namespace ChiselDebug.GraphFIR.IO
         internal MemReadPort AddReadPort(string portName)
         {
             MemReadPort port = new MemReadPort(InputType, AddressWidth, Node, portName);
+            port.SetParentIO(this);
             HiddenPorts.Add(port);
 
             return port;
@@ -35,6 +36,7 @@ namespace ChiselDebug.GraphFIR.IO
         internal MemWritePort AddWritePort(string portName)
         {
             MemWritePort port = new MemWritePort(InputType, AddressWidth, Node, portName);
+            port.SetParentIO(this);
             HiddenPorts.Add(port);
 
             return port;
@@ -43,6 +45,7 @@ namespace ChiselDebug.GraphFIR.IO
         internal MemRWPort AddReadWritePort(string portName)
         {
             MemRWPort port = new MemRWPort(InputType, AddressWidth, Node, portName);
+            port.SetParentIO(this);
             HiddenPorts.Add(port);
 
             return port;
@@ -64,6 +67,7 @@ namespace ChiselDebug.GraphFIR.IO
             foreach (var port in otherWithPorts.GetHiddenPorts())
             {
                 MemPort newPort = (MemPort)port.Flip(Node);
+                newPort.SetParentIO(this);
                 HiddenPorts.Add(newPort);
                 newPorts.Add(newPort);
             }
