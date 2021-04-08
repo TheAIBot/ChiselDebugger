@@ -11,10 +11,10 @@ namespace ChiselDebug.GraphFIR.IO
         internal readonly FIRIO DataIn;
         internal readonly FIRIO Mask;
 
-        public MemWritePort(FIRIO inputType, int addressWidth, FIRRTLNode node, string name) : this(name, CreateIO(inputType, addressWidth, node))
+        public MemWritePort(FIRRTLNode node, FIRIO inputType, int addressWidth, string name) : this(node, name, CreateIO(inputType, addressWidth, node))
         { }
 
-        public MemWritePort(string name, List<FIRIO> io) : base(name, io)
+        public MemWritePort(FIRRTLNode node, string name, List<FIRIO> io) : base(node, name, io)
         {
             this.DataIn = (FIRIO)GetIO("data");
             this.Mask = (FIRIO)GetIO("mask");
@@ -51,7 +51,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node = null)
         {
-            return new MemWritePort(Name, GetIOInOrder().Select(x => x.ToFlow(flow, node)).ToList());
+            return new MemWritePort(node ?? Node, Name, GetIOInOrder().Select(x => x.ToFlow(flow, node)).ToList());
         }
 
         internal override bool HasMask()

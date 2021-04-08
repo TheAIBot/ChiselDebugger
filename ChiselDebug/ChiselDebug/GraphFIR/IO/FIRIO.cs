@@ -6,13 +6,15 @@ namespace ChiselDebug.GraphFIR.IO
 {
     public abstract class FIRIO : IContainerIO
     {
+        public readonly FIRRTLNode Node;
         public string Name { get; private set; }
         public bool IsAnonymous => Name == string.Empty;
         public AggregateIO ParentIO { get; private set; } = null;
         public bool IsPartOfAggregateIO => ParentIO != null;
 
-        public FIRIO(string name)
+        public FIRIO(FIRRTLNode node, string name)
         {
+            this.Node = node;
             this.Name = name;
         }
 

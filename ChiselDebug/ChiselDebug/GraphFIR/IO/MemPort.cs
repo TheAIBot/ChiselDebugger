@@ -10,7 +10,7 @@ namespace ChiselDebug.GraphFIR.IO
         internal readonly FIRIO Enabled;
         internal readonly FIRIO Clock;
 
-        public MemPort(string name, List<FIRIO> io) : base(name, io)
+        public MemPort(FIRRTLNode node, string name, List<FIRIO> io) : base(node, name, io)
         {
             this.Address = (FIRIO)GetIO("addr");
             this.Enabled = (FIRIO)GetIO("en");

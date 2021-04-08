@@ -55,7 +55,7 @@ namespace ChiselDebug.GraphFIR
 
         internal DuplexIO GetAsDuplex()
         {
-            return new DuplexIO(Name, In, Result);
+            return new DuplexIO(this, Name, In, Result);
         }
 
         private List<FIRIO> GetAllIO()

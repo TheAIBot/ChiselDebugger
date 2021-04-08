@@ -2,7 +2,7 @@
 {
     public abstract class AggregateIO : FIRIO 
     { 
-        public AggregateIO(string name) : base(name) { }
+        public AggregateIO(FIRRTLNode node, string name) : base(node, name) { }
 
         public override FIRIO GetInput()
         {

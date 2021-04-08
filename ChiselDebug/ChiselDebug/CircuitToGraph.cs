@@ -232,13 +232,13 @@ namespace ChiselDebug
                 io.AddRange(VisitType(helper, fieldDir, field.Name, field.Type));
             }
 
-            return new GraphFIR.IO.IOBundle(bundleName, io);
+            return new GraphFIR.IO.IOBundle(null, bundleName, io);
         }
 
         private static GraphFIR.IO.FIRIO VisitVector(VisitHelper helper, FIRRTL.Dir direction, string vectorName, FIRRTL.VectorType vec)
         {
             var type = VisitType(helper, direction, string.Empty, vec.Type).Single();
-            return new GraphFIR.IO.Vector(vectorName, vec.Size, type, null);
+            return new GraphFIR.IO.Vector(null, vectorName, vec.Size, type);
         }
 
         private static void VisitStatement(VisitHelper helper, FIRRTL.Statement statement)

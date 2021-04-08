@@ -6,7 +6,6 @@ namespace ChiselDebug.GraphFIR.IO
 {
     public abstract class ScalarIO : FIRIO
     {
-        public readonly FIRRTLNode Node;
         public IFIRType Type { get; protected set; }
         public Connection Con = null;
         private Connection EnabledCond = null;
@@ -15,9 +14,8 @@ namespace ChiselDebug.GraphFIR.IO
         public ScalarIO(FIRRTLNode node, IFIRType type) : this(node, string.Empty, type)
         { }
 
-        public ScalarIO(FIRRTLNode node, string name, IFIRType type) : base(name)
+        public ScalarIO(FIRRTLNode node, string name, IFIRType type) : base(node, name)
         {
-            this.Node = node;
             this.Type = type;
         }
 

@@ -31,7 +31,7 @@ namespace ChiselDebug.GraphFIR
             this.ReadLatency = readLatency;
             this.WriteLatency = writeLatency;
             this.RUW = ruw;
-            this.MemIO = new MemoryIO(name, new List<FIRIO>(), InputType, GetAddressWidth(), this);
+            this.MemIO = new MemoryIO(this, name, new List<FIRIO>(), InputType, GetAddressWidth());
         }
 
         internal MemReadPort AddReadPort(string portName)

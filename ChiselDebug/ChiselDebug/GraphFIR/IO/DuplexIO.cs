@@ -8,7 +8,7 @@ namespace ChiselDebug.GraphFIR.IO
         private readonly FIRIO InIO;
         private readonly FIRIO OutIO;
 
-        public DuplexIO(string name, FIRIO inIO, FIRIO outIO) : base(name)
+        public DuplexIO(FIRRTLNode node, string name, FIRIO inIO, FIRIO outIO) : base(node, name)
         {
             this.InIO = inIO;
             this.OutIO = outIO;
@@ -72,8 +72,8 @@ namespace ChiselDebug.GraphFIR.IO
             {
                 FlowChange.Source => OutIO.ToFlow(flow, node),
                 FlowChange.Sink => InIO.ToFlow(flow, node),
-                FlowChange.Flipped => new DuplexIO(Name, InIO.ToFlow(flow, node), OutIO.ToFlow(flow, node)),
-                FlowChange.Preserve => new DuplexIO(Name, InIO, OutIO),
+                FlowChange.Flipped => new DuplexIO(node ?? Node, Name, InIO.ToFlow(flow, node), OutIO.ToFlow(flow, node)),
+                FlowChange.Preserve => new DuplexIO(node ?? Node, Name, InIO.ToFlow(flow, node), OutIO.ToFlow(flow, node)),
                 var error => throw new Exception($"Unknown flow. Flow: {flow}")
             };
         }

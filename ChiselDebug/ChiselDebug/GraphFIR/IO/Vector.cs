@@ -11,7 +11,7 @@ namespace ChiselDebug.GraphFIR.IO
         private readonly FIRIO Access;
         private readonly FIRIO Index;
 
-        public VectorAccess(FIRIO index, FIRIO access) : base(string.Empty, new List<FIRIO>() { index, access })
+        public VectorAccess(FIRRTLNode node, FIRIO index, FIRIO access) : base(node, string.Empty, new List<FIRIO>() { index, access })
         {
             this.Access = access;
             this.Index = index;
@@ -39,7 +39,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node = null)
         {
-            return new VectorAccess(Index.ToFlow(flow, node), Access.ToFlow(flow, node));
+            return new VectorAccess(node ?? Node, Index.ToFlow(flow, node), Access.ToFlow(flow, node));
         }
     }
 
@@ -48,10 +48,9 @@ namespace ChiselDebug.GraphFIR.IO
         private readonly FIRIO[] IO;
         private readonly List<VectorAccess> VisiblePorts = new List<VectorAccess>();
         private readonly List<VectorAccess> HiddenPorts = new List<VectorAccess>();
-        private readonly FIRRTLNode Node;
         public int Length => IO.Length;
 
-        public Vector(string name, int length, FIRIO firIO, FIRRTLNode node) : base(name)
+        public Vector(FIRRTLNode node, string name, int length, FIRIO firIO) : base(node, name)
         {
             if (!firIO.IsPassive())
             {
@@ -65,8 +64,6 @@ namespace ChiselDebug.GraphFIR.IO
                 IO[i].SetName(i.ToString());
                 IO[i].SetParentIO(this);
             }
-
-            this.Node = node;
         }
 
         public override FIRIO[] GetIOInOrder()
@@ -105,7 +102,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node = null)
         {
-            return new Vector(Name, Length, IO[0].ToFlow(flow, node), node);
+            return new Vector(node ?? Node, Name, Length, IO[0].ToFlow(flow, node));
         }
 
         public override IEnumerable<ScalarIO> Flatten()
@@ -198,7 +195,7 @@ namespace ChiselDebug.GraphFIR.IO
             accessIndex.SetName("index");
             index.ConnectToInput(accessIndex);
 
-            VectorAccess access = new VectorAccess(accessIndex, accessIO);
+            VectorAccess access = new VectorAccess(Node, accessIndex, accessIO);
             access.SetParentIO(this);
             HiddenPorts.Add(access);
 
