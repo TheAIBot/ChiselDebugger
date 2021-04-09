@@ -49,6 +49,7 @@ namespace ChiselDebug.GraphFIR.IO
             throw new Exception("Scalar IO can't contain additional io.");
         }
 
+        public abstract void DisconnectAll();
         public abstract void SetType(IFIRType type);
 
         public abstract void InferType();

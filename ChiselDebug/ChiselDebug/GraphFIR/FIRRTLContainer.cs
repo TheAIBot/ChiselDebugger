@@ -25,18 +25,7 @@ namespace ChiselDebug.GraphFIR
             InternalIO.Add(io.Name, flipped);
             AllIOInOrder.Add(flipped);
 
-            FIRIO[] ioWalk = io.WalkIOTree().ToArray();
-            FIRIO[] ioFlipWalk = flipped.WalkIOTree().ToArray();
-            if (ioWalk.Length != ioFlipWalk.Length)
-            {
-                throw new Exception($"Internal and external io must be of the same size when added to a module. External: {ioWalk.Length}, Internal: {ioFlipWalk.Length}");
-            }
-
-            for (int i = 0; i < ioWalk.Length; i++)
-            {
-                IOPairs.Add(ioWalk[i], ioFlipWalk[i]);
-                IOPairs.Add(ioFlipWalk[i], ioWalk[i]);
-            }
+            AddPairedIO(io, flipped);
         }
 
         public override ScalarIO[] GetInputs()
@@ -82,9 +71,30 @@ namespace ChiselDebug.GraphFIR
             return AllIOInOrder.SelectMany(x => x.Flatten()).ToArray();
         }
 
+        internal void AddPairedIO(FIRIO io, FIRIO ioFlipped)
+        {
+            FIRIO[] ioWalk = io.WalkIOTree().ToArray();
+            FIRIO[] ioFlipWalk = ioFlipped.WalkIOTree().ToArray();
+            if (ioWalk.Length != ioFlipWalk.Length)
+            {
+                throw new Exception($"Internal and external io must be of the same size when added to a module. External: {ioWalk.Length}, Internal: {ioFlipWalk.Length}");
+            }
+
+            for (int i = 0; i < ioWalk.Length; i++)
+            {
+                IOPairs.Add(ioWalk[i], ioFlipWalk[i]);
+                IOPairs.Add(ioFlipWalk[i], ioWalk[i]);
+            }
+        }
+
         public FIRIO GetPairedIO(FIRIO io)
         {
             return IOPairs[io];
+        }
+
+        public bool IsPartOfPair(FIRIO io)
+        {
+            return IOPairs.ContainsKey(io);
         }
 
         public override void InferType()

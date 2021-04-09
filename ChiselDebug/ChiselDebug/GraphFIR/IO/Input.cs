@@ -98,7 +98,7 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public void DisconnectAll()
+        public override void DisconnectAll()
         {
             if (Con != null)
             {

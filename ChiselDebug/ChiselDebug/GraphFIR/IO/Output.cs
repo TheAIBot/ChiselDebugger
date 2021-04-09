@@ -1,6 +1,7 @@
 ﻿using FIRRTL;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ChiselDebug.GraphFIR.IO
 {
@@ -12,6 +13,15 @@ namespace ChiselDebug.GraphFIR.IO
         public Output(FIRRTLNode node, string name, IFIRType type) : base(node, name, type)
         {
             this.Con = new Connection(this);
+        }
+
+        public override void DisconnectAll()
+        {
+            Input[] inputs = Con.To.ToArray();
+            foreach (var input in inputs)
+            {
+                Con.DisconnectInput(input);
+            }
         }
 
         public override void SetType(IFIRType type)

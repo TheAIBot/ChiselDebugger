@@ -449,20 +449,19 @@ namespace ChiselDebug
                 //Fill out module
                 VisitStatement(helper, body);
 
-                //If external input wasn't used internally then disconnect
-                //external input. Removing IO from a module isn't currently
-                //possible. In order to avoid visualing all this unused IO,
+                //Default things to do when a module is finished
+                CleanupModule(helper);
+
+                //If internal io was used then connect its external io
+                //to parent modules corresponding io
+                helper.Mod.ExternalConnectUsedIO(parentHelper.Mod);
+
+                //If external io wasn't used internally then disconnect
+                //external io. Removing io from a module isn't currently
+                //possible. In order to avoid visualing all this unused io,
                 //unused is hidden in the visualization but that can only work
                 //if it's not connected to anything.
                 helper.Mod.DisconnectUnusedIO();
-
-                //If internal input was used then connect its external IO
-                //to parent modules corresponding input
-                helper.Mod.ExternalConnectUsedIO(parentHelper.Mod);
-
-
-                //Default things to do when a module is finished
-                CleanupModule(helper);
 
                 cond.AddConditionalModule((GraphFIR.IO.Input)internalEnaDummy.InIO, helper.Mod);
 
