@@ -217,65 +217,86 @@ namespace ChiselDebug.GraphFIR
 
         internal void ExternalConnectUsedIO(Module parentMod)
         {
-
-
             //Propagate hidden ports
             foreach (var intKeyVal in InternalIO)
             {
                 var intIO = intKeyVal.Value;
                 var extIO = ExternalIO[intKeyVal.Key];
 
-                var intHidesPorts = intIO.GetAllIOOfType<IPortsIO>().ToArray();
-                var extHidesPorts = extIO.GetAllIOOfType<IPortsIO>().ToArray();
-                Debug.Assert(intHidesPorts.Length == extHidesPorts.Length, $"Internal and external module io did not contain the same amount of IHiddenPorts. Internal: {intHidesPorts.Length}, External: {extHidesPorts.Length}");
-
-                if (intHidesPorts.Length == 0)
+                //Ports can be nested and propagating one port may reveal more
+                //ports that should be propagated. Keep checking if more ports
+                //should be propagated until all ports have been checked.
+                HashSet<IPortsIO> handledPortsIO = new HashSet<IPortsIO>();
+                while (true)
                 {
-                    continue;
-                }
-
-                FIRIO parentIO = (FIRIO)parentMod.GetIO(intKeyVal.Key);
-                var parentHidesPorts = parentIO.GetAllIOOfType<IPortsIO>().ToArray();
-
-                for (int i = 0; i < intHidesPorts.Length; i++)
-                {
-                    IPortsIO internalHidden = intHidesPorts[i];
-                    IPortsIO externalHidden = extHidesPorts[i];
-                    IPortsIO parentModHidden = parentHidesPorts[i];
-
-                    FIRIO[] intPortsNeedsProp = internalHidden.GetAllPorts().Where(x => !IsPartOfPair(x)).ToArray();
-
-                    //Add internal ports to external io
-                    FIRIO[] newExtPorts = externalHidden.GetOrMakeFlippedPortsFrom(intPortsNeedsProp);
-
-                    //Add external ports to whatever io it's connecting to
-                    FIRIO[] newParentPorts = parentModHidden.GetOrMakeFlippedPortsFrom(newExtPorts);
-                    Debug.Assert(newExtPorts.Length == newParentPorts.Length);
-
-                    for (int y = 0; y < newExtPorts.Length; y++)
+                    var intHidesPorts = intIO.GetAllIOOfType<IPortsIO>().ToArray();
+                    
+                    //if this io contain no ports to begin with then
+                    //skip it
+                    if (intHidesPorts.Length == 0)
                     {
-                        //New ports need to be paired in the module as they
-                        //just passed from internal to external module io
-                        if (!IsPartOfPair(newExtPorts[y]))
-                        {
-                            AddPairedIO(intPortsNeedsProp[y], newExtPorts[y]);
-
-                            //FIRRTL scoping is truely stupid. If a memory port is created in an inner
-                            //scope then it can still be used in an outer scope. To handle that all
-                            //newly aded memory ports are added to the outer scope.
-                            if (newParentPorts[y] is MemPort memPort && 
-                                !parentMod.TryGetIO(newParentPorts[y].Name, false, out var _))
-                            {
-                                parentMod.AddMemoryPort(memPort);
-                            }
-
-                            //Connect new external ports to where they should
-                            //be connected
-                            IOHelper.BiDirFullyConnectIO(newExtPorts[y], newParentPorts[y], true);
-                        }
+                        break;
                     }
 
-                    //IOHelper.PropegatePorts(parentModHidden);
+                    bool handledNewPort = false;
+
+                    FIRIO parentIO = (FIRIO)parentMod.GetIO(intKeyVal.Key);
+
+                    for (int i = 0; i < intHidesPorts.Length; i++)
+                    {
+                        //Has seen port before?
+                        if (!handledPortsIO.Add(intHidesPorts[i]))
+                        {
+                            continue;
+                        }
+
+                        handledNewPort = true;
+                        IPortsIO internalHidden = intHidesPorts[i];
+                        IPortsIO externalHidden = (IPortsIO)GetPairedIO((FIRIO)internalHidden);
+                        IPortsIO parentModHidden = parentIO.GetAllIOOfType<IPortsIO>().ToArray()[i];
+
+                        FIRIO[] intPortsNeedsProp = internalHidden.GetAllPorts().Where(x => !IsPartOfPair(x)).ToArray();
+
+                        //Add internal ports to external io
+                        FIRIO[] newExtPorts = externalHidden.GetOrMakeFlippedPortsFrom(intPortsNeedsProp);
+
+                        //Add external ports to whatever io it's connecting to
+                        FIRIO[] newParentPorts = parentModHidden.GetOrMakeFlippedPortsFrom(newExtPorts);
+                        Debug.Assert(newExtPorts.Length == newParentPorts.Length);
+
+                        for (int y = 0; y < newExtPorts.Length; y++)
+                        {
+                            //New ports need to be paired in the module as they
+                            //just passed from internal to external module io
+                            if (!IsPartOfPair(newExtPorts[y]))
+                            {
+                                AddPairedIO(intPortsNeedsProp[y], newExtPorts[y]);
+
+                                //FIRRTL scoping is truely stupid. If a memory port is created in an inner
+                                //scope then it can still be used in an outer scope. To handle that all
+                                //newly aded memory ports are added to the outer scope.
+                                if (newParentPorts[y] is MemPort memPort &&
+                                    !parentMod.TryGetIO(newParentPorts[y].Name, false, out var _))
+                                {
+                                    parentMod.AddMemoryPort(memPort);
+                                }
+
+                                //Connect new external ports to where they should
+                                //be connected
+                                IOHelper.BiDirFullyConnectIO(newExtPorts[y], newParentPorts[y], true);
+                            }
+                        }
+
+                        //IOHelper.PropegatePorts(parentModHidden);
+                    }
+
+                    //If went through all ports and found no new ones
+                    //then no more new ports can be present meaning
+                    //they have all been found
+                    if (!handledNewPort)
+                    {
+                        break;
+                    }
                 }
             }
 
