@@ -11,6 +11,7 @@ namespace ChiselDebug.GraphFIR
         public readonly string Name;
         public readonly FIRIO In;
         public readonly FIRIO Result;
+        private readonly Dictionary<FIRIO, FIRIO> IOPairs = new Dictionary<FIRIO, FIRIO>();
 
         public Wire(string name, FIRIO inputType, FirrtlNode defNode) : base(defNode)
         {
@@ -22,9 +23,25 @@ namespace ChiselDebug.GraphFIR
             this.Name = name;
             this.In = inputType.Copy(this);
             this.Result = inputType.Flip(this);
+            IOHelper.PairIO(IOPairs, In, Result);
 
             In.SetName(Name + "/in");
             Result.SetName(Name);
+        }
+
+        internal void AddPairedIO(FIRIO io, FIRIO ioFlipped)
+        {
+            IOHelper.PairIO(IOPairs, io, ioFlipped);
+        }
+
+        public FIRIO GetPairedIO(FIRIO io)
+        {
+            return IOPairs[io];
+        }
+
+        public bool IsPartOfPair(FIRIO io)
+        {
+            return IOPairs.ContainsKey(io);
         }
 
         internal void BypassWireIO()

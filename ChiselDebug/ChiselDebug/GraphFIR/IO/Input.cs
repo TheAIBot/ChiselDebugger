@@ -58,6 +58,16 @@ namespace ChiselDebug.GraphFIR.IO
             return SinkSource;
         }
 
+        internal Connection[] GetConditionalConnections()
+        {
+            return CondCons.ToArray();
+        }
+
+        public bool HasSinkSource()
+        {
+            return SinkSource != null;
+        }
+
         public void MakeSinkOnly()
         {
             if (SinkSource == null)

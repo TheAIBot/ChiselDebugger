@@ -700,13 +700,15 @@ namespace ChiselDebug
             }
             else if (exp is FIRRTL.SubIndex subIndex)
             {
-                var vec = (GraphFIR.IO.Vector)VisitExp(helper, subIndex.Expr, gender);
+                var subVec = VisitExp(helper, subIndex.Expr, gender);
+                var vec = (GraphFIR.IO.Vector)GetIOGender(helper, subVec, gender);
 
                 refContainer = vec.GetIndex(subIndex.Value);
             }
             else if (exp is FIRRTL.SubAccess subAccess)
             {
-                var vec = (GraphFIR.IO.Vector)VisitExp(helper, subAccess.Expr, gender);
+                var subVec = VisitExp(helper, subAccess.Expr, gender);
+                var vec = (GraphFIR.IO.Vector)GetIOGender(helper, subVec, gender);
                 var index = (GraphFIR.IO.Output)VisitExp(helper, subAccess.Index, GraphFIR.IO.IOGender.Male);
 
                 refContainer = vec.MakeWriteAccess(index, gender);
@@ -721,9 +723,33 @@ namespace ChiselDebug
             //Dealing with it is ugly which is why i want to contain it.
             if (refContainer is GraphFIR.IO.FIRIO firIO && refContainer is not GraphFIR.IO.IPreserveDuplex)
             {
-                return firIO.GetAsGender(gender);
+                return GetIOGender(helper, firIO, gender);
             }
             return refContainer;
+        }
+
+        private static GraphFIR.IO.FIRIO GetIOGender(VisitHelper helper, GraphFIR.IO.FIRIO io, GraphFIR.IO.IOGender gender)
+        {
+            if (io is GraphFIR.IO.Input input && gender == GraphFIR.IO.IOGender.Male)
+            {
+                if (helper.Mod.TryGetDuplexOutputWire(input, out GraphFIR.IO.DuplexIO wireDuplex))
+                {
+                    io = wireDuplex;
+                }
+                else
+                {
+                    //Full name of io may collide with name of some other io, so
+                    //an unique string is added
+                    string fullNameUnique = input.GetFullName() + helper.GetUniqueName();
+                    GraphFIR.Wire wire = new GraphFIR.Wire(fullNameUnique, input, null);
+                    helper.Mod.AddWire(wire);
+                    helper.Mod.AddDuplexOuputWire(input, wire.GetAsDuplex());
+
+                    io = wire.GetAsDuplex();
+                }
+            }
+
+            return io.GetAsGender(gender);
         }
     }
 }

@@ -73,18 +73,7 @@ namespace ChiselDebug.GraphFIR
 
         internal void AddPairedIO(FIRIO io, FIRIO ioFlipped)
         {
-            FIRIO[] ioWalk = io.WalkIOTree().ToArray();
-            FIRIO[] ioFlipWalk = ioFlipped.WalkIOTree().ToArray();
-            if (ioWalk.Length != ioFlipWalk.Length)
-            {
-                throw new Exception($"Internal and external io must be of the same size when added to a module. External: {ioWalk.Length}, Internal: {ioFlipWalk.Length}");
-            }
-
-            for (int i = 0; i < ioWalk.Length; i++)
-            {
-                IOPairs.Add(ioWalk[i], ioFlipWalk[i]);
-                IOPairs.Add(ioFlipWalk[i], ioWalk[i]);
-            }
+            IOHelper.PairIO(IOPairs, io, ioFlipped);
         }
 
         public FIRIO GetPairedIO(FIRIO io)
