@@ -65,10 +65,10 @@ namespace ChiselDebug.GraphFIR.IO
                 return;
             }
 
-            if (!SinkSource.Con.IsUsed())
-            {
-                throw new Exception("Probably an error when a source is created in a sink but it's not connected to anything.");
-            }
+            //if (!SinkSource.Con.IsUsed())
+            //{
+            //    throw new Exception("Probably an error when a source is created in a sink but it's not connected to anything.");
+            //}
 
             if (!IsConnected())
             {
