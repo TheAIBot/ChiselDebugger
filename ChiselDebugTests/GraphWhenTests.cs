@@ -40,5 +40,10 @@ namespace ChiselDebugTests
         [TestMethod] public void When3xMemAccess_lo_fir() => TestTools.VerifyChiselTest("When3xMemAccess", "lo.fir", false);
         [TestMethod] public void When3xMemAccess_treadle_lo_fir() => TestTools.VerifyChiselTest("When3xMemAccess", "treadle.lo.fir", false);
         [TestMethod] public void When3xMemAccess_vcd_treadle_lo_fir() => TestTools.VerifyChiselTest("When3xMemAccess", "treadle.lo.fir", true);
+
+        [TestMethod] public void When1xDuplexInput_fir() => TestTools.VerifyChiselTest("When1xDuplexInput", "fir", false);
+        [TestMethod] public void When1xDuplexInput_lo_fir() => TestTools.VerifyChiselTest("When1xDuplexInput", "lo.fir", false);
+        [TestMethod] public void When1xDuplexInput_treadle_lo_fir() => TestTools.VerifyChiselTest("When1xDuplexInput", "treadle.lo.fir", false);
+        [TestMethod] public void When1xDuplexInput_vcd_treadle_lo_fir() => TestTools.VerifyChiselTest("When1xDuplexInput", "treadle.lo.fir", true);
     }
 }

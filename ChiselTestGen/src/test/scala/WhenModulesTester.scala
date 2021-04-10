@@ -31,4 +31,8 @@ class WhenTester extends FlatSpec with ChiselScalatestTester with Matchers {
         test(new When3xMemAccess()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
             {_=> {}}
     }
+    it should "Test When1xDuplexInput" in {
+        test(new When1xDuplexInput()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
+            {_=> {}}
+    }
 }

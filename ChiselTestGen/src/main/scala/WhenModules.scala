@@ -160,4 +160,20 @@ class When3xMemAccess extends Module {
             }
         }
     }
+
+class When1xDuplexInput extends Module {
+    val io = IO(new Bundle{
+        val en1 = Input(Bool())
+        val din = Input(UInt(8.W))
+        val dout1 = Output(UInt(8.W))
+        val dout2 = Output(UInt(8.W))
+    })
+
+    io.dout1 := io.din
+    io.dout2 := 0.U
+
+    when(io.en1) {
+        io.dout2 := io.dout1 + 1.U
+    }
+}
 }
