@@ -72,6 +72,8 @@ namespace ChiselDebug.GraphFIR.IO
 
             if (!IsConnected())
             {
+                SinkSource.DisconnectAll();
+                return;
                 throw new Exception("Sink must be connected when it's also used as a source.");
             }
 
