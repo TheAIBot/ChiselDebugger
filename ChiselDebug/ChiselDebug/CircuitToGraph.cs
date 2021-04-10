@@ -273,22 +273,11 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.Connect connect)
             {
-                GraphFIR.IO.FIRIO from = VisitExp(helper, connect.Expr, GraphFIR.IO.IOGender.Male);
-                GraphFIR.IO.FIRIO to = (GraphFIR.IO.FIRIO)VisitRef(helper, connect.Loc, helper.Mod, GraphFIR.IO.IOGender.Female);
-
-                //Can only connect two aggregates. If any of the two are not an
-                //aggregate type then try convert both to scalar io and connect them.
-                if (from is not GraphFIR.IO.AggregateIO || to is not GraphFIR.IO.AggregateIO)
-                {
-                    from = from.GetOutput();
-                    to = to.GetInput();
-                }
-
-                from.ConnectToInput(to);
+                VisitConnect(helper, connect.Expr, connect.Loc, false);
             }
-            else if (statement is FIRRTL.PartialConnect)
+            else if (statement is FIRRTL.PartialConnect parConnected)
             {
-                throw new NotImplementedException();
+                VisitConnect(helper, parConnected.Expr, parConnected.Loc, true);
             }
             else if (statement is FIRRTL.IsInvalid)
             {
@@ -426,6 +415,22 @@ namespace ChiselDebug
             {
                 throw new NotImplementedException();
             }
+        }
+
+        private static void VisitConnect(VisitHelper helper, FIRRTL.Expression exprFrom, FIRRTL.Expression exprTo, bool isPartial)
+        {
+            GraphFIR.IO.FIRIO from = VisitExp(helper, exprFrom, GraphFIR.IO.IOGender.Male);
+            GraphFIR.IO.FIRIO to = (GraphFIR.IO.FIRIO)VisitRef(helper, exprTo, helper.Mod, GraphFIR.IO.IOGender.Female);
+
+            //Can only connect two aggregates. If any of the two are not an
+            //aggregate type then try convert both to scalar io and connect them.
+            if (from is not GraphFIR.IO.AggregateIO || to is not GraphFIR.IO.AggregateIO)
+            {
+                from = from.GetOutput();
+                to = to.GetInput();
+            }
+
+            from.ConnectToInput(to, isPartial);
         }
 
         private static void VisitConditional(VisitHelper parentHelper, FIRRTL.Conditionally conditional)
@@ -688,7 +693,6 @@ namespace ChiselDebug
             if (exp is FIRRTL.Reference reference)
             {
                 refContainer = currContainer.GetIO(reference.Name);
-
             }
             else if (exp is FIRRTL.SubField subField)
             {
