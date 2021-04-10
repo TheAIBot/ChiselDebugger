@@ -303,6 +303,17 @@ namespace ChiselDebug
                 {
                     var lowFirMem = (FIRRTL.DefMemory)helper.GetDefNodeFromLowFirrtlGraph(cmem.Name);
                     VisitStatement(helper, lowFirMem);
+
+                    //Low level firrtl addresses the ports through the memory but
+                    //high level firrtl directly addreses the ports. Need to
+                    //make the ports directly addresseable which is why this is done.
+                    var lowMem = (GraphFIR.IO.IPortsIO)helper.Mod.GetIO(cmem.Name);
+                    foreach (GraphFIR.IO.MemPort port in lowMem.GetAllPorts())
+                    {
+                        helper.Mod.AddMemoryPort(port);
+                    }
+
+
                     return;
                 }
 
