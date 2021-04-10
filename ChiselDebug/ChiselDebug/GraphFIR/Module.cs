@@ -262,10 +262,8 @@ namespace ChiselDebug.GraphFIR
 
                             //Connect new external ports to where they should
                             //be connected
-                            newExtPorts[y].ConnectToInput(newParentPorts[y], false, false, true);
+                            IOHelper.BiDirFullyConnectIO(newExtPorts[y], newParentPorts[y], true);
                         }
-
-
                     }
 
                     //IOHelper.PropegatePorts(parentModHidden);
