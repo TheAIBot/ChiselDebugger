@@ -260,6 +260,15 @@ namespace ChiselDebug.GraphFIR
                         {
                             AddPairedIO(intPortsNeedsProp[y], newExtPorts[y]);
 
+                            //FIRRTL scoping is truely stupid. If a memory port is created in an inner
+                            //scope then it can still be used in an outer scope. To handle that all
+                            //newly aded memory ports are added to the outer scope.
+                            if (newParentPorts[y] is MemPort memPort && 
+                                !parentMod.TryGetIO(newParentPorts[y].Name, false, out var _))
+                            {
+                                parentMod.AddMemoryPort(memPort);
+                            }
+
                             //Connect new external ports to where they should
                             //be connected
                             IOHelper.BiDirFullyConnectIO(newExtPorts[y], newParentPorts[y], true);
