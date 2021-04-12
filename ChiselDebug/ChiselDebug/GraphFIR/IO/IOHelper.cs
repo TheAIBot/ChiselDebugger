@@ -19,8 +19,19 @@ namespace ChiselDebug.GraphFIR.IO
 
         public static void BypassIO(FIRIO bypassFrom, FIRIO bypassTo)
         {
-            ScalarIO[] bypassFromIO = bypassFrom.Flatten().ToArray();
-            ScalarIO[] bypassToIO = bypassTo.Flatten().ToArray();
+            HashSet<ScalarIO> ignoreFromIO = new HashSet<ScalarIO>(bypassFrom.GetAllIOOfType<VectorAccess>().SelectMany(x => x.Flatten()));
+            HashSet<ScalarIO> ignoreToIO = new HashSet<ScalarIO>(bypassTo.GetAllIOOfType<VectorAccess>().SelectMany(x => x.Flatten()));
+            foreach (var item in ignoreFromIO)
+            {
+                item.DisconnectAll();
+            }
+            foreach (var item in ignoreToIO)
+            {
+                item.DisconnectAll();
+            }
+
+            ScalarIO[] bypassFromIO = bypassFrom.Flatten().Where(x => !ignoreFromIO.Contains(x)).ToArray();
+            ScalarIO[] bypassToIO = bypassTo.Flatten().Where(x => !ignoreToIO.Contains(x)).ToArray();
 
             if (bypassFromIO.Length != bypassToIO.Length)
             {
@@ -71,7 +82,7 @@ namespace ChiselDebug.GraphFIR.IO
             Debug.Assert(bypassToIO.All(x => !x.IsConnectedToAnything()));
         }
 
-        public static void BiDirFullyConnectIO(FIRIO a, FIRIO b)
+        public static void BiDirFullyConnectIO(FIRIO a, FIRIO b, bool isConditional = false)
         {
             ScalarIO[] aFlat = a.Flatten().ToArray();
             ScalarIO[] bFlat = b.Flatten().ToArray();
@@ -88,11 +99,11 @@ namespace ChiselDebug.GraphFIR.IO
 
                 if (aIO is Input aIn && bIO is Output bOut)
                 {
-                    bOut.ConnectToInput(aIn);
+                    bOut.ConnectToInput(aIn, false, false, isConditional);
                 }
                 else if (aIO is Output aOut && bIO is Input bIn)
                 {
-                    aOut.ConnectToInput(bIn);
+                    aOut.ConnectToInput(bIn, false, false, isConditional);
                 }
                 else
                 {
@@ -123,25 +134,48 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        internal static void PropegatePorts(IHiddenPorts fromHidden)
+        public static void PairIO(Dictionary<FIRIO, FIRIO> pairs, FIRIO fromIO, FIRIO toIO)
         {
-            HashSet<FIRRTLNode> seenDestinations = new HashSet<FIRRTLNode>();
-            FIRRTLNode fromNode = ((FIRIO)fromHidden).Node;
-            while (seenDestinations.Add(fromNode) && fromNode is Module dstMod)// || dstNode is Wire)
+            FIRIO[] ioWalk = fromIO.WalkIOTree().ToArray();
+            FIRIO[] ioFlipWalk = toIO.WalkIOTree().ToArray();
+            if (ioWalk.Length != ioFlipWalk.Length)
             {
-                IHiddenPorts toHidden = (IHiddenPorts)dstMod.GetPairedIO((FIRIO)fromHidden);
+                throw new Exception($"In order to make a pair, the two io must be of the same size. From: {ioWalk.Length}, To: {ioFlipWalk.Length}");
+            }
 
-                FIRIO[] fromPorts = fromHidden.GetHiddenPorts();
-                FIRIO[] toPorts = toHidden.CopyHiddenPortsFrom(fromHidden);
-
-                for (int y = 0; y < fromPorts.Length; y++)
-                {
-                    fromPorts[y].ConnectToInput(toPorts[y]);
-                }
-
-                fromNode = ((FIRIO)toHidden).Node;
-                fromHidden = toHidden;
+            for (int i = 0; i < ioWalk.Length; i++)
+            {
+                pairs.Add(ioWalk[i], ioFlipWalk[i]);
+                pairs.Add(ioFlipWalk[i], ioWalk[i]);
             }
         }
+
+        //internal static void PropegatePorts(IPortsIO fromPortIO)
+        //{
+        //    while (true)
+        //    {
+        //        FIRRTLNode fromNode = ((FIRIO)fromPortIO).Node;
+
+        //    }
+
+
+        //    //HashSet<FIRRTLNode> seenDestinations = new HashSet<FIRRTLNode>();
+        //    //FIRRTLNode fromNode = ((FIRIO)fromHidden).Node;
+        //    //while (seenDestinations.Add(fromNode) && fromNode is Module dstMod)// || dstNode is Wire)
+        //    //{
+        //    //    IHiddenPorts toHidden = (IHiddenPorts)dstMod.GetPairedIO((FIRIO)fromHidden);
+
+        //    //    FIRIO[] fromPorts = fromHidden.GetHiddenPorts();
+        //    //    FIRIO[] toPorts = toHidden.CopyHiddenPortsFrom(fromHidden);
+
+        //    //    for (int y = 0; y < fromPorts.Length; y++)
+        //    //    {
+        //    //        fromPorts[y].ConnectToInput(toPorts[y]);
+        //    //    }
+
+        //    //    fromNode = ((FIRIO)toHidden).Node;
+        //    //    fromHidden = toHidden;
+        //    //}
+        //}
     }
 }

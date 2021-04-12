@@ -77,6 +77,11 @@ namespace FIRRTL
     {
         public const int UnknownWidth = -1;
         public bool IsWidthKnown => Width != -1;
+
+        public bool IsTypeFullyKnown()
+        {
+            return IsWidthKnown;
+        }
     }
     public record UIntType(int Width) : GroundType(Width);
     public record SIntType(int Width) : GroundType(Width);

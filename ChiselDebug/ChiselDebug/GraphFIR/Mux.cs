@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace ChiselDebug.GraphFIR
 {
-    public class Mux : FIRRTLNode
+    public class Mux : PairedIOFIRRTLNode
     {
         public readonly FIRIO[] Choises;
         public readonly Input Decider;
@@ -15,15 +15,10 @@ namespace ChiselDebug.GraphFIR
         public Mux(List<FIRIO> choises, Output decider, FirrtlNode defNode) : base(defNode)
         {
             choises = choises.Select(x => x.GetOutput()).ToList();
-            choises.ForEach(x => x.Flatten().ToList().ForEach(y => y.InferType()));
             if (!choises.All(x => x.IsPassiveOfType<Output>()))
             {
                 throw new Exception("Inputs to mux must all be passive output types.");
             }
-            //if (!choises.All(x => x.SameIO(choises.First())))
-            //{
-            //    throw new Exception("All inputs to mux must be of the same type.");
-            //}
 
             this.Choises = choises.Select(x => x.Flip(this)).ToArray();
             this.Decider = new Input(this, decider.Type);
@@ -36,6 +31,8 @@ namespace ChiselDebug.GraphFIR
                 choises[i].ConnectToInput(Choises[i]);
             }
             decider.ConnectToInput(Decider);
+
+            AddOneToManyPairedIO(Result, Choises.ToList());
         }
 
         public override ScalarIO[] GetInputs()

@@ -1,6 +1,7 @@
 ﻿using FIRRTL;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ChiselDebug.GraphFIR.IO
 {
@@ -14,9 +15,18 @@ namespace ChiselDebug.GraphFIR.IO
             this.Con = new Connection(this);
         }
 
+        public override void DisconnectAll()
+        {
+            Input[] inputs = Con.To.ToArray();
+            foreach (var input in inputs)
+            {
+                Con.DisconnectInput(input);
+            }
+        }
+
         public override void SetType(IFIRType type)
         {
-            Type = type;
+            base.SetType(type);
             Con.Value = new ValueType(type);
         }
 
@@ -68,22 +78,29 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public override void InferType()
+        public override void InferGroundType()
         {
             if (Node == null)
             {
                 return;
             }
-            if (Node is Module)
-            {
-                return;
-            }
-            if (Type is not UnknownType)
+            if (Type is GroundType ground && ground.IsTypeFullyKnown())
             {
                 return;
             }
 
-            Node.InferType();
+            if (Node is PairedIOFIRRTLNode pairedIO)
+            {
+                foreach (Input paired in pairedIO.GetAllPairedIO(this).OfType<Input>())
+                {
+                    paired.InferType();
+                    SetType(paired.Type);
+                }
+            }
+            else
+            {
+                Node.InferType();
+            }
         }
     }
 }

@@ -38,11 +38,6 @@ namespace ChiselDebug.GraphFIR.IO
             return cons.ToArray();
         }
 
-        public override void SetType(IFIRType type)
-        {
-            Type = type;
-        }
-
         public override FIRIO GetInput()
         {
             return this;
@@ -58,6 +53,16 @@ namespace ChiselDebug.GraphFIR.IO
             return SinkSource;
         }
 
+        internal Connection[] GetConditionalConnections()
+        {
+            return CondCons.ToArray();
+        }
+
+        public bool HasSinkSource()
+        {
+            return SinkSource != null;
+        }
+
         public void MakeSinkOnly()
         {
             if (SinkSource == null)
@@ -65,13 +70,15 @@ namespace ChiselDebug.GraphFIR.IO
                 return;
             }
 
-            if (!SinkSource.Con.IsUsed())
-            {
-                throw new Exception("Probably an error when a source is created in a sink but it's not connected to anything.");
-            }
+            //if (!SinkSource.Con.IsUsed())
+            //{
+            //    throw new Exception("Probably an error when a source is created in a sink but it's not connected to anything.");
+            //}
 
             if (!IsConnected())
             {
+                SinkSource.DisconnectAll();
+                return;
                 throw new Exception("Sink must be connected when it's also used as a source.");
             }
 
@@ -98,7 +105,7 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public void DisconnectAll()
+        public override void DisconnectAll()
         {
             if (Con != null)
             {
@@ -159,12 +166,21 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public override void InferType()
+        public override void InferGroundType()
         {
-            if (Con != null && Type is UnknownType)
+            if (Type is GroundType ground && ground.IsTypeFullyKnown())
+            {
+                return;
+            }
+            if (Con != null)
             {
                 Con.From.InferType();
-                Type = Con.From.Type;
+                SetType(Con.From.Type);
+            }
+            foreach (var condCon in CondCons)
+            {
+                condCon.From.InferType();
+                SetType(condCon.From.Type);
             }
         }
     }

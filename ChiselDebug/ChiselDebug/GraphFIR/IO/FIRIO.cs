@@ -28,6 +28,22 @@ namespace ChiselDebug.GraphFIR.IO
             ParentIO = aggIO;
         }
 
+        public string GetFullName()
+        {
+            List<string> pathToRoot = new List<string>();
+            pathToRoot.Add(Name);
+
+            FIRIO node = this;
+            while (node.ParentIO != null)
+            {
+                node = node.ParentIO;
+                pathToRoot.Add(node.Name);
+            }
+
+            pathToRoot.Reverse();
+            return string.Join('.', pathToRoot);
+        }
+
         public virtual FIRIO GetInput()
         {
             throw new Exception("Can't get input from this IO.");

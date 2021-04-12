@@ -2,11 +2,12 @@ using ChiselDebug.GraphFIR.IO;
 using FIRRTL;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace ChiselDebug.GraphFIR
 {
-    public class Wire : FIRRTLNode
+    public class Wire : PairedIOFIRRTLNode
     {
         public readonly string Name;
         public readonly FIRIO In;
@@ -22,6 +23,7 @@ namespace ChiselDebug.GraphFIR
             this.Name = name;
             this.In = inputType.Copy(this);
             this.Result = inputType.Flip(this);
+            AddPairedIO(In, Result);
 
             In.SetName(Name + "/in");
             Result.SetName(Name);
@@ -30,6 +32,8 @@ namespace ChiselDebug.GraphFIR
         internal void BypassWireIO()
         {
             IOHelper.BypassIO(In, Result);
+            Debug.Assert(In.Flatten().All(x => !x.IsConnectedToAnything()));
+            Debug.Assert(Result.Flatten().All(x => !x.IsConnectedToAnything()));
         }
 
         internal DuplexIO GetAsDuplex()

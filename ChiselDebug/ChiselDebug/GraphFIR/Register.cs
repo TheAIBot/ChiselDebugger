@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ChiselDebug.GraphFIR
 {
-    public class Register : FIRRTLNode
+    public class Register : PairedIOFIRRTLNode
     {
         public readonly string Name;
         public readonly FIRIO In;
@@ -51,6 +51,14 @@ namespace ChiselDebug.GraphFIR
                 Init.SetName("init");
                 init.ConnectToInput(Init);
             }
+
+            List<FIRIO> pairs = new List<FIRIO>();
+            pairs.Add(In);
+            if (Init != null)
+            {
+                pairs.Add(Init);
+            }
+            AddOneToManyPairedIO(Result, pairs);
         }
 
         internal DuplexIO GetAsDuplex()

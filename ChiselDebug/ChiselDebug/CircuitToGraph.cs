@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using static FIRRTL.Extensions;
@@ -257,41 +258,35 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.Stop)
             {
+                return;
                 throw new NotImplementedException();
             }
             else if (statement is FIRRTL.Attach)
             {
+                return;
                 throw new NotImplementedException();
             }
             else if (statement is FIRRTL.Print)
             {
+                return;
                 throw new NotImplementedException();
             }
             else if (statement is FIRRTL.Verification)
             {
+                return;
                 throw new NotImplementedException();
             }
             else if (statement is FIRRTL.Connect connect)
             {
-                GraphFIR.IO.FIRIO from = VisitExp(helper, connect.Expr, GraphFIR.IO.IOGender.Male);
-                GraphFIR.IO.FIRIO to = (GraphFIR.IO.FIRIO)VisitRef(helper, connect.Loc, helper.Mod, GraphFIR.IO.IOGender.Female);
-
-                //Can only connect two aggregates. If any of the two are not an
-                //aggregate type then try convert both to scalar io and connect them.
-                if (from is not GraphFIR.IO.AggregateIO || to is not GraphFIR.IO.AggregateIO)
-                {
-                    from = from.GetOutput();
-                    to = to.GetInput();
-                }
-
-                from.ConnectToInput(to);
+                VisitConnect(helper, connect.Expr, connect.Loc, false);
             }
-            else if (statement is FIRRTL.PartialConnect)
+            else if (statement is FIRRTL.PartialConnect parConnected)
             {
-                throw new NotImplementedException();
+                VisitConnect(helper, parConnected.Expr, parConnected.Loc, true);
             }
             else if (statement is FIRRTL.IsInvalid)
             {
+                return;
                 throw new NotImplementedException();
             }
             else if (statement is FIRRTL.CDefMemory cmem)
@@ -303,6 +298,17 @@ namespace ChiselDebug
                 {
                     var lowFirMem = (FIRRTL.DefMemory)helper.GetDefNodeFromLowFirrtlGraph(cmem.Name);
                     VisitStatement(helper, lowFirMem);
+
+                    //Low level firrtl addresses the ports through the memory but
+                    //high level firrtl directly addreses the ports. Need to
+                    //make the ports directly addresseable which is why this is done.
+                    var lowMem = (GraphFIR.IO.IPortsIO)helper.Mod.GetIO(cmem.Name);
+                    foreach (GraphFIR.IO.MemPort port in lowMem.GetAllPorts())
+                    {
+                        helper.Mod.AddMemoryPort(port);
+                    }
+
+
                     return;
                 }
 
@@ -332,20 +338,20 @@ namespace ChiselDebug
                         FIRRTL.MPortDir.MReadWrite => memory.AddReadWritePort(memPort.Name),
                         var error => throw new Exception($"Unknown memory port type. Type: {error}")
                     };
+                }
 
-                    VisitExp(helper, memPort.Exps[0], GraphFIR.IO.IOGender.Male).ConnectToInput(port.Address);
-                    VisitExp(helper, memPort.Exps[1], GraphFIR.IO.IOGender.Male).ConnectToInput(port.Clock);
-                    helper.ScopeEnabledCond.ConnectToInput(port.Enabled);
+                VisitExp(helper, memPort.Exps[0], GraphFIR.IO.IOGender.Male).ConnectToInput(port.Address);
+                VisitExp(helper, memPort.Exps[1], GraphFIR.IO.IOGender.Male).ConnectToInput(port.Clock);
+                helper.ScopeEnabledCond.ConnectToInput(port.Enabled);
 
-                    //if port has mask then by default set whole mask to true
-                    if (port.HasMask())
+                //if port has mask then by default set whole mask to true
+                if (port.HasMask())
+                {
+                    GraphFIR.IO.FIRIO mask = port.GetMask();
+                    GraphFIR.IO.Output const1 = (GraphFIR.IO.Output)VisitExp(helper, new FIRRTL.UIntLiteral(1, 1), GraphFIR.IO.IOGender.Male);
+                    foreach (var maskInput in mask.Flatten())
                     {
-                        GraphFIR.IO.FIRIO mask = port.GetMask();
-                        GraphFIR.IO.Output const1 = (GraphFIR.IO.Output)VisitExp(helper, new FIRRTL.UIntLiteral(1, 1), GraphFIR.IO.IOGender.Male);
-                        foreach (var maskInput in mask.Flatten())
-                        {
-                            const1.ConnectToInput(maskInput);
-                        }
+                        const1.ConnectToInput(maskInput);
                     }
                 }
 
@@ -417,6 +423,22 @@ namespace ChiselDebug
             }
         }
 
+        private static void VisitConnect(VisitHelper helper, FIRRTL.Expression exprFrom, FIRRTL.Expression exprTo, bool isPartial)
+        {
+            GraphFIR.IO.FIRIO from = VisitExp(helper, exprFrom, GraphFIR.IO.IOGender.Male);
+            GraphFIR.IO.FIRIO to = (GraphFIR.IO.FIRIO)VisitRef(helper, exprTo, helper.Mod, GraphFIR.IO.IOGender.Female);
+
+            //Can only connect two aggregates. If any of the two are not an
+            //aggregate type then try convert both to scalar io and connect them.
+            if (from is not GraphFIR.IO.AggregateIO || to is not GraphFIR.IO.AggregateIO)
+            {
+                from = from.GetOutput();
+                to = to.GetInput();
+            }
+
+            from.ConnectToInput(to, isPartial);
+        }
+
         private static void VisitConditional(VisitHelper parentHelper, FIRRTL.Conditionally conditional)
         {
             GraphFIR.Conditional cond = new GraphFIR.Conditional(conditional);
@@ -449,20 +471,19 @@ namespace ChiselDebug
                 //Fill out module
                 VisitStatement(helper, body);
 
-                //If external input wasn't used internally then disconnect
-                //external input. Removing IO from a module isn't currently
-                //possible. In order to avoid visualing all this unused IO,
+                //Default things to do when a module is finished
+                CleanupModule(helper);
+
+                //If internal io was used then connect its external io
+                //to parent modules corresponding io
+                helper.Mod.ExternalConnectUsedIO(parentHelper.Mod);
+
+                //If external io wasn't used internally then disconnect
+                //external io. Removing io from a module isn't currently
+                //possible. In order to avoid visualing all this unused io,
                 //unused is hidden in the visualization but that can only work
                 //if it's not connected to anything.
                 helper.Mod.DisconnectUnusedIO();
-
-                //If internal input was used then connect its external IO
-                //to parent modules corresponding input
-                helper.Mod.ExternalConnectUsedIO(parentHelper.Mod);
-
-
-                //Default things to do when a module is finished
-                CleanupModule(helper);
 
                 cond.AddConditionalModule((GraphFIR.IO.Input)internalEnaDummy.InIO, helper.Mod);
 
@@ -627,13 +648,13 @@ namespace ChiselDebug
                 }
                 else if (prim.Op is FIRRTL.Shl)
                 {
-                    var constLit = new FIRRTL.UIntLiteral(prim.Consts[0], 0);
+                    var constLit = new FIRRTL.UIntLiteral(prim.Consts[0], (int)prim.Consts[0].GetBitLength());
                     var constOutput = (GraphFIR.IO.Output)VisitExp(helper, constLit, GraphFIR.IO.IOGender.Male);
                     nodePrim = new GraphFIR.FIRShl(args[0], constOutput, prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Shr)
                 {
-                    var constLit = new FIRRTL.UIntLiteral(prim.Consts[0], 0);
+                    var constLit = new FIRRTL.UIntLiteral(prim.Consts[0], (int)prim.Consts[0].GetBitLength());
                     var constOutput = (GraphFIR.IO.Output)VisitExp(helper, constLit, GraphFIR.IO.IOGender.Male);
                     nodePrim = new GraphFIR.FIRShr(args[0], constOutput, prim.Type, prim);
                 }
@@ -678,7 +699,6 @@ namespace ChiselDebug
             if (exp is FIRRTL.Reference reference)
             {
                 refContainer = currContainer.GetIO(reference.Name);
-
             }
             else if (exp is FIRRTL.SubField subField)
             {
@@ -686,13 +706,15 @@ namespace ChiselDebug
             }
             else if (exp is FIRRTL.SubIndex subIndex)
             {
-                var vec = (GraphFIR.IO.Vector)VisitExp(helper, subIndex.Expr, gender);
+                var subVec = VisitExp(helper, subIndex.Expr, gender);
+                var vec = (GraphFIR.IO.Vector)GetIOGender(helper, subVec, gender);
 
                 refContainer = vec.GetIndex(subIndex.Value);
             }
             else if (exp is FIRRTL.SubAccess subAccess)
             {
-                var vec = (GraphFIR.IO.Vector)VisitExp(helper, subAccess.Expr, gender);
+                var subVec = VisitExp(helper, subAccess.Expr, gender);
+                var vec = (GraphFIR.IO.Vector)GetIOGender(helper, subVec, gender);
                 var index = (GraphFIR.IO.Output)VisitExp(helper, subAccess.Index, GraphFIR.IO.IOGender.Male);
 
                 refContainer = vec.MakeWriteAccess(index, gender);
@@ -707,9 +729,28 @@ namespace ChiselDebug
             //Dealing with it is ugly which is why i want to contain it.
             if (refContainer is GraphFIR.IO.FIRIO firIO && refContainer is not GraphFIR.IO.IPreserveDuplex)
             {
-                return firIO.GetAsGender(gender);
+                return GetIOGender(helper, firIO, gender);
             }
             return refContainer;
+        }
+
+        private static GraphFIR.IO.FIRIO GetIOGender(VisitHelper helper, GraphFIR.IO.FIRIO io, GraphFIR.IO.IOGender gender)
+        {
+            if (io is GraphFIR.IO.Input input && gender == GraphFIR.IO.IOGender.Male)
+            {
+                string duplexOutputName = helper.Mod.GetDuplexOutputName(input);
+
+                //Try see if it was already created
+                if (helper.Mod.TryGetIO(duplexOutputName, false, out var wireOut))
+                {
+                    return (GraphFIR.IO.Output)wireOut;
+                }
+
+                //Duplex output for this input wasn't created before so make it now
+                return helper.Mod.AddDuplexOuputWire(input);
+            }
+
+            return io.GetAsGender(gender);
         }
     }
 }

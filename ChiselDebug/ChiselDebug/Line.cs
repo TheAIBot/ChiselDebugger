@@ -21,5 +21,17 @@ namespace ChiselDebug
             Point diff = (End - Start).Abs();
             return diff.X + diff.Y;
         }
+
+        public override bool Equals(object obj)
+        {
+            return obj is Line line &&
+                   EqualityComparer<Point>.Default.Equals(Start, line.Start) &&
+                   EqualityComparer<Point>.Default.Equals(End, line.End);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Start, End);
+        }
     }
 }

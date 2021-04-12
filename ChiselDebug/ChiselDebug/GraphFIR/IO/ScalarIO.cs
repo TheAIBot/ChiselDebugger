@@ -6,9 +6,10 @@ namespace ChiselDebug.GraphFIR.IO
 {
     public abstract class ScalarIO : FIRIO
     {
-        public IFIRType Type { get; protected set; }
+        public IFIRType Type { get; private set; }
         public Connection Con = null;
         private Connection EnabledCond = null;
+        private bool IsInferingTypeNow = false;
         public bool IsEnabled => EnabledCond == null || EnabledCond.Value.IsTrue();
 
         public ScalarIO(FIRRTLNode node, IFIRType type) : this(node, string.Empty, type)
@@ -49,8 +50,25 @@ namespace ChiselDebug.GraphFIR.IO
             throw new Exception("Scalar IO can't contain additional io.");
         }
 
-        public abstract void SetType(IFIRType type);
+        public virtual void SetType(IFIRType type)
+        {
+            Type = type;
+        }
 
-        public abstract void InferType();
+        public abstract void DisconnectAll();
+
+        public void InferType()
+        {
+            if (IsInferingTypeNow)
+            {
+                return;
+            }
+
+            IsInferingTypeNow = true;
+            InferGroundType();
+            IsInferingTypeNow = false;
+        }
+
+        public abstract void InferGroundType();
     }
 }

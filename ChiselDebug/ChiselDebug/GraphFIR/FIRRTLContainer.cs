@@ -7,10 +7,9 @@ using System.Diagnostics;
 
 namespace ChiselDebug.GraphFIR
 {
-    public abstract class FIRRTLContainer : FIRRTLNode, IContainerIO
+    public abstract class FIRRTLContainer : PairedIOFIRRTLNode, IContainerIO
     {
         private readonly List<FIRIO> AllIOInOrder = new List<FIRIO>();
-        private readonly Dictionary<FIRIO, FIRIO> IOPairs = new Dictionary<FIRIO, FIRIO>();
         public readonly Dictionary<string, FIRIO> ExternalIO = new Dictionary<string, FIRIO>();
         public readonly Dictionary<string, FIRIO> InternalIO = new Dictionary<string, FIRIO>();   
 
@@ -25,18 +24,7 @@ namespace ChiselDebug.GraphFIR
             InternalIO.Add(io.Name, flipped);
             AllIOInOrder.Add(flipped);
 
-            FIRIO[] ioWalk = io.WalkIOTree().ToArray();
-            FIRIO[] ioFlipWalk = flipped.WalkIOTree().ToArray();
-            if (ioWalk.Length != ioFlipWalk.Length)
-            {
-                throw new Exception($"Internal and external io must be of the same size when added to a module. External: {ioWalk.Length}, Internal: {ioFlipWalk.Length}");
-            }
-
-            for (int i = 0; i < ioWalk.Length; i++)
-            {
-                IOPairs.Add(ioWalk[i], ioFlipWalk[i]);
-                IOPairs.Add(ioFlipWalk[i], ioWalk[i]);
-            }
+            AddPairedIO(io, flipped);
         }
 
         public override ScalarIO[] GetInputs()
@@ -80,11 +68,6 @@ namespace ChiselDebug.GraphFIR
         public virtual FIRIO[] GetAllIOOrdered()
         {
             return AllIOInOrder.SelectMany(x => x.Flatten()).ToArray();
-        }
-
-        public FIRIO GetPairedIO(FIRIO io)
-        {
-            return IOPairs[io];
         }
 
         public override void InferType()

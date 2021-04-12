@@ -60,6 +60,20 @@ namespace ChiselDebug.GraphFIR.IO
             return new MemRWPort(node ?? Node, Name, GetIOInOrder().Select(x => x.ToFlow(flow, node)).ToList());
         }
 
+        public override bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container)
+        {
+            if (base.TryGetIO(ioName, modulesOnly, out container))
+            {
+                return true;
+            }
+            else if (DataOut.TryGetIO(ioName, modulesOnly, out container))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         internal override bool HasMask()
         {
             return true;
