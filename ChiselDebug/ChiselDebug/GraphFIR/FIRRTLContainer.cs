@@ -7,10 +7,9 @@ using System.Diagnostics;
 
 namespace ChiselDebug.GraphFIR
 {
-    public abstract class FIRRTLContainer : FIRRTLNode, IContainerIO
+    public abstract class FIRRTLContainer : PairedIOFIRRTLNode, IContainerIO
     {
         private readonly List<FIRIO> AllIOInOrder = new List<FIRIO>();
-        private readonly Dictionary<FIRIO, FIRIO> IOPairs = new Dictionary<FIRIO, FIRIO>();
         public readonly Dictionary<string, FIRIO> ExternalIO = new Dictionary<string, FIRIO>();
         public readonly Dictionary<string, FIRIO> InternalIO = new Dictionary<string, FIRIO>();   
 
@@ -69,21 +68,6 @@ namespace ChiselDebug.GraphFIR
         public virtual FIRIO[] GetAllIOOrdered()
         {
             return AllIOInOrder.SelectMany(x => x.Flatten()).ToArray();
-        }
-
-        internal void AddPairedIO(FIRIO io, FIRIO ioFlipped)
-        {
-            IOHelper.PairIO(IOPairs, io, ioFlipped);
-        }
-
-        public FIRIO GetPairedIO(FIRIO io)
-        {
-            return IOPairs[io];
-        }
-
-        public bool IsPartOfPair(FIRIO io)
-        {
-            return IOPairs.ContainsKey(io);
         }
 
         public override void InferType()

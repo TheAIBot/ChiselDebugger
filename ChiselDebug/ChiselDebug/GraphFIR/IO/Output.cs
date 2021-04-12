@@ -89,9 +89,14 @@ namespace ChiselDebug.GraphFIR.IO
                 return;
             }
 
-            if (Node is Module mod)
+            if (Node is PairedIOFIRRTLNode pairedIO)
             {
-                Input paired = (Input)mod.GetPairedIO(this);
+                if (!pairedIO.IsPartOfPair(this))
+                {
+                    return;
+                }
+
+                Input paired = (Input)pairedIO.GetPairedIO(this);
                 paired.InferType();
                 SetType(paired.Type);
             }
