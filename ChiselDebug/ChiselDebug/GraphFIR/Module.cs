@@ -260,6 +260,25 @@ namespace ChiselDebug.GraphFIR
             }
         }
 
+        internal void SetConditional(Connection enableCon)
+        {
+            foreach (var io in InternalIO.Values.SelectMany(x => x.Flatten()))
+            {
+                io.SetEnabledCondition(enableCon);
+            }
+            foreach (var io in ExternalIO.Values.SelectMany(x => x.Flatten()))
+            {
+                io.SetEnabledCondition(enableCon);
+            }
+            foreach (var node in Nodes)
+            {
+                foreach (var io in node.GetIO().Flatten())
+                {
+                    io.SetEnabledCondition(enableCon);
+                }
+            }
+        }
+
         internal void CopyInternalAsExternalIO(Module mod)
         {
             foreach (Input input in GetAllIOOrdered().OfType<Input>())

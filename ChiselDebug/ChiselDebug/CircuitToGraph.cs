@@ -485,6 +485,8 @@ namespace ChiselDebug
                 //if it's not connected to anything.
                 helper.Mod.DisconnectUnusedIO();
 
+                helper.Mod.SetConditional(ena.Con);
+
                 cond.AddConditionalModule((GraphFIR.IO.Input)internalEnaDummy.InIO, helper.Mod);
 
                 helper.ExitEnabledScope();

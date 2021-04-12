@@ -166,6 +166,28 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
+        public Connection GetEnabledCon()
+        {
+            foreach (var condCon in CondCons)
+            {
+                if (condCon.From.IsEnabled)
+                {
+                    return condCon;
+                }
+            }
+
+            if (Con != null)
+            {
+                return Con;
+            }
+
+            //No connection is enabled.
+            //This should only happen when circuit state isn't set yet.
+            //Just return random connection as they should all have the
+            //same value.
+            return CondCons.First();
+        }
+
         public override void InferGroundType()
         {
             if (Type is GroundType ground && ground.IsTypeFullyKnown())
