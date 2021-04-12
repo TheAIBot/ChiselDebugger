@@ -19,8 +19,6 @@ namespace ChiselDebug.GraphFIR
 
         public void AddConditionalModule(Input enable, Module mod)
         {
-
-
             ConditionalModules.Add(new ConditionalModule(enable, mod));
         }
 

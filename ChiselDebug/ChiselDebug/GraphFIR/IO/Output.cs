@@ -78,27 +78,24 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public override void InferType()
+        public override void InferGroundType()
         {
             if (Node == null)
             {
                 return;
             }
-            if (Type is not UnknownType)
+            if (Type is GroundType ground && ground.IsTypeFullyKnown())
             {
                 return;
             }
 
             if (Node is PairedIOFIRRTLNode pairedIO)
             {
-                if (!pairedIO.IsPartOfPair(this))
+                foreach (Input paired in pairedIO.GetAllPairedIO(this).OfType<Input>())
                 {
-                    return;
+                    paired.InferType();
+                    SetType(paired.Type);
                 }
-
-                Input paired = (Input)pairedIO.GetPairedIO(this);
-                paired.InferType();
-                SetType(paired.Type);
             }
             else
             {

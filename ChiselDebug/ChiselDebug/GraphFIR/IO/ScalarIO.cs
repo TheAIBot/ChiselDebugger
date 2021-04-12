@@ -9,6 +9,7 @@ namespace ChiselDebug.GraphFIR.IO
         public IFIRType Type { get; private set; }
         public Connection Con = null;
         private Connection EnabledCond = null;
+        private bool IsInferingTypeNow = false;
         public bool IsEnabled => EnabledCond == null || EnabledCond.Value.IsTrue();
 
         public ScalarIO(FIRRTLNode node, IFIRType type) : this(node, string.Empty, type)
@@ -51,16 +52,23 @@ namespace ChiselDebug.GraphFIR.IO
 
         public virtual void SetType(IFIRType type)
         {
-            if (type is UnknownType)
-            {
-                throw new Exception("Not allowed to set the type to unknown.");
-            }
-
             Type = type;
         }
 
         public abstract void DisconnectAll();
 
-        public abstract void InferType();
+        public void InferType()
+        {
+            if (IsInferingTypeNow)
+            {
+                return;
+            }
+
+            IsInferingTypeNow = true;
+            InferGroundType();
+            IsInferingTypeNow = false;
+        }
+
+        public abstract void InferGroundType();
     }
 }

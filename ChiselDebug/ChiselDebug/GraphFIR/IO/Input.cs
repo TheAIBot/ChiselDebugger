@@ -166,13 +166,13 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public override void InferType()
+        public override void InferGroundType()
         {
-            if (Type is not UnknownType)
+            if (Type is GroundType ground && ground.IsTypeFullyKnown())
             {
                 return;
             }
-            if (Con != null && Type is UnknownType)
+            if (Con != null)
             {
                 Con.From.InferType();
                 SetType(Con.From.Type);

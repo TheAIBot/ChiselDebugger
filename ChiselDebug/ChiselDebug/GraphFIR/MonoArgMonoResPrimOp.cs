@@ -33,7 +33,7 @@ namespace ChiselDebug.GraphFIR
 
         public override void InferType()
         {
-            if (Result.Type is not UnknownType)
+            if (Result.Type is GroundType ground && ground.IsTypeFullyKnown())
             {
                 return;
             }

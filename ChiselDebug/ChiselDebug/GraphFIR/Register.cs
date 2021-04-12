@@ -52,7 +52,13 @@ namespace ChiselDebug.GraphFIR
                 init.ConnectToInput(Init);
             }
 
-            AddPairedIO(In, Result);
+            List<FIRIO> pairs = new List<FIRIO>();
+            pairs.Add(In);
+            if (Init != null)
+            {
+                pairs.Add(Init);
+            }
+            AddOneToManyPairedIO(Result, pairs);
         }
 
         internal DuplexIO GetAsDuplex()
@@ -97,11 +103,6 @@ namespace ChiselDebug.GraphFIR
         }
 
         public override void InferType()
-        {
-            foreach (var input in GetInputs())
-            {
-                input.InferType();
-            }
-        }
+        { }
     }
 }
