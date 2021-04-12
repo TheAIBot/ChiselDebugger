@@ -40,22 +40,6 @@ namespace ChiselDebug.GraphFIR
             return sBuilder.ToString();
         }
 
-        public static SizedType ToSizedType(this FIRRTL.Literal literal)
-        {
-            if (literal is FIRRTL.UIntLiteral)
-            {
-                return new SizedType(GroundType.UInt, literal.Width);
-            }
-            else if (literal is FIRRTL.SIntLiteral)
-            {
-                return new SizedType(GroundType.SInt, literal.Width);
-            }
-            else
-            {
-                throw new Exception($"Unexpected literal type: {literal}");
-            }
-        }
-
         public static ScalarIO[] Flatten(this FIRIO[] io)
         {
             return io.SelectMany(x => x.Flatten()).ToArray();
