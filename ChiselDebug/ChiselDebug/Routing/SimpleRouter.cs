@@ -27,6 +27,11 @@ namespace ChiselDebug.Routing
             {
                 return new Line(Start.DirIO.Position, End.DirIO.Position).GetManhattanDistance();
             }
+
+            public Line GetLine()
+            {
+                return new Line(Start.DirIO.Position, End.DirIO.Position);
+            }
         }
 
         public void UpdateIOFromNode(FIRRTLNode node, List<DirectedIO> inputOffsets, List<DirectedIO> outputOffsets)
@@ -44,11 +49,13 @@ namespace ChiselDebug.Routing
             try
             {
                 int rerouteCount = 0;
+                Dictionary<Line, int> repathCounter = new Dictionary<Line, int>();
                 PriorityQueue<LineInfo, int> linesPriority = new PriorityQueue<LineInfo, int>();
                 foreach ((IOInfo start, IOInfo end) in Connections.GetAllConnectionLines(placements))
                 {
                     LineInfo line = new LineInfo(start, end);
                     linesPriority.Enqueue(line, line.GetScore());
+                    repathCounter.Add(line.GetLine(), 0);
                 }
 
                 RouterBoard board = new RouterBoard(placements.SpaceNeeded);
@@ -92,12 +99,16 @@ namespace ChiselDebug.Routing
                     }
                     foreach (var repath in needsRepathing)
                     {
+                        LineInfo line = new LineInfo(repath.EndIO, repath.StartIO);
+                        if (repathCounter[line.GetLine()]++ >= 20)
+                        {
+                            continue;
+                        }
+
                         paths.Remove(repath);
                         startPosPaths[repath.EndIO.DirIO.Position].Remove(repath);
 
-                        LineInfo line = new LineInfo(repath.EndIO, repath.StartIO);
                         linesPriority.Enqueue(line, line.GetScore());
-                        rerouteCount++;
                     }
                     paths.Add(path);
 
@@ -110,11 +121,6 @@ namespace ChiselDebug.Routing
                         List<WirePath> startPdwaaths = new List<WirePath>();
                         startPdwaaths.Add(path);
                         startPosPaths.Add(start.DirIO.Position, startPdwaaths);
-                    }
-
-                    if (rerouteCount > 100)
-                    {
-                        break;
                     }
                 }
 
