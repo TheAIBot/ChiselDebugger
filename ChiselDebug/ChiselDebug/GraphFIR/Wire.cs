@@ -2,6 +2,7 @@ using ChiselDebug.GraphFIR.IO;
 using FIRRTL;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace ChiselDebug.GraphFIR
@@ -47,6 +48,8 @@ namespace ChiselDebug.GraphFIR
         internal void BypassWireIO()
         {
             IOHelper.BypassIO(In, Result);
+            Debug.Assert(In.Flatten().All(x => !x.IsConnectedToAnything()));
+            Debug.Assert(Result.Flatten().All(x => !x.IsConnectedToAnything()));
         }
 
         internal DuplexIO GetAsDuplex()

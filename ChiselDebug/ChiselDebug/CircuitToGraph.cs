@@ -732,21 +732,16 @@ namespace ChiselDebug
         {
             if (io is GraphFIR.IO.Input input && gender == GraphFIR.IO.IOGender.Male)
             {
-                if (helper.Mod.TryGetDuplexOutputWire(input, out GraphFIR.IO.DuplexIO wireDuplex))
-                {
-                    io = wireDuplex;
-                }
-                else
-                {
-                    //Full name of io may collide with name of some other io, so
-                    //an unique string is added
-                    string fullNameUnique = input.GetFullName() + helper.GetUniqueName();
-                    GraphFIR.Wire wire = new GraphFIR.Wire(fullNameUnique, input, null);
-                    helper.Mod.AddWire(wire);
-                    helper.Mod.AddDuplexOuputWire(input, wire.GetAsDuplex());
+                string duplexOutputName = helper.Mod.GetDuplexOutputName(input);
 
-                    io = wire.GetAsDuplex();
+                //Try see if it was already created
+                if (helper.Mod.TryGetIO(duplexOutputName, false, out var wireOut))
+                {
+                    return (GraphFIR.IO.Output)wireOut;
                 }
+
+                //Duplex output for this input wasn't created before so make it now
+                return helper.Mod.AddDuplexOuputWire(input);
             }
 
             return io.GetAsGender(gender);

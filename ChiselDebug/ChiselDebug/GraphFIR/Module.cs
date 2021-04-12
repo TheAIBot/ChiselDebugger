@@ -14,7 +14,8 @@ namespace ChiselDebug.GraphFIR
         public List<FIRRTLNode> Nodes = new List<FIRRTLNode>();
         private readonly Dictionary<string, FIRIO> NameToIO = new Dictionary<string, FIRIO>();
         private readonly Dictionary<IOBundle, Module> BundleToModule = new Dictionary<IOBundle, Module>();
-        private readonly Dictionary<Input, DuplexIO> DuplexOutputWires = new Dictionary<Input, DuplexIO>();
+        private readonly Dictionary<Input, Wire> DuplexOutputWires = new Dictionary<Input, Wire>();
+        private readonly List<Wire> DuplexWires = new List<Wire>();
         
 
         public Module(string name, FirrtlNode defNode) : base(defNode)
@@ -83,14 +84,31 @@ namespace ChiselDebug.GraphFIR
             Nodes.Add(cond);
         }
 
-        public void AddDuplexOuputWire(Input input, DuplexIO wireDuplex)
+        public Output AddDuplexOuputWire(Input input)
         {
-            DuplexOutputWires.Add(input, wireDuplex);
+            Wire wire = new Wire(GetDuplexOutputName(input), input, null);
+
+            DuplexWires.Add(wire);
+
+            DuplexIO wireIO = wire.GetAsDuplex();
+            NameToIO.Add(wireIO.Name, wireIO.GetOutput());
+            DuplexOutputWires.Add(input, wire);
+
+            return (Output)wireIO.GetOutput();
         }
 
-        public bool TryGetDuplexOutputWire(Input input, out DuplexIO wireDuplex)
+        public string GetDuplexOutputName(Input input)
         {
-            return DuplexOutputWires.TryGetValue(input, out wireDuplex);
+            //Full name of io may collide with name of some other io, so
+            //a string is added to the end which isn't a legal firrtl name
+            return input.GetFullName() + "/out";
+        }
+
+        public bool HasDunplexInput(Input input)
+        {
+            string duplexInputName = GetDuplexOutputName(input);
+            return NameToIO.ContainsKey(duplexInputName) || 
+                InternalIO.ContainsKey(duplexInputName);
         }
 
         public override bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container)
@@ -178,10 +196,10 @@ namespace ChiselDebug.GraphFIR
                     Nodes.RemoveAt(i);
                     NameToIO.Remove(wire.Name);
                 }
-                else if (node is Module mod)
-                {
-                    mod.RemoveAllWires();
-                }
+                //else if (node is Module mod)
+                //{
+                //    mod.RemoveAllWires();
+                //}
             }
         }
 
@@ -189,16 +207,34 @@ namespace ChiselDebug.GraphFIR
         {
             foreach (var keyValue in DuplexOutputWires)
             {
-                Input wireIn = (Input)keyValue.Value.GetInput();
-                if (keyValue.Key.Con != null)
+                Output wireOut = (Output)keyValue.Value.Result;
+                if (wireOut.IsConnectedToAnything())
                 {
-                    keyValue.Key.Con.From.ConnectToInput(wireIn);
+                    if (!keyValue.Key.IsConnectedToAnything())
+                    {
+                        throw new Exception("Input to duplex input wire must be connected to something.");
+                    }
+
+                    //Everything connected to duplex input is now being connected to the
+                    //wires input
+                    Input wireIn = (Input)keyValue.Value.In;
+                    if (keyValue.Key.Con != null)
+                    {
+                        keyValue.Key.Con.From.ConnectToInput(wireIn);
+                    }
+                    foreach (var inputCondCon in keyValue.Key.GetConditionalConnections())
+                    {
+                        inputCondCon.From.ConnectToInput(wireIn, false, false, true);
+                    }
+
+                    keyValue.Value.BypassWireIO();
                 }
-                foreach (var inputCondCon in keyValue.Key.GetConditionalConnections())
-                {
-                    inputCondCon.From.ConnectToInput(wireIn, false, false, true);
-                }
+
+                NameToIO.Remove(keyValue.Value.Name);
             }
+
+            DuplexOutputWires.Clear();
+            DuplexWires.Clear();
         }
 
         internal void CorrectIO()
@@ -226,7 +262,13 @@ namespace ChiselDebug.GraphFIR
 
         internal void CopyInternalAsExternalIO(Module mod)
         {
-            Dictionary<Input, Input> inToIntModIn = new Dictionary<Input, Input>();
+            foreach (Input input in GetAllIOOrdered().OfType<Input>())
+            {
+                if (!HasDunplexInput(input))
+                {
+                    AddDuplexOuputWire(input);
+                }
+            }
 
             foreach (var inIO in GetInternalIO())
             {
@@ -234,48 +276,15 @@ namespace ChiselDebug.GraphFIR
                 IOHelper.BiDirFullyConnectIO(inIO, copy, true);
 
                 mod.AddExternalIO(copy);
-
-                Input[] inIOInputs = inIO.GetAllIOOfType<Input>().ToArray();
-                Output[] extModOutputs = copy.GetAllIOOfType<Output>().ToArray();
-                Debug.Assert(inIOInputs.Length == extModOutputs.Length);
-                for (int i = 0; i < inIOInputs.Length; i++)
-                {
-                    if (DuplexOutputWires.ContainsKey(inIOInputs[i]))
-                    {
-                        inToIntModIn.Add(inIOInputs[i], (Input)mod.GetPairedIO(extModOutputs[i]));
-                    }
-                }
             }
 
             foreach (var nodeIO in NameToIO)
             {
-                if (nodeIO.Key == "io.expt~220")
-                {
-
-                }
                 FIRIO copy = nodeIO.Value.Flip(mod);
                 copy.SetName(nodeIO.Key);
                 IOHelper.BiDirFullyConnectIO(nodeIO.Value, copy, true);
 
                 mod.AddExternalIO(copy);
-
-                Input[] inIOInputs = nodeIO.Value.GetAllIOOfType<Input>().ToArray();
-                Output[] extModOutputs = copy.GetAllIOOfType<Output>().ToArray();
-                Debug.Assert(inIOInputs.Length == extModOutputs.Length);
-                for (int i = 0; i < inIOInputs.Length; i++)
-                {
-                    if (DuplexOutputWires.ContainsKey(inIOInputs[i]))
-                    {
-                        inToIntModIn.Add(inIOInputs[i], (Input)mod.GetPairedIO(extModOutputs[i]));
-                    }
-                }
-            }
-
-            foreach (var keyValue in DuplexOutputWires)
-            {
-                Input modIntInput = inToIntModIn[keyValue.Key];
-                DuplexIO modIntDuplex = (DuplexIO)mod.GetIO(keyValue.Value.Name);
-                mod.AddDuplexOuputWire(modIntInput, modIntDuplex);
             }
         }
 
