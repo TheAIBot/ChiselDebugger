@@ -14,6 +14,7 @@ namespace ChiselDebug.GraphFIR
             this.Value = value;
 
             this.Result = new Output(this, outputName, value.GetFIRType());
+            Result.SetType(value.GetFIRType());
             Result.Con.Value.SetValueString(value.Value.ToSignedBinaryString((FIRRTL.GroundType)value.GetFIRType()));
         }
 
@@ -33,7 +34,6 @@ namespace ChiselDebug.GraphFIR
         }
 
         public override void InferType()
-        {
-        }
+        { }
     }
 }
