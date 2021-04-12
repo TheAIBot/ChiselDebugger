@@ -142,13 +142,13 @@ class When3xMemAccess extends Module {
         val dout = Output(UInt(8.W))
     })
 
-    val mem = Mem(4, UInt(8.W))
+    val mem = SyncReadMem(4, UInt(8.W))
     io.dout := 0.U
 
     when(io.read1) {
         when(io.read2) {
             when(io.read3) {
-                io.dout := mem(io.index1)
+                io.dout := mem.read(io.index1, true.B)
             }
         }
     }
@@ -160,6 +160,7 @@ class When3xMemAccess extends Module {
             }
         }
     }
+}
 
 class When1xDuplexInput extends Module {
     val io = IO(new Bundle{
@@ -176,4 +177,43 @@ class When1xDuplexInput extends Module {
         io.dout2 := io.dout1 + 1.U
     }
 }
+
+class SyncReadMemScopeIssue extends Module {
+    val io = IO(new Bundle{
+        val read = Input(Bool())
+        val index1 = Input(UInt(2.W))
+        val dout = Output(UInt(8.W))
+    })
+
+    val mem = SyncReadMem(4, UInt(8.W))
+    io.dout := mem.read(io.index1, io.read)
+}
+
+class Test1 extends Module {
+    val io = IO(new Bundle{
+        val in = Input(UInt(8.W))
+        val out = Output(UInt(8.W))
+    })
+
+    io.out := io.in
+}
+
+class Test2 extends Module {
+    val io = IO(new Bundle{
+        val in = Input(UInt(8.W))
+        val read = Input(Bool())
+        val out1 = Output(UInt(8.W))
+        val out2 = Output(UInt(8.W))
+    })
+
+    io.out1 := io.in
+    io.out2 := io.in
+    when (io.read) {
+        val test = Module(new Test1())
+        test.io.in := io.in
+        io.out1 := test.io.out
+    }
+
+    
+
 }
