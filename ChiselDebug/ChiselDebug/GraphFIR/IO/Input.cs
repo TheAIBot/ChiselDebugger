@@ -173,10 +173,19 @@ namespace ChiselDebug.GraphFIR.IO
 
         public override void InferType()
         {
+            if (Type is not UnknownType)
+            {
+                return;
+            }
             if (Con != null && Type is UnknownType)
             {
                 Con.From.InferType();
-                Type = Con.From.Type;
+                SetType(Con.From.Type);
+            }
+            foreach (var condCon in CondCons)
+            {
+                condCon.From.InferType();
+                SetType(condCon.From.Type);
             }
         }
     }
