@@ -84,16 +84,21 @@ namespace ChiselDebug.GraphFIR.IO
             {
                 return;
             }
-            if (Node is Module)
-            {
-                return;
-            }
             if (Type is not UnknownType)
             {
                 return;
             }
 
-            Node.InferType();
+            if (Node is Module mod)
+            {
+                Input paired = (Input)mod.GetPairedIO(this);
+                paired.InferType();
+                SetType(paired.Type);
+            }
+            else
+            {
+                Node.InferType();
+            }
         }
     }
 }
