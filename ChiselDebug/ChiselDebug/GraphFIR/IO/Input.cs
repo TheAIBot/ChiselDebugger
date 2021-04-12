@@ -7,7 +7,6 @@ namespace ChiselDebug.GraphFIR.IO
 {
     public class Input : ScalarIO
     {
-        private Output SinkSource = null;
         private readonly HashSet<Connection> CondCons = new HashSet<Connection>();
 
         public Input(FIRRTLNode node, IFIRType type) : this(node, string.Empty, type)
@@ -43,51 +42,9 @@ namespace ChiselDebug.GraphFIR.IO
             return this;
         }
 
-        public override FIRIO GetOutput()
-        {
-            if (SinkSource == null)
-            {
-                SinkSource = (Output)Flip();
-            }
-
-            return SinkSource;
-        }
-
         internal Connection[] GetConditionalConnections()
         {
             return CondCons.ToArray();
-        }
-
-        public bool HasSinkSource()
-        {
-            return SinkSource != null;
-        }
-
-        public void MakeSinkOnly()
-        {
-            if (SinkSource == null)
-            {
-                return;
-            }
-
-            //if (!SinkSource.Con.IsUsed())
-            //{
-            //    throw new Exception("Probably an error when a source is created in a sink but it's not connected to anything.");
-            //}
-
-            if (!IsConnected())
-            {
-                SinkSource.DisconnectAll();
-                return;
-                throw new Exception("Sink must be connected when it's also used as a source.");
-            }
-
-            IOHelper.BypassIO(SinkSource, Con.From);
-            foreach (var condCond in CondCons)
-            {
-                IOHelper.BypassIO(SinkSource, condCond.From);
-            }
-            SinkSource = null;
         }
 
         public void Disconnect(Connection toDisconnect)

@@ -184,8 +184,6 @@ namespace ChiselDebug
             //visible outside of graph creation. Everything else
             //should still work on the assumption that only
             //connections from a source to a sink are possible.
-            helper.Mod.CorrectIO();
-
             helper.Mod.RemoveAllWires();
         }
 

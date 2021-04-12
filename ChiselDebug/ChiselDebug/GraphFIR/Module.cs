@@ -237,29 +237,6 @@ namespace ChiselDebug.GraphFIR
             DuplexWires.Clear();
         }
 
-        internal void CorrectIO()
-        {
-            foreach (var node in Nodes)
-            {
-                if (node is Module mod)
-                {
-                    mod.CorrectIO();
-                }
-                else
-                {
-                    foreach (Input input in node.GetInputs())
-                    {
-                        input.MakeSinkOnly();
-                    }
-                }
-            }
-
-            foreach (Input input in GetInternalInputs())
-            {
-                input.MakeSinkOnly();
-            }
-        }
-
         internal void SetConditional(Connection enableCon)
         {
             foreach (var io in InternalIO.Values.SelectMany(x => x.Flatten()))
@@ -438,10 +415,6 @@ namespace ChiselDebug.GraphFIR
                 {
                     if (!intFlat[x].IsConnectedToAnything())
                     {
-                        if (intFlat[x] is Input input && input.HasSinkSource())
-                        {
-                            continue;
-                        }
                         extFlat[x].DisconnectAll();
                     }
                 }
