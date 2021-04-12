@@ -76,7 +76,10 @@ namespace ChiselDebug.GraphFIR
 
         public override void InferType()
         {
-            
+            foreach (var input in GetInputs())
+            {
+                input.InferType();
+            }
         }
 
         public bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container)
