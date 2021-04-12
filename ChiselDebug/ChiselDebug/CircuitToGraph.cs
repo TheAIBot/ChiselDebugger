@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using static FIRRTL.Extensions;
@@ -257,18 +258,22 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.Stop)
             {
+                return;
                 throw new NotImplementedException();
             }
             else if (statement is FIRRTL.Attach)
             {
+                return;
                 throw new NotImplementedException();
             }
             else if (statement is FIRRTL.Print)
             {
+                return;
                 throw new NotImplementedException();
             }
             else if (statement is FIRRTL.Verification)
             {
+                return;
                 throw new NotImplementedException();
             }
             else if (statement is FIRRTL.Connect connect)
@@ -281,6 +286,7 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.IsInvalid)
             {
+                return;
                 throw new NotImplementedException();
             }
             else if (statement is FIRRTL.CDefMemory cmem)
