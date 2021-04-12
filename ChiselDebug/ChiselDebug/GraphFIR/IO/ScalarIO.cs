@@ -6,7 +6,7 @@ namespace ChiselDebug.GraphFIR.IO
 {
     public abstract class ScalarIO : FIRIO
     {
-        public IFIRType Type { get; protected set; }
+        public IFIRType Type { get; private set; }
         public Connection Con = null;
         private Connection EnabledCond = null;
         public bool IsEnabled => EnabledCond == null || EnabledCond.Value.IsTrue();
@@ -49,8 +49,17 @@ namespace ChiselDebug.GraphFIR.IO
             throw new Exception("Scalar IO can't contain additional io.");
         }
 
+        public virtual void SetType(IFIRType type)
+        {
+            if (type is UnknownType)
+            {
+                throw new Exception("Not allowed to set the type to unknown.");
+            }
+
+            Type = type;
+        }
+
         public abstract void DisconnectAll();
-        public abstract void SetType(IFIRType type);
 
         public abstract void InferType();
     }

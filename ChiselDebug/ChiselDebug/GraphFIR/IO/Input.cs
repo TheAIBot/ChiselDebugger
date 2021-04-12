@@ -38,11 +38,6 @@ namespace ChiselDebug.GraphFIR.IO
             return cons.ToArray();
         }
 
-        public override void SetType(IFIRType type)
-        {
-            Type = type;
-        }
-
         public override FIRIO GetInput()
         {
             return this;
