@@ -87,7 +87,7 @@
 
         ModuleOpPoses = Operation.GetAllNodes().Select(x => new Positioned<FIRRTLNode>(Point.Zero, x)).ToList();
         CurrModLayout = new ModuleLayout(DebugCtrl, Operation, this);
-        CurrModLayout.OnPlacedNodes += x => InvokeAsync(() => UpdatePlacement(x));
+        CurrModLayout.SubscribeToPlaceTemplate(x => InvokeAsync(() => UpdatePlacement(x)));
 
         //If the module contain no nodes then the module will never
         //be rendered as it's waiting for at least one thing to

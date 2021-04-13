@@ -28,7 +28,7 @@
 
     protected override void OnFirstParametersSetAsync()
     {
-        ModLayout.OnWiresRouted += x => InvokeAsync(() => UpdateWires(x));
+        ModLayout.SubscribeToRouteTemplate(x => InvokeAsync(() => UpdateWires(x)));
     }
 
     private void UpdateWires(List<WirePath> wirePaths)

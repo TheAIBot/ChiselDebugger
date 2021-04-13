@@ -167,10 +167,10 @@ namespace ChiselDebuggerWebUI.Code
         private readonly FIRIO[] ModuleIO;
 
         public delegate void PlacedHandler(PlacementInfo placements);
-        public event PlacedHandler OnPlacedNodes;
+        private event PlacedHandler OnPlacedNodes;
 
         public delegate void RoutedHandler(List<WirePath> wirePaths);
-        public event RoutedHandler OnWiresRouted;
+        private event RoutedHandler OnWiresRouted;
 
         public ModuleLayout(DebugController debugCtrl, Module mod, ModuleUI modUI)
         {
@@ -204,6 +204,26 @@ namespace ChiselDebuggerWebUI.Code
         public bool IsEmpty()
         {
             return ModuleNodes.Where(x => x is not INoPlaceAndRoute).Count() == 0;
+        }
+
+        public void SubscribeToPlaceTemplate(PlacedHandler onPlaced)
+        {
+            OnPlacedNodes += onPlaced;
+
+            if (DebugCtrl.TryGetPlaceTemplate(Mod.Name, this, out var placement))
+            {
+                PlaceNodes(placement);
+            }
+        }
+
+        public void SubscribeToRouteTemplate(RoutedHandler onRouted)
+        {
+            OnWiresRouted += onRouted;
+
+            if (DebugCtrl.TryGetRouteTemplate(Mod.Name, this, out var wires))
+            {
+                PlaceWires(wires);
+            }
         }
 
         public void PlaceNodes(PlacementInfo placements)

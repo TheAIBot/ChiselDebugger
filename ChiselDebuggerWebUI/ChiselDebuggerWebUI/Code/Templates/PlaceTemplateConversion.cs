@@ -6,7 +6,7 @@ namespace ChiselDebuggerWebUI.Code.Templates
 {
     public class PlaceTemplateConversion
     {
-        private readonly ModuleLayout Ctrl;
+        public readonly ModuleLayout Ctrl;
         private readonly FIRRTLNode[] NodeOrder;
 
         public PlaceTemplateConversion(ModuleLayout ctrl, FIRRTLNode[] nodeOrder)
@@ -20,7 +20,7 @@ namespace ChiselDebuggerWebUI.Code.Templates
             Ctrl.PlaceNodes(Convert(template));
         }
 
-        private PlacementInfo Convert(PlaceTemplate template)
+        public PlacementInfo Convert(PlaceTemplate template)
         {
             List<Positioned<FIRRTLNode>> convertedNodePos = new List<Positioned<FIRRTLNode>>();
             Dictionary<FIRRTLNode, Rectangle> convertedSpace = new Dictionary<FIRRTLNode, Rectangle>();

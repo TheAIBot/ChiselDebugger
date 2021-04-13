@@ -7,7 +7,7 @@ namespace ChiselDebuggerWebUI.Code.Templates
 {
     public class RouteTemplateConversion
     {
-        private readonly ModuleLayout Ctrl;
+        public readonly ModuleLayout Ctrl;
         private readonly FIRRTLNode[] NodeOrder;
         private readonly FIRIO[] IOOrder;
 
@@ -23,7 +23,7 @@ namespace ChiselDebuggerWebUI.Code.Templates
             Ctrl.PlaceWires(Convert(template));
         }
 
-        private List<WirePath> Convert(RouteTemplate template)
+        public List<WirePath> Convert(RouteTemplate template)
         {
             List<WirePath> convWires = new List<WirePath>();
             for (int i = 0; i < template.Wires.Count; i++)

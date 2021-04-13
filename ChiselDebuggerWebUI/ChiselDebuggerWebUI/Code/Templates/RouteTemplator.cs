@@ -79,5 +79,30 @@ namespace ChiselDebuggerWebUI.Code.Templates
                 }
             }
         }
+
+        public bool TryGetTemplate(string moduleName, ModuleLayout modLayout, out List<WirePath> wires)
+        {
+            RouteTemplate modTemplate;
+            lock (Templates)
+            {
+                if (!Templates.TryGetValue(moduleName, out modTemplate))
+                {
+                    wires = null;
+                    return false;
+                }
+            }
+
+            lock (Converters)
+            {
+                if (Converters.TryGetValue(moduleName, out var cons))
+                {
+                    wires = cons.First(x => x.Ctrl == modLayout).Convert(modTemplate);
+                    return true;
+                }
+            }
+
+            wires = null;
+            return false;
+        }
     }
 }

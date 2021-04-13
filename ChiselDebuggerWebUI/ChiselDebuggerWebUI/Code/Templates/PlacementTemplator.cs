@@ -79,5 +79,30 @@ namespace ChiselDebuggerWebUI.Code.Templates
                 }
             }
         }
+
+        public bool TryGetTemplate(string moduleName, ModuleLayout modLayout, out PlacementInfo placement)
+        {
+            PlaceTemplate modTemplate;
+            lock (Templates)
+            {
+                if (!Templates.TryGetValue(moduleName, out modTemplate))
+                {
+                    placement = null;
+                    return false;
+                }
+            }
+
+            lock (Converters)
+            {
+                if (Converters.TryGetValue(moduleName, out var cons))
+                {
+                    placement = cons.First(x => x.Ctrl == modLayout).Convert(modTemplate);
+                    return true;
+                }
+            }
+
+            placement = null;
+            return false;
+        }
     }
 }

@@ -58,6 +58,16 @@ namespace ChiselDebuggerWebUI.Code
             RouteTemplates.AddTemplateParameters(moduleName, router, placeInfo, nodeOrder, ioOrder);
         }
 
+        internal bool TryGetPlaceTemplate(string moduleName, ModuleLayout modLayout, out PlacementInfo placement)
+        {
+            return PlacementTemplates.TryGetTemplate(moduleName, modLayout, out placement);
+        }
+
+        internal bool TryGetRouteTemplate(string moduleName, ModuleLayout modLayout, out List<WirePath> wires)
+        {
+            return RouteTemplates.TryGetTemplate(moduleName, modLayout, out wires);
+        }
+
         public void SetCircuitSize(Point size)
         {
             CircuitSize = size;
