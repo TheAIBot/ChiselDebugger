@@ -7,9 +7,9 @@
 }
 
 .moduleHeader {
-    width: 100%;
-    border-bottom: solid black;
+    position: relative;
     text-align: center;
+    color: #6b6b6b;
 }
 
 .moduleContent {

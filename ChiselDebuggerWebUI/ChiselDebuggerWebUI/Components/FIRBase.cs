@@ -37,6 +37,7 @@ namespace ChiselDebuggerWebUI.Components
         protected readonly string SizeWatcherID = UniqueID.UniqueHTMLID();
         protected List<DirectedIO> InputOffsets = new List<DirectedIO>();
         protected List<DirectedIO> OutputOffsets = new List<DirectedIO>();
+        private readonly List<string> SizeWatchIDs = new List<string>();
 
         protected Point GetCurrentSize()
         {
@@ -62,12 +63,18 @@ namespace ChiselDebuggerWebUI.Components
         {
             if (firstRender)
             {
-                JSEvents.AddResizeListener(JS, SizeWatcherID, JSOnResize);
+                AddSizeWatcher(SizeWatcherID, JSOnResize);
             }
 
             return base.OnAfterRenderAsync(firstRender);
 
             //Debug.WriteLine($"Render: {typeof(T)} sizeChange: {sizeChanged}, Count: {RenderCounter++}");
+        }
+
+        protected void AddSizeWatcher(string componentID, JSEvents.ResizeHandler onResize)
+        {
+            JSEvents.AddResizeListener(JS, componentID, onResize);
+            SizeWatchIDs.Add(componentID);
         }
 
         private void JSOnResize(ElemWH size)

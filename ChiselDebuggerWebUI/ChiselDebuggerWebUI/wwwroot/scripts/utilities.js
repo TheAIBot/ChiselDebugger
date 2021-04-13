@@ -23,6 +23,9 @@ var JSUtils = JSUtils || {};
 JSUtils.getElementSize = function(element) {
     return new ElemWH(element.clientWidth, element.clientHeight);
 };
+JSUtils.getViewPortSize = function () {
+    return new ElemWH(window.innerWidth, window.innerHeight);
+};
 JSUtils.getElementPosition = function (element) {
     const elemRect = element.getBoundingClientRect();
     return new ElemWH(elemRect.left, elemRect.top);

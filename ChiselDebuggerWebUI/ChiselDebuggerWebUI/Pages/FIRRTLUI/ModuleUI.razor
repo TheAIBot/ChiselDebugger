@@ -1,9 +1,15 @@
 ﻿@inherits FIRBase<Module>
 
 <div id="@SizeWatcherID" class="module" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();">
-    @*<div class="moduleHeader">
-            <h2>@Operation.Name</h2>
-        </div>*@
+
+    <div id="@ModNameID" class="moduleHeader" style="transform: scale(@ModNameScale.ToHtmlNumber()); top: @((GetCurrentSize().Y / 2.0f).ToPixels())">
+        @if (!IgnoreUnusedIO && ShowModuleName)
+        {
+            @Operation.Name
+        }
+    </div>
+
+
     <div class="moduleContent" style="
     width:@GetCurrentSize().X.ToPixels();
     height:@GetCurrentSize().Y.ToPixels();
@@ -59,11 +65,16 @@
     private const int MarginForIO = 20;
     private const int MinSpaceBetweenIO = 15;
     private const float MaxContentScaling = 6.0f;
+
     private Point MinContentSize;
     private List<Positioned<FIRRTLNode>> ModuleOpPoses = new List<Positioned<FIRRTLNode>>();
     private ModuleLayout CurrModLayout;
     private ScopedNodeIO ExternalIO = null;
     private float ContentScale = 1.0f;
+    private bool ShowModuleName = true;
+    private string ModNameID = UniqueID.UniqueHTMLID();
+    private float ModNameScale = 1.0f;
+    private Point ModNameSize = Point.Zero;
 
     [Parameter]
     public bool IgnoreUnusedIO { get; set; } = false;
@@ -178,6 +189,7 @@
 
         CurrModLayout.PrepareToRerenderLayout();
         SetCurrentSize(moduleSize);
+        UpdateModNameScale();
         StateHasChanged();
     }
 
@@ -199,5 +211,33 @@
     private List<DirectedIO> MakeExternalOutputs(int width, int height)
     {
         return IOPositionCalc.EvenVertical(height, Operation.GetOutputs(), width + ContentPadding, MarginForIO);
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            AddSizeWatcher(ModNameID, x => ModNameSize = x.ToPoint());
+        }
+
+        return base.OnAfterRenderAsync(firstRender);
+    }
+
+    private void UpdateModNameScale()
+    {
+        if (ModNameSize == Point.Zero)
+        {
+            ModNameScale = 1.0f;
+        }
+
+        Point modSize = GetCurrentSize();
+
+        float relWidth = (float)modSize.X / ModNameSize.X;
+        float relHeight = (float)modSize.Y / ModNameSize.Y;
+
+        //Scale so it doesn't go outside the module bounds.
+        //Then make the text slightly smaller again so it
+        //doesn't go right to the modules borders.
+        ModNameScale = Math.Min(relWidth, relHeight) * 0.9f;
     }
 }
