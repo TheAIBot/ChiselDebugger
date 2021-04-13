@@ -164,36 +164,12 @@ namespace ChiselDebug
                         nodePlacements[pos.X][pos.Y] = keyVal.Key.Value;
                     }
 
-                    int[] xOffsets = new int[columns];
-                    int[] yOffsets = new int[rows];
-
-                    var xGroups = placement.GroupBy(x => x.Value.X).ToArray();
-                    var yGroups = placement.GroupBy(x => x.Value.Y).ToArray();
-
+                    var xGroups = placement.GroupBy(x => x.Value.X).OrderBy(x => x.Key).ToArray();
+                    var yGroups = placement.GroupBy(x => x.Value.Y).OrderBy(x => x.Key).ToArray();
                     Point borderPadding = new Point(200, 200);
-                    Point padding = new Point(300, 200);
-                    int xOffset = borderPadding.X;
-                    int yOffset = borderPadding.Y;
 
-                    foreach (var xGroup in placement.GroupBy(x => x.Value.X).OrderBy(x => x.Key))
-                    {
-                        int widest = xGroup.Max(x => NodeSizes[x.Key.Value].X);
-                        int xIndex = xGroup.Key - min.X;
-
-                        xOffsets[xIndex] = xOffset;
-
-                        xOffset += widest + padding.X;
-                    }
-
-                    foreach (var yGroup in placement.GroupBy(x => x.Value.Y).OrderBy(x => x.Key))
-                    {
-                        int widest = yGroup.Max(x => NodeSizes[x.Key.Value].Y);
-                        int yIndex = yGroup.Key - min.Y;
-
-                        yOffsets[yIndex] = yOffset;
-
-                        yOffset += widest + padding.Y;
-                    }
+                    int[] xOffsets = MakeXOffsets(xGroups, min, borderPadding, columns);
+                    int[] yOffsets = MakeYOffsets(yGroups, min, borderPadding, rows);
 
                     for (int x = 0; x < columns; x++)
                     {
@@ -222,6 +198,55 @@ namespace ChiselDebug
                     throw;
                 }
             }
+        }
+
+        private int[] MakeXOffsets(IGrouping<int, KeyValuePair<Node<FIRRTLNode>, Point>>[] xGroups, Point minPos, Point borderPadding, int columns)
+        {
+            int modOutputCount = Mod.GetInternalOutputs().Sum(x => x.IsConnectedToAnything() ? 1 : 0);
+            int modInputCount = Mod.GetInternalInputs().Sum(x => x.IsConnectedToAnything() ? 1 : 0);
+
+            int[] xSpacing = new int[xGroups.Length + 1];
+
+            const int spaceForWire = 12;
+            xSpacing[0] += modOutputCount * spaceForWire;
+            xSpacing[^1] += modInputCount * spaceForWire;
+
+            for (int i = 0; i < xGroups.Length; i++)
+            {
+                xSpacing[i] += xGroups[i].Sum(x => x.Key.Incomming.Count) * spaceForWire;
+                xSpacing[i + 1] += xGroups[i].Sum(x => x.Key.Outgoing.Count) * spaceForWire;
+            }
+
+            int xOffset = borderPadding.X + xSpacing[0];
+            int[] xOffsets = new int[columns];
+            for (int i = 0; i < xGroups.Length; i++)
+            {
+                int widest = xGroups[i].Max(x => NodeSizes[x.Key.Value].X);
+                int xIndex = xGroups[i].Key - minPos.X;
+
+                xOffsets[xIndex] = xOffset;
+
+                xOffset += widest + xSpacing[i + 1];
+            }
+
+            return xOffsets;
+        }
+
+        private int[] MakeYOffsets(IGrouping<int, KeyValuePair<Node<FIRRTLNode>, Point>>[] yGroups, Point minPos, Point borderPadding, int rows)
+        {
+            int yOffset = borderPadding.Y;
+            int[] yOffsets = new int[rows];
+            foreach (var yGroup in yGroups)
+            {
+                int widest = yGroup.Max(x => NodeSizes[x.Key.Value].Y);
+                int yIndex = yGroup.Key - minPos.Y;
+
+                yOffsets[yIndex] = yOffset;
+
+                yOffset += widest + borderPadding.Y;
+            }
+
+            return yOffsets;
         }
 
         private Dictionary<Node<FIRRTLNode>, Point> GetPlacements(Graph<FIRRTLNode> graph, List<Node<FIRRTLNode>> modInputNodes, List<Node<FIRRTLNode>> modOutputNodes)
