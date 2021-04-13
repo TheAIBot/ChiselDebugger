@@ -2,7 +2,7 @@
 
 <div id="@SizeWatcherID" class="module" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();">
 
-    <div id="@ModNameID" class="moduleHeader" style="transform: scale(@ModNameScale.ToHtmlNumber()); top: @((GetCurrentSize().Y / 2.0f).ToPixels())">
+    <div id="@ModNameID" class="moduleHeader" style="transform: scale(@ModNameScale.ToHtmlNumber()); top: @((GetCurrentSize().Y / 2.0f).ToPixels()); left: @((GetCurrentSize().X / 2.0f).ToPixels());">
         @if (!IgnoreUnusedIO && ShowModuleName)
         {
             @Operation.Name

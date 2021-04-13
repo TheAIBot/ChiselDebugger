@@ -7,7 +7,7 @@
 }
 
 .moduleHeader {
-    position: relative;
+    position: absolute;
     text-align: center;
     color: #6b6b6b;
 }
