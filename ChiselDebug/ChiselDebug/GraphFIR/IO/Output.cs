@@ -15,6 +15,16 @@ namespace ChiselDebug.GraphFIR.IO
             this.Con = new Connection(this);
         }
 
+        public override bool IsConnected()
+        {
+            return Con != null;
+        }
+
+        public override bool IsConnectedToAnything()
+        {
+            return Con != null && Con.To.Count > 0;
+        }
+
         public override void DisconnectAll()
         {
             Input[] inputs = Con.To.ToArray();

@@ -25,15 +25,9 @@ namespace ChiselDebug.GraphFIR.IO
             EnabledCond = enabledCond;
         }
 
-        public virtual bool IsConnected()
-        {
-            return Con != null;
-        }
+        public abstract bool IsConnected();
 
-        public virtual bool IsConnectedToAnything()
-        {
-            return Con != null && Con.To.Count > 0;
-        }
+        public abstract bool IsConnectedToAnything();
 
         public override IEnumerable<ScalarIO> Flatten()
         {
