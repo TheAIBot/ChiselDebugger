@@ -1,12 +1,14 @@
 ﻿@inherits FIRBase<Module>
 
 <div id="@SizeWatcherID" class="module" style="
-    left:@Position.X.ToPixels();
-    top:@Position.Y.ToPixels();        
-    width:@GetCurrentSize().X.ToPixels();
-    height:@GetCurrentSize().Y.ToPixels();
-    min-width:@MinContentSize.X.ToPixels();
-    min-height:@MinContentSize.Y.ToPixels();">
+    left: @Position.X.ToPixels();
+    top: @Position.Y.ToPixels();
+    width: @GetCurrentSize().X.ToPixels();
+    height: @GetCurrentSize().Y.ToPixels();
+    min-width: @MinContentSize.X.ToPixels();
+    min-height: @MinContentSize.Y.ToPixels();
+    background-image: @(ShowModuleContent() ? "linear-gradient(#b4aaff, #dcf3ff)" : "linear-gradient(#9487fb, #7ec8ec)");
+">
 
     <div class="moduleHeader" style="@(ShowMdwaoduleName() ? string.Empty : "visibility: hidden;"); width:@GetCurrentSize().X.ToPixels();height:@GetCurrentSize().Y.ToPixels();">
         <div id="@ModNameID" style="display: inline-block; height:@GetCurrentSize().Y.ToPixels();line-height:@GetCurrentSize().Y.ToPixels(); transform: scale( @ModNameScale.ToHtmlNumber() );">

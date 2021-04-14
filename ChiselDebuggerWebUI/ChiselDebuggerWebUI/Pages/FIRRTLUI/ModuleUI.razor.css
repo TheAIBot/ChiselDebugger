@@ -3,14 +3,12 @@
     display: inline-block;
     outline: 4px solid blue;
     outline-offset: -2px;
-    background-image: linear-gradient(#9487fb57, #d6f0fd4a);
 }
 
 .moduleHeader {
     position: absolute;
     text-align: center;
     color: #6b6b6b;
-    background-image: linear-gradient(#9487fb57, #d6f0fd4a);
 }
 
 .moduleContent {

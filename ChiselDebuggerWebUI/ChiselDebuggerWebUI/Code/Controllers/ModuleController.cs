@@ -126,7 +126,7 @@ namespace ChiselDebuggerWebUI.Code
             float actualHeight = layoutSize.Y * scaling;
             //if layout is too small on screen then don't display its
             //content in order to speed up render
-            if (actualWidth < 300 && actualHeight < 300)
+            if (actualWidth < 200 && actualHeight < 200)
             {
                 ModUI.SetShowModuleName(true);
                 return;
