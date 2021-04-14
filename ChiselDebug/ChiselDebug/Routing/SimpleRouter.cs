@@ -268,7 +268,7 @@ namespace ChiselDebug.Routing
                         if (neighborScoreFromCurrent.IsBetterScoreThan(neighborScore))
                         {
                             Point diff = (current - relativeEnd).Abs();
-                            int dist = diff.X + diff.Y;
+                            int dist = 0;// diff.X + diff.Y;
 
                             toSee.Enqueue(neighborPos, neighborScoreFromCurrent.GetTotalScore() + dist / 2);
                             neighborScore = neighborScoreFromCurrent;
