@@ -8,13 +8,13 @@
     min-width:@MinContentSize.X.ToPixels();
     min-height:@MinContentSize.Y.ToPixels();">
 
-    <div class="moduleHeader" style="@(ShowMdwaoduleName() ? string.Empty : "display: none;"); width:@GetCurrentSize().X.ToPixels();height:@GetCurrentSize().Y.ToPixels();">
+    <div class="moduleHeader" style="@(ShowMdwaoduleName() ? string.Empty : "visibility: hidden;"); width:@GetCurrentSize().X.ToPixels();height:@GetCurrentSize().Y.ToPixels();">
         <div id="@ModNameID" style="display: inline-block; height:@GetCurrentSize().Y.ToPixels();line-height:@GetCurrentSize().Y.ToPixels(); transform: scale( @ModNameScale.ToHtmlNumber() );">
             @Operation.Name
         </div>
     </div>
 
-    <div class="moduleContent" style="@(ShowModuleContent() ? string.Empty : "display: none;");transform: scale(@ContentScale.ToHtmlNumber());">
+    <div class="moduleContent" style="@(ShowModuleContent() ? string.Empty : "visibility: hidden;");transform: scale(@ContentScale.ToHtmlNumber());">
         @foreach (var posOp in ModuleOpPoses)
         {
         @if (posOp.Value is Mux)
