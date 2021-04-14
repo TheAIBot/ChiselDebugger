@@ -20,6 +20,7 @@
 
         CurrLayout = new CondLayout(Operation);
         CurrLayout.OnLayoutUpdate += (x, y) => InvokeAsync(() => UpdateLayout(x, y));
+        ParentLayoutCtrl?.AddChildLayout(CurrLayout);
 
     }
 

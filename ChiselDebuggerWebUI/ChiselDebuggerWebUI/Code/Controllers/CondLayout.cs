@@ -1,5 +1,7 @@
 ﻿using ChiselDebug;
 using ChiselDebug.GraphFIR;
+using ChiselDebuggerWebUI.Components;
+using ChiselDebuggerWebUI.Pages.FIRRTLUI;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -121,6 +123,14 @@ namespace ChiselDebuggerWebUI.Code
                     FIRComponentUpdate componentUpdate = new FIRComponentUpdate(Cond, CondSize, layoutData.inOffsets, layoutData.outOffsets);
                     OnLayoutUpdate?.Invoke(layoutData.modPoses, componentUpdate);
                 }
+            }
+        }
+
+        public override void UpdateLayoutDisplay(float scaling)
+        {
+            foreach (var childLayout in ChildLayouts)
+            {
+                childLayout.UpdateLayoutDisplay(scaling);
             }
         }
     }

@@ -22,7 +22,7 @@
         overflow: hidden;
         user-select: none;">
             <div class="Circuit" style="transform: translate( @CircuitOffset.X.ToPixels(), @CircuitOffset.Y.ToPixels() ) scale( @CircuitScale.ToHtmlNumber() );" @onwheel="HandleScroll">
-                <ModuleUI PosOp="@ModulePosition" />
+                <ModuleUI PosOp="@ModulePosition" ParentLayoutCtrl="RootModLayout"/>
             </div>
         </div>
     </div>
@@ -35,6 +35,7 @@
 
     private DebugController DebugCtrl;
     private Positioned<ChiselDebug.GraphFIR.Module> ModulePosition;
+    private CircuitLayout RootModLayout = new CircuitLayout();
     private float CircuitScale = 1.0f;
     private Point CircuitOffset = Point.Zero;
 
@@ -124,7 +125,7 @@ circuit ModL :
         float delta = args.DeltaY > 0 ? 0.9f : 1.1f;
 
         //Limit zooming to some reasonable range
-        float newScale = Math.Clamp(CircuitScale * delta, 0.00005f, 200.0f);
+        float newScale = Math.Clamp(CircuitScale * delta, 0.0000005f, 200000.0f);
         float scaleDelta = CircuitScale - newScale;
 
         //ClientX and ClientY are relative to the viewport.
@@ -162,6 +163,7 @@ circuit ModL :
         CircuitOffset.X += (int)xOffset;
         CircuitOffset.Y += (int)yOffset;
 
+        RootModLayout.UpdateLayoutDisplay(CircuitScale);
         StateHasChanged();
     }
 

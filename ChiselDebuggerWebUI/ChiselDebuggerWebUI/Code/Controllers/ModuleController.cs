@@ -118,5 +118,27 @@ namespace ChiselDebuggerWebUI.Code
         {
             WireRouter.UpdateIOFromNode(node, inputOffsets, outputOffsets);
         }
+
+        public override void UpdateLayoutDisplay(float scaling)
+        {
+            Point layoutSize = ModUI.GetModuleSize();
+            float actualWidth = layoutSize.X * scaling;
+            float actualHeight = layoutSize.Y * scaling;
+            //if layout is too small on screen then don't display its
+            //content in order to speed up render
+            if (actualWidth < 300 && actualHeight < 300)
+            {
+                ModUI.SetShowModuleName(true);
+                return;
+            }
+
+            ModUI.SetShowModuleName(false);
+
+            float childScaling = scaling * ModUI.GetContentScaling();
+            foreach (var childLayout in ChildLayouts)
+            {
+                childLayout.UpdateLayoutDisplay(childScaling);
+            }
+        }
     }
 }

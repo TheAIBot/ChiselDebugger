@@ -1,61 +1,59 @@
 ﻿@inherits FIRBase<Module>
 
-<div id="@SizeWatcherID" class="module" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();">
-
-    <div id="@ModNameID" class="moduleHeader" style="transform: scale(@ModNameScale.ToHtmlNumber()); top: @((GetCurrentSize().Y / 2.0f).ToPixels()); left: @((GetCurrentSize().X / 2.0f).ToPixels());">
-        @if (!IgnoreUnusedIO && ShowModuleName)
-        {
-            @Operation.Name
-        }
-    </div>
-
-
-    <div class="moduleContent" style="
+<div id="@SizeWatcherID" class="module" style="
+    left:@Position.X.ToPixels();
+    top:@Position.Y.ToPixels();        
     width:@GetCurrentSize().X.ToPixels();
     height:@GetCurrentSize().Y.ToPixels();
     min-width:@MinContentSize.X.ToPixels();
-    min-height:@MinContentSize.Y.ToPixels();
-    transform: scale(@ContentScale.ToHtmlNumber());">
+    min-height:@MinContentSize.Y.ToPixels();">
+
+    <div class="moduleHeader" style="@(ShowMdwaoduleName() ? string.Empty : "display: none;"); width:@GetCurrentSize().X.ToPixels();height:@GetCurrentSize().Y.ToPixels();">
+        <div id="@ModNameID" style="display: inline-block; height:@GetCurrentSize().Y.ToPixels();line-height:@GetCurrentSize().Y.ToPixels(); transform: scale( @ModNameScale.ToHtmlNumber() );">
+            @Operation.Name
+        </div>
+    </div>
+
+    <div class="moduleContent" style="@(ShowModuleContent() ? string.Empty : "display: none;");transform: scale(@ContentScale.ToHtmlNumber());">
         @foreach (var posOp in ModuleOpPoses)
         {
-            @if (posOp.Value is Mux)
+        @if (posOp.Value is Mux)
             {
-                <MuxOp @key=posOp.Value PosOp="@(posOp.Cast<Mux>())" ParentLayoutCtrl="CurrModLayout"></MuxOp>
+        <MuxOp @key=posOp.Value PosOp="@(posOp.Cast<Mux>())" ParentLayoutCtrl="CurrModLayout"></MuxOp>
             }
             else if (posOp.Value is MonoArgMonoResPrimOp)
             {
-                <MonoArgPrimOpUI @key=posOp.Value PosOp="@(posOp.Cast<MonoArgMonoResPrimOp>())" ParentLayoutCtrl="CurrModLayout"></MonoArgPrimOpUI>
+        <MonoArgPrimOpUI @key=posOp.Value PosOp="@(posOp.Cast<MonoArgMonoResPrimOp>())" ParentLayoutCtrl="CurrModLayout"></MonoArgPrimOpUI>
             }
             else if (posOp.Value is BiArgMonoResPrimOp)
             {
-                <BiArgMonoResPrimOpUI @key=posOp.Value PosOp="@(posOp.Cast<BiArgMonoResPrimOp>())" ParentLayoutCtrl="CurrModLayout"></BiArgMonoResPrimOpUI>
+        <BiArgMonoResPrimOpUI @key=posOp.Value PosOp="@(posOp.Cast<BiArgMonoResPrimOp>())" ParentLayoutCtrl="CurrModLayout"></BiArgMonoResPrimOpUI>
             }
             else if (posOp.Value is ConstBitRange)
             {
-                <ConstBitRangeUI @key=posOp.Value PosOp="@(posOp.Cast<ConstBitRange>())" ParentLayoutCtrl="CurrModLayout"></ConstBitRangeUI>
+        <ConstBitRangeUI @key=posOp.Value PosOp="@(posOp.Cast<ConstBitRange>())" ParentLayoutCtrl="CurrModLayout"></ConstBitRangeUI>
             }
             else if (posOp.Value is Register)
             {
-                <RegisterUI @key=posOp.Value PosOp="@(posOp.Cast<Register>())" ParentLayoutCtrl="CurrModLayout"></RegisterUI>
+        <RegisterUI @key=posOp.Value PosOp="@(posOp.Cast<Register>())" ParentLayoutCtrl="CurrModLayout"></RegisterUI>
             }
             else if (posOp.Value is Module)
             {
-                <ModuleUI @key=posOp.Value PosOp="@(posOp.Cast<Module>())" ParentLayoutCtrl="CurrModLayout"></ModuleUI>
+        <ModuleUI @key=posOp.Value PosOp="@(posOp.Cast<Module>())" ParentLayoutCtrl="CurrModLayout"></ModuleUI>
             }
             else if (posOp.Value is Memory)
             {
-                <MemoryUI @key=posOp.Value PosOp="@(posOp.Cast<Memory>())" ParentLayoutCtrl="CurrModLayout"></MemoryUI>
+        <MemoryUI @key=posOp.Value PosOp="@(posOp.Cast<Memory>())" ParentLayoutCtrl="CurrModLayout"></MemoryUI>
             }
             else if (posOp.Value is Conditional)
             {
-                <ConditionalUI @key=posOp.Value PosOp="@(posOp.Cast<Conditional>())" ParentLayoutCtrl="CurrModLayout"></ConditionalUI>
+        <ConditionalUI @key=posOp.Value PosOp="@(posOp.Cast<Conditional>())" ParentLayoutCtrl="CurrModLayout"></ConditionalUI>
             }
         }
 
         <WiresUI ModLayout="CurrModLayout"></WiresUI>
-
-
     </div>
+
     <ScopedIOUI NodeIO="@ExternalIO"></ScopedIOUI>
 </div>
 
@@ -75,6 +73,7 @@
     private string ModNameID = UniqueID.UniqueHTMLID();
     private float ModNameScale = 1.0f;
     private Point ModNameSize = Point.Zero;
+    private bool HasLayout = false;
 
     [Parameter]
     public bool IgnoreUnusedIO { get; set; } = false;
@@ -88,6 +87,7 @@
         ModuleOpPoses = Operation.GetAllNodes().Select(x => new Positioned<FIRRTLNode>(Point.Zero, x)).ToList();
         CurrModLayout = new ModuleLayout(DebugCtrl, Operation, this);
         CurrModLayout.SubscribeToPlaceTemplate(x => InvokeAsync(() => UpdatePlacement(x)));
+        ParentLayoutCtrl?.AddChildLayout(CurrModLayout);
 
         //If the module contain no nodes then the module will never
         //be rendered as it's waiting for at least one thing to
@@ -135,7 +135,7 @@
             //Top level module will actuall scale its io.
             //Nested modules will instead Scale the module content
             //to a size better matching the size of the io.
-            if (ParentLayoutCtrl == null)
+            if (ParentLayoutCtrl is CircuitLayout)
             {
                 ExternalIO.ScaleFillY(moduleSize.Y, maxScaling);
             }
@@ -153,7 +153,7 @@
         //Circuit size is the same as the size of the top level
         //module. Only the top level module doesn't have a
         //parent controller.
-        if (ParentLayoutCtrl == null)
+        if (ParentLayoutCtrl is CircuitLayout)
         {
             DebugCtrl.SetCircuitSize(moduleSize);
         }
@@ -190,6 +190,7 @@
         CurrModLayout.PrepareToRerenderLayout();
         SetCurrentSize(moduleSize);
         UpdateModNameScale();
+        HasLayout = true;
         StateHasChanged();
     }
 
@@ -239,5 +240,52 @@
         //Then make the text slightly smaller again so it
         //doesn't go right to the modules borders.
         ModNameScale = Math.Min(relWidth, relHeight) * 0.9f;
+    }
+
+    public void SetShowModuleName(bool showName)
+    {
+        if (ShowModuleName != showName)
+        {
+            ShowModuleName = showName;
+            StateHasChanged();
+        }
+    }
+
+    private bool ShowModuleContent()
+    {
+        if (!HasLayout)
+        {
+            return true;
+        }
+        else
+        {
+            return !ShowModuleName;
+        }
+    }
+
+    private bool ShowMdwaoduleName()
+    {
+        if (IgnoreUnusedIO)
+        {
+            return false;
+        }
+        else if (!HasLayout)
+        {
+            return true;
+        }
+        else
+        {
+            return ShowModuleName;
+        }
+    }
+
+    public float GetContentScaling()
+    {
+        return ContentScale;
+    }
+
+    public Point GetModuleSize()
+    {
+        return GetCurrentSize();
     }
 }
