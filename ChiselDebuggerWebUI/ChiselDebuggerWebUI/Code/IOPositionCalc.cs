@@ -48,27 +48,45 @@ namespace ChiselDebuggerWebUI.Code
         private void RemakeScopes()
         {
             Scopes.Clear();
-            Scopes.AddRange(MakeScopes(InputOffsets));
-            Scopes.AddRange(MakeScopes(OutputOffsets));
+            Scopes.AddRange(MakeScopes(InputOffsets, false));
+            Scopes.AddRange(MakeScopes(OutputOffsets, true));
         }
 
-        private static List<IOScope> MakeScopes(List<ScopedDirIO> io)
+        private static List<IOScope> MakeScopes(List<ScopedDirIO> io, bool isOutputIO)
         {
             List<IOScope> scopes = new List<IOScope>();
 
-            var bundleGroups = io
-                .Where(x => x.DirIO.IO.IsPartOfAggregateIO)
-                .GroupBy(x => x.DirIO.IO.ParentIO);
+            Dictionary<AggregateIO, (Point start, int end)> bundleSizes = new Dictionary<AggregateIO, (Point start, int end)>();
+            foreach (var scopedIO in io)
+            {
+                var zIO = scopedIO.DirIO.IO;
+                int yStart = scopedIO.DirIO.Position.Y;
+                int yEnd = scopedIO.DirIO.Position.Y;
+                int xStart = scopedIO.DirIO.Position.X + scopedIO.ScopeXOffset - (isOutputIO ? 0 : IOPositionCalc.ScopeWidth);
+                while (zIO.IsPartOfAggregateIO)
+                {
+                    if (!bundleSizes.TryAdd(zIO.ParentIO, (new Point(xStart, yStart), yEnd)))
+                    {
+                        var currScope = bundleSizes[zIO.ParentIO];
+                        currScope.start.Y = Math.Min(currScope.start.Y, yStart);
+                        currScope.end = Math.Max(currScope.end, yEnd);
+
+                        bundleSizes[zIO.ParentIO] = currScope;
+                    }
+
+                    zIO = zIO.ParentIO;
+                    yStart -= IOPositionCalc.ScopeExtraY / 2;
+                    yEnd += IOPositionCalc.ScopeExtraY / 2;
+                    xStart += IOPositionCalc.ScopeWidth * (isOutputIO ? 1 : -1);
+                }
+            }
 
             int colorIndex = 0;
-            foreach (var bundleGroup in bundleGroups)
+            foreach (var scopeData in bundleSizes.Values)
             {
                 string color = PrettyColors[colorIndex++ % PrettyColors.Length];
-                int xStart = bundleGroup.First().DirIO.Position.X + bundleGroup.First().ScopeXOffset;
-                int yStart = bundleGroup.Min(x => x.DirIO.Position.Y);
-                int yEnd = bundleGroup.Max(x => x.DirIO.Position.Y);
 
-                scopes.Add(new IOScope(color, xStart, yStart, yEnd));
+                scopes.Add(new IOScope(color, scopeData.start.X, scopeData.start.Y, scopeData.end));
             }
 
             return scopes;
@@ -332,7 +350,7 @@ namespace ChiselDebuggerWebUI.Code
             scopeDepth = Math.Max(0, scopeDepth);
             if (io is Input)
             {
-                int scopeOffset = scopeDepth * ScopeWidth;
+                int scopeOffset = (scopeDepth + 2) * ScopeWidth;
                 Point inputPos = new Point(0, inputYOffset);
                 DirectedIO dirIO = new DirectedIO(io, inputPos, MoveDirs.Right);
                 inputIO.Add(new ScopedDirIO(dirIO, scopeOffset));
@@ -342,7 +360,7 @@ namespace ChiselDebuggerWebUI.Code
             }
             else if (io is Output)
             {
-                int scopeOffset = -(scopeDepth + 1) * ScopeWidth;
+                int scopeOffset = -(scopeDepth + 2) * ScopeWidth;
                 Point outputPos = new Point(fixedX, outputYOffset);
                 DirectedIO dirIO = new DirectedIO(io, outputPos, MoveDirs.Right);
                 outputIO.Add(new ScopedDirIO(dirIO, scopeOffset));
