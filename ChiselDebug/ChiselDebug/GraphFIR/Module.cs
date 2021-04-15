@@ -421,6 +421,29 @@ namespace ChiselDebug.GraphFIR
             }
         }
 
+        internal IEnumerable<T> GetAllNestedNodesOfType<T>()
+        {
+            if (this is T tThis)
+            {
+                yield return tThis;
+            }
+
+            foreach (var node in Nodes)
+            {
+                if (node is T tNode)
+                {
+                    yield return tNode;
+                }
+                else if (node is Module mod)
+                {
+                    foreach (var tFound in mod.GetAllNestedNodesOfType<T>())
+                    {
+                        yield return tFound;
+                    }
+                }
+            }
+        }
+
         public override void InferType()
         {
             foreach (var node in Nodes)

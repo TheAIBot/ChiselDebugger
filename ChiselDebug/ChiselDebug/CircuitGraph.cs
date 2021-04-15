@@ -8,6 +8,40 @@ using VCDReader;
 
 namespace ChiselDebug
 {
+    public class ComputeGraph
+    {
+
+    }
+
+    public class CombComputeNode
+    {
+        private readonly List<FIRRTLNode> ComputeOrder;
+        private readonly List<CombComputeNode> OutgoingEdges = new List<CombComputeNode>();
+        private int TotalComputeDependencies = 0;
+        private int RemainingComputeDependencies = 0;
+
+        public CombComputeNode(List<FIRRTLNode> computeOrder)
+        {
+            this.ComputeOrder = computeOrder;
+        }
+
+        public void AddEdgeTo(CombComputeNode edgeTo)
+        {
+            OutgoingEdges.Add(edgeTo);
+            edgeTo.AddComputeDependency();
+        }
+
+        private void AddComputeDependency()
+        {
+            TotalComputeDependencies++;
+        }
+
+        public void ResetRemainingDependencies()
+        {
+            RemainingComputeDependencies = TotalComputeDependencies;
+        }
+    }
+
     public class CircuitGraph
     {
         public readonly string Name;
@@ -83,6 +117,85 @@ namespace ChiselDebug
             }
 
             return consWithChanges;
+        }
+
+        private void feis()
+        {
+            HashSet<Connection> mustBeSet = new HashSet<Connection>();
+        }
+
+        private void MakeCombComputeGraph()
+        {
+            HashSet<Connection> hasValue = new HashSet<Connection>();
+            Dictionary<Connection, HashSet<Connection>>
+        }
+
+        private (CombComputeNode node, List<FIRRTLNode> depTo) MakeCombComputeNode(Output[] outputs)
+        {
+            void AddConnections(Queue<(Connection con, Input input)> toTraverse, Output output)
+            {
+                foreach (var input in output.Con.To)
+                {
+                    toTraverse.Enqueue((output.Con, input));
+                }
+            }
+
+            List<FIRRTLNode> computeOrder = new List<FIRRTLNode>();
+            Dictionary<FIRRTLNode, HashSet<Connection>> seenButMissingInputs = new Dictionary<FIRRTLNode, HashSet<Connection>>();
+            HashSet<Connection> seenCons = new HashSet<Connection>();
+
+            Queue<(Connection con, Input input)> toTraverse = new Queue<(Connection con, Input input)>();
+            foreach (var output in outputs)
+            {
+                AddConnections(toTraverse, output);
+
+                while (toTraverse.Count > 0)
+                {
+                    var conInput = toTraverse.Dequeue();
+
+                    //Punch through module border to continue search on the other side
+                    if (conInput.input.Node is Module mod)
+                    {
+                        Output inPairedOut = (Output)mod.GetPairedIO(conInput.input);
+                        AddConnections(toTraverse, inPairedOut);
+                        continue;
+                    }
+                    //Ignore state preserving components as a combinatorial graph
+                    //shouldn't cross those
+                    else if (conInput.input.Node is Memory ||
+                             conInput.input.Node is Register)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        HashSet<Connection> missingCons;
+                        if (!seenButMissingInputs.TryGetValue(conInput.input.Node, out missingCons))
+                        {
+                            Input[] nodeInputs = (Input[])conInput.input.Node.GetInputs();
+                            missingCons = new HashSet<Connection>(nodeInputs.SelectMany(x => x.GetAllConnections()));
+                        }
+
+                        missingCons.Remove(conInput.con);
+
+                        //If this graph has provided all inputs to this component then
+                        //it can finally compute the component and continue the graph
+                        //with the components output
+                        if (missingCons.Count == 0)
+                        {
+                            seenButMissingInputs.Remove(conInput.input.Node);
+                            computeOrder.Add(conInput.input.Node);
+
+                            foreach (Output nodeOutput in conInput.input.Node.GetOutputs())
+                            {
+                                AddConnections(toTraverse, nodeOutput);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return (new CombComputeNode(computeOrder), seenButMissingInputs.Keys.ToList());
         }
     }
 }
