@@ -9,10 +9,16 @@ namespace ChiselDebug.CombGraph
     public class CombComputeGraph
     {
         private readonly Dictionary<FIRRTLNode, CombComputeNode> Nodes = new Dictionary<FIRRTLNode, CombComputeNode>();
+        private readonly List<CombComputeNode> ConstComputeNodes = new List<CombComputeNode>();
 
-        public void AddNode(FIRRTLNode firNode, CombComputeNode combNode)
+        public void AddValueChangingNode(FIRRTLNode firNode, CombComputeNode combNode)
         {
             Nodes.Add(firNode, combNode);
+        }
+
+        public void AddConstNode(CombComputeNode constCombNode)
+        {
+            ConstComputeNodes.Add(constCombNode);
         }
 
         public void AddEdge(FIRRTLNode from, FIRRTLNode to)
@@ -38,9 +44,14 @@ namespace ChiselDebug.CombGraph
             }
         }
 
-        public CombComputeNode[] GetAllNodes()
+        public CombComputeNode[] GetValueChangingNodes()
         {
             return Nodes.Values.ToArray();
+        }
+
+        public CombComputeNode[] GetConstNodes()
+        {
+            return ConstComputeNodes.ToArray();
         }
 
         public static CombComputeGraph MakeGraph(Module module)
@@ -58,12 +69,12 @@ namespace ChiselDebug.CombGraph
                 toMake.Enqueue((mem, (Output[])mem.GetOutputs()));
             }
 
-            HashSet<Connection> consFromConsts = GetAllCombNodeFromConstValue(module);
+            var constNodesAndCons = GetAllCombNodeFromConstValue(module);
 
             while (toMake.Count > 0)
             {
                 var make = toMake.Dequeue();
-                var compInfo = MakeCombComputeNode(make.outputs, consFromConsts);
+                var compInfo = MakeCombComputeNode(make.outputs, constNodesAndCons.consFromConsts);
 
                 computeNodes.Add((make.root, compInfo.node, compInfo.depTo));
 
@@ -79,7 +90,11 @@ namespace ChiselDebug.CombGraph
             CombComputeGraph graph = new CombComputeGraph();
             foreach (var node in computeNodes)
             {
-                graph.AddNode(node.root, node.node);
+                graph.AddValueChangingNode(node.root, node.node);
+            }
+            foreach (var constNode in constNodesAndCons.constNodes)
+            {
+                graph.AddConstNode(constNode);
             }
 
             foreach (var node in computeNodes)
@@ -96,12 +111,14 @@ namespace ChiselDebug.CombGraph
             return graph;
         }
 
-        private static HashSet<Connection> GetAllCombNodeFromConstValue(Module module)
+        private static (List<CombComputeNode> constNodes, HashSet<Connection> consFromConsts) GetAllCombNodeFromConstValue(Module module)
         {
+            List<CombComputeNode> constNodes = new List<CombComputeNode>();
             HashSet<Connection> consFromConsts = new HashSet<Connection>();
             foreach (var constValue in module.GetAllNestedNodesOfType<ConstValue>())
             {
                 var compInfo = MakeCombComputeNode(new[] { constValue.Result }, consFromConsts);
+                constNodes.Add(compInfo.node);
 
                 foreach (var con in compInfo.node.GetResponsibleConnections())
                 {
@@ -114,7 +131,7 @@ namespace ChiselDebug.CombGraph
                 con.Value.SetValueString("const??");
             }
 
-            return consFromConsts;
+            return (constNodes, consFromConsts);
         }
 
         private static (CombComputeNode node, List<FIRRTLNode> depTo) MakeCombComputeNode(Output[] outputs, HashSet<Connection> consFromConsts)
@@ -198,7 +215,7 @@ namespace ChiselDebug.CombGraph
                 }
             }
 
-            return (new CombComputeNode(computeOrder, seenCons.ToList()), seenButMissingInputs.Keys.ToList());
+            return (new CombComputeNode(outputs, computeOrder, seenCons.ToList()), seenButMissingInputs.Keys.ToList());
         }
     }
 }
