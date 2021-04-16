@@ -69,6 +69,13 @@ namespace ChiselDebug.CombGraph
                 toMake.Enqueue((mem, (Output[])mem.GetOutputs()));
             }
 
+            ScalarIO[] rootModuleIncommingPorts = module.GetInternalOutputs();
+            if (rootModuleIncommingPorts.Length > 0)
+            {
+                toMake.Enqueue((module, rootModuleIncommingPorts.Cast<Output>().ToArray()));
+            }
+
+
             var constNodesAndCons = GetAllCombNodeFromConstValue(module);
 
             while (toMake.Count > 0)
