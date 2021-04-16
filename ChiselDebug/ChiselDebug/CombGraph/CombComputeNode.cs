@@ -42,5 +42,10 @@ namespace ChiselDebug.CombGraph
         {
             RemainingComputeDependencies = TotalComputeDependencies;
         }
+
+        public Connection[] GetResponsibleConnections()
+        {
+            return ConsResponsibleFor.ToArray();
+        }
     }
 }

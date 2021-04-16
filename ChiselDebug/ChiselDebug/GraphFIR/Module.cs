@@ -441,6 +441,16 @@ namespace ChiselDebug.GraphFIR
                         yield return tFound;
                     }
                 }
+                else if (node is Conditional cond)
+                {
+                    foreach (var condMod in cond.CondMods)
+                    {
+                        foreach (var tFound in condMod.Mod.GetAllNestedNodesOfType<T>())
+                        {
+                            yield return tFound;
+                        }
+                    }
+                }
             }
         }
 
