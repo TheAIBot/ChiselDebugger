@@ -185,6 +185,11 @@ namespace ChiselDebug
             //should still work on the assumption that only
             //connections from a source to a sink are possible.
             helper.Mod.RemoveAllWires();
+
+            //There may be connections inside a module that connects
+            //to nothing. These connections are comfusing to look at
+            //in the ui so just remove them instead.
+            helper.Mod.RemoveUnusedConnections();
         }
 
         private static void VisitPort(VisitHelper helper, FIRRTL.Port port)

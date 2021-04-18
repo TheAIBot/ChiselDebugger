@@ -237,6 +237,24 @@ namespace ChiselDebug.GraphFIR
             DuplexWires.Clear();
         }
 
+        internal void RemoveUnusedConnections()
+        {
+            //foreach (var node in Nodes)
+            //{
+            //    if (node is Module mod)
+            //    {
+            //        mod.DisconnectUnusedIO();
+            //    }
+            //    else if (node is Conditional cond)
+            //    {
+            //        foreach (var condMod in cond.CondMods)
+            //        {
+            //            condMod.Mod.DisconnectUnusedIO();
+            //        }
+            //    }
+            //}
+        }
+
         internal void SetConditional(Connection enableCon)
         {
             foreach (var io in InternalIO.Values.SelectMany(x => x.Flatten()))
