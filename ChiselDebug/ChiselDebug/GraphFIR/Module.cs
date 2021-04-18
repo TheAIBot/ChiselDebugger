@@ -399,23 +399,14 @@ namespace ChiselDebug.GraphFIR
 
         internal void DisconnectUnusedIO()
         {
-            var extKeyVals = ExternalIO.ToArray();
-            var intKeyVals = InternalIO.ToArray();
-
-            for (int i = 0; i < extKeyVals.Length; i++)
+            foreach (var intIO in InternalIO)
             {
-                var extKeyVal = extKeyVals[i];
-                var intKeyVal = intKeyVals[i];
-
-                ScalarIO[] extFlat = extKeyVal.Value.Flatten().ToArray();
-                ScalarIO[] intFlat = intKeyVal.Value.Flatten().ToArray();
-                Debug.Assert(extFlat.Length == intFlat.Length);
-
-                for (int x = 0; x < extFlat.Length; x++)
+                foreach (var scalarIntIO in intIO.Value.Flatten())
                 {
-                    if (!intFlat[x].IsConnectedToAnything())
+                    if (!scalarIntIO.IsConnectedToAnything())
                     {
-                        extFlat[x].DisconnectAll();
+                        ScalarIO extIO = (ScalarIO)GetPairedIO(scalarIntIO);
+                        extIO.DisconnectAll();
                     }
                 }
             }
