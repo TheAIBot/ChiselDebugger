@@ -11,6 +11,7 @@ namespace ChiselDebug.CombGraph
     {
         private readonly List<CombComputeNode> Nodes = new List<CombComputeNode>();
         private readonly List<CombComputeNode> ConstComputeNodes = new List<CombComputeNode>();
+        private readonly List<CombComputeNode> RootNodes = new List<CombComputeNode>();
 
         public void AddValueChangingNode(CombComputeNode combNode)
         {
@@ -24,12 +25,53 @@ namespace ChiselDebug.CombGraph
 
         public void ComputeRoots()
         {
-
+            foreach (var node in Nodes)
+            {
+                if (node.GetEdges().Length == 0)
+                {
+                    RootNodes.Add(node);
+                }
+            }
         }
 
-        public void ComputeGraph()
+        public void ComputeConsts()
         {
+            foreach (var node in ConstComputeNodes)
+            {
+                node.Compute();
+            }
+        }
 
+        public List<Connection> ComputeGraph()
+        {
+            foreach (var node in Nodes)
+            {
+                node.ResetRemainingDependencies();
+            }
+
+            List<Connection> updatedCons = new List<Connection>();
+            Queue<CombComputeNode> nodesReady = new Queue<CombComputeNode>();
+            foreach (var root in RootNodes)
+            {
+                nodesReady.Enqueue(root);
+            }
+
+            while (nodesReady.Count > 0)
+            {
+                CombComputeNode node = nodesReady.Dequeue();
+
+                updatedCons.AddRange(node.Compute());
+
+                foreach (var maybeReady in node.GetEdges())
+                {
+                    if (!maybeReady.IsWaitingForDependencies())
+                    {
+                        nodesReady.Enqueue(maybeReady);
+                    }
+                }
+            }
+
+            return updatedCons;
         }
 
         public void Reset()
@@ -128,6 +170,11 @@ namespace ChiselDebug.CombGraph
                 }
             }
 
+            Dictionary<CombComputeNode, List<CombComputeNode>> nodeEdges = new Dictionary<CombComputeNode, List<CombComputeNode>>();
+            foreach (var node in allNodes)
+            {
+                nodeEdges.Add(node, new List<CombComputeNode>());
+            }
             foreach (var node in allNodes)
             {
                 Output firstNodeStart = node.GetStartOutputs()[0];
@@ -147,10 +194,14 @@ namespace ChiselDebug.CombGraph
                     {
                         foreach (var dep in deps)
                         {
-                            dep.AddEdgeTo(node);
+                            nodeEdges[dep].Add(node);
                         }
                     }
                 }
+            }
+            foreach (var keyValue in nodeEdges)
+            {
+                keyValue.Key.AddEdges(keyValue.Value);
             }
 
             //Find graph roots so it doesn't have to be done in the future
@@ -208,10 +259,10 @@ namespace ChiselDebug.CombGraph
                 }
             }
 
-            List<FIRRTLNode> computeOrder = new List<FIRRTLNode>();
+            List<Computable> computeOrder = new List<Computable>();
+            List<Connection> seenCons = new List<Connection>();
             Dictionary<FIRRTLNode, HashSet<Connection>> seenButMissingFirNodeInputs = new Dictionary<FIRRTLNode, HashSet<Connection>>();
             Dictionary<Input, HashSet<Connection>> seenButMissingModInputCons = new Dictionary<Input, HashSet<Connection>>();
-            HashSet<Connection> seenCons = new HashSet<Connection>();
 
             Queue<(Connection con, Input input)> toTraverse = new Queue<(Connection con, Input input)>();
             foreach (var output in outputs)
@@ -221,6 +272,7 @@ namespace ChiselDebug.CombGraph
                 while (toTraverse.Count > 0)
                 {
                     var conInput = toTraverse.Dequeue();
+                    computeOrder.Add(new Computable(conInput.con));
                     seenCons.Add(conInput.con);
 
                     //Punch through module border to continue search on the other side
@@ -283,7 +335,7 @@ namespace ChiselDebug.CombGraph
                         if (missingCons.Count == 0)
                         {
                             seenButMissingFirNodeInputs.Remove(conInput.input.Node);
-                            computeOrder.Add(conInput.input.Node);
+                            computeOrder.Add(new Computable(conInput.input.Node));
 
                             foreach (Output nodeOutput in conInput.input.Node.GetOutputs())
                             {
@@ -305,7 +357,7 @@ namespace ChiselDebug.CombGraph
                 depForOutputs.Add(new Output[] { (Output)mod.GetPairedIO(input) });
             }
 
-            return (new CombComputeNode(outputs, seenButMissingModInputCons.Keys.ToArray(), computeOrder, seenCons.ToList()), depForOutputs);
+            return (new CombComputeNode(outputs, seenButMissingModInputCons.Keys.ToArray(), computeOrder.ToArray(), seenCons.ToArray()), depForOutputs);
         }
     }
 }

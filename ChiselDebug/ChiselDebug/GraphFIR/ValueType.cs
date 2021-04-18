@@ -31,6 +31,11 @@ namespace ChiselDebug.GraphFIR
             return true;
         }
 
+        public bool UpdateFrom(ValueType copyFrom)
+        {
+            return UpdateValue(copyFrom.Value);
+        }
+
         public void SetValueString(string valueString)
         {
             ValueString = valueString;

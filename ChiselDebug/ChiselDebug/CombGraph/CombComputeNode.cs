@@ -8,25 +8,29 @@ namespace ChiselDebug.CombGraph
     public class CombComputeNode
     {
         private readonly Output[] StartOutputs;
-        private readonly List<FIRRTLNode> ComputeOrder;
-        private readonly List<Connection> ConsResponsibleFor;
         private readonly Input[] StopInputs;
-        private readonly List<CombComputeNode> OutgoingEdges = new List<CombComputeNode>();
+        private readonly Computable[] ComputeOrder;
+        private readonly Connection[] ConsResponsibleFor;
+        private CombComputeNode[] OutgoingEdges;
         private int TotalComputeDependencies = 0;
         private int RemainingComputeDependencies = 0;
 
-        public CombComputeNode(Output[] startOutputs, Input[] stopInputs, List<FIRRTLNode> computeOrder, List<Connection> consResponsibleFor)
+        public CombComputeNode(Output[] startOutputs, Input[] stopInputs, Computable[] computeOrder, Connection[] consResponsibleFor)
         {
             this.StartOutputs = startOutputs;
+            this.StopInputs = stopInputs;
             this.ComputeOrder = computeOrder;
             this.ConsResponsibleFor = consResponsibleFor;
-            this.StopInputs = stopInputs;
         }
 
-        public void AddEdgeTo(CombComputeNode edgeTo)
+        public void AddEdges(List<CombComputeNode> edgesTo)
         {
-            OutgoingEdges.Add(edgeTo);
-            edgeTo.AddComputeDependency();
+            OutgoingEdges = new CombComputeNode[edgesTo.Count];
+            for (int i = 0; i < edgesTo.Count; i++)
+            {
+                OutgoingEdges[i] = edgesTo[i];
+                edgesTo[i].AddComputeDependency();
+            }
         }
 
         private void AddComputeDependency()
@@ -39,9 +43,24 @@ namespace ChiselDebug.CombGraph
             return RemainingComputeDependencies > 0;
         }
 
-        public void Compute()
+        public List<Connection> Compute()
         {
+            List<Connection> updatedConnections = new List<Connection>();
+            foreach (var compute in ComputeOrder)
+            {
+                Connection updated = compute.Compute();
+                if (updated != null)
+                {
+                    updatedConnections.Add(updated);
+                }
+            }
 
+            foreach (var edge in OutgoingEdges)
+            {
+                edge.RemainingComputeDependencies--;
+            }
+
+            return updatedConnections;
         }
 
         public void ResetRemainingDependencies()
@@ -59,9 +78,14 @@ namespace ChiselDebug.CombGraph
             return StopInputs.AsSpan();
         }
 
-        public Connection[] GetResponsibleConnections()
+        public ReadOnlySpan<Connection> GetResponsibleConnections()
         {
-            return ConsResponsibleFor.ToArray();
+            return ConsResponsibleFor.AsSpan();
+        }
+
+        public ReadOnlySpan<CombComputeNode> GetEdges()
+        {
+            return OutgoingEdges.AsSpan();
         }
     }
 }
