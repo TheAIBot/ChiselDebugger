@@ -185,12 +185,17 @@ namespace ChiselDebug.CombGraph
                         if (!seenButMissingInputs.TryGetValue(conInput.input.Node, out missingCons))
                         {
                             missingCons = new HashSet<Connection>();
+                            seenButMissingInputs.Add(conInput.input.Node, missingCons);
 
                             ScalarIO[] nodeInputs = conInput.input.Node.GetInputs();
                             foreach (Input input in nodeInputs)
                             {
                                 foreach (var con in input.GetAllConnections())
                                 {
+                                    //Connections from constant will never change value
+                                    //and they will be always be computed before everyting
+                                    //else. Therefore they will not be a dependency which
+                                    //is why they can be skipped here.
                                     if (consFromConsts.Contains(con))
                                     {
                                         continue;
@@ -198,9 +203,6 @@ namespace ChiselDebug.CombGraph
                                     missingCons.Add(con);
                                 }
                             }
-                            // nodeInputs.SelectMany(x => ((Input)x).GetAllConnections()));
-
-                            seenButMissingInputs.Add(conInput.input.Node, missingCons);
                         }
 
                         missingCons.Remove(conInput.con);
