@@ -1,5 +1,6 @@
 ﻿using ChiselDebug.GraphFIR;
 using ChiselDebug.GraphFIR.IO;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -8,22 +9,17 @@ namespace ChiselDebug.CombGraph
 {
     public class CombComputeGraph
     {
-        private readonly Dictionary<FIRRTLNode, CombComputeNode> Nodes = new Dictionary<FIRRTLNode, CombComputeNode>();
+        private readonly List<CombComputeNode> Nodes = new List<CombComputeNode>();
         private readonly List<CombComputeNode> ConstComputeNodes = new List<CombComputeNode>();
 
-        public void AddValueChangingNode(FIRRTLNode firNode, CombComputeNode combNode)
+        public void AddValueChangingNode(CombComputeNode combNode)
         {
-            Nodes.Add(firNode, combNode);
+            Nodes.Add(combNode);
         }
 
         public void AddConstNode(CombComputeNode constCombNode)
         {
             ConstComputeNodes.Add(constCombNode);
-        }
-
-        public void AddEdge(FIRRTLNode from, FIRRTLNode to)
-        {
-            Nodes[from].AddEdgeTo(Nodes[to]);
         }
 
         public void ComputeRoots()
@@ -38,7 +34,7 @@ namespace ChiselDebug.CombGraph
 
         public void Reset()
         {
-            foreach (var node in Nodes.Values)
+            foreach (var node in Nodes)
             {
                 node.ResetRemainingDependencies();
             }
@@ -46,7 +42,7 @@ namespace ChiselDebug.CombGraph
 
         public CombComputeNode[] GetValueChangingNodes()
         {
-            return Nodes.Values.ToArray();
+            return Nodes.ToArray();
         }
 
         public CombComputeNode[] GetConstNodes()
@@ -54,25 +50,34 @@ namespace ChiselDebug.CombGraph
             return ConstComputeNodes.ToArray();
         }
 
+        public CombComputeNode[] GetAllNodes()
+        {
+            List<CombComputeNode> allNodes = new List<CombComputeNode>();
+            allNodes.AddRange(Nodes);
+            allNodes.AddRange(ConstComputeNodes);
+
+            return allNodes.ToArray();
+        }
+
         public static CombComputeGraph MakeGraph(Module module)
         {
-            List<(FIRRTLNode root, CombComputeNode node, List<FIRRTLNode> depTo)> computeNodes = new List<(FIRRTLNode root, CombComputeNode node, List<FIRRTLNode> depTo)>();
-            HashSet<FIRRTLNode> alreadyNode = new HashSet<FIRRTLNode>();
-            Queue<(FIRRTLNode root, Output[] outputs)> toMake = new Queue<(FIRRTLNode root, Output[] outputs)>();
+            List<CombComputeNode> computeNodes = new List<CombComputeNode>();
+            HashSet<Output> alreadyNode = new HashSet<Output>();
+            Queue<Output[]> toMake = new Queue<Output[]>();
 
             foreach (var reg in module.GetAllNestedNodesOfType<Register>())
             {
-                toMake.Enqueue((reg, (Output[])reg.GetOutputs()));
+                toMake.Enqueue((Output[])reg.GetOutputs());
             }
             foreach (var mem in module.GetAllNestedNodesOfType<Memory>())
             {
-                toMake.Enqueue((mem, (Output[])mem.GetOutputs()));
+                toMake.Enqueue((Output[])mem.GetOutputs());
             }
 
             ScalarIO[] rootModuleIncommingPorts = module.GetInternalOutputs();
             if (rootModuleIncommingPorts.Length > 0)
             {
-                toMake.Enqueue((module, rootModuleIncommingPorts.Cast<Output>().ToArray()));
+                toMake.Enqueue(rootModuleIncommingPorts.Cast<Output>().ToArray());
             }
 
 
@@ -81,15 +86,15 @@ namespace ChiselDebug.CombGraph
             while (toMake.Count > 0)
             {
                 var make = toMake.Dequeue();
-                var compInfo = MakeCombComputeNode(make.outputs, constNodesAndCons.consFromConsts);
+                var compInfo = MakeCombComputeNode(make, constNodesAndCons.consFromConsts);
 
-                computeNodes.Add((make.root, compInfo.node, compInfo.depTo));
+                computeNodes.Add(compInfo.node);
 
                 foreach (var depNode in compInfo.depTo)
                 {
-                    if (alreadyNode.Add(depNode))
+                    if (alreadyNode.Add(depNode.First()))
                     {
-                        toMake.Enqueue((depNode, depNode.GetOutputs().Cast<Output>().ToArray()));
+                        toMake.Enqueue(depNode);
                     }
                 }
             }
@@ -97,18 +102,54 @@ namespace ChiselDebug.CombGraph
             CombComputeGraph graph = new CombComputeGraph();
             foreach (var node in computeNodes)
             {
-                graph.AddValueChangingNode(node.root, node.node);
+                graph.AddValueChangingNode(node);
             }
             foreach (var constNode in constNodesAndCons.constNodes)
             {
                 graph.AddConstNode(constNode);
             }
 
-            foreach (var node in computeNodes)
+            CombComputeNode[] allNodes = graph.GetAllNodes();
+            Dictionary<Input, List<CombComputeNode>> depToInputs = new Dictionary<Input, List<CombComputeNode>>();
+            foreach (var node in allNodes)
             {
-                foreach (var depTo in node.depTo)
+                foreach (var nodeStop in node.GetStopInputs())
                 {
-                    graph.AddEdge(node.root, depTo);
+                    if (depToInputs.TryGetValue(nodeStop, out var deps))
+                    {
+                        deps.Add(node);
+                    }
+                    else
+                    {
+                        List<CombComputeNode> deps1 = new List<CombComputeNode>();
+                        deps1.Add(node);
+                        depToInputs.Add(nodeStop, deps1);
+                    }
+                }
+            }
+
+            foreach (var node in allNodes)
+            {
+                Output firstNodeStart = node.GetStartOutputs()[0];
+                Input[] inputDeps;
+                if (firstNodeStart.Node is Module mod)
+                {
+                    inputDeps = new Input[] { (Input)mod.GetPairedIO(firstNodeStart) };
+                }
+                else
+                {
+                    inputDeps = firstNodeStart.Node.GetInputs().Cast<Input>().ToArray();
+                }
+
+                foreach (var inputDep in inputDeps)
+                {
+                    if (depToInputs.TryGetValue(inputDep, out var deps))
+                    {
+                        foreach (var dep in deps)
+                        {
+                            dep.AddEdgeTo(node);
+                        }
+                    }
                 }
             }
 
@@ -141,7 +182,7 @@ namespace ChiselDebug.CombGraph
             return (constNodes, consFromConsts);
         }
 
-        private static (CombComputeNode node, List<FIRRTLNode> depTo) MakeCombComputeNode(Output[] outputs, HashSet<Connection> consFromConsts)
+        private static (CombComputeNode node, List<Output[]> depTo) MakeCombComputeNode(Output[] outputs, HashSet<Connection> consFromConsts)
         {
             void AddConnections(Queue<(Connection con, Input input)> toTraverse, Output output)
             {
@@ -151,8 +192,25 @@ namespace ChiselDebug.CombGraph
                 }
             }
 
+            void AddMissingCons(HashSet<Connection> missingCons, Connection[] inputCons)
+            {
+                foreach (var con in inputCons)
+                {
+                    //Connections from constant will never change value
+                    //and they will be always be computed before everyting
+                    //else. Therefore they will not be a dependency which
+                    //is why they can be skipped here.
+                    if (consFromConsts.Contains(con))
+                    {
+                        continue;
+                    }
+                    missingCons.Add(con);
+                }
+            }
+
             List<FIRRTLNode> computeOrder = new List<FIRRTLNode>();
-            Dictionary<FIRRTLNode, HashSet<Connection>> seenButMissingInputs = new Dictionary<FIRRTLNode, HashSet<Connection>>();
+            Dictionary<FIRRTLNode, HashSet<Connection>> seenButMissingFirNodeInputs = new Dictionary<FIRRTLNode, HashSet<Connection>>();
+            Dictionary<Input, HashSet<Connection>> seenButMissingModInputCons = new Dictionary<Input, HashSet<Connection>>();
             HashSet<Connection> seenCons = new HashSet<Connection>();
 
             Queue<(Connection con, Input input)> toTraverse = new Queue<(Connection con, Input input)>();
@@ -168,6 +226,29 @@ namespace ChiselDebug.CombGraph
                     //Punch through module border to continue search on the other side
                     if (conInput.input.Node is Module mod)
                     {
+                        Connection[] inputCons = conInput.input.GetAllConnections();
+                        if (inputCons.Length > 1)
+                        {
+                            HashSet<Connection> missingCons;
+                            if (!seenButMissingModInputCons.TryGetValue(conInput.input, out missingCons))
+                            {
+                                missingCons = new HashSet<Connection>();
+                                seenButMissingModInputCons.Add(conInput.input, missingCons);
+
+                                AddMissingCons(missingCons, inputCons);
+                            }
+
+                            missingCons.Remove(conInput.con);
+
+                            if (missingCons.Count == 0)
+                            {
+                                seenButMissingModInputCons.Remove(conInput.input);
+                            }
+                            else
+                            {
+                                continue;
+                            }
+                        }
                         Output inPairedOut = (Output)mod.GetPairedIO(conInput.input);
                         AddConnections(toTraverse, inPairedOut);
                         continue;
@@ -182,26 +263,15 @@ namespace ChiselDebug.CombGraph
                     else
                     {
                         HashSet<Connection> missingCons;
-                        if (!seenButMissingInputs.TryGetValue(conInput.input.Node, out missingCons))
+                        if (!seenButMissingFirNodeInputs.TryGetValue(conInput.input.Node, out missingCons))
                         {
                             missingCons = new HashSet<Connection>();
-                            seenButMissingInputs.Add(conInput.input.Node, missingCons);
+                            seenButMissingFirNodeInputs.Add(conInput.input.Node, missingCons);
 
                             ScalarIO[] nodeInputs = conInput.input.Node.GetInputs();
                             foreach (Input input in nodeInputs)
                             {
-                                foreach (var con in input.GetAllConnections())
-                                {
-                                    //Connections from constant will never change value
-                                    //and they will be always be computed before everyting
-                                    //else. Therefore they will not be a dependency which
-                                    //is why they can be skipped here.
-                                    if (consFromConsts.Contains(con))
-                                    {
-                                        continue;
-                                    }
-                                    missingCons.Add(con);
-                                }
+                                AddMissingCons(missingCons, input.GetAllConnections());
                             }
                         }
 
@@ -212,7 +282,7 @@ namespace ChiselDebug.CombGraph
                         //with the components output
                         if (missingCons.Count == 0)
                         {
-                            seenButMissingInputs.Remove(conInput.input.Node);
+                            seenButMissingFirNodeInputs.Remove(conInput.input.Node);
                             computeOrder.Add(conInput.input.Node);
 
                             foreach (Output nodeOutput in conInput.input.Node.GetOutputs())
@@ -224,7 +294,18 @@ namespace ChiselDebug.CombGraph
                 }
             }
 
-            return (new CombComputeNode(outputs, computeOrder, seenCons.ToList()), seenButMissingInputs.Keys.ToList());
+            List<Output[]> depForOutputs = new List<Output[]>();
+            foreach (var node in seenButMissingFirNodeInputs.Keys)
+            {
+                depForOutputs.Add(node.GetOutputs().Cast<Output>().ToArray());
+            }
+            foreach (var input in seenButMissingModInputCons.Keys)
+            {
+                Module mod = (Module)input.Node;
+                depForOutputs.Add(new Output[] { (Output)mod.GetPairedIO(input) });
+            }
+
+            return (new CombComputeNode(outputs, seenButMissingModInputCons.Keys.ToArray(), computeOrder, seenCons.ToList()), depForOutputs);
         }
     }
 }
