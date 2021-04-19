@@ -1,4 +1,5 @@
-﻿using ChiselDebug.GraphFIR;
+﻿using ChiselDebug.CombGraph;
+using ChiselDebug.GraphFIR;
 using ChiselDebug.GraphFIR.IO;
 using System;
 using System.Collections.Generic;
@@ -8,15 +9,18 @@ using VCDReader;
 
 namespace ChiselDebug
 {
+
     public class CircuitGraph
     {
         public readonly string Name;
         public readonly Module MainModule;
+        public readonly CombComputeGraph ComputeGraph;
 
         public CircuitGraph(string name, Module mainModule)
         {
             this.Name = name;
             this.MainModule = mainModule;
+            this.ComputeGraph = CombComputeGraph.MakeGraph(MainModule);
         }
 
         public void InferTypes()

@@ -237,6 +237,24 @@ namespace ChiselDebug.GraphFIR
             DuplexWires.Clear();
         }
 
+        internal void RemoveUnusedConnections()
+        {
+            //foreach (var node in Nodes)
+            //{
+            //    if (node is Module mod)
+            //    {
+            //        mod.DisconnectUnusedIO();
+            //    }
+            //    else if (node is Conditional cond)
+            //    {
+            //        foreach (var condMod in cond.CondMods)
+            //        {
+            //            condMod.Mod.DisconnectUnusedIO();
+            //        }
+            //    }
+            //}
+        }
+
         internal void SetConditional(Connection enableCon)
         {
             foreach (var io in InternalIO.Values.SelectMany(x => x.Flatten()))
@@ -399,23 +417,47 @@ namespace ChiselDebug.GraphFIR
 
         internal void DisconnectUnusedIO()
         {
-            var extKeyVals = ExternalIO.ToArray();
-            var intKeyVals = InternalIO.ToArray();
-
-            for (int i = 0; i < extKeyVals.Length; i++)
+            foreach (var intIO in InternalIO)
             {
-                var extKeyVal = extKeyVals[i];
-                var intKeyVal = intKeyVals[i];
-
-                ScalarIO[] extFlat = extKeyVal.Value.Flatten().ToArray();
-                ScalarIO[] intFlat = intKeyVal.Value.Flatten().ToArray();
-                Debug.Assert(extFlat.Length == intFlat.Length);
-
-                for (int x = 0; x < extFlat.Length; x++)
+                foreach (var scalarIntIO in intIO.Value.Flatten())
                 {
-                    if (!intFlat[x].IsConnectedToAnything())
+                    if (!scalarIntIO.IsConnectedToAnything())
                     {
-                        extFlat[x].DisconnectAll();
+                        ScalarIO extIO = (ScalarIO)GetPairedIO(scalarIntIO);
+                        extIO.DisconnectAll();
+                    }
+                }
+            }
+        }
+
+        internal IEnumerable<T> GetAllNestedNodesOfType<T>()
+        {
+            if (this is T tThis)
+            {
+                yield return tThis;
+            }
+
+            foreach (var node in Nodes)
+            {
+                if (node is T tNode)
+                {
+                    yield return tNode;
+                }
+                else if (node is Module mod)
+                {
+                    foreach (var tFound in mod.GetAllNestedNodesOfType<T>())
+                    {
+                        yield return tFound;
+                    }
+                }
+                else if (node is Conditional cond)
+                {
+                    foreach (var condMod in cond.CondMods)
+                    {
+                        foreach (var tFound in condMod.Mod.GetAllNestedNodesOfType<T>())
+                        {
+                            yield return tFound;
+                        }
                     }
                 }
             }

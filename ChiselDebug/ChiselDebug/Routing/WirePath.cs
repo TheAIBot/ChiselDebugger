@@ -131,6 +131,27 @@ namespace ChiselDebug.Routing
             return EndIO.Node;
         }
 
+        public Connection[] GetConnections()
+        {
+            List<Connection> outputCons = new List<Connection>();
+            foreach (var io in StartIO.DirIO.IO.Flatten())
+            {
+                if (io is Output output)
+                {
+                    outputCons.Add(output.Con);
+                }
+            }
+            foreach (var io in EndIO.DirIO.IO.Flatten())
+            {
+                if (io is Output output)
+                {
+                    outputCons.Add(output.Con);
+                }
+            }
+
+            return outputCons.ToArray();
+        }
+
         public string ToSVGPathString()
         {
             StringBuilder sBuilder = new StringBuilder();
