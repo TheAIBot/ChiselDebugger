@@ -17,7 +17,7 @@ namespace ChiselDebug.GraphFIR
 
             this.Result = new Output(this, outputName, value.GetFIRType());
 
-            BinaryVarValue binValue = new BinaryVarValue(new BitState[value.Width], null);
+            BinaryVarValue binValue = new BinaryVarValue(value.Width);
             binValue.SetBits(value.Value);
             Result.Con.Value.UpdateValue(binValue);
         }

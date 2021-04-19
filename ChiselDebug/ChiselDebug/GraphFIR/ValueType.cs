@@ -16,7 +16,7 @@ namespace ChiselDebug.GraphFIR
             this.Type = type;
             if (Type is FIRRTL.GroundType ground && ground.IsWidthKnown)
             {
-                this.Value = new BinaryVarValue(new BitState[ground.Width], null);
+                this.Value = new BinaryVarValue(ground.Width);
                 this.ValueString = new string(BitState.X.ToChar(), ground.Width);
             }
         }

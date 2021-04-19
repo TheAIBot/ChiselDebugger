@@ -21,7 +21,7 @@ namespace ChiselDebug.CombGraph
         {
             this.Node = null;
             this.Con = con;
-            this.OldValue = new BinaryVarValue(new BitState[Con.Value.GetValue().Bits.Length], null);
+            this.OldValue = new BinaryVarValue(Con.Value.GetValue().Bits.Length);
         }
 
         public Connection Compute()

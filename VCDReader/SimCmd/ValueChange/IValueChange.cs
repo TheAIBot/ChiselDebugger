@@ -6,9 +6,9 @@ namespace VCDReader
 {
     public abstract class VarValue : ISimCmd
     {
-        public readonly VarDef Variable;
+        public readonly VarDef? Variable;
 
-        public VarValue(VarDef variable)
+        public VarValue(VarDef? variable)
         {
             this.Variable = variable;
         }
@@ -26,6 +26,11 @@ namespace VCDReader
 
             Array.Fill(Bits, bits[^1].LeftExtendWith());
             bits.CopyTo(Bits, 0);
+        }
+
+        public BinaryVarValue(int bitCount) : base(null)
+        {
+            this.Bits = new BitState[bitCount];
         }
 
         public string BitsToString()
