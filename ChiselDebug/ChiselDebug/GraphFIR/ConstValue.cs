@@ -1,6 +1,8 @@
 ﻿using ChiselDebug.GraphFIR.IO;
 using FIRRTL;
 using System;
+using System.Numerics;
+using VCDReader;
 
 namespace ChiselDebug.GraphFIR
 {
@@ -14,8 +16,10 @@ namespace ChiselDebug.GraphFIR
             this.Value = value;
 
             this.Result = new Output(this, outputName, value.GetFIRType());
-            Result.SetType(value.GetFIRType());
-            Result.Con.Value.SetValueString(value.Value.ToSignedBinaryString((FIRRTL.GroundType)value.GetFIRType()));
+
+            BinaryVarValue binValue = new BinaryVarValue(new BitState[value.Width], null);
+            binValue.SetBits(value.Value);
+            Result.Con.Value.UpdateValue(binValue);
         }
 
         public override ScalarIO[] GetInputs()
@@ -31,6 +35,11 @@ namespace ChiselDebug.GraphFIR
         public override FIRIO[] GetIO()
         {
             return new FIRIO[] { Result };
+        }
+
+        public override void Compute()
+        {
+            throw new Exception("This node is not computable");
         }
 
         public override void InferType()

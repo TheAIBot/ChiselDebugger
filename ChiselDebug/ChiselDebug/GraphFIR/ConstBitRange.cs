@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VCDReader;
 
 namespace ChiselDebug.GraphFIR
 {
@@ -33,6 +34,23 @@ namespace ChiselDebug.GraphFIR
                 Result
             };
         }
+
+        public override void Compute()
+        {
+            Connection aCon = In.GetEnabledCon();
+            Connection resultCon = Result.Con;
+
+            BinaryVarValue aVal = (BinaryVarValue)aCon.Value.GetValue();
+            BinaryVarValue resultVal = (BinaryVarValue)resultCon.Value.GetValue();
+
+            if (!aVal.IsValidBinary())
+            {
+                Array.Fill(resultVal.Bits, BitState.X);
+            }
+
+            ConstBitRangeCompute(aVal, resultVal);
+        }
+        protected abstract void ConstBitRangeCompute(BinaryVarValue a, BinaryVarValue result);
     }
 
     public class Head : ConstBitRange
@@ -41,6 +59,11 @@ namespace ChiselDebug.GraphFIR
         public Head(Output arg1, IFIRType outType, int fromMSB, FirrtlNode defNode) : base("head", arg1, outType, defNode)
         {
             this.FromMSB = fromMSB;
+        }
+
+        protected override void ConstBitRangeCompute(BinaryVarValue a, BinaryVarValue result)
+        {
+            Array.Copy(a.Bits, a.Bits.Length - FromMSB, result.Bits, 0, FromMSB);
         }
 
         public override void InferType()
@@ -63,6 +86,11 @@ namespace ChiselDebug.GraphFIR
         public Tail(Output arg1, IFIRType outType, int fromLSB, FirrtlNode defNode) : base("tail", arg1, outType, defNode)
         {
             this.FromLSB = fromLSB;
+        }
+
+        protected override void ConstBitRangeCompute(BinaryVarValue a, BinaryVarValue result)
+        {
+            Array.Copy(a.Bits, 0, result.Bits, 0, a.Bits.Length - FromLSB);
         }
 
         public override void InferType()
@@ -89,6 +117,11 @@ namespace ChiselDebug.GraphFIR
             this.EndInclusive = endInclusive;
         }
 
+        protected override void ConstBitRangeCompute(BinaryVarValue a, BinaryVarValue result)
+        {
+            Array.Copy(a.Bits, StartInclusive, result.Bits, 0, EndInclusive - StartInclusive + 1);
+        }
+
         public override void InferType()
         {
             In.InferType();
@@ -109,6 +142,23 @@ namespace ChiselDebug.GraphFIR
         public Pad(Output arg1, IFIRType outType, int newWidth, FirrtlNode defNode) : base("pad", arg1, outType, defNode)
         {
             this.WidthAfterPad = newWidth;
+        }
+
+        protected override void ConstBitRangeCompute(BinaryVarValue a, BinaryVarValue result)
+        {
+            Array.Copy(a.Bits, result.Bits, Math.Max(a.Bits.Length, WidthAfterPad));
+
+            if (a.Bits.Length < WidthAfterPad)
+            {
+                if (In.Type is SIntType)
+                {
+                    Array.Fill(result.Bits, a.Bits[^1], a.Bits.Length, WidthAfterPad - a.Bits.Length);
+                }
+                else
+                {
+                    Array.Fill(result.Bits, BitState.Zero, a.Bits.Length, WidthAfterPad - a.Bits.Length);
+                }                
+            }
         }
 
         public override void InferType()

@@ -102,6 +102,11 @@ namespace ChiselDebug.GraphFIR
             return GetAllIO().ToArray();
         }
 
+        public override void Compute()
+        {
+            throw new Exception("This node is not computable");
+        }
+
         public override void InferType()
         { }
     }

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Numerics;
 
 namespace VCDReader
 {
@@ -46,25 +48,139 @@ namespace VCDReader
 
         public override bool SameValue(VarValue other)
         {
-            if (other is BinaryVarValue binary)
+            return other is BinaryVarValue binary && SameValue(binary);
+        }
+
+        public bool SameValue(BinaryVarValue other)
+        {
+            if (Bits.Length != other.Bits.Length)
             {
-                if (Bits.Length != binary.Bits.Length)
+                return false;
+            }
+
+            for (int i = 0; i < Bits.Length; i++)
+            {
+                if (Bits[i] != other.Bits[i])
                 {
                     return false;
                 }
-
-                for (int i = 0; i < Bits.Length; i++)
-                {
-                    if (Bits[i] != binary.Bits[i])
-                    {
-                        return false;
-                    }
-                }
-
-                return true;
             }
 
-            return false;
+            return true;
+        }
+
+        public void SetBits(BinaryVarValue value)
+        {
+            Debug.Assert(Bits.Length == value.Bits.Length);
+
+            Array.Copy(value.Bits, Bits, value.Bits.Length);
+        }
+
+        public void SetBits(ulong value)
+        {
+            Debug.Assert(Bits.Length <= 64);
+
+            for (int i = 0; i < Bits.Length; i++)
+            {
+                ulong bitValue = value >> i;
+                Bits[i] = (BitState)(1 & bitValue);
+            }
+        }
+
+        public void SetBits(long value)
+        {
+            SetBits((ulong)value);
+        }
+
+        public void SetBits(BigInteger value)
+        {
+            for (int i = 0; i < Bits.Length; i++)
+            {
+                BigInteger bitValue = value >> i;
+                Bits[i] = (BitState)(int)(1 & bitValue);
+            }
+        }
+
+        public int AsInt()
+        {
+            Debug.Assert(Bits.Length <= 32);
+
+            int value = 0;
+            for (int i = 0; i < Bits.Length; i++)
+            {
+                int bitValue = 1 & (int)Bits[i];
+                value |= bitValue << i;
+            }
+
+            return value;
+        }
+
+        public ulong AsULong()
+        {
+            Debug.Assert(Bits.Length <= 64);
+
+            ulong value = 0;
+            for (int i = 0; i < Bits.Length; i++)
+            {
+                ulong bitValue = 1 & (ulong)Bits[i];
+                value |= bitValue << i;
+            }
+
+            return value;
+        }
+
+        public long AsLong()
+        {
+            Debug.Assert(Bits.Length <= 64);
+
+            long value = Bits[^1] == BitState.One ? long.MaxValue : 0;
+            for (int i = 0; i < Bits.Length; i++)
+            {
+                long bitValue = 1 & (long)Bits[i];
+                value |= bitValue << i;
+            }
+
+            return value;
+        }
+
+        public BigInteger AsBigInteger(bool asSigned)
+        {
+            if (asSigned)
+            {
+                return AsSignedBigInteger();
+            }
+            else
+            {
+                return AsUnsignedBigInteger();
+            }
+        }
+
+        public BigInteger AsUnsignedBigInteger()
+        {
+            var value = BigInteger.Zero;
+            for (int i = Bits.Length - 1; i >= 0; i--)
+            {
+                value = value << 1;
+                value |= 1 & (int)Bits[i];
+            }
+
+            return value;
+        }
+
+        public BigInteger AsSignedBigInteger()
+        {
+            var value = BigInteger.Zero;
+
+            int sign = (int)Bits[^1];
+            value |= sign;
+
+            for (int i = Bits.Length - 1; i >= 0; i--)
+            {
+                value = value << 1;
+                value |= 1 & (int)Bits[i];
+            }
+
+            return value;
         }
     }
     public class RealVarValue: VarValue

@@ -81,6 +81,11 @@ namespace ChiselDebug.GraphFIR
             throw new Exception($"Failed to find io. IO name: {ioName}");
         }
 
+        public override void Compute()
+        {
+            throw new Exception("This node is not computable");
+        }
+
         public override void InferType()
         {
             foreach (var condMod in ConditionalModules)
