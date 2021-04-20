@@ -152,7 +152,11 @@ namespace VCDReader
                 Bits[i] = (BitState)(int)(1 & bitValue);
             }
 
-            ExtendBits(minBits, asSigned);
+            if (valueBits < Bits.Length)
+            {
+                BitState sign = value.Sign == -1 ? BitState.One : BitState.Zero;
+                Array.Fill(Bits, sign, valueBits, Bits.Length - valueBits);
+            }
         }
 
         public int AsInt()
