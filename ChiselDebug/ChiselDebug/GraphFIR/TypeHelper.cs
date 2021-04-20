@@ -1,0 +1,37 @@
+﻿using ChiselDebug.GraphFIR.IO;
+using FIRRTL;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ChiselDebug.GraphFIR
+{
+    internal static class TypeHelper
+    {
+        public static GroundType InferMuxOutputType(Output output, Mux mux)
+        {
+            List<GroundType> inputTypes = new List<GroundType>();
+            foreach (Input paired in mux.GetAllPairedIO(output).OfType<Input>())
+            {
+                paired.InferType();
+                inputTypes.Add((GroundType)paired.Type);
+            }
+
+            int maxWidth = inputTypes.Max(x => x.Width);
+            if (inputTypes.All(x => x is UIntType))
+            {
+                return new UIntType(maxWidth);
+            }
+            else if (inputTypes.All(x => x is SIntType))
+            {
+                return new SIntType(maxWidth);
+            }
+            else
+            {
+                throw new Exception("All input types for mux output must be of the same ground type.");
+            }
+        }
+    }
+}

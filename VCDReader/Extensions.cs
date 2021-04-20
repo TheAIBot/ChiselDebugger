@@ -25,7 +25,7 @@ namespace VCDReader
         public static string BitsToString(this BitState[] bits)
         {
             StringBuilder sBuilder = new StringBuilder();
-            for (int i = 0; i < bits.Length; i++)
+            for (int i = bits.Length - 1; i >= 0; i--)
             {
                 sBuilder.Append(bits[i].ToChar());
             }

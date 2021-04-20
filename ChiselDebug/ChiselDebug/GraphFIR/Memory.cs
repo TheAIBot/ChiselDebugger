@@ -74,11 +74,20 @@ namespace ChiselDebug.GraphFIR
             return new FIRIO[] { MemIO };
         }
 
+        public override void Compute()
+        {
+            throw new Exception("This node is not computable");
+        }
+
         public override void InferType()
         {
             foreach (var input in GetInputs())
             {
                 input.InferType();
+            }
+            foreach (var output in GetOutputs())
+            {
+                output.InferType();
             }
         }
 

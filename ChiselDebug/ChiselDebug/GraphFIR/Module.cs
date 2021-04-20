@@ -463,11 +463,25 @@ namespace ChiselDebug.GraphFIR
             }
         }
 
+        public override void Compute()
+        {
+            throw new Exception("This node is not computable");
+        }
+
         public override void InferType()
         {
             foreach (var node in Nodes)
             {
                 node.InferType();
+            }
+
+            foreach (var con in GetAllModuleConnections())
+            {
+                con.From.InferType();
+                foreach (var input in con.To)
+                {
+                    input.InferType();
+                }
             }
         }
     }

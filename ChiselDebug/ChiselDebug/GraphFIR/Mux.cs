@@ -2,7 +2,9 @@
 using FIRRTL;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using VCDReader;
 
 namespace ChiselDebug.GraphFIR
 {
@@ -56,6 +58,45 @@ namespace ChiselDebug.GraphFIR
             io.Add(Result);
 
             return io.ToArray();
+        }
+
+        public override void Compute()
+        {
+            Debug.Assert(Choises.Length <= 2, "Only support multiplexer with two choises");
+
+            FIRIO ChosenInput;
+            if (Decider.GetEnabledCon().Value.IsTrue())
+            {
+                ChosenInput = Choises.First();
+            }
+            else
+            {
+                //Conditionally valid
+                if (Choises.Length == 1)
+                {
+                    foreach (Output output in Result.Flatten())
+                    {
+                        BinaryVarValue binValue = (BinaryVarValue)output.Con.Value.GetValue();
+                        Array.Fill(binValue.Bits, BitState.X);
+                    }
+
+                    return;
+                }
+
+                ChosenInput = Choises.Last();
+            }
+
+            Input[] from = ChosenInput.Flatten().Cast<Input>().ToArray();
+            Output[] to = Result.Flatten().Cast<Output>().ToArray();
+            Debug.Assert(from.Length == to.Length);
+
+            for (int i = 0; i < from.Length; i++)
+            {
+                BinaryVarValue fromBin = (BinaryVarValue)from[i].GetEnabledCon().Value.GetValue();
+                BinaryVarValue toBin = (BinaryVarValue)to[i].Con.Value.GetValue();
+
+                Array.Copy(fromBin.Bits, toBin.Bits, toBin.Bits.Length);
+            }
         }
 
         public override void InferType()

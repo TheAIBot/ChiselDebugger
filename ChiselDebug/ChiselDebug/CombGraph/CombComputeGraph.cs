@@ -204,6 +204,8 @@ namespace ChiselDebug.CombGraph
                 keyValue.Key.AddEdges(keyValue.Value);
             }
 
+            graph.ComputeConsts();
+
             //Find graph roots so it doesn't have to be done in the future
             graph.ComputeRoots();
 
@@ -223,11 +225,6 @@ namespace ChiselDebug.CombGraph
                 {
                     consFromConsts.Add(con);
                 }
-            }
-
-            foreach (var con in consFromConsts)
-            {
-                con.Value.SetValueString("const??");
             }
 
             return (constNodes, consFromConsts);
@@ -260,9 +257,14 @@ namespace ChiselDebug.CombGraph
             }
 
             List<Computable> computeOrder = new List<Computable>();
-            List<Connection> seenCons = new List<Connection>();
+            HashSet<Connection> seenCons = new HashSet<Connection>();
             Dictionary<FIRRTLNode, HashSet<Connection>> seenButMissingFirNodeInputs = new Dictionary<FIRRTLNode, HashSet<Connection>>();
             Dictionary<Input, HashSet<Connection>> seenButMissingModInputCons = new Dictionary<Input, HashSet<Connection>>();
+
+            foreach (var computeFirst in outputs.Where(x => x.Node is not Module).Select(x => x.Node).Distinct())
+            {
+                computeOrder.Add(new Computable(computeFirst));
+            }
 
             Queue<(Connection con, Input input)> toTraverse = new Queue<(Connection con, Input input)>();
             foreach (var output in outputs)
@@ -272,8 +274,10 @@ namespace ChiselDebug.CombGraph
                 while (toTraverse.Count > 0)
                 {
                     var conInput = toTraverse.Dequeue();
-                    computeOrder.Add(new Computable(conInput.con));
-                    seenCons.Add(conInput.con);
+                    if (seenCons.Add(conInput.con))
+                    {
+                        computeOrder.Add(new Computable(conInput.con));
+                    }
 
                     //Punch through module border to continue search on the other side
                     if (conInput.input.Node is Module mod)
@@ -309,6 +313,10 @@ namespace ChiselDebug.CombGraph
                     //shouldn't cross those
                     else if (conInput.input.Node is Memory ||
                              conInput.input.Node is Register)
+                    {
+                        continue;
+                    }
+                    else if (conInput.input.Node is DummySink)
                     {
                         continue;
                     }

@@ -1,33 +1,36 @@
 ﻿using FIRRTL;
 using System;
+using System.Diagnostics;
 using VCDReader;
 
 namespace ChiselDebug.GraphFIR
 {
     public class ValueType
     {
-        string ValueString = string.Empty;
         private readonly IFIRType Type;
-        private VarValue Value;
+        private BinaryVarValue Value;
+        string ValueString = string.Empty;
 
         public ValueType(IFIRType type)
         {
             this.Type = type;
             if (Type is FIRRTL.GroundType ground && ground.IsWidthKnown)
             {
-                this.ValueString = new string(BitState.X.ToChar(), ground.Width);
+                this.Value = new BinaryVarValue(ground.Width);
+                Array.Fill(Value.Bits, BitState.X);
+
+                this.ValueString = Value.BitsToString();
             }
         }
 
-        public bool UpdateValue(VarValue value)
+        public bool UpdateValue(BinaryVarValue update)
         {
-            if (Value != null && Value.SameValue(value))
+            if (Value.SameValueZeroExtend(update))
             {
                 return false;
             }
 
-            Value = value;
-            ValueString = ((BinaryVarValue)Value).BitsToString();
+            Value.SetBitsAndExtend(update, Type is SIntType);
             return true;
         }
 
@@ -36,20 +39,24 @@ namespace ChiselDebug.GraphFIR
             return UpdateValue(copyFrom.Value);
         }
 
-        public void SetValueString(string valueString)
+        public void UpdateValueString()
         {
-            ValueString = valueString;
+            ValueString = Value.BitsToString();
+        }
+
+        public BinaryVarValue GetValue()
+        {
+            return Value;
         }
 
         public bool IsTrue()
         {
-            var binValue = (BinaryVarValue)Value;
-            if (binValue.Bits.Length > 1)
+            if (Value.Bits.Length > 1)
             {
                 throw new Exception("Value must be a single bit when asking if it's true.");
             }
 
-            return binValue.Bits[0] == BitState.One;
+            return Value.Bits[0] == BitState.One;
         }
 
         public string ToBinaryString()
