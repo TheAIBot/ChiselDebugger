@@ -204,6 +204,8 @@ namespace ChiselDebug.CombGraph
                 keyValue.Key.AddEdges(keyValue.Value);
             }
 
+            graph.ComputeConsts();
+
             //Find graph roots so it doesn't have to be done in the future
             graph.ComputeRoots();
 
@@ -223,11 +225,6 @@ namespace ChiselDebug.CombGraph
                 {
                     consFromConsts.Add(con);
                 }
-            }
-
-            foreach (var con in consFromConsts)
-            {
-                con.Value.SetValueString("const??");
             }
 
             return (constNodes, consFromConsts);
