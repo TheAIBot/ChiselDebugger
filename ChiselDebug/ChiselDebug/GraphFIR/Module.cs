@@ -474,6 +474,15 @@ namespace ChiselDebug.GraphFIR
             {
                 node.InferType();
             }
+
+            foreach (var con in GetAllModuleConnections())
+            {
+                con.From.InferType();
+                foreach (var input in con.To)
+                {
+                    input.InferType();
+                }
+            }
         }
     }
 }

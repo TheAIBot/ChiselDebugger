@@ -108,6 +108,15 @@ namespace ChiselDebug.GraphFIR
         }
 
         public override void InferType()
-        { }
+        {
+            foreach (var input in GetInputs())
+            {
+                input.InferType();
+            }
+            foreach (var output in GetOutputs())
+            {
+                output.InferType();
+            }
+        }
     }
 }
