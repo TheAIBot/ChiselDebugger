@@ -314,6 +314,10 @@ namespace ChiselDebug.CombGraph
                     {
                         continue;
                     }
+                    else if (conInput.input.Node is DummySink)
+                    {
+                        continue;
+                    }
                     else
                     {
                         HashSet<Connection> missingCons;
