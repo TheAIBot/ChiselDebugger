@@ -248,6 +248,7 @@ namespace VCDReader.Parsing
                 bits[i] = ToBitState(valueText[i]);
             }
 
+            Array.Reverse(bits);
             return bits;
         }
 
