@@ -165,7 +165,7 @@ namespace ChiselDebug.GraphFIR
                 else
                 {
                     BigInteger aVal = a.AsUnsignedBigInteger();
-                    result.SetBits(-aVal);
+                    result.SetBitsZeroExtend(-aVal);
                 }
             }
             else
@@ -179,7 +179,7 @@ namespace ChiselDebug.GraphFIR
                 else
                 {
                     BigInteger aVal = a.AsSignedBigInteger();
-                    result.SetBits(-aVal);
+                    result.SetBitsZeroExtend(-aVal);
                 }
             }
         }

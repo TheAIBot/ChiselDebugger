@@ -23,14 +23,12 @@ namespace ChiselDebug.GraphFIR
 
         public bool UpdateValue(BinaryVarValue update)
         {
-            Debug.Assert(Value.Bits.Length == update.Bits.Length);
-
-            if (Value.SameValue(update))
+            if (Value.SameValueZeroExtend(update))
             {
                 return false;
             }
 
-            Value.SetBits(update);
+            Value.SetBitsZeroExtend(update);
             ValueString = Value.BitsToString();
             return true;
         }

@@ -46,7 +46,7 @@ namespace ChiselDebug.CombGraph
                 //Did connection value change?
                 if (!OldValue.SameValue(Con.Value.GetValue()))
                 {
-                    OldValue.SetBits(Con.Value.GetValue());
+                    OldValue.SetBitsZeroExtend(Con.Value.GetValue());
                     return Con;
                 }
             }

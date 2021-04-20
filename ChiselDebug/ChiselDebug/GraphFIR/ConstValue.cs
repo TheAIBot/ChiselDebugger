@@ -14,12 +14,7 @@ namespace ChiselDebug.GraphFIR
         public ConstValue(string outputName, Literal value) : base(value)
         {
             this.Value = value;
-
             this.Result = new Output(this, outputName, value.GetFIRType());
-
-            BinaryVarValue binValue = new BinaryVarValue(value.Width);
-            binValue.SetBits(value.Value);
-            Result.Con.Value.UpdateValue(binValue);
         }
 
         public override ScalarIO[] GetInputs()
@@ -39,7 +34,9 @@ namespace ChiselDebug.GraphFIR
 
         public override void Compute()
         {
-            throw new Exception("This node is not computable");
+            BinaryVarValue binValue = new BinaryVarValue(Value.Width);
+            binValue.SetBitsZeroExtend(Value.Value);
+            Result.Con.Value.UpdateValue(binValue);
         }
 
         public override void InferType()

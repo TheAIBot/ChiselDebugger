@@ -74,11 +74,48 @@ namespace VCDReader
             return true;
         }
 
-        public void SetBits(BinaryVarValue value)
+        public bool SameValueZeroExtend(BinaryVarValue other)
         {
-            Debug.Assert(Bits.Length == value.Bits.Length);
+            int minLength = Math.Min(Bits.Length, other.Bits.Length);
+            for (int i = 0; i < minLength; i++)
+            {
+                if (Bits[i] != other.Bits[i])
+                {
+                    return false;
+                }
+            }
 
+            if (Bits.Length > other.Bits.Length)
+            {
+                for (int i = minLength; i < Bits.Length; i++)
+                {
+                    if (Bits[i] != BitState.Zero)
+                    {
+                        return false;
+                    }
+                }
+            }
+            else if (Bits.Length < other.Bits.Length)
+            {
+                for (int i = minLength; i < other.Bits.Length; i++)
+                {
+                    if (other.Bits[i] != BitState.Zero)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        public void SetBitsZeroExtend(BinaryVarValue value)
+        {
             Array.Copy(value.Bits, Bits, value.Bits.Length);
+            if (Bits.Length > value.Bits.Length)
+            {
+                Array.Fill(Bits, BitState.Zero, value.Bits.Length, Bits.Length - value.Bits.Length);
+            }
         }
 
         public void SetBits(ulong value)
@@ -97,12 +134,20 @@ namespace VCDReader
             SetBits((ulong)value);
         }
 
-        public void SetBits(BigInteger value)
+        public void SetBitsZeroExtend(BigInteger value)
         {
+            int valueBits = (int)value.GetBitLength();
+            int minBits = Math.Min(valueBits, Bits.Length);
             for (int i = 0; i < Bits.Length; i++)
             {
                 BigInteger bitValue = value >> i;
                 Bits[i] = (BitState)(int)(1 & bitValue);
+            }
+
+
+            if (Bits.Length > valueBits)
+            {
+                Array.Fill(Bits, BitState.Zero, valueBits, Bits.Length - valueBits);
             }
         }
 
