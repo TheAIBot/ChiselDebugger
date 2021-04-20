@@ -86,7 +86,7 @@ namespace ChiselDebug.GraphFIR
             throw new Exception("This node is not computable");
         }
 
-        public override void InferType()
+        internal override void InferType()
         {
             foreach (var condMod in ConditionalModules)
             {

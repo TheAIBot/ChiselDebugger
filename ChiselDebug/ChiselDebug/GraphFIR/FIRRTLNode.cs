@@ -19,6 +19,6 @@ namespace ChiselDebug.GraphFIR
 
         public abstract void Compute();
 
-        public abstract void InferType();
+        internal abstract void InferType();
     }
 }

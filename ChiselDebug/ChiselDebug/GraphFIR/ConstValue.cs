@@ -39,7 +39,7 @@ namespace ChiselDebug.GraphFIR
             Result.Con.Value.UpdateValue(binValue);
         }
 
-        public override void InferType()
+        internal override void InferType()
         { }
     }
 }

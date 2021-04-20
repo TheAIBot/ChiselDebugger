@@ -23,11 +23,6 @@ namespace ChiselDebug
             this.ComputeGraph = CombComputeGraph.MakeGraph(MainModule);
         }
 
-        public void InferTypes()
-        {
-            MainModule.InferType();
-        }
-
         public List<Connection> SetState(CircuitState state)
         {
             List<Connection> consWithChanges = new List<Connection>();

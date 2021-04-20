@@ -51,7 +51,7 @@ namespace ChiselDebug.GraphFIR
         }
         protected abstract void MonoArgCompute(BinaryVarValue a, BinaryVarValue result);
 
-        public override void InferType()
+        internal override void InferType()
         {
             if (Result.Type is GroundType ground && ground.IsTypeFullyKnown())
             {

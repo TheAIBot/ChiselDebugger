@@ -99,7 +99,7 @@ namespace ChiselDebug.GraphFIR
             }
         }
 
-        public override void InferType()
+        internal override void InferType()
         {
             foreach (Input input in GetInputs())
             {

@@ -17,7 +17,6 @@ namespace ChiselDebugTests
         {
             Circuit circuit = FIRRTL.Parse.FromString(firrtl);
             CircuitGraph graph = CircuitToGraph.GetAsGraph(circuit, lowFirGraph);
-            graph.InferTypes();
 
             return graph;
         }

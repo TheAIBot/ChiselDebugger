@@ -57,7 +57,7 @@ namespace ChiselDebug.GraphFIR
         }
         protected abstract void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result);
 
-        public override void InferType()
+        internal override void InferType()
         {
             if (Result.Type is GroundType ground && ground.IsTypeFullyKnown())
             {

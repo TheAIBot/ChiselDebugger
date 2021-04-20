@@ -66,7 +66,7 @@ namespace ChiselDebug.GraphFIR
             Array.Copy(a.Bits, a.Bits.Length - FromMSB, result.Bits, 0, FromMSB);
         }
 
-        public override void InferType()
+        internal override void InferType()
         {
             In.InferType();
 
@@ -93,7 +93,7 @@ namespace ChiselDebug.GraphFIR
             Array.Copy(a.Bits, 0, result.Bits, 0, a.Bits.Length - FromLSB);
         }
 
-        public override void InferType()
+        internal override void InferType()
         {
             In.InferType();
 
@@ -122,7 +122,7 @@ namespace ChiselDebug.GraphFIR
             Array.Copy(a.Bits, StartInclusive, result.Bits, 0, EndInclusive - StartInclusive + 1);
         }
 
-        public override void InferType()
+        internal override void InferType()
         {
             In.InferType();
 
@@ -161,7 +161,7 @@ namespace ChiselDebug.GraphFIR
             }
         }
 
-        public override void InferType()
+        internal override void InferType()
         {
             In.InferType();
 

@@ -70,7 +70,7 @@ namespace ChiselDebug.GraphFIR
             return AllIOInOrder.SelectMany(x => x.Flatten()).ToArray();
         }
 
-        public override void InferType()
+        internal override void InferType()
         {
             throw new NotImplementedException();
         }
