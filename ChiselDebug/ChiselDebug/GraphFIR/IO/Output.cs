@@ -101,10 +101,17 @@ namespace ChiselDebug.GraphFIR.IO
 
             if (Node is PairedIOFIRRTLNode pairedIO)
             {
-                foreach (Input paired in pairedIO.GetAllPairedIO(this).OfType<Input>())
+                if (pairedIO is Mux mux)
                 {
-                    paired.InferType();
-                    SetType(paired.Type);
+                    SetType(TypeHelper.InferMuxOutputType(this, mux));
+                }
+                else
+                {
+                    foreach (Input paired in pairedIO.GetAllPairedIO(this).OfType<Input>())
+                    {
+                        paired.InferType();
+                        SetType(paired.Type);
+                    }
                 }
             }
             else
