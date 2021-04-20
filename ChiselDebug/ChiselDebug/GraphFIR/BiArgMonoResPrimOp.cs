@@ -493,9 +493,20 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
         {
-            for (int i = 0; i < a.Bits.Length; i++)
+            const int bitsInLong = 64;
+            if (a.Bits.Length <= bitsInLong &&
+                b.Bits.Length <= bitsInLong)
             {
-                result.Bits[i] = (BitState)((int)a.Bits[i] & (int)b.Bits[i]);
+                ulong aVal = a.AsULong();
+                ulong bVal = b.AsULong();
+                result.SetBits(aVal & bVal);
+
+            }
+            else
+            {
+                BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
+                BigInteger bVal = b.AsBigInteger(B.Type is SIntType);
+                result.SetBitsAndExtend(aVal & bVal, false);
             }
         }
     }
@@ -506,9 +517,20 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
         {
-            for (int i = 0; i < a.Bits.Length; i++)
+            const int bitsInLong = 64;
+            if (a.Bits.Length <= bitsInLong &&
+                b.Bits.Length <= bitsInLong)
             {
-                result.Bits[i] = (BitState)((int)a.Bits[i] | (int)b.Bits[i]);
+                ulong aVal = a.AsULong();
+                ulong bVal = b.AsULong();
+                result.SetBits(aVal | bVal);
+
+            }
+            else
+            {
+                BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
+                BigInteger bVal = b.AsBigInteger(B.Type is SIntType);
+                result.SetBitsAndExtend(aVal | bVal, false);
             }
         }
     }
@@ -519,9 +541,20 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
         {
-            for (int i = 0; i < a.Bits.Length; i++)
+            const int bitsInLong = 64;
+            if (a.Bits.Length <= bitsInLong &&
+                b.Bits.Length <= bitsInLong)
             {
-                result.Bits[i] = (BitState)((int)a.Bits[i] ^ (int)b.Bits[i]);
+                ulong aVal = a.AsULong();
+                ulong bVal = b.AsULong();
+                result.SetBits(aVal ^ bVal);
+
+            }
+            else
+            {
+                BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
+                BigInteger bVal = b.AsBigInteger(B.Type is SIntType);
+                result.SetBitsAndExtend(aVal ^ bVal, false);
             }
         }
     }
