@@ -23,6 +23,7 @@ namespace ChiselDebug.CombGraph
             this.Node = null;
             this.Con = con;
             this.OldValue = new BinaryVarValue(Con.Value.GetValue().Bits.Length);
+            Array.Fill(OldValue.Bits, BitState.X);
         }
 
         public Connection Compute()
@@ -48,6 +49,7 @@ namespace ChiselDebug.CombGraph
                 if (!OldValue.SameValue(Con.Value.GetValue()))
                 {
                     OldValue.SetBitsAndExtend(Con.Value.GetValue(), false);
+                    Con.Value.UpdateValueString();
                     return Con;
                 }
             }

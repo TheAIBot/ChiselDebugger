@@ -17,7 +17,9 @@ namespace ChiselDebug.GraphFIR
             if (Type is FIRRTL.GroundType ground && ground.IsWidthKnown)
             {
                 this.Value = new BinaryVarValue(ground.Width);
-                this.ValueString = new string(BitState.X.ToChar(), ground.Width);
+                Array.Fill(Value.Bits, BitState.X);
+
+                this.ValueString = Value.BitsToString();
             }
         }
 
@@ -29,7 +31,6 @@ namespace ChiselDebug.GraphFIR
             }
 
             Value.SetBitsAndExtend(update, Type is SIntType);
-            ValueString = Value.BitsToString();
             return true;
         }
 
@@ -38,9 +39,9 @@ namespace ChiselDebug.GraphFIR
             return UpdateValue(copyFrom.Value);
         }
 
-        public void SetValueString(string valueString)
+        public void UpdateValueString()
         {
-            ValueString = valueString;
+            ValueString = Value.BitsToString();
         }
 
         public BinaryVarValue GetValue()
