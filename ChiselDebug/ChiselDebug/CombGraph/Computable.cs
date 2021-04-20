@@ -1,5 +1,6 @@
 ﻿using ChiselDebug.GraphFIR;
 using ChiselDebug.GraphFIR.IO;
+using System;
 using VCDReader;
 
 namespace ChiselDebug.CombGraph
@@ -46,7 +47,7 @@ namespace ChiselDebug.CombGraph
                 //Did connection value change?
                 if (!OldValue.SameValue(Con.Value.GetValue()))
                 {
-                    OldValue.SetBitsZeroExtend(Con.Value.GetValue());
+                    OldValue.SetBitsAndExtend(Con.Value.GetValue(), false);
                     return Con;
                 }
             }

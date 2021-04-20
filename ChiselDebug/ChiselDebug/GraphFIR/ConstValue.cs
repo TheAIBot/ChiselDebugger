@@ -35,7 +35,7 @@ namespace ChiselDebug.GraphFIR
         public override void Compute()
         {
             BinaryVarValue binValue = new BinaryVarValue(Value.Width);
-            binValue.SetBitsZeroExtend(Value.Value);
+            binValue.SetBitsAndExtend(Value.Value, Result.Type is SIntType);
             Result.Con.Value.UpdateValue(binValue);
         }
 

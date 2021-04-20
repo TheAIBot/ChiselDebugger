@@ -109,13 +109,21 @@ namespace VCDReader
             return true;
         }
 
-        public void SetBitsZeroExtend(BinaryVarValue value)
+        public void SetBitsAndExtend(BinaryVarValue value, bool asSigned)
         {
             Array.Copy(value.Bits, Bits, value.Bits.Length);
-            if (Bits.Length > value.Bits.Length)
+            ExtendBits(value.Bits.Length, asSigned);
+        }
+
+        private void ExtendBits(int lengthAlreadySet, bool asSigned)
+        {
+            if (lengthAlreadySet == Bits.Length)
             {
-                Array.Fill(Bits, BitState.Zero, value.Bits.Length, Bits.Length - value.Bits.Length);
+                return;
             }
+
+            BitState extendWith = asSigned ? Bits[lengthAlreadySet - 1] : BitState.Zero;
+            Array.Fill(Bits, extendWith, lengthAlreadySet, Bits.Length - lengthAlreadySet);
         }
 
         public void SetBits(ulong value)
@@ -134,21 +142,17 @@ namespace VCDReader
             SetBits((ulong)value);
         }
 
-        public void SetBitsZeroExtend(BigInteger value)
+        public void SetBitsAndExtend(BigInteger value, bool asSigned)
         {
             int valueBits = (int)value.GetBitLength();
             int minBits = Math.Min(valueBits, Bits.Length);
-            for (int i = 0; i < Bits.Length; i++)
+            for (int i = 0; i < minBits; i++)
             {
                 BigInteger bitValue = value >> i;
                 Bits[i] = (BitState)(int)(1 & bitValue);
             }
 
-
-            if (Bits.Length > valueBits)
-            {
-                Array.Fill(Bits, BitState.Zero, valueBits, Bits.Length - valueBits);
-            }
+            ExtendBits(minBits, asSigned);
         }
 
         public int AsInt()

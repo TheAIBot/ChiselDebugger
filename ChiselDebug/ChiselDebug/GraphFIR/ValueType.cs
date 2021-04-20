@@ -28,7 +28,7 @@ namespace ChiselDebug.GraphFIR
                 return false;
             }
 
-            Value.SetBitsZeroExtend(update);
+            Value.SetBitsAndExtend(update, Type is SIntType);
             ValueString = Value.BitsToString();
             return true;
         }
