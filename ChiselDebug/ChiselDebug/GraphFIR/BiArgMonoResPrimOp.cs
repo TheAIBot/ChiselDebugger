@@ -594,17 +594,32 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
         {
-            for (int i = 0; i < a.Bits.Length; i++)
+            //Special logic for when shifting by more than the wire length.
+            //In that case the result should be equal to zero if unsigned and
+            //equal to sign bit if signed.
+            if (ShiftBy >= a.Bits.Length)
+            {
+                if (A.Type is UIntType)
+                {
+                    result.Bits[0] = BitState.Zero;
+                }
+                else
+                {
+                    result.Bits[0] = a.Bits[^1];
+                }
+
+                return;
+            }
+            for (int i = 0; i < result.Bits.Length; i++)
             {
                 result.Bits[i] = a.Bits[i + ShiftBy];
             }
-            Array.Fill(result.Bits, a.Bits[^1], result.Bits.Length - 1 - ShiftBy, ShiftBy);
         }
 
         protected override IFIRType BiArgInferType() => A.Type switch
         {
-            UIntType a => new UIntType(a.Width - ShiftBy),
-            SIntType a => new SIntType(a.Width - ShiftBy),
+            UIntType a => new UIntType(Math.Max(a.Width - ShiftBy, 1)),
+            SIntType a => new SIntType(Math.Max(a.Width - ShiftBy, 1)),
             _ => throw new Exception("Failed to infer type.")
         };
     }
