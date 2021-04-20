@@ -521,7 +521,7 @@ namespace ChiselDebug.GraphFIR
         {
             for (int i = 0; i < a.Bits.Length; i++)
             {
-                result.Bits[i] |= (BitState)((int)a.Bits[i] ^ (int)b.Bits[i]);
+                result.Bits[i] = (BitState)((int)a.Bits[i] ^ (int)b.Bits[i]);
             }
         }
     }
