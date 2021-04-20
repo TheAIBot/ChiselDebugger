@@ -257,7 +257,7 @@ namespace ChiselDebug.CombGraph
             }
 
             List<Computable> computeOrder = new List<Computable>();
-            List<Connection> seenCons = new List<Connection>();
+            HashSet<Connection> seenCons = new HashSet<Connection>();
             Dictionary<FIRRTLNode, HashSet<Connection>> seenButMissingFirNodeInputs = new Dictionary<FIRRTLNode, HashSet<Connection>>();
             Dictionary<Input, HashSet<Connection>> seenButMissingModInputCons = new Dictionary<Input, HashSet<Connection>>();
 
@@ -274,8 +274,10 @@ namespace ChiselDebug.CombGraph
                 while (toTraverse.Count > 0)
                 {
                     var conInput = toTraverse.Dequeue();
-                    computeOrder.Add(new Computable(conInput.con));
-                    seenCons.Add(conInput.con);
+                    if (seenCons.Add(conInput.con))
+                    {
+                        computeOrder.Add(new Computable(conInput.con));
+                    }
 
                     //Punch through module border to continue search on the other side
                     if (conInput.input.Node is Module mod)
