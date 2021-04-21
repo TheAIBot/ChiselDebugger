@@ -261,7 +261,7 @@ namespace ChiselDebug.CombGraph
             Dictionary<FIRRTLNode, HashSet<Connection>> seenButMissingFirNodeInputs = new Dictionary<FIRRTLNode, HashSet<Connection>>();
             Dictionary<Input, HashSet<Connection>> seenButMissingModInputCons = new Dictionary<Input, HashSet<Connection>>();
 
-            foreach (var computeFirst in outputs.Where(x => x.Node is not Module).Select(x => x.Node).Distinct())
+            foreach (var computeFirst in outputs.Where(x => x.Node is not Module && x.Node is not IStatePreserving).Select(x => x.Node).Distinct())
             {
                 computeOrder.Add(new Computable(computeFirst));
             }
