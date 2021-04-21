@@ -194,6 +194,11 @@ namespace ChiselDebug.GraphFIR
             return allOrdered.ToArray();
         }
 
+        public KeyValuePair<string, FIRIO>[] GetIOAliases()
+        {
+            return NameToIO.ToArray();
+        }
+
         internal void RemoveAllWires()
         {
             FixDuplexOutputWires();

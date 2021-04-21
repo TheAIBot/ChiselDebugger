@@ -42,12 +42,9 @@ namespace ChiselDebug.CombGraph
             }
         }
 
-        public List<Connection> ComputeGraph()
+        public List<Connection> Compute()
         {
-            foreach (var node in Nodes)
-            {
-                node.ResetRemainingDependencies();
-            }
+            Reset();
 
             List<Connection> updatedCons = new List<Connection>();
             Queue<CombComputeNode> nodesReady = new Queue<CombComputeNode>();
@@ -90,6 +87,11 @@ namespace ChiselDebug.CombGraph
         public CombComputeNode[] GetConstNodes()
         {
             return ConstComputeNodes.ToArray();
+        }
+
+        public CombComputeNode[] GetRootNodes()
+        {
+            return RootNodes.ToArray();
         }
 
         public CombComputeNode[] GetAllNodes()
