@@ -111,8 +111,15 @@ namespace VCDReader
 
         public void SetBitsAndExtend(BinaryVarValue value, bool asSigned)
         {
-            Array.Copy(value.Bits, Bits, value.Bits.Length);
-            ExtendBits(value.Bits.Length, asSigned);
+            if (Bits.Length <= value.Bits.Length)
+            {
+                Array.Copy(value.Bits, Bits, Bits.Length);
+            }
+            else
+            {
+                Array.Copy(value.Bits, Bits, value.Bits.Length);
+                ExtendBits(value.Bits.Length, asSigned);
+            }
         }
 
         private void ExtendBits(int lengthAlreadySet, bool asSigned)
