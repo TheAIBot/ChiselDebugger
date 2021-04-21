@@ -27,7 +27,7 @@ namespace ChiselDebug.CombGraph
         {
             foreach (var node in Nodes)
             {
-                if (node.GetEdges().Length == 0)
+                if (!node.HasComputeDependencies())
                 {
                     RootNodes.Add(node);
                 }
