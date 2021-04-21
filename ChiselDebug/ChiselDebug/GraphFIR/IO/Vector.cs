@@ -177,7 +177,20 @@ namespace ChiselDebug.GraphFIR.IO
 
         public override bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container)
         {
-            throw new NotImplementedException();
+            if (int.TryParse(ioName, out int index))
+            {
+                if (index >= IO.Length || index < 0)
+                {
+                    container = null;
+                    return false;
+                }
+
+                container = IO[index];
+                return true;
+            }
+
+            container = null;
+            return false;
         }
 
         public FIRIO GetIndex(int index)
