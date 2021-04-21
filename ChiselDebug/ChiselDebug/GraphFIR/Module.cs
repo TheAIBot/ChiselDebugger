@@ -135,6 +135,17 @@ namespace ChiselDebug.GraphFIR
                 return true;
             }
 
+            foreach (var condNode in Nodes.OfType<Conditional>())
+            {
+                foreach (var condMod in condNode.CondMods)
+                {
+                    if (condMod.Mod.TryGetIO(ioName, modulesOnly, out container))
+                    {
+                        return true;
+                    }
+                }
+            }
+
             container = null;
             return false;
         }
