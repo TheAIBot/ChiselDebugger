@@ -15,73 +15,178 @@ namespace ChiselDebug
         public readonly string Name;
         public readonly Module MainModule;
         public readonly CombComputeGraph ComputeGraph;
+        public readonly Dictionary<VarDef, Connection> VarDefToCon = new Dictionary<VarDef, Connection>();
+        public readonly HashSet<Connection> ComputeAllowsUpdate = new HashSet<Connection>();
 
         public CircuitGraph(string name, Module mainModule)
         {
             this.Name = name;
             this.MainModule = mainModule;
             this.ComputeGraph = CombComputeGraph.MakeGraph(MainModule);
+
+            foreach (var root in ComputeGraph.GetRootNodes())
+            {
+                foreach (var rootStart in root.GetStartOutputs())
+                {
+                    ComputeAllowsUpdate.Add(rootStart.Con);
+                }
+            }
+        }
+
+        private bool TryFindIO(string ioName, IContainerIO container, out IContainerIO foundIO)
+        {
+            string remainingName = ioName;
+            string searchName = remainingName;
+            while (true)
+            {
+                if (container.TryGetIO(searchName, false, out foundIO))
+                {
+                    container = foundIO;
+
+                    //Remove found name from what still needs to be found
+                    remainingName = remainingName.Substring(searchName.Length);
+
+                    //Also remove _ from the name as firrtl uses it as an io name
+                    //separator
+                    if (remainingName.Length > 0)
+                    {
+                        remainingName = remainingName.Substring(1);
+                    }
+                    if (remainingName.Length == 0)
+                    {
+                        return true;
+                    }
+
+                    if (container is ScalarIO)
+                    {
+                        foundIO = null;
+                        return false;
+                    }
+
+                    if (container is DuplexIO duplex)
+                    {
+                        if (remainingName.EndsWith("/in"))
+                        {
+                            container = duplex.GetInput();
+                            remainingName = remainingName.Substring(0, remainingName.Length - "/in".Length);
+                        }
+                        else
+                        {
+                            container = duplex.GetOutput();
+                        }
+                    }
+
+                    searchName = remainingName;
+                }
+                else
+                {
+                    int _index = searchName.LastIndexOf('_');
+                    if (_index == -1)
+                    {
+                        foundIO = null;
+                        return false;
+                    }
+
+                    searchName = searchName.Substring(0, _index);
+                }
+            }
+        }
+
+        public Connection GetConnection(VarDef variable)
+        {
+            if (VarDefToCon.TryGetValue(variable, out Connection con))
+            {
+                return con;
+            }
+
+            //VCD adds wires that contain the previous clock value.
+            //These wires are not part of the circuit and therefore
+            //there is no circuit state for them to update.
+            if (variable.Reference.EndsWith("/prev"))
+            {
+                VarDefToCon.Add(variable, null);
+                return null;
+            }
+
+            string[] modulePath = variable.Scopes.Skip(1).Select(x => x.Name).ToArray();
+            IContainerIO moduleIO = ((IContainerIO)MainModule).GetIO(modulePath, true);
+
+            IContainerIO ioLink = null;
+            bool foundIO = TryFindIO(variable.Reference, moduleIO, out ioLink);
+
+            if (!foundIO)
+            {
+                return null;
+                ////Wierd wires are added to memory ports that are not part of the
+                ////firrtl code. Just ignore those wires.
+                //if (moduleIO is MemPort)
+                //{
+                //    VarDefToCon.Add(variable, null);
+                //    return null;
+                //}
+
+                ////FIRRTL lowering creates temporaries that are not part of high
+                ////level FIRRTL code which is why they can't be found
+                //if (variable.Reference.StartsWith("_GEN"))
+                //{
+                //    VarDefToCon.Add(variable, null);
+                //    return null;
+                //}
+
+                //throw new Exception($"Failed to find vcd io in circuit. IO name: {variable.Reference}");
+            }
+
+            //Because a register is Duplex, its io is contained
+            //within a bundle so it's necessary to do this extra
+            //step to get the correct io out.
+            if (ioLink is DuplexIO regIO)
+            {
+                ioLink = regIO.GetIO(variable.Reference);
+            }
+
+            //Apparently if a module contains an instance of another module
+            //then it will also have a wire with the instance name in the vcd
+            //file. Ends up with a bundle when this happens so just ignore the
+            //change.
+            if (ioLink is IOBundle)
+            {
+                VarDefToCon.Add(variable, null);
+                return null;
+            }
+
+            if (ioLink is Output output)
+            {
+                return output.Con;
+            }
+
+            return null;
+
+            Connection conFound = ((ScalarIO)ioLink).Con;
+            VarDefToCon.Add(variable, conFound);
+
+            return conFound;
         }
 
         public List<Connection> SetState(CircuitState state)
         {
-            List<Connection> consWithChanges = new List<Connection>();
+
             foreach (BinaryVarValue varValue in state.VariableValues.Values)
             {
-                //VCD adds wires that contain the previous clock value.
-                //These wires are not part of the circuit and therefore
-                //there is no circuit state for them to update.
-                if (varValue.Variable.Reference.EndsWith("/prev"))
+                Connection con = GetConnection(varValue.Variable);
+                if (con == null)
                 {
                     continue;
                 }
 
-                Scope scope = varValue.Variable.Scopes[0];
-                if (scope.Type == ScopeType.Module)
+                if (!ComputeAllowsUpdate.Contains(con))
                 {
-                    string[] modulePath = varValue.Variable.Scopes.Skip(1).Select(x => x.Name).ToArray();
-                    IContainerIO moduleIO = ((IContainerIO)MainModule).GetIO(modulePath, true);
-
-                    IContainerIO ioLink = null;
-                    bool foundIO = moduleIO.TryGetIO(varValue.Variable.Reference, false, out ioLink);
-
-                    //Wierd wires are added to memory ports that are not part of the
-                    //firrtl code. Just ignore those wires.
-                    if (!foundIO && moduleIO is MemPort)
-                    {
-                        continue;
-                    }
-
-                    //Because a register is Duplex, its io is contained
-                    //within a bundle so it's necessary to do this extra
-                    //step to get the correct io out.
-                    if (ioLink is DuplexIO regIO)
-                    {
-                        ioLink = regIO.GetIO(varValue.Variable.Reference);
-                    }
-
-                    //Apparently if a module contains an instance of another module
-                    //then it will also have a wire with the instance name in the vcd
-                    //file. Ends up with a bundle when this happens so just ignore the
-                    //change.
-                    if (ioLink is IOBundle)
-                    {
-                        continue;
-                    }
-                    Connection con = ((ScalarIO)ioLink).Con;
-
-                    if (con != null && con.Value.UpdateValue(varValue))
-                    {
-                        consWithChanges.Add(con);
-                    }
+                    continue;
                 }
-                else
-                {
-                    throw new NotImplementedException();
-                }
+
+                con.Value.UpdateValue(varValue);
             }
 
-            return consWithChanges;
+            return ComputeGraph.Compute();
         }
     }
 }

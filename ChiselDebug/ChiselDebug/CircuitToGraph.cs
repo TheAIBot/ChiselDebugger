@@ -490,6 +490,9 @@ namespace ChiselDebug
                 helper.Mod.DisconnectUnusedIO();
 
                 helper.Mod.SetConditional(ena.Con);
+                enaInput.SetEnabledCondition(null);
+                internalEna.SetEnabledCondition(null);
+                ((GraphFIR.IO.Input)internalEnaDummy.InIO).SetEnabledCondition(null);
 
                 cond.AddConditionalModule((GraphFIR.IO.Input)internalEnaDummy.InIO, helper.Mod);
 

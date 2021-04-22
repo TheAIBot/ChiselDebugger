@@ -68,6 +68,11 @@ namespace ChiselDebug.CombGraph
             RemainingComputeDependencies = TotalComputeDependencies;
         }
 
+        public bool HasComputeDependencies()
+        {
+            return TotalComputeDependencies > 0;
+        }
+
         public ReadOnlySpan<Output> GetStartOutputs()
         {
             return StartOutputs.AsSpan();

@@ -25,6 +25,16 @@ namespace ChiselDebug.GraphFIR.IO
             EnabledCond = enabledCond;
         }
 
+        public Connection GetConditional()
+        {
+            return EnabledCond;
+        }
+
+        public bool IsConditional()
+        {
+            return EnabledCond != null;
+        }
+
         public abstract bool IsConnected();
 
         public abstract bool IsConnectedToAnything();
@@ -41,7 +51,8 @@ namespace ChiselDebug.GraphFIR.IO
 
         public override bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container)
         {
-            throw new Exception("Scalar IO can't contain additional io.");
+            container = null;
+            return false;
         }
 
         public virtual void SetType(IFIRType type)
