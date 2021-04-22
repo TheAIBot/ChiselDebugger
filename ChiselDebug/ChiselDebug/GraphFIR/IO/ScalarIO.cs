@@ -25,6 +25,16 @@ namespace ChiselDebug.GraphFIR.IO
             EnabledCond = enabledCond;
         }
 
+        public Connection GetConditional()
+        {
+            return EnabledCond;
+        }
+
+        public bool IsConditional()
+        {
+            return EnabledCond != null;
+        }
+
         public abstract bool IsConnected();
 
         public abstract bool IsConnectedToAnything();
