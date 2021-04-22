@@ -221,6 +221,11 @@ namespace ChiselDebug.CombGraph
                     {
                         foreach (var dep in deps)
                         {
+                            //Not allowed to have a dependency on itself
+                            if (dep == node)
+                            {
+                                continue;
+                            }
                             nodeEdges[dep].Add(node);
                         }
                     }
@@ -231,6 +236,11 @@ namespace ChiselDebug.CombGraph
                     foreach (var con in extraConDeps)
                     {
                         CombComputeNode depNode = conToDep[con];
+                        //Not allowed to have a dependency on itself
+                        if (depNode == node)
+                        {
+                            continue;
+                        }
                         nodeEdges[depNode].Add(node);
                     }
                 }
