@@ -373,12 +373,12 @@ namespace ChiselDebug
             {
                 GraphFIR.IO.Output clock = (GraphFIR.IO.Output)VisitExp(helper, reg.Clock, GraphFIR.IO.IOGender.Male);
                 GraphFIR.IO.Output reset = null;
-                GraphFIR.IO.Output initValue = null;
+                GraphFIR.IO.FIRIO initValue = null;
 
                 if (reg.HasResetAndInit())
                 {
                     reset = (GraphFIR.IO.Output)VisitExp(helper, reg.Reset, GraphFIR.IO.IOGender.Male);
-                    initValue = (GraphFIR.IO.Output)VisitExp(helper, reg.Init, GraphFIR.IO.IOGender.Male);
+                    initValue = VisitExp(helper, reg.Init, GraphFIR.IO.IOGender.Male);
                 }
 
                 GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, string.Empty, reg.Type).Single();
