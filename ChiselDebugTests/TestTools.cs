@@ -1,6 +1,8 @@
 ﻿using ChiselDebug;
+using ChiselDebug.GraphFIR;
 using ChiselDebug.Timeline;
 using FIRRTL;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -33,10 +35,44 @@ namespace ChiselDebugTests
 
             if (testVCD)
             {
-                VCD vcd = VCDReader.Parse.FromFile($"ChiselTests/{moduleName}.vcd");
+                using VCD vcd = VCDReader.Parse.FromFile($"ChiselTests/{moduleName}.vcd");
                 VCDTimeline timeline = new VCDTimeline(vcd);
 
-                graph.SetState(timeline.GetStateAtTime(0));
+                VerifyCircuitState(graph, timeline);
+            }
+        }
+
+        internal static void VerifyCircuitState(CircuitGraph graph, VCDTimeline timeline)
+        {
+            foreach (var time in timeline.GetAllSimTimes())
+            {
+                CircuitState state = timeline.GetStateAtTime(time);
+                graph.SetState(state);
+
+                foreach (BinaryVarValue expected in state.VariableValues.Values)
+                {
+                    Connection varCon = graph.GetConnection(expected.Variable);
+                    if (varCon == null)
+                    {
+                        continue;
+                    }
+
+                    BinaryVarValue actual = varCon.Value.GetValue();
+                    Assert.AreEqual(expected.Bits.Length, actual.Bits.Length);
+                    for (int i = 0; i < expected.Bits.Length; i++)
+                    {
+                        if (!actual.Bits[i].IsBinary())
+                        {
+                            continue;
+                        }
+
+                        if (expected.Bits[i] != actual.Bits[i])
+                        {
+
+                        }
+                        Assert.AreEqual(expected.Bits[i], actual.Bits[i]);
+                    }
+                }
             }
         }
     }
