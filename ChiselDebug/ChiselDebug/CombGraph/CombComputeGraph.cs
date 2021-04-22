@@ -316,6 +316,8 @@ namespace ChiselDebug.CombGraph
                     //is why they can be skipped here.
                     if (consFromConsts.Contains(con))
                     {
+                        //Still need to mark as dependency 
+                        depOnCons.Add(con);
                         continue;
                     }
                     missingCons.Add(con);
