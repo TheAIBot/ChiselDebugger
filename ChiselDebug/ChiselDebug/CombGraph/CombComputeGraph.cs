@@ -46,6 +46,8 @@ namespace ChiselDebug.CombGraph
         {
             Reset();
 
+            int remainingNodes = Nodes.Count + ConstComputeNodes.Count;
+
             List<Connection> updatedCons = new List<Connection>();
             Queue<CombComputeNode> nodesReady = new Queue<CombComputeNode>();
             foreach (var root in RootNodes)
@@ -56,6 +58,7 @@ namespace ChiselDebug.CombGraph
             while (nodesReady.Count > 0)
             {
                 CombComputeNode node = nodesReady.Dequeue();
+                remainingNodes--;
 
                 updatedCons.AddRange(node.Compute());
 
@@ -67,6 +70,8 @@ namespace ChiselDebug.CombGraph
                     }
                 }
             }
+
+            Debug.Assert(remainingNodes == 0);
 
             return updatedCons;
         }
