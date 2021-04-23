@@ -37,7 +37,6 @@ namespace ChiselDebug.GraphFIR.IO
         public override void SetType(IFIRType type)
         {
             base.SetType(type);
-            Con.Value = new ValueType(type);
         }
 
         public override FIRIO GetOutput()

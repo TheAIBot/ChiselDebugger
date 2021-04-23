@@ -7,18 +7,15 @@ namespace ChiselDebug.GraphFIR
 {
     public class ValueType
     {
-        private readonly IFIRType Type;
+        private readonly GroundType Type;
         private BinaryVarValue Value;
         private string ValueString = null;
 
-        public ValueType(IFIRType type)
+        public ValueType(GroundType type)
         {
             this.Type = type;
-            if (Type is FIRRTL.GroundType ground && ground.IsWidthKnown)
-            {
-                this.Value = new BinaryVarValue(ground.Width);
-                Array.Fill(Value.Bits, BitState.X);
-            }
+            this.Value = new BinaryVarValue(Type.Width);
+            Array.Fill(Value.Bits, BitState.X);
         }
 
         public bool UpdateValue(BinaryVarValue update)

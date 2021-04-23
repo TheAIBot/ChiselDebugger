@@ -14,7 +14,6 @@ namespace ChiselDebug.GraphFIR
         public Connection(Output from)
         {
             this.From = from;
-            this.Value = new ValueType(From.Type);
         }
 
         public void ConnectToInput(Input input, bool isConditional)
@@ -40,6 +39,15 @@ namespace ChiselDebug.GraphFIR
         public bool IsUsed()
         {
             return To.Count > 0;
+        }
+
+        public void SetDefaultvalue()
+        {
+            if (From.Type == null)
+            {
+
+            }
+            Value = new ValueType(From.Type);
         }
     }
 }

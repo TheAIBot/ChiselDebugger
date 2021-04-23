@@ -496,12 +496,73 @@ namespace ChiselDebug.GraphFIR
                 node.InferType();
             }
 
-            foreach (var con in GetAllModuleConnections())
+            foreach (var output in GetInternalOutputs())
             {
-                con.From.InferType();
-                foreach (var input in con.To)
+                if (output.IsConnectedToAnything())
                 {
-                    input.InferType();
+                    output.InferType();
+                    Debug.Assert(output.Type != null);
+
+                    foreach (var input in output.Con.To)
+                    {
+                        input.InferType();
+                        Debug.Assert(input.Type != null);
+                    }
+                }
+            }
+
+            foreach (var node in Nodes)
+            {
+                foreach (var output in node.GetOutputs())
+                {
+                    if (output.IsConnectedToAnything())
+                    {
+                        output.InferType();
+                        Debug.Assert(output.Type != null);
+
+                        foreach (var input in output.Con.To)
+                        {
+                            input.InferType();
+                            Debug.Assert(input.Type != null);
+                        }
+                    }
+                }
+            }
+        }
+
+        internal void FinishConnections()
+        {
+            foreach (var output in GetInternalOutputs())
+            {
+                if (output.Type != null)
+                {
+                    output.Con.SetDefaultvalue();
+                }
+            }
+
+            foreach (var node in Nodes)
+            {
+                foreach (var output in node.GetOutputs())
+                {
+                    if (output.Type != null)
+                    {
+                        output.Con.SetDefaultvalue();
+                    }
+                }
+            }
+
+            foreach (var node in Nodes)
+            {
+                if (node is Module mod)
+                {
+                    mod.FinishConnections();
+                }
+                else if (node is Conditional cond)
+                {
+                    foreach (var condMod in cond.CondMods)
+                    {
+                        condMod.Mod.FinishConnections();
+                    }
                 }
             }
         }
