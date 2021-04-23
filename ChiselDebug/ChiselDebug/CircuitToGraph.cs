@@ -14,6 +14,7 @@ namespace ChiselDebug
         public readonly Dictionary<string, FIRRTL.DefModule> ModuleRoots;
         public readonly bool IsConditionalModule;
         private readonly VisitHelper ParentHelper;
+        private readonly VisitHelper RootHelper;
 
         private readonly Stack<GraphFIR.IO.Output> ScopeEnabledConditions = new Stack<GraphFIR.IO.Output>();
         public GraphFIR.IO.Output ScopeEnabledCond 
@@ -32,21 +33,22 @@ namespace ChiselDebug
             }
         }
 
-        public VisitHelper(GraphFIR.Module mod, CircuitGraph lowFirGraph) : this(mod, lowFirGraph, new Dictionary<string, FIRRTL.DefModule>(), null, false)
+        public VisitHelper(GraphFIR.Module mod, CircuitGraph lowFirGraph) : this(mod, lowFirGraph, new Dictionary<string, FIRRTL.DefModule>(), null, false, null)
         { }
 
-        private VisitHelper(GraphFIR.Module mod, CircuitGraph lowFirGraph, Dictionary<string, FIRRTL.DefModule> roots, VisitHelper parentHelper, bool isConditional)
+        private VisitHelper(GraphFIR.Module mod, CircuitGraph lowFirGraph, Dictionary<string, FIRRTL.DefModule> roots, VisitHelper parentHelper, bool isConditional, VisitHelper rootHelper)
         {
             this.Mod = mod;
             this.LowFirGraph = lowFirGraph;
             this.ModuleRoots = roots;
             this.ParentHelper = parentHelper;
             this.IsConditionalModule = isConditional;
+            this.RootHelper = rootHelper;
         }
 
         public VisitHelper ForNewModule(string moduleName, FIRRTL.DefModule moduleDef, bool isConditional)
         {
-            return new VisitHelper(new GraphFIR.Module(moduleName, moduleDef), LowFirGraph, ModuleRoots, this, isConditional);
+            return new VisitHelper(new GraphFIR.Module(moduleName, moduleDef), LowFirGraph, ModuleRoots, this, isConditional, RootHelper ?? this);
         }
 
         public void AddNodeToModule(GraphFIR.FIRRTLNode node)
@@ -129,11 +131,18 @@ namespace ChiselDebug
             return nodeIO.Flatten().First().Node.FirDefNode;
         }
 
-        private static long UniqueNumber = 0;
+        private long UniqueNumber = 0;
 
         internal string GetUniqueName()
         {
-            return $"~{Interlocked.Increment(ref UniqueNumber)}";
+            if (RootHelper != null)
+            {
+                return RootHelper.GetUniqueName();
+            }
+            else
+            {
+                return $"~{UniqueNumber++}";
+            }
         }
     }
 
