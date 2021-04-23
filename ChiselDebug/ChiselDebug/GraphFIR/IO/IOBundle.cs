@@ -169,9 +169,16 @@ namespace ChiselDebug.GraphFIR.IO
 
             foreach (var io in OrderedIO)
             {
-                foreach (var nested in io.WalkIOTree())
+                if (io is ScalarIO)
                 {
-                    yield return nested;
+                    yield return io;
+                }
+                else
+                {
+                    foreach (var nested in io.WalkIOTree())
+                    {
+                        yield return nested;
+                    }
                 }
             }
         }

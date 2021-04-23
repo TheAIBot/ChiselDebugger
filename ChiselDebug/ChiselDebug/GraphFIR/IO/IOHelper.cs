@@ -136,12 +136,20 @@ namespace ChiselDebug.GraphFIR.IO
 
         public static void PairIO(Dictionary<FIRIO, FIRIO> pairs, FIRIO fromIO, FIRIO toIO)
         {
-            var ioWalk = fromIO.WalkIOTree();
-            var ioFlipWalk = toIO.WalkIOTree();
-            foreach (var pair in ioWalk.Zip(ioFlipWalk))
+            if (fromIO is ScalarIO && toIO is ScalarIO)
             {
-                pairs.Add(pair.First, pair.Second);
-                pairs.Add(pair.Second, pair.First);
+                pairs.Add(fromIO, toIO);
+                pairs.Add(toIO, fromIO);
+            }
+            else
+            {
+                var ioWalk = fromIO.WalkIOTree();
+                var ioFlipWalk = toIO.WalkIOTree();
+                foreach (var pair in ioWalk.Zip(ioFlipWalk))
+                {
+                    pairs.Add(pair.First, pair.Second);
+                    pairs.Add(pair.Second, pair.First);
+                }
             }
         }
 
