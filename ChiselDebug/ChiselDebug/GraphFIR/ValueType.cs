@@ -9,7 +9,7 @@ namespace ChiselDebug.GraphFIR
     {
         private readonly IFIRType Type;
         private BinaryVarValue Value;
-        string ValueString = string.Empty;
+        private string ValueString = null;
 
         public ValueType(IFIRType type)
         {
@@ -18,8 +18,6 @@ namespace ChiselDebug.GraphFIR
             {
                 this.Value = new BinaryVarValue(ground.Width);
                 Array.Fill(Value.Bits, BitState.X);
-
-                this.ValueString = Value.BitsToString();
             }
         }
 
@@ -61,6 +59,7 @@ namespace ChiselDebug.GraphFIR
 
         public string ToBinaryString()
         {
+            ValueString = ValueString ?? Value.BitsToString();
             return ValueString;
         }
     }
