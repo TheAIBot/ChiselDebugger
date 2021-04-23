@@ -23,19 +23,29 @@ namespace ChiselDebugTests
             return graph;
         }
 
-        internal static void VerifyChiselTest(string moduleName, string extension, bool testVCD)
+        private static CircuitGraph VerifyCanCreateGraphFromFile(string firrtlPath, CircuitGraph lowFirGraph = null)
+        {
+            Circuit circuit = FIRRTL.Parse.FromFile(firrtlPath);
+            CircuitGraph graph = CircuitToGraph.GetAsGraph(circuit, lowFirGraph);
+
+            return graph;
+        }
+
+        internal static void VerifyChiselTest(string moduleName, string extension, bool testVCD, string modulePath = "ChiselTests")
         {
             CircuitGraph lowFirGraph = null;
             if (extension == "fir")
             {
-                lowFirGraph = VerifyCanCreateGraph(File.ReadAllText($"ChiselTests/{moduleName}.lo.fir"));
+                string loFirPath = Path.Combine(modulePath, $"{moduleName}.lo.fir");
+                lowFirGraph = VerifyCanCreateGraphFromFile(loFirPath);
             }
 
-            CircuitGraph graph = VerifyCanCreateGraph(File.ReadAllText($"ChiselTests/{moduleName}.{extension}"), lowFirGraph);
+            string firPath = Path.Combine(modulePath, $"{moduleName}.{extension}");
+            CircuitGraph graph = VerifyCanCreateGraphFromFile(firPath, lowFirGraph);
 
             if (testVCD)
             {
-                using VCD vcd = VCDReader.Parse.FromFile($"ChiselTests/{moduleName}.vcd");
+                using VCD vcd = VCDReader.Parse.FromFile($"{modulePath}/{moduleName}.vcd");
                 VCDTimeline timeline = new VCDTimeline(vcd);
 
                 VerifyCircuitState(graph, timeline);
