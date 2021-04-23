@@ -292,7 +292,7 @@ namespace ChiselDebug.GraphFIR
 
         internal void CopyInternalAsExternalIO(Module mod)
         {
-            foreach (Input input in GetAllIOOrdered().OfType<Input>())
+            foreach (Input input in GetInternalInputs())
             {
                 if (!HasDunplexInput(input))
                 {
