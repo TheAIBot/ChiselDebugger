@@ -49,13 +49,13 @@ namespace ChiselDebug.CombGraph
             }
         }
 
-        public List<Connection> Compute()
+        public List<Output> Compute()
         {
             Reset();
 
             int remainingNodes = Nodes.Count + ConstComputeNodes.Count;
 
-            List<Connection> updatedCons = new List<Connection>();
+            List<Output> updatedCons = new List<Output>();
             Queue<CombComputeNode> nodesReady = new Queue<CombComputeNode>();
             foreach (var root in RootNodes)
             {
@@ -139,7 +139,7 @@ namespace ChiselDebug.CombGraph
 
             var constNodesAndCons = GetAllCombNodeFromConstValue(module);
 
-            Dictionary<CombComputeNode, HashSet<Connection>> extraDeps = new Dictionary<CombComputeNode, HashSet<Connection>>();
+            Dictionary<CombComputeNode, HashSet<Output>> extraDeps = new Dictionary<CombComputeNode, HashSet<Output>>();
 
 
             while (toMake.Count > 0)
@@ -188,7 +188,7 @@ namespace ChiselDebug.CombGraph
                 }
             }
 
-            Dictionary<Connection, CombComputeNode> conToDep = new Dictionary<Connection, CombComputeNode>();
+            Dictionary<Output, CombComputeNode> conToDep = new Dictionary<Output, CombComputeNode>();
             foreach (var node in allNodes)
             {
                 foreach (var con in node.GetResponsibleConnections())
@@ -258,10 +258,10 @@ namespace ChiselDebug.CombGraph
             return graph;
         }
 
-        private static (List<CombComputeNode> constNodes, HashSet<Connection> consFromConsts) GetAllCombNodeFromConstValue(Module module)
+        private static (List<CombComputeNode> constNodes, HashSet<Output> consFromConsts) GetAllCombNodeFromConstValue(Module module)
         {
             List<CombComputeNode> constNodes = new List<CombComputeNode>();
-            HashSet<Connection> consFromConsts = new HashSet<Connection>();
+            HashSet<Output> consFromConsts = new HashSet<Output>();
 
             foreach (var constValue in module.GetAllNestedNodesOfType<ConstValue>())
             {
@@ -277,10 +277,10 @@ namespace ChiselDebug.CombGraph
             return (constNodes, consFromConsts);
         }
 
-        private static (CombComputeNode node, List<Output[]> depTo, HashSet<Connection> depOnCons) MakeCombComputeNode(Output[] outputs, HashSet<Connection> consFromConsts, bool ignoreConCondBorders)
+        private static (CombComputeNode node, List<Output[]> depTo, HashSet<Output> depOnCons) MakeCombComputeNode(Output[] outputs, HashSet<Output> consFromConsts, bool ignoreConCondBorders)
         {
-            HashSet<Connection> depOnCons = new HashSet<Connection>();
-            HashSet<Connection> seenCons = new HashSet<Connection>();
+            HashSet<Output> depOnCons = new HashSet<Output>();
+            HashSet<Output> seenCons = new HashSet<Output>();
 
             bool HasUnSeenConCond(Output output)
             {
@@ -292,11 +292,11 @@ namespace ChiselDebug.CombGraph
                 return false;
             }
 
-            void AddConnections(Queue<(Connection con, Input input)> toTraverse, Output output)
+            void AddConnections(Queue<(Output con, Input input)> toTraverse, Output output)
             {
-                foreach (var input in output.Con.GetConnectedInputs())
+                foreach (var input in output.GetConnectedInputs())
                 {
-                    toTraverse.Enqueue((output.Con, input));
+                    toTraverse.Enqueue((output, input));
                 }
                 if (output.IsConditional())
                 {
@@ -306,7 +306,7 @@ namespace ChiselDebug.CombGraph
 
 
 
-            void AddMissingCons(HashSet<Connection> missingCons, Input input)
+            void AddMissingCons(HashSet<Output> missingCons, Input input)
             {
                 foreach (var con in input.GetAllConnections())
                 {
@@ -326,15 +326,15 @@ namespace ChiselDebug.CombGraph
 
             List<Computable> computeOrder = new List<Computable>();
 
-            Dictionary<FIRRTLNode, HashSet<Connection>> seenButMissingFirNodeInputs = new Dictionary<FIRRTLNode, HashSet<Connection>>();
-            Dictionary<Input, HashSet<Connection>> seenButMissingModInputCons = new Dictionary<Input, HashSet<Connection>>();
+            Dictionary<FIRRTLNode, HashSet<Output>> seenButMissingFirNodeInputs = new Dictionary<FIRRTLNode, HashSet<Output>>();
+            Dictionary<Input, HashSet<Output>> seenButMissingModInputCons = new Dictionary<Input, HashSet<Output>>();
 
             foreach (var computeFirst in outputs.Where(x => x.Node is not Module && x.Node is not IStatePreserving).Select(x => x.Node).Distinct())
             {
                 computeOrder.Add(new Computable(computeFirst));
             }
 
-            Queue<(Connection con, Input input)> toTraverse = new Queue<(Connection con, Input input)>();
+            Queue<(Output con, Input input)> toTraverse = new Queue<(Output con, Input input)>();
             foreach (var output in outputs)
             {
                 AddConnections(toTraverse, output);
@@ -350,10 +350,10 @@ namespace ChiselDebug.CombGraph
                     //Punch through module border to continue search on the other side
                     if (conInput.input.Node is Module mod)
                     {
-                        HashSet<Connection> missingCons;
+                        HashSet<Output> missingCons;
                         if (!seenButMissingModInputCons.TryGetValue(conInput.input, out missingCons))
                         {
-                            missingCons = new HashSet<Connection>();
+                            missingCons = new HashSet<Output>();
                             seenButMissingModInputCons.Add(conInput.input, missingCons);
 
                             AddMissingCons(missingCons, conInput.input);
@@ -384,10 +384,10 @@ namespace ChiselDebug.CombGraph
                     }
                     else
                     {
-                        HashSet<Connection> missingCons;
+                        HashSet<Output> missingCons;
                         if (!seenButMissingFirNodeInputs.TryGetValue(conInput.input.Node, out missingCons))
                         {
-                            missingCons = new HashSet<Connection>();
+                            missingCons = new HashSet<Output>();
                             seenButMissingFirNodeInputs.Add(conInput.input.Node, missingCons);
 
                             ScalarIO[] nodeInputs = conInput.input.Node.GetInputs();

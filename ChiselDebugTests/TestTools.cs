@@ -1,5 +1,6 @@
 ﻿using ChiselDebug;
 using ChiselDebug.GraphFIR;
+using ChiselDebug.GraphFIR.IO;
 using ChiselDebug.Timeline;
 using FIRRTL;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -64,7 +65,7 @@ namespace ChiselDebugTests
 
                 foreach (BinaryVarValue expected in state.VariableValues.Values)
                 {
-                    Connection varCon = graph.GetConnection(expected.Variable);
+                    Output varCon = graph.GetConnection(expected.Variable);
                     if (varCon == null)
                     {
                         continue;

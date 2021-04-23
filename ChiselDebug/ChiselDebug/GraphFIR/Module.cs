@@ -150,24 +150,24 @@ namespace ChiselDebug.GraphFIR
             return false;
         }
 
-        public List<Connection> GetAllModuleConnections()
+        public List<Output> GetAllModuleConnections()
         {
-            List<Connection> connestions = new List<Connection>();
-            foreach (var output in GetInternalOutputs())
+            List<Output> connestions = new List<Output>();
+            foreach (Output output in GetInternalOutputs())
             {
-                if (output.Con.IsUsed())
+                if (output.IsUsed())
                 {
-                    connestions.Add(output.Con);
+                    connestions.Add(output);
                 }
             }
 
             foreach (var node in Nodes)
             {
-                foreach (var output in node.GetOutputs())
+                foreach (Output output in node.GetOutputs())
                 {
-                    if (output.Con.IsUsed())
+                    if (output.IsUsed())
                     {
-                        connestions.Add(output.Con);
+                        connestions.Add(output);
                     }
                 }
             }
@@ -234,13 +234,13 @@ namespace ChiselDebug.GraphFIR
                     //Everything connected to duplex input is now being connected to the
                     //wires input
                     Input wireIn = (Input)keyValue.Value.In;
-                    if (keyValue.Key.Con != null)
+                    if (keyValue.Key != null)
                     {
-                        keyValue.Key.Con.From.ConnectToInput(wireIn);
+                        keyValue.Key.Con.ConnectToInput(wireIn);
                     }
                     foreach (var inputCondCon in keyValue.Key.GetConditionalConnections())
                     {
-                        inputCondCon.From.ConnectToInput(wireIn, false, false, true);
+                        inputCondCon.ConnectToInput(wireIn, false, false, true);
                     }
 
                     keyValue.Value.BypassWireIO();
@@ -271,7 +271,7 @@ namespace ChiselDebug.GraphFIR
             //}
         }
 
-        internal void SetConditional(Connection enableCon)
+        internal void SetConditional(Output enableCon)
         {
             foreach (var io in InternalIO.Values)
             {
@@ -533,14 +533,14 @@ namespace ChiselDebug.GraphFIR
                 node.InferType();
             }
 
-            foreach (var output in GetInternalOutputs())
+            foreach (Output output in GetInternalOutputs())
             {
                 if (output.IsConnectedToAnything())
                 {
                     output.InferType();
                     Debug.Assert(output.Type != null);
 
-                    foreach (var input in output.Con.GetConnectedInputs())
+                    foreach (var input in output.GetConnectedInputs())
                     {
                         input.InferType();
                         Debug.Assert(input.Type != null);
@@ -550,14 +550,14 @@ namespace ChiselDebug.GraphFIR
 
             foreach (var node in Nodes)
             {
-                foreach (var output in node.GetOutputs())
+                foreach (Output output in node.GetOutputs())
                 {
                     if (output.IsConnectedToAnything())
                     {
                         output.InferType();
                         Debug.Assert(output.Type != null);
 
-                        foreach (var input in output.Con.GetConnectedInputs())
+                        foreach (var input in output.GetConnectedInputs())
                         {
                             input.InferType();
                             Debug.Assert(input.Type != null);
@@ -569,21 +569,21 @@ namespace ChiselDebug.GraphFIR
 
         internal void FinishConnections()
         {
-            foreach (var output in GetInternalOutputs())
+            foreach (Output output in GetInternalOutputs())
             {
                 if (output.Type != null)
                 {
-                    output.Con.SetDefaultvalue();
+                    output.SetDefaultvalue();
                 }
             }
 
             foreach (var node in Nodes)
             {
-                foreach (var output in node.GetOutputs())
+                foreach (Output output in node.GetOutputs())
                 {
                     if (output.Type != null)
                     {
-                        output.Con.SetDefaultvalue();
+                        output.SetDefaultvalue();
                     }
                 }
             }

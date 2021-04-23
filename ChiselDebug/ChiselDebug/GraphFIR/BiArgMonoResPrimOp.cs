@@ -40,9 +40,9 @@ namespace ChiselDebug.GraphFIR
 
         public override void Compute()
         {
-            Connection aCon = A.GetEnabledCon();
-            Connection bCon = B.GetEnabledCon();
-            Connection resultCon = Result.Con;
+            Output aCon = A.GetEnabledCon();
+            Output bCon = B.GetEnabledCon();
+            Output resultCon = Result;
 
             BinaryVarValue aVal = (BinaryVarValue)aCon.Value.GetValue();
             BinaryVarValue bVal = (BinaryVarValue)bCon.Value.GetValue();

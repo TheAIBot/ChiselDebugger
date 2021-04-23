@@ -15,8 +15,8 @@ namespace ChiselDebug
         public readonly string Name;
         public readonly Module MainModule;
         public readonly CombComputeGraph ComputeGraph;
-        public readonly Dictionary<VarDef, Connection> VarDefToCon = new Dictionary<VarDef, Connection>();
-        public readonly HashSet<Connection> ComputeAllowsUpdate = new HashSet<Connection>();
+        public readonly Dictionary<VarDef, Output> VarDefToCon = new Dictionary<VarDef, Output>();
+        public readonly HashSet<Output> ComputeAllowsUpdate = new HashSet<Output>();
 
         public CircuitGraph(string name, Module mainModule)
         {
@@ -28,7 +28,7 @@ namespace ChiselDebug
             {
                 foreach (var rootStart in root.GetStartOutputs())
                 {
-                    ComputeAllowsUpdate.Add(rootStart.Con);
+                    ComputeAllowsUpdate.Add(rootStart);
                 }
             }
         }
@@ -92,9 +92,9 @@ namespace ChiselDebug
             }
         }
 
-        public Connection GetConnection(VarDef variable)
+        public Output GetConnection(VarDef variable)
         {
-            if (VarDefToCon.TryGetValue(variable, out Connection con))
+            if (VarDefToCon.TryGetValue(variable, out Output con))
             {
                 return con;
             }
@@ -156,23 +156,19 @@ namespace ChiselDebug
 
             if (ioLink is Output output)
             {
-                return output.Con;
+                VarDefToCon.Add(variable, output);
+                return output;
             }
 
             return null;
-
-            Connection conFound = ((ScalarIO)ioLink).Con;
-            VarDefToCon.Add(variable, conFound);
-
-            return conFound;
         }
 
-        public List<Connection> SetState(CircuitState state)
+        public List<Output> SetState(CircuitState state)
         {
 
             foreach (BinaryVarValue varValue in state.VariableValues.Values)
             {
-                Connection con = GetConnection(varValue.Variable);
+                Output con = GetConnection(varValue.Variable);
                 if (con == null)
                 {
                     continue;

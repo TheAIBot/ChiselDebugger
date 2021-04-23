@@ -8,7 +8,7 @@ namespace ChiselDebug.CombGraph
     public readonly struct Computable
     {
         private readonly FIRRTLNode Node;
-        private readonly Connection Con;
+        private readonly Output Con;
         private readonly BinaryVarValue OldValue;
 
         public Computable(FIRRTLNode node)
@@ -18,7 +18,7 @@ namespace ChiselDebug.CombGraph
             this.OldValue = null;
         }
 
-        public Computable(Connection con)
+        public Computable(Output con)
         {
             this.Node = null;
             this.Con = con;
@@ -26,7 +26,7 @@ namespace ChiselDebug.CombGraph
             Array.Fill(OldValue.Bits, BitState.X);
         }
 
-        public Connection Compute()
+        public Output Compute()
         {
             if (Node != null)
             {
@@ -35,12 +35,12 @@ namespace ChiselDebug.CombGraph
             else
             {
                 //Copy value from other side of module
-                if (Con.From.Node is Module mod)
+                if (Con.Node is Module mod)
                 {
-                    Input input = (Input)mod.GetPairedIO(Con.From);
+                    Input input = (Input)mod.GetPairedIO(Con);
                     if (input.IsConnectedToAnything())
                     {
-                        Connection copyFrom = input.GetEnabledCon();
+                        Output copyFrom = input.GetEnabledCon();
                         Con.Value.UpdateFrom(copyFrom.Value);
                     }
                 }

@@ -10,12 +10,12 @@ namespace ChiselDebug.CombGraph
         private readonly Output[] StartOutputs;
         private readonly Input[] StopInputs;
         private readonly Computable[] ComputeOrder;
-        private readonly Connection[] ConsResponsibleFor;
+        private readonly Output[] ConsResponsibleFor;
         private CombComputeNode[] OutgoingEdges;
         private int TotalComputeDependencies = 0;
         private int RemainingComputeDependencies = 0;
 
-        public CombComputeNode(Output[] startOutputs, Input[] stopInputs, Computable[] computeOrder, Connection[] consResponsibleFor)
+        public CombComputeNode(Output[] startOutputs, Input[] stopInputs, Computable[] computeOrder, Output[] consResponsibleFor)
         {
             this.StartOutputs = startOutputs;
             this.StopInputs = stopInputs;
@@ -43,12 +43,12 @@ namespace ChiselDebug.CombGraph
             return RemainingComputeDependencies > 0;
         }
 
-        public List<Connection> Compute()
+        public List<Output> Compute()
         {
-            List<Connection> updatedConnections = new List<Connection>();
+            List<Output> updatedConnections = new List<Output>();
             foreach (var compute in ComputeOrder)
             {
-                Connection updated = compute.Compute();
+                Output updated = compute.Compute();
                 if (updated != null)
                 {
                     updatedConnections.Add(updated);
@@ -83,7 +83,7 @@ namespace ChiselDebug.CombGraph
             return StopInputs.AsSpan();
         }
 
-        public ReadOnlySpan<Connection> GetResponsibleConnections()
+        public ReadOnlySpan<Output> GetResponsibleConnections()
         {
             return ConsResponsibleFor.AsSpan();
         }

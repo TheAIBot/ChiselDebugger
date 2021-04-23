@@ -7,7 +7,8 @@ namespace ChiselDebug.GraphFIR.IO
 {
     public class Input : ScalarIO
     {
-        private HashSet<Connection> CondCons = null;
+        internal Output Con;
+        private HashSet<Output> CondCons = null;
 
         public Input(FIRRTLNode node, IFIRType type) : this(node, string.Empty, type)
         { }
@@ -25,9 +26,9 @@ namespace ChiselDebug.GraphFIR.IO
             return Con != null || (CondCons != null && CondCons.Count > 0);
         }
 
-        public Connection[] GetAllConnections()
+        public Output[] GetAllConnections()
         {
-            List<Connection> cons = new List<Connection>();
+            List<Output> cons = new List<Output>();
             if (Con != null)
             {
                 cons.Add(Con);
@@ -45,16 +46,16 @@ namespace ChiselDebug.GraphFIR.IO
             return this;
         }
 
-        internal Connection[] GetConditionalConnections()
+        internal Output[] GetConditionalConnections()
         {
             if (CondCons == null)
             {
-                return Array.Empty<Connection>();
+                return Array.Empty<Output>();
             }
             return CondCons.ToArray();
         }
 
-        public void Disconnect(Connection toDisconnect)
+        public void Disconnect(Output toDisconnect)
         {
             if (Con == toDisconnect)
             {
@@ -85,13 +86,13 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public void Connect(Connection con, bool isConditional)
+        public void Connect(Output con, bool isConditional)
         {
             if (isConditional)
             {
                 if (CondCons == null)
                 {
-                    CondCons = new HashSet<Connection>();
+                    CondCons = new HashSet<Output>();
                 }
                 CondCons.Add(con);
             }
@@ -137,13 +138,13 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public Connection GetEnabledCon()
+        public Output GetEnabledCon()
         {
             if (CondCons != null)
             {
                 foreach (var condCon in CondCons)
                 {
-                    if (condCon.From.IsEnabled)
+                    if (condCon.IsEnabled)
                     {
                         return condCon;
                     }
@@ -170,15 +171,15 @@ namespace ChiselDebug.GraphFIR.IO
             }
             if (Con != null)
             {
-                Con.From.InferType();
-                SetType(Con.From.Type);
+                Con.InferType();
+                SetType(Con.Type);
             }
             if (CondCons != null)
             {
                 foreach (var condCon in CondCons)
                 {
-                    condCon.From.InferType();
-                    SetType(condCon.From.Type);
+                    condCon.InferType();
+                    SetType(condCon.Type);
                 }
             }
         }

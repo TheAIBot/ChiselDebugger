@@ -9,10 +9,10 @@ namespace ChiselDebug.GraphFIR.IO
     {
         public static void BypassIO(Output from, Output to)
         {
-            Input[] inputs = from.Con.GetConnectedInputs().ToArray();
+            Input[] inputs = from.GetConnectedInputs().ToArray();
             foreach (var input in inputs)
             {
-                from.Con.DisconnectInput(input);
+                from.DisconnectInput(input);
                 to.ConnectToInput(input);
             }
         }
@@ -40,7 +40,7 @@ namespace ChiselDebug.GraphFIR.IO
 
             for (int i = 0; i < bypassFromIO.Length; i++)
             {
-                Connection[] connectFromCons;
+                Output[] connectFromCons;
                 Input[] connectTo;
 
                 //They must both either be connected or not.
@@ -53,13 +53,13 @@ namespace ChiselDebug.GraphFIR.IO
                 if (bypassFromIO[i] is Input fromIn && bypassToIO[i] is Output toOut)
                 {
                     connectFromCons = fromIn.GetAllConnections();
-                    connectTo = toOut.Con.GetConnectedInputs().ToArray();
+                    connectTo = toOut.GetConnectedInputs().ToArray();
                     fromIn.DisconnectAll();
                 }
                 else if (bypassFromIO[i] is Output fromOut && bypassToIO[i] is Input toIn)
                 {
                     connectFromCons = toIn.GetAllConnections();
-                    connectTo = fromOut.Con.GetConnectedInputs().ToArray();
+                    connectTo = fromOut.GetConnectedInputs().ToArray();
                     toIn.DisconnectAll();
                 }
                 else 
@@ -72,7 +72,7 @@ namespace ChiselDebug.GraphFIR.IO
                     input.DisconnectAll();
                     foreach (var connection in connectFromCons)
                     {
-                        connection.From.ConnectToInput(input, false, false, true);
+                        connection.ConnectToInput(input, false, false, true);
                     }
                 }
             }

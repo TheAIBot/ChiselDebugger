@@ -7,30 +7,31 @@ namespace ChiselDebug.GraphFIR.IO
 {
     public class Output : ScalarIO
     {
+        private HashSet<Input> To = null;
+        public ValueType Value;
+
         public Output(FIRRTLNode node, IFIRType type) : this(node, string.Empty, type)
         { }
 
         public Output(FIRRTLNode node, string name, IFIRType type) : base(node, name, type)
-        {
-            this.Con = new Connection(this);
-        }
+        { }
 
         public override bool IsConnected()
         {
-            return Con != null;
+            return true;
         }
 
         public override bool IsConnectedToAnything()
         {
-            return Con != null && Con.IsUsed();
+            return IsUsed();
         }
 
         public override void DisconnectAll()
         {
-            Input[] inputs = Con.GetConnectedInputs().ToArray();
+            Input[] inputs = GetConnectedInputs().ToArray();
             foreach (var input in inputs)
             {
-                Con.DisconnectInput(input);
+                DisconnectInput(input);
             }
         }
 
@@ -48,7 +49,7 @@ namespace ChiselDebug.GraphFIR.IO
         {
             if (input is Input ioIn)
             {
-                Con.ConnectToInput(ioIn, isConditional);
+                ConnectToInput(ioIn, isConditional);
             }
             else
             {
@@ -117,6 +118,46 @@ namespace ChiselDebug.GraphFIR.IO
             {
                 Node.InferType();
             }
+        }
+
+        public void ConnectToInput(Input input, bool isConditional)
+        {
+            if (!isConditional && input.IsConnected())
+            {
+                if (input.Con != null)
+                {
+                    input.Con.DisconnectInput(input);
+                }
+            }
+
+            if (To == null)
+            {
+                To = new HashSet<Input>();
+            }
+            To.Add(input);
+            input.Connect(this, isConditional);
+        }
+
+        public void DisconnectInput(Input input)
+        {
+            To.Remove(input);
+            input.Disconnect(this);
+        }
+
+        public bool IsUsed()
+        {
+            return To != null && To.Count > 0;
+        }
+
+        public IEnumerable<Input> GetConnectedInputs()
+        {
+            return To ?? Enumerable.Empty<Input>();
+        }
+
+
+        public void SetDefaultvalue()
+        {
+            Value = new ValueType(Type);
         }
     }
 }

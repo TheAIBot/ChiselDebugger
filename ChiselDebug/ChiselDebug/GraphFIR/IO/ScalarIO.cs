@@ -7,8 +7,7 @@ namespace ChiselDebug.GraphFIR.IO
     public abstract class ScalarIO : FIRIO
     {
         public GroundType Type { get; private set; }
-        public Connection Con = null;
-        private Connection EnabledCond = null;
+        private Output EnabledCond = null;
         private bool IsInferingTypeNow = false;
         public bool IsEnabled => EnabledCond == null || EnabledCond.Value.IsTrue();
 
@@ -23,12 +22,12 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public void SetEnabledCondition(Connection enabledCond)
+        public void SetEnabledCondition(Output enabledCond)
         {
             EnabledCond = enabledCond;
         }
 
-        public Connection GetConditional()
+        public Output GetConditional()
         {
             return EnabledCond;
         }

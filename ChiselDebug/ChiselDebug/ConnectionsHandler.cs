@@ -14,7 +14,7 @@ namespace ChiselDebug
     {
 
         private readonly Module Mod;
-        private readonly List<Connection> UsedModuleConnections;
+        private readonly List<Output> UsedModuleConnections;
         private readonly Dictionary<FIRIO, IOInfo> IOInfos = new Dictionary<FIRIO, IOInfo>();
 
         public ConnectionsHandler(Module mod)
@@ -53,7 +53,7 @@ namespace ChiselDebug
                 List<(IOInfo start, IOInfo end)> lines = new List<(IOInfo start, IOInfo end)>();
                 foreach (var connection in UsedModuleConnections)
                 {
-                    if (IOInfos.TryGetValue(connection.From, out IOInfo outputInfo))
+                    if (IOInfos.TryGetValue(connection, out IOInfo outputInfo))
                     {
                         foreach (var input in connection.GetConnectedInputs())
                         {

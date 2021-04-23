@@ -76,7 +76,7 @@ namespace ChiselDebug.GraphFIR
                 {
                     foreach (Output output in Result.Flatten())
                     {
-                        BinaryVarValue binValue = output.Con.Value.GetValue();
+                        BinaryVarValue binValue = output.Value.GetValue();
                         Array.Fill(binValue.Bits, BitState.X);
                     }
 
@@ -93,7 +93,7 @@ namespace ChiselDebug.GraphFIR
             for (int i = 0; i < from.Length; i++)
             {
                 BinaryVarValue fromBin = from[i].GetEnabledCon().Value.GetValue();
-                BinaryVarValue toBin = to[i].Con.Value.GetValue();
+                BinaryVarValue toBin = to[i].Value.GetValue();
 
                 toBin.SetBitsAndExtend(fromBin, from[i].Type is SIntType);
             }
