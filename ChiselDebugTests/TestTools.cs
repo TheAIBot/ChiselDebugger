@@ -25,7 +25,10 @@ namespace ChiselDebugTests
 
         private static CircuitGraph VerifyCanCreateGraphFromFile(string firrtlPath, CircuitGraph lowFirGraph = null)
         {
-            Circuit circuit = FIRRTL.Parse.FromFile(firrtlPath);
+            using FileStream fileStream = new FileStream(firrtlPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using TextReader textStream = new StreamReader(fileStream);
+
+            Circuit circuit = FIRRTL.Parse.FromStream(textStream);
             CircuitGraph graph = CircuitToGraph.GetAsGraph(circuit, lowFirGraph);
 
             return graph;
