@@ -337,31 +337,33 @@ namespace ChiselDebug.GraphFIR
                 HashSet<IPortsIO> handledPortsIO = new HashSet<IPortsIO>();
                 while (true)
                 {
-                    var intHidesPorts = intIO.GetAllIOOfType<IPortsIO>().ToArray();
-                    
+                    var intHiddenPorts = intIO.GetAllIOOfType<IPortsIO>();
+
                     //if this io contain no ports to begin with then
                     //skip it
-                    if (intHidesPorts.Length == 0)
+                    if (!intHiddenPorts.Any())
                     {
                         break;
                     }
 
+                    FIRIO parentIO = (FIRIO)parentMod.GetIO(intKeyVal.Key);
+                    var parentModHiddenPorts = parentIO.GetAllIOOfType<IPortsIO>();
+
                     bool handledNewPort = false;
 
-                    FIRIO parentIO = (FIRIO)parentMod.GetIO(intKeyVal.Key);
-
-                    for (int i = 0; i < intHidesPorts.Length; i++)
+                    foreach (var hiddenPorts in intHiddenPorts.Zip(parentModHiddenPorts))
                     {
+                        IPortsIO internalHidden = hiddenPorts.First;
+                        IPortsIO parentModHidden = hiddenPorts.Second;
+
                         //Has seen port before?
-                        if (!handledPortsIO.Add(intHidesPorts[i]))
+                        if (!handledPortsIO.Add(internalHidden))
                         {
                             continue;
                         }
 
                         handledNewPort = true;
-                        IPortsIO internalHidden = intHidesPorts[i];
                         IPortsIO externalHidden = (IPortsIO)GetPairedIO((FIRIO)internalHidden);
-                        IPortsIO parentModHidden = parentIO.GetAllIOOfType<IPortsIO>().ToArray()[i];
 
                         FIRIO[] intPortsNeedsProp = internalHidden.GetAllPorts().Where(x => !IsPartOfPair(x)).ToArray();
 
@@ -394,8 +396,6 @@ namespace ChiselDebug.GraphFIR
                                 IOHelper.BiDirFullyConnectIO(newExtPorts[y], newParentPorts[y], true);
                             }
                         }
-
-                        //IOHelper.PropegatePorts(parentModHidden);
                     }
 
                     //If went through all ports and found no new ones
