@@ -136,17 +136,12 @@ namespace ChiselDebug.GraphFIR.IO
 
         public static void PairIO(Dictionary<FIRIO, FIRIO> pairs, FIRIO fromIO, FIRIO toIO)
         {
-            FIRIO[] ioWalk = fromIO.WalkIOTree().ToArray();
-            FIRIO[] ioFlipWalk = toIO.WalkIOTree().ToArray();
-            if (ioWalk.Length != ioFlipWalk.Length)
+            var ioWalk = fromIO.WalkIOTree();
+            var ioFlipWalk = toIO.WalkIOTree();
+            foreach (var pair in ioWalk.Zip(ioFlipWalk))
             {
-                throw new Exception($"In order to make a pair, the two io must be of the same size. From: {ioWalk.Length}, To: {ioFlipWalk.Length}");
-            }
-
-            for (int i = 0; i < ioWalk.Length; i++)
-            {
-                pairs.Add(ioWalk[i], ioFlipWalk[i]);
-                pairs.Add(ioFlipWalk[i], ioWalk[i]);
+                pairs.Add(pair.First, pair.Second);
+                pairs.Add(pair.Second, pair.First);
             }
         }
 
