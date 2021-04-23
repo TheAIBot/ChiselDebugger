@@ -273,13 +273,33 @@ namespace ChiselDebug.GraphFIR
 
         internal void SetConditional(Connection enableCon)
         {
-            foreach (var io in InternalIO.Values.SelectMany(x => x.Flatten()))
+            foreach (var io in InternalIO.Values)
             {
-                io.SetEnabledCondition(enableCon);
+                if (io is ScalarIO scalar)
+                {
+                    scalar.SetEnabledCondition(enableCon);
+                }
+                else
+                {
+                    foreach (var scalarIO in io.Flatten())
+                    {
+                        scalarIO.SetEnabledCondition(enableCon);
+                    }
+                }
             }
-            foreach (var io in ExternalIO.Values.SelectMany(x => x.Flatten()))
+            foreach (var io in ExternalIO.Values)
             {
-                io.SetEnabledCondition(enableCon);
+                if (io is ScalarIO scalar)
+                {
+                    scalar.SetEnabledCondition(enableCon);
+                }
+                else
+                {
+                    foreach (var scalarIO in io.Flatten())
+                    {
+                        scalarIO.SetEnabledCondition(enableCon);
+                    }
+                }
             }
             foreach (var node in Nodes)
             {

@@ -59,10 +59,29 @@ namespace ChiselDebug.GraphFIR
 
         internal static T[] FlattenAndFilterIO<T>(Dictionary<string, FIRIO> io)
         {
-            return io.Values
-                .SelectMany(x => x.Flatten())
-                .OfType<T>()
-                .ToArray();
+            List<T> filtered = new List<T>(io.Values.Count);
+            foreach (var value in io.Values)
+            {
+                if (value is ScalarIO)
+                {
+                    if (value is T tVal)
+                    {
+                        filtered.Add(tVal);
+                    }
+                }
+                else
+                {
+                    foreach (var flatValue in value.Flatten())
+                    {
+                        if (flatValue is T tFlatVal)
+                        {
+                            filtered.Add(tFlatVal);
+                        }
+                    }
+                }
+            }
+
+            return filtered.ToArray();
         }
 
         public virtual FIRIO[] GetAllIOOrdered()
