@@ -345,6 +345,7 @@ namespace ChiselDebug.GraphFIR
 
         internal void ExternalConnectUsedIO(Module parentMod)
         {
+            HashSet<IPortsIO> handledPortsIO = new HashSet<IPortsIO>();
             //Propagate hidden ports
             foreach (var intKeyVal in InternalIO)
             {
@@ -354,7 +355,7 @@ namespace ChiselDebug.GraphFIR
                 //Ports can be nested and propagating one port may reveal more
                 //ports that should be propagated. Keep checking if more ports
                 //should be propagated until all ports have been checked.
-                HashSet<IPortsIO> handledPortsIO = new HashSet<IPortsIO>();
+                handledPortsIO.Clear();
                 while (true)
                 {
                     var intHiddenPorts = intIO.GetAllIOOfType<IPortsIO>();
