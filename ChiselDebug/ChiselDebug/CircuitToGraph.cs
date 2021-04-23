@@ -311,15 +311,14 @@ namespace ChiselDebug
                     {
                         helper.Mod.AddMemoryPort(port);
                     }
-
-
-                    return;
                 }
+                else
+                {
+                    GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, string.Empty, cmem.Type).Single();
+                    var memory = new GraphFIR.Memory(cmem.Name, inputType, cmem.Size, 0, 0, cmem.Ruw, cmem);
 
-                GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, string.Empty, cmem.Type).Single();
-                var memory = new GraphFIR.Memory(cmem.Name, inputType, cmem.Size, 0, 0, cmem.Ruw, cmem);
-
-                helper.Mod.AddMemory(memory);
+                    helper.Mod.AddMemory(memory);
+                }
             }
             else if (statement is FIRRTL.CDefMPort memPort)
             {
@@ -342,24 +341,24 @@ namespace ChiselDebug
                         FIRRTL.MPortDir.MReadWrite => memory.AddReadWritePort(memPort.Name),
                         var error => throw new Exception($"Unknown memory port type. Type: {error}")
                     };
-                }
 
-                VisitExp(helper, memPort.Exps[0], GraphFIR.IO.IOGender.Male).ConnectToInput(port.Address);
-                VisitExp(helper, memPort.Exps[1], GraphFIR.IO.IOGender.Male).ConnectToInput(port.Clock);
-                helper.ScopeEnabledCond.ConnectToInput(port.Enabled);
+                    VisitExp(helper, memPort.Exps[0], GraphFIR.IO.IOGender.Male).ConnectToInput(port.Address);
+                    VisitExp(helper, memPort.Exps[1], GraphFIR.IO.IOGender.Male).ConnectToInput(port.Clock);
+                    helper.ScopeEnabledCond.ConnectToInput(port.Enabled);
 
-                //if port has mask then by default set whole mask to true
-                if (port.HasMask())
-                {
-                    GraphFIR.IO.FIRIO mask = port.GetMask();
-                    GraphFIR.IO.Output const1 = (GraphFIR.IO.Output)VisitExp(helper, new FIRRTL.UIntLiteral(1, 1), GraphFIR.IO.IOGender.Male);
-                    foreach (var maskInput in mask.Flatten())
+                    //if port has mask then by default set whole mask to true
+                    if (port.HasMask())
                     {
-                        const1.ConnectToInput(maskInput);
+                        GraphFIR.IO.FIRIO mask = port.GetMask();
+                        GraphFIR.IO.Output const1 = (GraphFIR.IO.Output)VisitExp(helper, new FIRRTL.UIntLiteral(1, 1), GraphFIR.IO.IOGender.Male);
+                        foreach (var maskInput in mask.Flatten())
+                        {
+                            const1.ConnectToInput(maskInput);
+                        }
                     }
-                }
 
-                helper.Mod.AddMemoryPort(port);
+                    helper.Mod.AddMemoryPort(port);
+                }
             }
             else if (statement is FIRRTL.DefWire defWire)
             {
