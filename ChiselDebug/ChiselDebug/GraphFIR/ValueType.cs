@@ -5,17 +5,19 @@ using VCDReader;
 
 namespace ChiselDebug.GraphFIR
 {
-    public class ValueType
+    public struct ValueType
     {
         private readonly GroundType Type;
-        private BinaryVarValue Value;
-        private string ValueString = null;
+        private readonly BinaryVarValue Value;
+        private string ValueString;
 
         public ValueType(GroundType type)
         {
             this.Type = type;
             this.Value = new BinaryVarValue(Type.Width);
             Array.Fill(Value.Bits, BitState.X);
+
+            this.ValueString = null;
         }
 
         public bool UpdateValue(BinaryVarValue update)
