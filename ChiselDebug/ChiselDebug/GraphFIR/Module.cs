@@ -411,13 +411,30 @@ namespace ChiselDebug.GraphFIR
             var extKeyVals = ExternalIO.ToArray();
             var intKeyVals = InternalIO.ToArray();
 
+            ScalarIO[] oneExt = new ScalarIO[1];
+            ScalarIO[] oneInt = new ScalarIO[1];
+
             for (int i = 0; i < extKeyVals.Length; i++)
             {
                 var extKeyVal = extKeyVals[i];
                 var intKeyVal = intKeyVals[i];
 
-                ScalarIO[] extFlat = extKeyVal.Value.Flatten().ToArray();
-                ScalarIO[] intFlat = intKeyVal.Value.Flatten().ToArray();
+                ScalarIO[] extFlat;
+                ScalarIO[] intFlat;
+                if (extKeyVal.Value is ScalarIO extIO && intKeyVal.Value is ScalarIO intIO)
+                {
+                    oneExt[0] = extIO;
+                    oneInt[0] = intIO;
+
+                    extFlat = oneExt;
+                    intFlat = oneInt;
+                }
+                else
+                {
+                    extFlat = extKeyVal.Value.Flatten().ToArray();
+                    intFlat = intKeyVal.Value.Flatten().ToArray();
+                }
+
                 Debug.Assert(extFlat.Length == intFlat.Length);
 
                 for (int x = 0; x < extFlat.Length; x++)
