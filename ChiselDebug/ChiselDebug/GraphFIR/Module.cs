@@ -300,21 +300,26 @@ namespace ChiselDebug.GraphFIR
                 }
             }
 
+            HashSet<string> ioAdded = new HashSet<string>();
             foreach (var inIO in GetInternalIO())
             {
                 var copy = inIO.Flip(mod);
                 IOHelper.BiDirFullyConnectIO(inIO, copy, true);
 
+                ioAdded.Add(inIO.Name);
                 mod.AddExternalIO(copy);
             }
 
             foreach (var nodeIO in NameToIO)
             {
-                FIRIO copy = nodeIO.Value.Flip(mod);
-                copy.SetName(nodeIO.Key);
-                IOHelper.BiDirFullyConnectIO(nodeIO.Value, copy, true);
+                if (ioAdded.Add(nodeIO.Key))
+                {
+                    FIRIO copy = nodeIO.Value.Flip(mod);
+                    copy.SetName(nodeIO.Key);
+                    IOHelper.BiDirFullyConnectIO(nodeIO.Value, copy, true);
 
-                mod.AddExternalIO(copy);
+                    mod.AddExternalIO(copy);
+                }
             }
         }
 
