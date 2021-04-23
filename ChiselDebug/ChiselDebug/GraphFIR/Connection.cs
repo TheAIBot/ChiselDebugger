@@ -2,17 +2,19 @@
 using FIRRTL;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ChiselDebug.GraphFIR
 {
     public class Connection
     {
         public readonly Output From = null;
-        public readonly HashSet<Input> To = new HashSet<Input>();
+        private HashSet<Input> To = null;
         public ValueType Value;
 
         public Connection(Output from)
         {
+            Enumerable.Empty<Input>();
             this.From = from;
         }
 
@@ -26,6 +28,10 @@ namespace ChiselDebug.GraphFIR
                 }
             }
 
+            if (To == null)
+            {
+                To = new HashSet<Input>();
+            }
             To.Add(input);
             input.Connect(this, isConditional);
         }
@@ -38,15 +44,17 @@ namespace ChiselDebug.GraphFIR
 
         public bool IsUsed()
         {
-            return To.Count > 0;
+            return To != null && To.Count > 0;
         }
+
+        public IEnumerable<Input> GetConnectedInputs()
+        {
+            return To ?? Enumerable.Empty<Input>();
+        }
+
 
         public void SetDefaultvalue()
         {
-            if (From.Type == null)
-            {
-
-            }
             Value = new ValueType(From.Type);
         }
     }

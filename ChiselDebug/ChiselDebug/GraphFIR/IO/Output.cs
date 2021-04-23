@@ -22,12 +22,12 @@ namespace ChiselDebug.GraphFIR.IO
 
         public override bool IsConnectedToAnything()
         {
-            return Con != null && Con.To.Count > 0;
+            return Con != null && Con.IsUsed();
         }
 
         public override void DisconnectAll()
         {
-            Input[] inputs = Con.To.ToArray();
+            Input[] inputs = Con.GetConnectedInputs().ToArray();
             foreach (var input in inputs)
             {
                 Con.DisconnectInput(input);

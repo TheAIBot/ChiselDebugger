@@ -55,7 +55,7 @@ namespace ChiselDebug
                 {
                     if (IOInfos.TryGetValue(connection.From, out IOInfo outputInfo))
                     {
-                        foreach (var input in connection.To)
+                        foreach (var input in connection.GetConnectedInputs())
                         {
                             if (IOInfos.TryGetValue(input, out IOInfo inputInfo))
                             {

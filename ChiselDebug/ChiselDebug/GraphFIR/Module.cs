@@ -503,7 +503,7 @@ namespace ChiselDebug.GraphFIR
                     output.InferType();
                     Debug.Assert(output.Type != null);
 
-                    foreach (var input in output.Con.To)
+                    foreach (var input in output.Con.GetConnectedInputs())
                     {
                         input.InferType();
                         Debug.Assert(input.Type != null);
@@ -520,7 +520,7 @@ namespace ChiselDebug.GraphFIR
                         output.InferType();
                         Debug.Assert(output.Type != null);
 
-                        foreach (var input in output.Con.To)
+                        foreach (var input in output.Con.GetConnectedInputs())
                         {
                             input.InferType();
                             Debug.Assert(input.Type != null);

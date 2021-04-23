@@ -86,7 +86,7 @@ namespace ChiselDebuggerWebUI.Code
                 //are being allowed to rerender here.
                 foreach (var connection in changedConnections)
                 {
-                    foreach (var node in connection.To)
+                    foreach (var node in connection.GetConnectedInputs())
                     {
                         if (node.Node != null &&
                             FIRNodeToModCtrl.TryGetValue(node.Node, out var modCtrl1))

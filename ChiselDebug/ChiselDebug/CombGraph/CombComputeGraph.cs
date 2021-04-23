@@ -294,7 +294,7 @@ namespace ChiselDebug.CombGraph
 
             void AddConnections(Queue<(Connection con, Input input)> toTraverse, Output output)
             {
-                foreach (var input in output.Con.To)
+                foreach (var input in output.Con.GetConnectedInputs())
                 {
                     toTraverse.Enqueue((output.Con, input));
                 }

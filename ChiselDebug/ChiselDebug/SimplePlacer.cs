@@ -117,7 +117,7 @@ namespace ChiselDebug
                             continue;
                         }
                         var from = outputToNode[output];
-                        foreach (var input in output.Con.To)
+                        foreach (var input in output.Con.GetConnectedInputs())
                         {
                             if (input.Node != null && input.Node is INoPlaceAndRoute)
                             {

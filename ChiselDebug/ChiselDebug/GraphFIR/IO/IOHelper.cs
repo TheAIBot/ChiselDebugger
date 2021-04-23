@@ -9,7 +9,7 @@ namespace ChiselDebug.GraphFIR.IO
     {
         public static void BypassIO(Output from, Output to)
         {
-            Input[] inputs = from.Con.To.ToArray();
+            Input[] inputs = from.Con.GetConnectedInputs().ToArray();
             foreach (var input in inputs)
             {
                 from.Con.DisconnectInput(input);
@@ -53,13 +53,13 @@ namespace ChiselDebug.GraphFIR.IO
                 if (bypassFromIO[i] is Input fromIn && bypassToIO[i] is Output toOut)
                 {
                     connectFromCons = fromIn.GetAllConnections();
-                    connectTo = toOut.Con.To.ToArray();
+                    connectTo = toOut.Con.GetConnectedInputs().ToArray();
                     fromIn.DisconnectAll();
                 }
                 else if (bypassFromIO[i] is Output fromOut && bypassToIO[i] is Input toIn)
                 {
                     connectFromCons = toIn.GetAllConnections();
-                    connectTo = fromOut.Con.To.ToArray();
+                    connectTo = fromOut.Con.GetConnectedInputs().ToArray();
                     toIn.DisconnectAll();
                 }
                 else 
