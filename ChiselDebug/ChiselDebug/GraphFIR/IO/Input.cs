@@ -7,7 +7,7 @@ namespace ChiselDebug.GraphFIR.IO
 {
     public class Input : ScalarIO
     {
-        private readonly HashSet<Connection> CondCons = new HashSet<Connection>();
+        private HashSet<Connection> CondCons = null;
 
         public Input(FIRRTLNode node, IFIRType type) : this(node, string.Empty, type)
         { }
@@ -17,12 +17,12 @@ namespace ChiselDebug.GraphFIR.IO
 
         public override bool IsConnected()
         {
-            return Con != null || CondCons.Count > 0;
+            return Con != null || (CondCons != null && CondCons.Count > 0);
         }
 
         public override bool IsConnectedToAnything()
         {
-            return Con != null || CondCons.Count > 0;
+            return Con != null || (CondCons != null && CondCons.Count > 0);
         }
 
         public Connection[] GetAllConnections()
@@ -32,7 +32,10 @@ namespace ChiselDebug.GraphFIR.IO
             {
                 cons.Add(Con);
             }
-            cons.AddRange(CondCons);
+            if (CondCons != null)
+            {
+                cons.AddRange(CondCons);
+            }
 
             return cons.ToArray();
         }
@@ -44,6 +47,10 @@ namespace ChiselDebug.GraphFIR.IO
 
         internal Connection[] GetConditionalConnections()
         {
+            if (CondCons == null)
+            {
+                return Array.Empty<Connection>();
+            }
             return CondCons.ToArray();
         }
 
@@ -55,7 +62,7 @@ namespace ChiselDebug.GraphFIR.IO
             }
             else
             {
-                if (!CondCons.Remove(toDisconnect))
+                if (CondCons == null || !CondCons.Remove(toDisconnect))
                 {
                     throw new Exception("Can't disconnect from a connection is wasn't connected to.");
                 }
@@ -69,9 +76,12 @@ namespace ChiselDebug.GraphFIR.IO
                 Con.DisconnectInput(this);
             }
 
-            foreach (var con in CondCons.ToArray())
+            if (CondCons != null)
             {
-                con.DisconnectInput(this);
+                foreach (var con in CondCons.ToArray())
+                {
+                    con.DisconnectInput(this);
+                }
             }
         }
 
@@ -79,6 +89,10 @@ namespace ChiselDebug.GraphFIR.IO
         {
             if (isConditional)
             {
+                if (CondCons == null)
+                {
+                    CondCons = new HashSet<Connection>();
+                }
                 CondCons.Add(con);
             }
             else
@@ -125,11 +139,14 @@ namespace ChiselDebug.GraphFIR.IO
 
         public Connection GetEnabledCon()
         {
-            foreach (var condCon in CondCons)
+            if (CondCons != null)
             {
-                if (condCon.From.IsEnabled)
+                foreach (var condCon in CondCons)
                 {
-                    return condCon;
+                    if (condCon.From.IsEnabled)
+                    {
+                        return condCon;
+                    }
                 }
             }
 
@@ -156,10 +173,13 @@ namespace ChiselDebug.GraphFIR.IO
                 Con.From.InferType();
                 SetType(Con.From.Type);
             }
-            foreach (var condCon in CondCons)
+            if (CondCons != null)
             {
-                condCon.From.InferType();
-                SetType(condCon.From.Type);
+                foreach (var condCon in CondCons)
+                {
+                    condCon.From.InferType();
+                    SetType(condCon.From.Type);
+                }
             }
         }
     }
