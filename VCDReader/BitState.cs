@@ -1,6 +1,6 @@
 ﻿namespace VCDReader
 {
-    public enum BitState
+    public enum BitState : byte
     {
         Zero = 0,
         One = 1,
