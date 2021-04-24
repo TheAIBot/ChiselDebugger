@@ -15,7 +15,6 @@ namespace ChiselDebug.GraphFIR
         private readonly Dictionary<string, FIRIO> NameToIO = new Dictionary<string, FIRIO>();
         private readonly Dictionary<IOBundle, Module> BundleToModule = new Dictionary<IOBundle, Module>();
         private readonly Dictionary<Input, Wire> DuplexOutputWires = new Dictionary<Input, Wire>();
-        private readonly List<Wire> DuplexWires = new List<Wire>();
         
 
         public Module(string name, FirrtlNode defNode) : base(defNode)
@@ -87,8 +86,6 @@ namespace ChiselDebug.GraphFIR
         public Output AddDuplexOuputWire(Input input)
         {
             Wire wire = new Wire(GetDuplexOutputName(input), input, null);
-
-            DuplexWires.Add(wire);
 
             DuplexIO wireIO = wire.GetAsDuplex();
             NameToIO.Add(wireIO.Name, wireIO.GetOutput());
@@ -250,7 +247,6 @@ namespace ChiselDebug.GraphFIR
             }
 
             DuplexOutputWires.Clear();
-            DuplexWires.Clear();
         }
 
         internal void RemoveUnusedConnections()
