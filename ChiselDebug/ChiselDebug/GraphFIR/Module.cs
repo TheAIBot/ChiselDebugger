@@ -301,10 +301,18 @@ namespace ChiselDebug.GraphFIR
             {
                 foreach (var nodeIO in node.GetIO())
                 {
-                    foreach (var scalar in nodeIO.Flatten())
+                    if (nodeIO is ScalarIO scalar)
                     {
                         scalar.SetEnabledCondition(enableCon);
                     }
+                    else
+                    {
+                        foreach (var scalarIO in nodeIO.Flatten())
+                        {
+                            scalarIO.SetEnabledCondition(enableCon);
+                        }
+                    }
+
                 }
             }
         }
@@ -477,14 +485,25 @@ namespace ChiselDebug.GraphFIR
 
         internal void DisconnectUnusedIO()
         {
-            foreach (var intIO in InternalIO)
+            foreach (var intIO in InternalIO.Values)
             {
-                foreach (var scalarIntIO in intIO.Value.Flatten())
+                if (intIO is ScalarIO scalar)
                 {
-                    if (!scalarIntIO.IsConnectedToAnything())
+                    if (!scalar.IsConnectedToAnything())
                     {
-                        ScalarIO extIO = (ScalarIO)GetPairedIO(scalarIntIO);
+                        ScalarIO extIO = (ScalarIO)GetPairedIO(scalar);
                         extIO.DisconnectAll();
+                    }
+                }
+                else
+                {
+                    foreach (var scalarIntIO in intIO.Flatten())
+                    {
+                        if (!scalarIntIO.IsConnectedToAnything())
+                        {
+                            ScalarIO extIO = (ScalarIO)GetPairedIO(scalarIntIO);
+                            extIO.DisconnectAll();
+                        }
                     }
                 }
             }
