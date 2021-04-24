@@ -77,7 +77,7 @@ namespace ChiselDebuggerWebUI.Code
         {
             TimeChanger.Post(() =>
             {
-                List<Connection> changedConnections = Graph.SetState(Timeline.GetStateAtTime(time));
+                List<Output> changedConnections = Graph.SetState(Timeline.GetStateAtTime(time));
 
                 HashSet<ModuleLayout> modulesToReRender = new HashSet<ModuleLayout>();
 
@@ -94,8 +94,8 @@ namespace ChiselDebuggerWebUI.Code
                             modulesToReRender.Add(modCtrl1);
                         }
                     }
-                    if (connection.From.Node != null &&
-                        FIRNodeToModCtrl.TryGetValue(connection.From.Node, out var modCtrl2))
+                    if (connection.Node != null &&
+                        FIRNodeToModCtrl.TryGetValue(connection.Node, out var modCtrl2))
                     {
                         modulesToReRender.Add(modCtrl2);
                     }
