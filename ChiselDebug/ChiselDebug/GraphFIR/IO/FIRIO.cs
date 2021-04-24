@@ -8,7 +8,7 @@ namespace ChiselDebug.GraphFIR.IO
     {
         public readonly FIRRTLNode Node;
         public string Name { get; private set; }
-        public bool IsAnonymous => Name == string.Empty;
+        public bool IsAnonymous => Name == null;
         public AggregateIO ParentIO { get; private set; } = null;
         public bool IsPartOfAggregateIO => ParentIO != null;
 
@@ -20,7 +20,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         public void SetName(string name)
         {
-            Name = name ?? string.Empty;
+            Name = name;
         }
 
         public void SetParentIO(AggregateIO aggIO)

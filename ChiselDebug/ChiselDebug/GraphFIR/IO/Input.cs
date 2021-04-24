@@ -10,7 +10,7 @@ namespace ChiselDebug.GraphFIR.IO
         internal Output Con;
         private HashSet<Output> CondCons = null;
 
-        public Input(FIRRTLNode node, IFIRType type) : this(node, string.Empty, type)
+        public Input(FIRRTLNode node, IFIRType type) : this(node, null, type)
         { }
 
         public Input(FIRRTLNode node, string name, IFIRType type) : base(node, name, type)

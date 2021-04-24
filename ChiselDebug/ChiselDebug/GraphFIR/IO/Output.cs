@@ -10,9 +10,6 @@ namespace ChiselDebug.GraphFIR.IO
         private HashSet<Input> To = null;
         public ValueType Value;
 
-        public Output(FIRRTLNode node, IFIRType type) : this(node, string.Empty, type)
-        { }
-
         public Output(FIRRTLNode node, string name, IFIRType type) : base(node, name, type)
         { }
 

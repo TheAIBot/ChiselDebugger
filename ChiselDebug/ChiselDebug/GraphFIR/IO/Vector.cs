@@ -11,7 +11,7 @@ namespace ChiselDebug.GraphFIR.IO
         private readonly FIRIO Access;
         private readonly FIRIO Index;
 
-        public VectorAccess(FIRRTLNode node, FIRIO index, FIRIO access) : base(node, string.Empty, new List<FIRIO>() { index, access })
+        public VectorAccess(FIRRTLNode node, FIRIO index, FIRIO access) : base(node, null, new List<FIRIO>() { index, access })
         {
             this.Access = access;
             this.Index = index;

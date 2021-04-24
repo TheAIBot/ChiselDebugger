@@ -252,7 +252,7 @@ namespace ChiselDebug
 
         private static GraphFIR.IO.FIRIO VisitVector(VisitHelper helper, FIRRTL.Dir direction, string vectorName, FIRRTL.VectorType vec)
         {
-            var type = VisitType(helper, direction, string.Empty, vec.Type).Single();
+            var type = VisitType(helper, direction, null, vec.Type).Single();
             return new GraphFIR.IO.Vector(null, vectorName, vec.Size, type);
         }
 
@@ -324,7 +324,7 @@ namespace ChiselDebug
                 }
                 else
                 {
-                    GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, string.Empty, cmem.Type).Single();
+                    GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, null, cmem.Type).Single();
                     var memory = new GraphFIR.Memory(cmem.Name, inputType, cmem.Size, 0, 0, cmem.Ruw, cmem);
 
                     helper.Mod.AddMemory(memory);
@@ -372,7 +372,7 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.DefWire defWire)
             {
-                GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Output, string.Empty, defWire.Type).Single();
+                GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Output, null, defWire.Type).Single();
                 inputType = inputType.ToFlow(GraphFIR.IO.FlowChange.Sink, null);
                 GraphFIR.Wire wire = new GraphFIR.Wire(defWire.Name, inputType, defWire);
 
@@ -390,7 +390,7 @@ namespace ChiselDebug
                     initValue = VisitExp(helper, reg.Init, GraphFIR.IO.IOGender.Male);
                 }
 
-                GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, string.Empty, reg.Type).Single();
+                GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, null, reg.Type).Single();
                 GraphFIR.Register register = new GraphFIR.Register(reg.Name, inputType, clock, reset, initValue, reg);
                 helper.Mod.AddRegister(register);
             }
@@ -412,7 +412,7 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.DefMemory mem)
             {
-                GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, string.Empty, mem.Type).Single();
+                GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, null, mem.Type).Single();
                 var memory = new GraphFIR.Memory(mem.Name, inputType, mem.Depth, mem.ReadLatency, mem.WriteLatency, mem.Ruw, mem);
 
                 foreach (var portName in mem.Readers)

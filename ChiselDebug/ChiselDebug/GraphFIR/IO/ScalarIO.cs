@@ -11,9 +11,6 @@ namespace ChiselDebug.GraphFIR.IO
         private bool IsInferingTypeNow = false;
         public bool IsEnabled => EnabledCond == null || EnabledCond.Value.IsTrue();
 
-        public ScalarIO(FIRRTLNode node, IFIRType type) : this(node, string.Empty, type)
-        { }
-
         public ScalarIO(FIRRTLNode node, string name, IFIRType type) : base(node, name)
         {
             if (type is GroundType ground && ground.IsTypeFullyKnown())
