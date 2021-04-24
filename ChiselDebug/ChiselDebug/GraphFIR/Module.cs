@@ -155,7 +155,7 @@ namespace ChiselDebug.GraphFIR
             List<Output> connestions = new List<Output>();
             foreach (Output output in GetInternalOutputs())
             {
-                if (output.IsUsed())
+                if (output.IsConnectedToAnything())
                 {
                     connestions.Add(output);
                 }
@@ -165,7 +165,7 @@ namespace ChiselDebug.GraphFIR
             {
                 foreach (Output output in node.GetOutputs())
                 {
-                    if (output.IsUsed())
+                    if (output.IsConnectedToAnything())
                     {
                         connestions.Add(output);
                     }

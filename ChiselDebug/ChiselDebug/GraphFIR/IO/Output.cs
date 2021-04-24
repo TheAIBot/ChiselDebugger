@@ -23,7 +23,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         public override bool IsConnectedToAnything()
         {
-            return IsUsed();
+            return To != null && To.Count > 0;
         }
 
         public override void DisconnectAll()
@@ -35,11 +35,6 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public override void SetType(IFIRType type)
-        {
-            base.SetType(type);
-        }
-
         public override FIRIO GetOutput()
         {
             return this;
@@ -49,7 +44,20 @@ namespace ChiselDebug.GraphFIR.IO
         {
             if (input is Input ioIn)
             {
-                ConnectToInput(ioIn, isConditional);
+                if (!isConditional && ioIn.IsConnected())
+                {
+                    if (ioIn.Con != null)
+                    {
+                        ioIn.Con.DisconnectInput(ioIn);
+                    }
+                }
+
+                if (To == null)
+                {
+                    To = new HashSet<Input>();
+                }
+                To.Add(ioIn);
+                ioIn.Connect(this, isConditional);
             }
             else
             {
@@ -120,33 +128,10 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public void ConnectToInput(Input input, bool isConditional)
-        {
-            if (!isConditional && input.IsConnected())
-            {
-                if (input.Con != null)
-                {
-                    input.Con.DisconnectInput(input);
-                }
-            }
-
-            if (To == null)
-            {
-                To = new HashSet<Input>();
-            }
-            To.Add(input);
-            input.Connect(this, isConditional);
-        }
-
         public void DisconnectInput(Input input)
         {
             To.Remove(input);
             input.Disconnect(this);
-        }
-
-        public bool IsUsed()
-        {
-            return To != null && To.Count > 0;
         }
 
         public IEnumerable<Input> GetConnectedInputs()
