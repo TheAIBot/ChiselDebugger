@@ -11,7 +11,7 @@ namespace ChiselDebug.GraphFIR.IO
         private readonly FIRIO Access;
         private readonly FIRIO Index;
 
-        public VectorAccess(FIRRTLNode node, FIRIO index, FIRIO access) : base(node, string.Empty, new List<FIRIO>() { index, access })
+        public VectorAccess(FIRRTLNode node, FIRIO index, FIRIO access) : base(node, null, new List<FIRIO>() { index, access })
         {
             this.Access = access;
             this.Index = index;
@@ -37,9 +37,9 @@ namespace ChiselDebug.GraphFIR.IO
             return Access;
         }
 
-        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node = null)
+        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)
         {
-            return new VectorAccess(node ?? Node, Index.ToFlow(flow, node), Access.ToFlow(flow, node));
+            return new VectorAccess(node, Index.ToFlow(flow, node), Access.ToFlow(flow, node));
         }
     }
 
@@ -103,9 +103,9 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node = null)
+        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)
         {
-            return new Vector(node ?? Node, Name, Length, IO[0].ToFlow(flow, node), VisiblePorts.Select(x => (VectorAccess)x.ToFlow(flow, node)).ToList());
+            return new Vector(node, Name, Length, IO[0].ToFlow(flow, node), VisiblePorts.Select(x => (VectorAccess)x.ToFlow(flow, node)).ToList());
         }
 
         public override IEnumerable<ScalarIO> Flatten()

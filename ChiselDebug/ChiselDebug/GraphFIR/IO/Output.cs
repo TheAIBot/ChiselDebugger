@@ -7,37 +7,29 @@ namespace ChiselDebug.GraphFIR.IO
 {
     public class Output : ScalarIO
     {
-        public Output(FIRRTLNode node, IFIRType type) : this(node, string.Empty, type)
-        { }
+        private HashSet<Input> To = null;
+        public ValueType Value;
 
         public Output(FIRRTLNode node, string name, IFIRType type) : base(node, name, type)
-        {
-            this.Con = new Connection(this);
-        }
+        { }
 
         public override bool IsConnected()
         {
-            return Con != null;
+            return true;
         }
 
         public override bool IsConnectedToAnything()
         {
-            return Con != null && Con.To.Count > 0;
+            return To != null && To.Count > 0;
         }
 
         public override void DisconnectAll()
         {
-            Input[] inputs = Con.To.ToArray();
+            Input[] inputs = GetConnectedInputs().ToArray();
             foreach (var input in inputs)
             {
-                Con.DisconnectInput(input);
+                DisconnectInput(input);
             }
-        }
-
-        public override void SetType(IFIRType type)
-        {
-            base.SetType(type);
-            Con.Value = new ValueType(type);
         }
 
         public override FIRIO GetOutput()
@@ -49,7 +41,20 @@ namespace ChiselDebug.GraphFIR.IO
         {
             if (input is Input ioIn)
             {
-                Con.ConnectToInput(ioIn, isConditional);
+                if (!isConditional && ioIn.IsConnected())
+                {
+                    if (ioIn.Con != null)
+                    {
+                        ioIn.Con.DisconnectInput(ioIn);
+                    }
+                }
+
+                if (To == null)
+                {
+                    To = new HashSet<Input>();
+                }
+                To.Add(ioIn);
+                ioIn.Connect(this, isConditional);
             }
             else
             {
@@ -57,14 +62,14 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node = null)
+        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)
         {
             return flow switch
             {
-                FlowChange.Source => new Output(node ?? Node, Name, Type),
-                FlowChange.Sink => new Input(node ?? Node, Name, Type),
-                FlowChange.Flipped => new Input(node ?? Node, Name, Type),
-                FlowChange.Preserve => new Output(node ?? Node, Name, Type),
+                FlowChange.Source => new Output(node, Name, Type),
+                FlowChange.Sink => new Input(node, Name, Type),
+                FlowChange.Flipped => new Input(node, Name, Type),
+                FlowChange.Preserve => new Output(node, Name, Type),
                 var error => throw new Exception($"Unknown flow. Flow: {flow}")
             };
         }
@@ -118,6 +123,23 @@ namespace ChiselDebug.GraphFIR.IO
             {
                 Node.InferType();
             }
+        }
+
+        public void DisconnectInput(Input input)
+        {
+            To.Remove(input);
+            input.Disconnect(this);
+        }
+
+        public IEnumerable<Input> GetConnectedInputs()
+        {
+            return To ?? Enumerable.Empty<Input>();
+        }
+
+
+        public void SetDefaultvalue()
+        {
+            Value = new ValueType(Type);
         }
     }
 }

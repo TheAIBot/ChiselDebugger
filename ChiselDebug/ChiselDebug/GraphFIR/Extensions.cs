@@ -39,10 +39,5 @@ namespace ChiselDebug.GraphFIR
 
             return sBuilder.ToString();
         }
-
-        public static ScalarIO[] Flatten(this FIRIO[] io)
-        {
-            return io.SelectMany(x => x.Flatten()).ToArray();
-        }
     }
 }

@@ -21,24 +21,21 @@ namespace ChiselDebug.GraphFIR
             arg1.ConnectToInput(In);
         }
 
-        public override ScalarIO[] GetInputs()
+        public override Input[] GetInputs()
         {
-            return new ScalarIO[] { In };
+            return new Input[] { In };
         }
 
-        public override FIRIO[] GetIO()
+        public override IEnumerable<FIRIO> GetIO()
         {
-            return new FIRIO[]
-            {
-                In,
-                Result
-            };
+            yield return In;
+            yield return Result;
         }
 
         public override void Compute()
         {
-            Connection aCon = In.GetEnabledCon();
-            Connection resultCon = Result.Con;
+            Output aCon = In.GetEnabledCon();
+            Output resultCon = Result;
 
             BinaryVarValue aVal = (BinaryVarValue)aCon.Value.GetValue();
             BinaryVarValue resultVal = (BinaryVarValue)resultCon.Value.GetValue();

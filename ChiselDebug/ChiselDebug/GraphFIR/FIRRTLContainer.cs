@@ -27,19 +27,28 @@ namespace ChiselDebug.GraphFIR
             AddPairedIO(io, flipped);
         }
 
-        public override ScalarIO[] GetInputs()
+        internal void ReserveMemory(int extIntSize)
+        {
+            ExternalIO.EnsureCapacity(extIntSize);
+            InternalIO.EnsureCapacity(extIntSize);
+            AllIOInOrder.Capacity = extIntSize;
+
+            ReservePairMemory(extIntSize + extIntSize);
+        }
+
+        public override Input[] GetInputs()
         {
             return FlattenAndFilterIO<Input>(ExternalIO);
         }
 
-        public override ScalarIO[] GetOutputs()
+        public override Output[] GetOutputs()
         {
             return FlattenAndFilterIO<Output>(ExternalIO);
         }
 
-        public override FIRIO[] GetIO()
+        public override Dictionary<string, FIRIO>.ValueCollection GetIO()
         {
-            return ExternalIO.Values.ToArray();
+            return ExternalIO.Values;
         }
 
         public FIRIO[] GetInternalIO()
@@ -47,22 +56,79 @@ namespace ChiselDebug.GraphFIR
             return InternalIO.Values.ToArray();
         }
 
-        public ScalarIO[] GetInternalInputs()
+        public IEnumerable<Input> GetInternalInputs()
         {
-            return FlattenAndFilterIO<Input>(InternalIO);
+            foreach (var intIO in InternalIO.Values)
+            {
+                if (intIO is ScalarIO)
+                {
+                    if (intIO is Input inT)
+                    {
+                        yield return inT;
+                    }
+                }
+                else
+                {
+                    foreach (var flat in intIO.Flatten())
+                    {
+                        if (flat is Input inT)
+                        {
+                            yield return inT;
+                        }
+                    }
+                }
+            }
         }
 
-        public ScalarIO[] GetInternalOutputs()
+        public IEnumerable<Output> GetInternalOutputs()
         {
-            return FlattenAndFilterIO<Output>(InternalIO);
+            foreach (var intIO in InternalIO.Values)
+            {
+                if (intIO is ScalarIO)
+                {
+                    if (intIO is Output outT)
+                    {
+                        yield return outT;
+                    }
+                }
+                else
+                {
+                    foreach (var flat in intIO.Flatten())
+                    {
+                        if (flat is Output outT)
+                        {
+                            yield return outT;
+                        }
+                    }
+                }
+            }
         }
 
         internal static T[] FlattenAndFilterIO<T>(Dictionary<string, FIRIO> io)
         {
-            return io.Values
-                .SelectMany(x => x.Flatten())
-                .OfType<T>()
-                .ToArray();
+            List<T> filtered = new List<T>(io.Values.Count);
+            foreach (var value in io.Values)
+            {
+                if (value is ScalarIO)
+                {
+                    if (value is T tVal)
+                    {
+                        filtered.Add(tVal);
+                    }
+                }
+                else
+                {
+                    foreach (var flatValue in value.Flatten())
+                    {
+                        if (flatValue is T tFlatVal)
+                        {
+                            filtered.Add(tFlatVal);
+                        }
+                    }
+                }
+            }
+
+            return filtered.ToArray();
         }
 
         public virtual FIRIO[] GetAllIOOrdered()

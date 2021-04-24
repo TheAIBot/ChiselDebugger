@@ -16,7 +16,10 @@ namespace ChiselDebug.GraphFIR
             foreach (Input paired in mux.GetAllPairedIO(output).OfType<Input>())
             {
                 paired.InferType();
-                inputTypes.Add((GroundType)paired.Type);
+                if (paired.Type != null)
+                {
+                    inputTypes.Add(paired.Type);
+                }
             }
 
             int maxWidth = inputTypes.Max(x => x.Width);

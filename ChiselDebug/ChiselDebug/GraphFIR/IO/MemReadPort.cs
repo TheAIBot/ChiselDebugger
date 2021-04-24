@@ -42,9 +42,9 @@ namespace ChiselDebug.GraphFIR.IO
             return DataOut;
         }
 
-        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node = null)
+        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)
         {
-            return new MemReadPort(node ?? Node, Name, GetIOInOrder().Select(x => x.ToFlow(flow, node)).ToList());
+            return new MemReadPort(node, Name, GetIOInOrder().Select(x => x.ToFlow(flow, node)).ToList());
         }
 
         public override bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container)

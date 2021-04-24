@@ -14,6 +14,7 @@ namespace ChiselDebug
         public readonly Dictionary<string, FIRRTL.DefModule> ModuleRoots;
         public readonly bool IsConditionalModule;
         private readonly VisitHelper ParentHelper;
+        private readonly VisitHelper RootHelper;
 
         private readonly Stack<GraphFIR.IO.Output> ScopeEnabledConditions = new Stack<GraphFIR.IO.Output>();
         public GraphFIR.IO.Output ScopeEnabledCond 
@@ -32,21 +33,22 @@ namespace ChiselDebug
             }
         }
 
-        public VisitHelper(GraphFIR.Module mod, CircuitGraph lowFirGraph) : this(mod, lowFirGraph, new Dictionary<string, FIRRTL.DefModule>(), null, false)
+        public VisitHelper(GraphFIR.Module mod, CircuitGraph lowFirGraph) : this(mod, lowFirGraph, new Dictionary<string, FIRRTL.DefModule>(), null, false, null)
         { }
 
-        private VisitHelper(GraphFIR.Module mod, CircuitGraph lowFirGraph, Dictionary<string, FIRRTL.DefModule> roots, VisitHelper parentHelper, bool isConditional)
+        private VisitHelper(GraphFIR.Module mod, CircuitGraph lowFirGraph, Dictionary<string, FIRRTL.DefModule> roots, VisitHelper parentHelper, bool isConditional, VisitHelper rootHelper)
         {
             this.Mod = mod;
             this.LowFirGraph = lowFirGraph;
             this.ModuleRoots = roots;
             this.ParentHelper = parentHelper;
             this.IsConditionalModule = isConditional;
+            this.RootHelper = rootHelper;
         }
 
         public VisitHelper ForNewModule(string moduleName, FIRRTL.DefModule moduleDef, bool isConditional)
         {
-            return new VisitHelper(new GraphFIR.Module(moduleName, moduleDef), LowFirGraph, ModuleRoots, this, isConditional);
+            return new VisitHelper(new GraphFIR.Module(moduleName, moduleDef), LowFirGraph, ModuleRoots, this, isConditional, RootHelper ?? this);
         }
 
         public void AddNodeToModule(GraphFIR.FIRRTLNode node)
@@ -129,11 +131,18 @@ namespace ChiselDebug
             return nodeIO.Flatten().First().Node.FirDefNode;
         }
 
-        private static long UniqueNumber = 0;
+        private long UniqueNumber = 0;
 
         internal string GetUniqueName()
         {
-            return $"~{Interlocked.Increment(ref UniqueNumber)}";
+            if (RootHelper != null)
+            {
+                return RootHelper.GetUniqueName();
+            }
+            else
+            {
+                return $"~{UniqueNumber++}";
+            }
         }
     }
 
@@ -150,6 +159,7 @@ namespace ChiselDebug
             FIRRTL.DefModule mainModDef = circuit.Modules.Single(x => x.Name == circuit.Main);
             GraphFIR.Module mainModule = VisitModule(helper, mainModDef);
             mainModule.InferType();
+            mainModule.FinishConnections();
             return new CircuitGraph(circuit.Main, mainModule);
         }
 
@@ -242,7 +252,7 @@ namespace ChiselDebug
 
         private static GraphFIR.IO.FIRIO VisitVector(VisitHelper helper, FIRRTL.Dir direction, string vectorName, FIRRTL.VectorType vec)
         {
-            var type = VisitType(helper, direction, string.Empty, vec.Type).Single();
+            var type = VisitType(helper, direction, null, vec.Type).Single();
             return new GraphFIR.IO.Vector(null, vectorName, vec.Size, type);
         }
 
@@ -314,7 +324,7 @@ namespace ChiselDebug
                 }
                 else
                 {
-                    GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, string.Empty, cmem.Type).Single();
+                    GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, null, cmem.Type).Single();
                     var memory = new GraphFIR.Memory(cmem.Name, inputType, cmem.Size, 0, 0, cmem.Ruw, cmem);
 
                     helper.Mod.AddMemory(memory);
@@ -362,8 +372,8 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.DefWire defWire)
             {
-                GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Output, string.Empty, defWire.Type).Single();
-                inputType = inputType.ToFlow(GraphFIR.IO.FlowChange.Sink);
+                GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Output, null, defWire.Type).Single();
+                inputType = inputType.ToFlow(GraphFIR.IO.FlowChange.Sink, null);
                 GraphFIR.Wire wire = new GraphFIR.Wire(defWire.Name, inputType, defWire);
 
                 helper.Mod.AddWire(wire);
@@ -380,7 +390,7 @@ namespace ChiselDebug
                     initValue = VisitExp(helper, reg.Init, GraphFIR.IO.IOGender.Male);
                 }
 
-                GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, string.Empty, reg.Type).Single();
+                GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, null, reg.Type).Single();
                 GraphFIR.Register register = new GraphFIR.Register(reg.Name, inputType, clock, reset, initValue, reg);
                 helper.Mod.AddRegister(register);
             }
@@ -402,7 +412,7 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.DefMemory mem)
             {
-                GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, string.Empty, mem.Type).Single();
+                GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, null, mem.Type).Single();
                 var memory = new GraphFIR.Memory(mem.Name, inputType, mem.Depth, mem.ReadLatency, mem.WriteLatency, mem.Ruw, mem);
 
                 foreach (var portName in mem.Readers)
@@ -488,7 +498,7 @@ namespace ChiselDebug
                 //if it's not connected to anything.
                 helper.Mod.DisconnectUnusedIO();
 
-                helper.Mod.SetConditional(ena.Con);
+                helper.Mod.SetConditional(ena);
                 enaInput.SetEnabledCondition(null);
                 internalEna.SetEnabledCondition(null);
                 ((GraphFIR.IO.Input)internalEnaDummy.InIO).SetEnabledCondition(null);

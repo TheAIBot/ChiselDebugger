@@ -1,5 +1,6 @@
 ﻿using ChiselDebug.GraphFIR.IO;
 using FIRRTL;
+using System.Collections.Generic;
 
 namespace ChiselDebug.GraphFIR
 {
@@ -12,10 +13,10 @@ namespace ChiselDebug.GraphFIR
             this.FirDefNode = defNode;
         }
 
-        public abstract ScalarIO[] GetInputs();
-        public abstract ScalarIO[] GetOutputs();
+        public abstract Input[] GetInputs();
+        public abstract Output[] GetOutputs();
 
-        public abstract FIRIO[] GetIO();
+        public abstract IEnumerable<FIRIO> GetIO();
 
         public abstract void Compute();
 

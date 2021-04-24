@@ -6,26 +6,25 @@ namespace ChiselDebug.GraphFIR.IO
 {
     public abstract class ScalarIO : FIRIO
     {
-        public IFIRType Type { get; private set; }
-        public Connection Con = null;
-        private Connection EnabledCond = null;
+        public GroundType Type { get; private set; }
+        private Output EnabledCond = null;
         private bool IsInferingTypeNow = false;
         public bool IsEnabled => EnabledCond == null || EnabledCond.Value.IsTrue();
 
-        public ScalarIO(FIRRTLNode node, IFIRType type) : this(node, string.Empty, type)
-        { }
-
         public ScalarIO(FIRRTLNode node, string name, IFIRType type) : base(node, name)
         {
-            this.Type = type;
+            if (type is GroundType ground && ground.IsTypeFullyKnown())
+            {
+                this.Type = ground;
+            }
         }
 
-        public void SetEnabledCondition(Connection enabledCond)
+        public void SetEnabledCondition(Output enabledCond)
         {
             EnabledCond = enabledCond;
         }
 
-        public Connection GetConditional()
+        public Output GetConditional()
         {
             return EnabledCond;
         }
@@ -55,9 +54,12 @@ namespace ChiselDebug.GraphFIR.IO
             return false;
         }
 
-        public virtual void SetType(IFIRType type)
+        public void SetType(IFIRType type)
         {
-            Type = type;
+            if (type is GroundType ground && ground.IsTypeFullyKnown())
+            {
+                Type = ground;
+            }
         }
 
         public abstract void DisconnectAll();

@@ -15,7 +15,6 @@ namespace ChiselDebug.GraphFIR
         private readonly Dictionary<string, FIRIO> NameToIO = new Dictionary<string, FIRIO>();
         private readonly Dictionary<IOBundle, Module> BundleToModule = new Dictionary<IOBundle, Module>();
         private readonly Dictionary<Input, Wire> DuplexOutputWires = new Dictionary<Input, Wire>();
-        private readonly List<Wire> DuplexWires = new List<Wire>();
         
 
         public Module(string name, FirrtlNode defNode) : base(defNode)
@@ -88,8 +87,6 @@ namespace ChiselDebug.GraphFIR
         {
             Wire wire = new Wire(GetDuplexOutputName(input), input, null);
 
-            DuplexWires.Add(wire);
-
             DuplexIO wireIO = wire.GetAsDuplex();
             NameToIO.Add(wireIO.Name, wireIO.GetOutput());
             DuplexOutputWires.Add(input, wire);
@@ -150,24 +147,24 @@ namespace ChiselDebug.GraphFIR
             return false;
         }
 
-        public List<Connection> GetAllModuleConnections()
+        public List<Output> GetAllModuleConnections()
         {
-            List<Connection> connestions = new List<Connection>();
-            foreach (var output in GetInternalOutputs())
+            List<Output> connestions = new List<Output>();
+            foreach (Output output in GetInternalOutputs())
             {
-                if (output.Con.IsUsed())
+                if (output.IsConnectedToAnything())
                 {
-                    connestions.Add(output.Con);
+                    connestions.Add(output);
                 }
             }
 
             foreach (var node in Nodes)
             {
-                foreach (var output in node.GetOutputs())
+                foreach (Output output in node.GetOutputs())
                 {
-                    if (output.Con.IsUsed())
+                    if (output.IsConnectedToAnything())
                     {
-                        connestions.Add(output.Con);
+                        connestions.Add(output);
                     }
                 }
             }
@@ -234,13 +231,13 @@ namespace ChiselDebug.GraphFIR
                     //Everything connected to duplex input is now being connected to the
                     //wires input
                     Input wireIn = (Input)keyValue.Value.In;
-                    if (keyValue.Key.Con != null)
+                    if (keyValue.Key != null)
                     {
-                        keyValue.Key.Con.From.ConnectToInput(wireIn);
+                        keyValue.Key.Con.ConnectToInput(wireIn);
                     }
                     foreach (var inputCondCon in keyValue.Key.GetConditionalConnections())
                     {
-                        inputCondCon.From.ConnectToInput(wireIn, false, false, true);
+                        inputCondCon.ConnectToInput(wireIn, false, false, true);
                     }
 
                     keyValue.Value.BypassWireIO();
@@ -250,7 +247,6 @@ namespace ChiselDebug.GraphFIR
             }
 
             DuplexOutputWires.Clear();
-            DuplexWires.Clear();
         }
 
         internal void RemoveUnusedConnections()
@@ -271,21 +267,52 @@ namespace ChiselDebug.GraphFIR
             //}
         }
 
-        internal void SetConditional(Connection enableCon)
+        internal void SetConditional(Output enableCon)
         {
-            foreach (var io in InternalIO.Values.SelectMany(x => x.Flatten()))
+            foreach (var io in InternalIO.Values)
             {
-                io.SetEnabledCondition(enableCon);
+                if (io is ScalarIO scalar)
+                {
+                    scalar.SetEnabledCondition(enableCon);
+                }
+                else
+                {
+                    foreach (var scalarIO in io.Flatten())
+                    {
+                        scalarIO.SetEnabledCondition(enableCon);
+                    }
+                }
             }
-            foreach (var io in ExternalIO.Values.SelectMany(x => x.Flatten()))
+            foreach (var io in ExternalIO.Values)
             {
-                io.SetEnabledCondition(enableCon);
+                if (io is ScalarIO scalar)
+                {
+                    scalar.SetEnabledCondition(enableCon);
+                }
+                else
+                {
+                    foreach (var scalarIO in io.Flatten())
+                    {
+                        scalarIO.SetEnabledCondition(enableCon);
+                    }
+                }
             }
             foreach (var node in Nodes)
             {
-                foreach (var io in node.GetIO().Flatten())
+                foreach (var nodeIO in node.GetIO())
                 {
-                    io.SetEnabledCondition(enableCon);
+                    if (nodeIO is ScalarIO scalar)
+                    {
+                        scalar.SetEnabledCondition(enableCon);
+                    }
+                    else
+                    {
+                        foreach (var scalarIO in nodeIO.Flatten())
+                        {
+                            scalarIO.SetEnabledCondition(enableCon);
+                        }
+                    }
+
                 }
             }
         }
@@ -300,11 +327,13 @@ namespace ChiselDebug.GraphFIR
                 }
             }
 
+            mod.ReserveMemory(InternalIO.Count + NameToIO.Count);
+
             HashSet<string> ioAdded = new HashSet<string>();
             foreach (var inIO in GetInternalIO())
             {
                 var copy = inIO.Flip(mod);
-                IOHelper.BiDirFullyConnectIO(inIO, copy, true);
+                //IOHelper.BiDirFullyConnectIO(inIO, copy, true);
 
                 ioAdded.Add(inIO.Name);
                 mod.AddExternalIO(copy);
@@ -316,7 +345,7 @@ namespace ChiselDebug.GraphFIR
                 {
                     FIRIO copy = nodeIO.Value.Flip(mod);
                     copy.SetName(nodeIO.Key);
-                    IOHelper.BiDirFullyConnectIO(nodeIO.Value, copy, true);
+                    //IOHelper.BiDirFullyConnectIO(nodeIO.Value, copy, true);
 
                     mod.AddExternalIO(copy);
                 }
@@ -325,6 +354,7 @@ namespace ChiselDebug.GraphFIR
 
         internal void ExternalConnectUsedIO(Module parentMod)
         {
+            HashSet<IPortsIO> handledPortsIO = new HashSet<IPortsIO>();
             //Propagate hidden ports
             foreach (var intKeyVal in InternalIO)
             {
@@ -334,34 +364,36 @@ namespace ChiselDebug.GraphFIR
                 //Ports can be nested and propagating one port may reveal more
                 //ports that should be propagated. Keep checking if more ports
                 //should be propagated until all ports have been checked.
-                HashSet<IPortsIO> handledPortsIO = new HashSet<IPortsIO>();
+                handledPortsIO.Clear();
                 while (true)
                 {
-                    var intHidesPorts = intIO.GetAllIOOfType<IPortsIO>().ToArray();
-                    
+                    var intHiddenPorts = intIO.GetAllIOOfType<IPortsIO>();
+
                     //if this io contain no ports to begin with then
                     //skip it
-                    if (intHidesPorts.Length == 0)
+                    if (!intHiddenPorts.Any())
                     {
                         break;
                     }
 
+                    FIRIO parentIO = (FIRIO)parentMod.GetIO(intKeyVal.Key);
+                    var parentModHiddenPorts = parentIO.GetAllIOOfType<IPortsIO>();
+
                     bool handledNewPort = false;
 
-                    FIRIO parentIO = (FIRIO)parentMod.GetIO(intKeyVal.Key);
-
-                    for (int i = 0; i < intHidesPorts.Length; i++)
+                    foreach (var hiddenPorts in intHiddenPorts.Zip(parentModHiddenPorts))
                     {
+                        IPortsIO internalHidden = hiddenPorts.First;
+                        IPortsIO parentModHidden = hiddenPorts.Second;
+
                         //Has seen port before?
-                        if (!handledPortsIO.Add(intHidesPorts[i]))
+                        if (!handledPortsIO.Add(internalHidden))
                         {
                             continue;
                         }
 
                         handledNewPort = true;
-                        IPortsIO internalHidden = intHidesPorts[i];
                         IPortsIO externalHidden = (IPortsIO)GetPairedIO((FIRIO)internalHidden);
-                        IPortsIO parentModHidden = parentIO.GetAllIOOfType<IPortsIO>().ToArray()[i];
 
                         FIRIO[] intPortsNeedsProp = internalHidden.GetAllPorts().Where(x => !IsPartOfPair(x)).ToArray();
 
@@ -394,8 +426,6 @@ namespace ChiselDebug.GraphFIR
                                 IOHelper.BiDirFullyConnectIO(newExtPorts[y], newParentPorts[y], true);
                             }
                         }
-
-                        //IOHelper.PropegatePorts(parentModHidden);
                     }
 
                     //If went through all ports and found no new ones
@@ -411,13 +441,30 @@ namespace ChiselDebug.GraphFIR
             var extKeyVals = ExternalIO.ToArray();
             var intKeyVals = InternalIO.ToArray();
 
+            ScalarIO[] oneExt = new ScalarIO[1];
+            ScalarIO[] oneInt = new ScalarIO[1];
+
             for (int i = 0; i < extKeyVals.Length; i++)
             {
                 var extKeyVal = extKeyVals[i];
                 var intKeyVal = intKeyVals[i];
 
-                ScalarIO[] extFlat = extKeyVal.Value.Flatten().ToArray();
-                ScalarIO[] intFlat = intKeyVal.Value.Flatten().ToArray();
+                ScalarIO[] extFlat;
+                ScalarIO[] intFlat;
+                if (extKeyVal.Value is ScalarIO extIO && intKeyVal.Value is ScalarIO intIO)
+                {
+                    oneExt[0] = extIO;
+                    oneInt[0] = intIO;
+
+                    extFlat = oneExt;
+                    intFlat = oneInt;
+                }
+                else
+                {
+                    extFlat = extKeyVal.Value.Flatten().ToArray();
+                    intFlat = intKeyVal.Value.Flatten().ToArray();
+                }
+
                 Debug.Assert(extFlat.Length == intFlat.Length);
 
                 for (int x = 0; x < extFlat.Length; x++)
@@ -438,14 +485,25 @@ namespace ChiselDebug.GraphFIR
 
         internal void DisconnectUnusedIO()
         {
-            foreach (var intIO in InternalIO)
+            foreach (var intIO in InternalIO.Values)
             {
-                foreach (var scalarIntIO in intIO.Value.Flatten())
+                if (intIO is ScalarIO scalar)
                 {
-                    if (!scalarIntIO.IsConnectedToAnything())
+                    if (!scalar.IsConnectedToAnything())
                     {
-                        ScalarIO extIO = (ScalarIO)GetPairedIO(scalarIntIO);
+                        ScalarIO extIO = (ScalarIO)GetPairedIO(scalar);
                         extIO.DisconnectAll();
+                    }
+                }
+                else
+                {
+                    foreach (var scalarIntIO in intIO.Flatten())
+                    {
+                        if (!scalarIntIO.IsConnectedToAnything())
+                        {
+                            ScalarIO extIO = (ScalarIO)GetPairedIO(scalarIntIO);
+                            extIO.DisconnectAll();
+                        }
                     }
                 }
             }
@@ -496,12 +554,73 @@ namespace ChiselDebug.GraphFIR
                 node.InferType();
             }
 
-            foreach (var con in GetAllModuleConnections())
+            foreach (Output output in GetInternalOutputs())
             {
-                con.From.InferType();
-                foreach (var input in con.To)
+                if (output.IsConnectedToAnything())
                 {
-                    input.InferType();
+                    output.InferType();
+                    Debug.Assert(output.Type != null);
+
+                    foreach (var input in output.GetConnectedInputs())
+                    {
+                        input.InferType();
+                        Debug.Assert(input.Type != null);
+                    }
+                }
+            }
+
+            foreach (var node in Nodes)
+            {
+                foreach (Output output in node.GetOutputs())
+                {
+                    if (output.IsConnectedToAnything())
+                    {
+                        output.InferType();
+                        Debug.Assert(output.Type != null);
+
+                        foreach (var input in output.GetConnectedInputs())
+                        {
+                            input.InferType();
+                            Debug.Assert(input.Type != null);
+                        }
+                    }
+                }
+            }
+        }
+
+        internal void FinishConnections()
+        {
+            foreach (Output output in GetInternalOutputs())
+            {
+                if (output.Type != null)
+                {
+                    output.SetDefaultvalue();
+                }
+            }
+
+            foreach (var node in Nodes)
+            {
+                foreach (Output output in node.GetOutputs())
+                {
+                    if (output.Type != null)
+                    {
+                        output.SetDefaultvalue();
+                    }
+                }
+            }
+
+            foreach (var node in Nodes)
+            {
+                if (node is Module mod)
+                {
+                    mod.FinishConnections();
+                }
+                else if (node is Conditional cond)
+                {
+                    foreach (var condMod in cond.CondMods)
+                    {
+                        condMod.Mod.FinishConnections();
+                    }
                 }
             }
         }

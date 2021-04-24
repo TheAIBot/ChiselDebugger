@@ -37,27 +37,28 @@ namespace ChiselDebug.GraphFIR
             AddOneToManyPairedIO(Result, Choises.ToList());
         }
 
-        public override ScalarIO[] GetInputs()
+        public override Input[] GetInputs()
         {
-            List<ScalarIO> inputs = new List<ScalarIO>();
-            inputs.AddRange(Choises.SelectMany(x => x.Flatten()));
+            List<Input> inputs = new List<Input>();
+            inputs.AddRange(Choises.SelectMany(x => x.Flatten()).Cast<Input>());
             inputs.Add(Decider);
             return inputs.ToArray();
         }
 
-        public override ScalarIO[] GetOutputs()
+        public override Output[] GetOutputs()
         {
-            return Result.Flatten().ToArray();
+            return Result.Flatten().Cast<Output>().ToArray();
         }
 
-        public override FIRIO[] GetIO()
+        public override IEnumerable<FIRIO> GetIO()
         {
-            List<FIRIO> io = new List<FIRIO>();
-            io.AddRange(Choises);
-            io.Add(Decider);
-            io.Add(Result);
+            foreach (var io in Choises)
+            {
+                yield return io;
+            }
 
-            return io.ToArray();
+            yield return Decider;
+            yield return Result;
         }
 
         public override void Compute()
@@ -76,7 +77,7 @@ namespace ChiselDebug.GraphFIR
                 {
                     foreach (Output output in Result.Flatten())
                     {
-                        BinaryVarValue binValue = output.Con.Value.GetValue();
+                        BinaryVarValue binValue = output.Value.GetValue();
                         Array.Fill(binValue.Bits, BitState.X);
                     }
 
@@ -93,7 +94,7 @@ namespace ChiselDebug.GraphFIR
             for (int i = 0; i < from.Length; i++)
             {
                 BinaryVarValue fromBin = from[i].GetEnabledCon().Value.GetValue();
-                BinaryVarValue toBin = to[i].Con.Value.GetValue();
+                BinaryVarValue toBin = to[i].Value.GetValue();
 
                 toBin.SetBitsAndExtend(fromBin, from[i].Type is SIntType);
             }

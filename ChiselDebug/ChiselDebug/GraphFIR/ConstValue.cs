@@ -1,6 +1,7 @@
 ﻿using ChiselDebug.GraphFIR.IO;
 using FIRRTL;
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using VCDReader;
 
@@ -17,26 +18,26 @@ namespace ChiselDebug.GraphFIR
             this.Result = new Output(this, outputName, value.GetFIRType());
         }
 
-        public override ScalarIO[] GetInputs()
+        public override Input[] GetInputs()
         {
-            return Array.Empty<ScalarIO>();
+            return Array.Empty<Input>();
         }
 
-        public override ScalarIO[] GetOutputs()
+        public override Output[] GetOutputs()
         {
-            return new ScalarIO[] { Result };
+            return new Output[] { Result };
         }
 
-        public override FIRIO[] GetIO()
+        public override IEnumerable<FIRIO> GetIO()
         {
-            return new FIRIO[] { Result };
+            yield return Result;
         }
 
         public override void Compute()
         {
             BinaryVarValue binValue = new BinaryVarValue(Value.Width);
             binValue.SetBitsAndExtend(Value.Value, true);
-            Result.Con.Value.UpdateValue(binValue);
+            Result.Value.UpdateValue(binValue);
         }
 
         internal override void InferType()

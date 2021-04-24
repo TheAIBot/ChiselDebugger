@@ -10,12 +10,12 @@ namespace ChiselDebug.GraphFIR
 
         public FIRRTLPrimOP(IFIRType type, FirrtlNode defNode) : base(defNode)
         {
-            this.Result = new Output(this, type);
+            this.Result = new Output(this, null, type);
         }
 
-        public override ScalarIO[] GetOutputs()
+        public override Output[] GetOutputs()
         {
-            return new ScalarIO[] { Result };
+            return new Output[] { Result };
         }
     }
 }

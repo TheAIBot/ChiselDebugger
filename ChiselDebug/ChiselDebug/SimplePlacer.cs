@@ -110,14 +110,14 @@ namespace ChiselDebug
 
 
                     //Make edges
-                    foreach (var output in outputToNode.Keys)
+                    foreach (Output output in outputToNode.Keys)
                     {
                         if (!output.IsConnectedToAnything())
                         {
                             continue;
                         }
                         var from = outputToNode[output];
-                        foreach (var input in output.Con.To)
+                        foreach (var input in output.GetConnectedInputs())
                         {
                             if (input.Node != null && input.Node is INoPlaceAndRoute)
                             {

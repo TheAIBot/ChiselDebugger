@@ -21,9 +21,9 @@ namespace ChiselDebug.GraphFIR.IO
             this.AddressWidth = addressWidth;
         }
 
-        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node = null)
+        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)
         {
-            return new MemoryIO(node ?? Node, Name, GetIOInOrder().Select(x => x.ToFlow(flow, node)).ToList(), InputType.ToFlow(flow, node), AddressWidth, VisiblePorts.Select(x => (MemPort)x.ToFlow(flow, node)).ToList());
+            return new MemoryIO(node, Name, GetIOInOrder().Select(x => x.ToFlow(flow, node)).ToList(), InputType.ToFlow(flow, node), AddressWidth, VisiblePorts.Select(x => (MemPort)x.ToFlow(flow, node)).ToList());
         }
 
         internal MemReadPort AddReadPort(string portName)

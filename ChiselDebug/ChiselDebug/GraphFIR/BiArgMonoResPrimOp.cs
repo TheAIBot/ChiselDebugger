@@ -1,6 +1,7 @@
 ﻿using ChiselDebug.GraphFIR.IO;
 using FIRRTL;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 using VCDReader;
@@ -23,26 +24,23 @@ namespace ChiselDebug.GraphFIR
             bIn.ConnectToInput(B);
         }
 
-        public override ScalarIO[] GetInputs()
+        public override Input[] GetInputs()
         {
-            return new ScalarIO[] { A, B };
+            return new Input[] { A, B };
         }
 
-        public override FIRIO[] GetIO()
+        public override IEnumerable<FIRIO> GetIO()
         {
-            return new FIRIO[]
-            {
-                A,
-                B,
-                Result
-            };
+            yield return A;
+            yield return B;
+            yield return Result;
         }
 
         public override void Compute()
         {
-            Connection aCon = A.GetEnabledCon();
-            Connection bCon = B.GetEnabledCon();
-            Connection resultCon = Result.Con;
+            Output aCon = A.GetEnabledCon();
+            Output bCon = B.GetEnabledCon();
+            Output resultCon = Result;
 
             BinaryVarValue aVal = (BinaryVarValue)aCon.Value.GetValue();
             BinaryVarValue bVal = (BinaryVarValue)bCon.Value.GetValue();

@@ -7,9 +7,10 @@ namespace ChiselDebug.GraphFIR.IO
 {
     public class Input : ScalarIO
     {
-        private readonly HashSet<Connection> CondCons = new HashSet<Connection>();
+        internal Output Con;
+        private HashSet<Output> CondCons = null;
 
-        public Input(FIRRTLNode node, IFIRType type) : this(node, string.Empty, type)
+        public Input(FIRRTLNode node, IFIRType type) : this(node, null, type)
         { }
 
         public Input(FIRRTLNode node, string name, IFIRType type) : base(node, name, type)
@@ -17,22 +18,25 @@ namespace ChiselDebug.GraphFIR.IO
 
         public override bool IsConnected()
         {
-            return Con != null || CondCons.Count > 0;
+            return Con != null || (CondCons != null && CondCons.Count > 0);
         }
 
         public override bool IsConnectedToAnything()
         {
-            return Con != null || CondCons.Count > 0;
+            return Con != null || (CondCons != null && CondCons.Count > 0);
         }
 
-        public Connection[] GetAllConnections()
+        public Output[] GetAllConnections()
         {
-            List<Connection> cons = new List<Connection>();
+            List<Output> cons = new List<Output>();
             if (Con != null)
             {
                 cons.Add(Con);
             }
-            cons.AddRange(CondCons);
+            if (CondCons != null)
+            {
+                cons.AddRange(CondCons);
+            }
 
             return cons.ToArray();
         }
@@ -42,12 +46,16 @@ namespace ChiselDebug.GraphFIR.IO
             return this;
         }
 
-        internal Connection[] GetConditionalConnections()
+        internal Output[] GetConditionalConnections()
         {
+            if (CondCons == null)
+            {
+                return Array.Empty<Output>();
+            }
             return CondCons.ToArray();
         }
 
-        public void Disconnect(Connection toDisconnect)
+        public void Disconnect(Output toDisconnect)
         {
             if (Con == toDisconnect)
             {
@@ -55,7 +63,7 @@ namespace ChiselDebug.GraphFIR.IO
             }
             else
             {
-                if (!CondCons.Remove(toDisconnect))
+                if (CondCons == null || !CondCons.Remove(toDisconnect))
                 {
                     throw new Exception("Can't disconnect from a connection is wasn't connected to.");
                 }
@@ -69,16 +77,23 @@ namespace ChiselDebug.GraphFIR.IO
                 Con.DisconnectInput(this);
             }
 
-            foreach (var con in CondCons.ToArray())
+            if (CondCons != null)
             {
-                con.DisconnectInput(this);
+                foreach (var con in CondCons.ToArray())
+                {
+                    con.DisconnectInput(this);
+                }
             }
         }
 
-        public void Connect(Connection con, bool isConditional)
+        public void Connect(Output con, bool isConditional)
         {
             if (isConditional)
             {
+                if (CondCons == null)
+                {
+                    CondCons = new HashSet<Output>();
+                }
                 CondCons.Add(con);
             }
             else
@@ -92,14 +107,14 @@ namespace ChiselDebug.GraphFIR.IO
             throw new Exception("Input can't be connected to output. Flow is reversed.");
         }
 
-        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node = null)
+        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)
         {
             return flow switch
             {
-                FlowChange.Source => new Output(node ?? Node, Name, Type),
-                FlowChange.Sink => new Input(node ?? Node, Name, Type),
-                FlowChange.Flipped => new Output(node ?? Node, Name, Type),
-                FlowChange.Preserve => new Input(node ?? Node, Name, Type),
+                FlowChange.Source => new Output(node, Name, Type),
+                FlowChange.Sink => new Input(node, Name, Type),
+                FlowChange.Flipped => new Output(node, Name, Type),
+                FlowChange.Preserve => new Input(node, Name, Type),
                 var error => throw new Exception($"Unknown flow. Flow: {flow}")
             };
         }
@@ -123,13 +138,16 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public Connection GetEnabledCon()
+        public Output GetEnabledCon()
         {
-            foreach (var condCon in CondCons)
+            if (CondCons != null)
             {
-                if (condCon.From.IsEnabled)
+                foreach (var condCon in CondCons)
                 {
-                    return condCon;
+                    if (condCon.IsEnabled)
+                    {
+                        return condCon;
+                    }
                 }
             }
 
@@ -153,13 +171,16 @@ namespace ChiselDebug.GraphFIR.IO
             }
             if (Con != null)
             {
-                Con.From.InferType();
-                SetType(Con.From.Type);
+                Con.InferType();
+                SetType(Con.Type);
             }
-            foreach (var condCon in CondCons)
+            if (CondCons != null)
             {
-                condCon.From.InferType();
-                SetType(condCon.From.Type);
+                foreach (var condCon in CondCons)
+                {
+                    condCon.InferType();
+                    SetType(condCon.Type);
+                }
             }
         }
     }

@@ -41,19 +41,20 @@ namespace ChiselDebug.GraphFIR
             return new DuplexIO(this, Name, In, Result);
         }
 
-        public override ScalarIO[] GetInputs()
+        public override Input[] GetInputs()
         {
-            return In.Flatten().ToArray();
+            return In.Flatten().OfType<Input>().ToArray();
         }
 
-        public override ScalarIO[] GetOutputs()
+        public override Output[] GetOutputs()
         {
-            return Result.Flatten().ToArray();
+            return Result.Flatten().OfType<Output>().ToArray();
         }
 
-        public override FIRIO[] GetIO()
+        public override IEnumerable<FIRIO> GetIO()
         {
-            return new FIRIO[] { In, Result };
+            yield return In;
+            yield return Result;
         }
 
         public override void Compute()

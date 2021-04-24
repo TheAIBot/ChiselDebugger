@@ -66,40 +66,40 @@ namespace ChiselDebug.GraphFIR
             return new DuplexIO(this, Name, In, Result);
         }
 
-        private List<FIRIO> GetAllIO()
+        public IEnumerable<FIRIO> GetAllIO()
         {
-            List<FIRIO> io = new List<FIRIO>();
-            io.Add(GetAsDuplex());
-            io.Add(Clock);
+            yield return GetAsDuplex();
+            yield return Clock;
             if (Reset != null)
             {
-                io.Add(Reset);
+                yield return Reset;
             }
             if (Init != null)
             {
-                io.Add(Init);
+                yield return Init;
             }
-
-            return io;
         }
 
-        public override ScalarIO[] GetInputs()
+        public override Input[] GetInputs()
         {
             return GetAllIO().SelectMany(x => x.Flatten())
                              .OfType<Input>()
                              .ToArray();
         }
 
-        public override ScalarIO[] GetOutputs()
+        public override Output[] GetOutputs()
         {
             return GetAllIO().SelectMany(x => x.Flatten())
                              .OfType<Output>()
                              .ToArray();
         }
 
-        public override FIRIO[] GetIO()
+        public override IEnumerable<FIRIO> GetIO()
         {
-            return GetAllIO().ToArray();
+            foreach (var io in GetAllIO())
+            {
+                yield return io;
+            }
         }
 
         public override void Compute()
