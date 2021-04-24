@@ -66,14 +66,14 @@ namespace ChiselDebug.GraphFIR.IO
             return false;
         }
 
-        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node = null)
+        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)
         {
             return flow switch
             {
                 FlowChange.Source => OutIO.ToFlow(flow, node),
                 FlowChange.Sink => InIO.ToFlow(flow, node),
-                FlowChange.Flipped => new DuplexIO(node ?? Node, Name, InIO.ToFlow(flow, node), OutIO.ToFlow(flow, node)),
-                FlowChange.Preserve => new DuplexIO(node ?? Node, Name, InIO.ToFlow(flow, node), OutIO.ToFlow(flow, node)),
+                FlowChange.Flipped => new DuplexIO(node, Name, InIO.ToFlow(flow, node), OutIO.ToFlow(flow, node)),
+                FlowChange.Preserve => new DuplexIO(node, Name, InIO.ToFlow(flow, node), OutIO.ToFlow(flow, node)),
                 var error => throw new Exception($"Unknown flow. Flow: {flow}")
             };
         }

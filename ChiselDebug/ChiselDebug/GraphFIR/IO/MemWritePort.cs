@@ -49,9 +49,9 @@ namespace ChiselDebug.GraphFIR.IO
             throw new Exception("Can't get output from this IO.");
         }
 
-        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node = null)
+        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)
         {
-            return new MemWritePort(node ?? Node, Name, GetIOInOrder().Select(x => x.ToFlow(flow, node)).ToList());
+            return new MemWritePort(node, Name, GetIOInOrder().Select(x => x.ToFlow(flow, node)).ToList());
         }
 
         internal override bool HasMask()

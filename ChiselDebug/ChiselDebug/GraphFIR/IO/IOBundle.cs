@@ -94,10 +94,10 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node = null)
+        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)
         {
             List<FIRIO> changedFlow = OrderedIO.Select(x => x.ToFlow(flow, node)).ToList();
-            return new IOBundle(node ?? Node, Name, changedFlow, IsVisibleAggregate());
+            return new IOBundle(node, Name, changedFlow, IsVisibleAggregate());
         }
 
         public override IEnumerable<ScalarIO> Flatten()

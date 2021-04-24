@@ -107,14 +107,14 @@ namespace ChiselDebug.GraphFIR.IO
             throw new Exception("Input can't be connected to output. Flow is reversed.");
         }
 
-        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node = null)
+        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)
         {
             return flow switch
             {
-                FlowChange.Source => new Output(node ?? Node, Name, Type),
-                FlowChange.Sink => new Input(node ?? Node, Name, Type),
-                FlowChange.Flipped => new Output(node ?? Node, Name, Type),
-                FlowChange.Preserve => new Input(node ?? Node, Name, Type),
+                FlowChange.Source => new Output(node, Name, Type),
+                FlowChange.Sink => new Input(node, Name, Type),
+                FlowChange.Flipped => new Output(node, Name, Type),
+                FlowChange.Preserve => new Input(node, Name, Type),
                 var error => throw new Exception($"Unknown flow. Flow: {flow}")
             };
         }

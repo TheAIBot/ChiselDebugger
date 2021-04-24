@@ -65,14 +65,14 @@ namespace ChiselDebug.GraphFIR.IO
         }
 
         public abstract void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, bool isConditional = false);
-        public abstract FIRIO ToFlow(FlowChange flow, FIRRTLNode node = null);
+        public abstract FIRIO ToFlow(FlowChange flow, FIRRTLNode node);
         public FIRIO Flip(FIRRTLNode node = null)
         {
-            return ToFlow(FlowChange.Flipped, node);
+            return ToFlow(FlowChange.Flipped, node ?? Node);
         }
         public FIRIO Copy(FIRRTLNode node = null)
         {
-            return ToFlow(FlowChange.Preserve, node);
+            return ToFlow(FlowChange.Preserve, node ?? Node);
         }
         public abstract IEnumerable<ScalarIO> Flatten();
         public abstract bool IsPassiveOfType<T>();
