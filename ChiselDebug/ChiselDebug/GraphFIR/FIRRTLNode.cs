@@ -12,8 +12,8 @@ namespace ChiselDebug.GraphFIR
             this.FirDefNode = defNode;
         }
 
-        public abstract ScalarIO[] GetInputs();
-        public abstract ScalarIO[] GetOutputs();
+        public abstract Input[] GetInputs();
+        public abstract Output[] GetOutputs();
 
         public abstract FIRIO[] GetIO();
 

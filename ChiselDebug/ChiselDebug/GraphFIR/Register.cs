@@ -83,14 +83,14 @@ namespace ChiselDebug.GraphFIR
             return io;
         }
 
-        public override ScalarIO[] GetInputs()
+        public override Input[] GetInputs()
         {
             return GetAllIO().SelectMany(x => x.Flatten())
                              .OfType<Input>()
                              .ToArray();
         }
 
-        public override ScalarIO[] GetOutputs()
+        public override Output[] GetOutputs()
         {
             return GetAllIO().SelectMany(x => x.Flatten())
                              .OfType<Output>()

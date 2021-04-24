@@ -17,14 +17,14 @@ namespace ChiselDebug.GraphFIR
             this.Result = new Output(this, outputName, value.GetFIRType());
         }
 
-        public override ScalarIO[] GetInputs()
+        public override Input[] GetInputs()
         {
-            return Array.Empty<ScalarIO>();
+            return Array.Empty<Input>();
         }
 
-        public override ScalarIO[] GetOutputs()
+        public override Output[] GetOutputs()
         {
-            return new ScalarIO[] { Result };
+            return new Output[] { Result };
         }
 
         public override FIRIO[] GetIO()

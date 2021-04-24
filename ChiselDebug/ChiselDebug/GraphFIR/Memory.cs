@@ -59,12 +59,12 @@ namespace ChiselDebug.GraphFIR
             return MemIO;
         }
 
-        public override ScalarIO[] GetInputs()
+        public override Input[] GetInputs()
         {
             return MemIO.Flatten().OfType<Input>().ToArray();
         }
 
-        public override ScalarIO[] GetOutputs()
+        public override Output[] GetOutputs()
         {
             return MemIO.Flatten().OfType<Output>().ToArray();
         }

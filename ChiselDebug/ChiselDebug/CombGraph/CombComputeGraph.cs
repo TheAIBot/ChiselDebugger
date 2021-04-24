@@ -123,17 +123,17 @@ namespace ChiselDebug.CombGraph
 
             foreach (var reg in module.GetAllNestedNodesOfType<Register>())
             {
-                toMake.Enqueue((Output[])reg.GetOutputs());
+                toMake.Enqueue(reg.GetOutputs());
             }
             foreach (var mem in module.GetAllNestedNodesOfType<Memory>())
             {
-                toMake.Enqueue((Output[])mem.GetOutputs());
+                toMake.Enqueue(mem.GetOutputs());
             }
 
-            ScalarIO[] rootModuleIncommingPorts = module.GetInternalOutputs();
+            Output[] rootModuleIncommingPorts = module.GetInternalOutputs();
             if (rootModuleIncommingPorts.Length > 0)
             {
-                toMake.Enqueue(rootModuleIncommingPorts.Cast<Output>().ToArray());
+                toMake.Enqueue(rootModuleIncommingPorts);
             }
 
 
@@ -212,7 +212,7 @@ namespace ChiselDebug.CombGraph
                 }
                 else
                 {
-                    inputDeps = firstNodeStart.Node.GetInputs().Cast<Input>().ToArray();
+                    inputDeps = firstNodeStart.Node.GetInputs();
                 }
 
                 foreach (var inputDep in inputDeps)
@@ -404,7 +404,7 @@ namespace ChiselDebug.CombGraph
                         //with the components output
                         if (missingCons.Count == 0)
                         {
-                            Output[] outfewpduts = conInput.input.Node.GetOutputs().Cast<Output>().ToArray();
+                            Output[] outfewpduts = conInput.input.Node.GetOutputs();
                             if (ignoreConCondBorders || outfewpduts.All(x => !HasUnSeenConCond(x)))
                             {
                                 seenButMissingFirNodeInputs.Remove(conInput.input.Node);
@@ -424,7 +424,7 @@ namespace ChiselDebug.CombGraph
             List<Output[]> depForOutputs = new List<Output[]>();
             foreach (var node in seenButMissingFirNodeInputs)
             {
-                depForOutputs.Add(node.Key.GetOutputs().Cast<Output>().ToArray());
+                depForOutputs.Add(node.Key.GetOutputs());
             }
             foreach (var input in seenButMissingModInputCons)
             {
@@ -434,7 +434,7 @@ namespace ChiselDebug.CombGraph
 
             List<Input> endInputs = new List<Input>();
             endInputs.AddRange(seenButMissingModInputCons.Keys);
-            endInputs.AddRange(seenButMissingFirNodeInputs.Keys.SelectMany(x => x.GetInputs().Cast<Input>()));
+            endInputs.AddRange(seenButMissingFirNodeInputs.Keys.SelectMany(x => x.GetInputs()));
 
             return (new CombComputeNode(outputs, endInputs.ToArray(), computeOrder.ToArray(), seenCons.ToArray()), depForOutputs, depOnCons);
         }

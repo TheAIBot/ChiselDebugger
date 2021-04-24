@@ -23,9 +23,9 @@ namespace ChiselDebug.GraphFIR
             bIn.ConnectToInput(B);
         }
 
-        public override ScalarIO[] GetInputs()
+        public override Input[] GetInputs()
         {
-            return new ScalarIO[] { A, B };
+            return new Input[] { A, B };
         }
 
         public override FIRIO[] GetIO()

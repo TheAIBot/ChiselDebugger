@@ -22,9 +22,9 @@ namespace ChiselDebug.GraphFIR
             ConditionalModules.Add(new ConditionalModule(enable, mod));
         }
 
-        public override ScalarIO[] GetInputs()
+        public override Input[] GetInputs()
         {
-            List<ScalarIO> inputs = new List<ScalarIO>();
+            List<Input> inputs = new List<Input>();
             foreach (var condMod in ConditionalModules)
             {
                 inputs.Add(condMod.Enable);
@@ -34,9 +34,9 @@ namespace ChiselDebug.GraphFIR
             return inputs.ToArray();
         }
 
-        public override ScalarIO[] GetOutputs()
+        public override Output[] GetOutputs()
         {
-            List<ScalarIO> outputs = new List<ScalarIO>();
+            List<Output> outputs = new List<Output>();
             foreach (var condMod in ConditionalModules)
             {
                 outputs.AddRange(condMod.Mod.GetOutputs());

@@ -37,17 +37,17 @@ namespace ChiselDebug.GraphFIR
             AddOneToManyPairedIO(Result, Choises.ToList());
         }
 
-        public override ScalarIO[] GetInputs()
+        public override Input[] GetInputs()
         {
-            List<ScalarIO> inputs = new List<ScalarIO>();
-            inputs.AddRange(Choises.SelectMany(x => x.Flatten()));
+            List<Input> inputs = new List<Input>();
+            inputs.AddRange(Choises.SelectMany(x => x.Flatten()).Cast<Input>());
             inputs.Add(Decider);
             return inputs.ToArray();
         }
 
-        public override ScalarIO[] GetOutputs()
+        public override Output[] GetOutputs()
         {
-            return Result.Flatten().ToArray();
+            return Result.Flatten().Cast<Output>().ToArray();
         }
 
         public override FIRIO[] GetIO()

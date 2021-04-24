@@ -6,24 +6,24 @@ namespace ChiselDebug.GraphFIR
 {
     public class DummySink : FIRRTLNode, INoPlaceAndRoute
     {
-        public readonly FIRIO InIO;
+        public readonly Input InIO;
 
         public DummySink(Output outIO) : base(null)
         {
-            this.InIO = outIO.Flip(this);
+            this.InIO = (Input)outIO.Flip(this);
             InIO.SetName(null);
 
             outIO.ConnectToInput(InIO);
         }
 
-        public override ScalarIO[] GetInputs()
+        public override Input[] GetInputs()
         {
-            return InIO.Flatten().ToArray();
+            return new Input[] { InIO };
         }
 
-        public override ScalarIO[] GetOutputs()
+        public override Output[] GetOutputs()
         {
-            return Array.Empty<ScalarIO>();
+            return Array.Empty<Output>();
         }
 
         public override FIRIO[] GetIO()

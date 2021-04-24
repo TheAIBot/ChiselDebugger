@@ -27,12 +27,12 @@ namespace ChiselDebug.GraphFIR
             AddPairedIO(io, flipped);
         }
 
-        public override ScalarIO[] GetInputs()
+        public override Input[] GetInputs()
         {
             return FlattenAndFilterIO<Input>(ExternalIO);
         }
 
-        public override ScalarIO[] GetOutputs()
+        public override Output[] GetOutputs()
         {
             return FlattenAndFilterIO<Output>(ExternalIO);
         }
@@ -47,12 +47,12 @@ namespace ChiselDebug.GraphFIR
             return InternalIO.Values.ToArray();
         }
 
-        public ScalarIO[] GetInternalInputs()
+        public Input[] GetInternalInputs()
         {
             return FlattenAndFilterIO<Input>(InternalIO);
         }
 
-        public ScalarIO[] GetInternalOutputs()
+        public Output[] GetInternalOutputs()
         {
             return FlattenAndFilterIO<Output>(InternalIO);
         }
