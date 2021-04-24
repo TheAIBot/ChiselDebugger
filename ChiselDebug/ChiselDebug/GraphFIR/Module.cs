@@ -316,6 +316,8 @@ namespace ChiselDebug.GraphFIR
                 }
             }
 
+            mod.ReserveMemory(InternalIO.Count + NameToIO.Count);
+
             HashSet<string> ioAdded = new HashSet<string>();
             foreach (var inIO in GetInternalIO())
             {

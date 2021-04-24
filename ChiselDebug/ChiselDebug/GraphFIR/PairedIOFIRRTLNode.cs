@@ -46,6 +46,16 @@ namespace ChiselDebug.GraphFIR
             }
         }
 
+        internal void ReservePairMemory(int size)
+        {
+            IOPairs.EnsureCapacity(size);
+        }
+
+        internal int GetPairCount()
+        {
+            return IOPairs.Count;
+        }
+
         public FIRIO GetPairedIO(FIRIO io)
         {
             return IOPairs[io];

@@ -27,6 +27,15 @@ namespace ChiselDebug.GraphFIR
             AddPairedIO(io, flipped);
         }
 
+        internal void ReserveMemory(int extIntSize)
+        {
+            ExternalIO.EnsureCapacity(extIntSize);
+            InternalIO.EnsureCapacity(extIntSize);
+            AllIOInOrder.Capacity = extIntSize;
+
+            ReservePairMemory(extIntSize + extIntSize);
+        }
+
         public override Input[] GetInputs()
         {
             return FlattenAndFilterIO<Input>(ExternalIO);
