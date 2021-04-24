@@ -69,9 +69,9 @@ namespace ChiselDebug.GraphFIR
             return MemIO.Flatten().OfType<Output>().ToArray();
         }
 
-        public override FIRIO[] GetIO()
+        public override IEnumerable<FIRIO> GetIO()
         {
-            return new FIRIO[] { MemIO };
+            yield return MemIO;
         }
 
         public override void Compute()

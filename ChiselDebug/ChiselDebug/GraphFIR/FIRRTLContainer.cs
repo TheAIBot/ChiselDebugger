@@ -46,9 +46,12 @@ namespace ChiselDebug.GraphFIR
             return FlattenAndFilterIO<Output>(ExternalIO);
         }
 
-        public override FIRIO[] GetIO()
+        public override IEnumerable<FIRIO> GetIO()
         {
-            return ExternalIO.Values.ToArray();
+            foreach (var extIO in ExternalIO.Values)
+            {
+                yield return extIO;
+            }
         }
 
         public FIRIO[] GetInternalIO()
@@ -56,14 +59,52 @@ namespace ChiselDebug.GraphFIR
             return InternalIO.Values.ToArray();
         }
 
-        public Input[] GetInternalInputs()
+        public IEnumerable<Input> GetInternalInputs()
         {
-            return FlattenAndFilterIO<Input>(InternalIO);
+            foreach (var intIO in InternalIO.Values)
+            {
+                if (intIO is ScalarIO)
+                {
+                    if (intIO is Input inT)
+                    {
+                        yield return inT;
+                    }
+                }
+                else
+                {
+                    foreach (var flat in intIO.Flatten())
+                    {
+                        if (flat is Input inT)
+                        {
+                            yield return inT;
+                        }
+                    }
+                }
+            }
         }
 
-        public Output[] GetInternalOutputs()
+        public IEnumerable<Output> GetInternalOutputs()
         {
-            return FlattenAndFilterIO<Output>(InternalIO);
+            foreach (var intIO in InternalIO.Values)
+            {
+                if (intIO is ScalarIO)
+                {
+                    if (intIO is Output outT)
+                    {
+                        yield return outT;
+                    }
+                }
+                else
+                {
+                    foreach (var flat in intIO.Flatten())
+                    {
+                        if (flat is Output outT)
+                        {
+                            yield return outT;
+                        }
+                    }
+                }
+            }
         }
 
         internal static T[] FlattenAndFilterIO<T>(Dictionary<string, FIRIO> io)

@@ -45,16 +45,16 @@ namespace ChiselDebug.GraphFIR
             return outputs.ToArray();
         }
 
-        public override FIRIO[] GetIO()
+        public override IEnumerable<FIRIO> GetIO()
         {
-            List<FIRIO> io = new List<FIRIO>();
             foreach (var condMod in ConditionalModules)
             {
-                io.Add(condMod.Enable);
-                io.AddRange(condMod.Mod.GetIO());
+                yield return condMod.Enable;
+                foreach (var childIO in condMod.Mod.GetIO())
+                {
+                    yield return childIO;
+                }
             }
-
-            return io.ToArray();
         }
 
         public bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container)

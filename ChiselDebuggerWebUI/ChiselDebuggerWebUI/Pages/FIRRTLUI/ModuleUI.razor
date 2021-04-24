@@ -128,7 +128,7 @@
 
     private Point UpdateParentAboutExteriorIO(Point moduleSize)
     {
-        ExternalIO = IOPositionCalc.VerticalScopedIO(Operation.GetIO(), moduleSize.X, MarginForIO, MarginForIO, IgnoreUnusedIO);
+        ExternalIO = IOPositionCalc.VerticalScopedIO(Operation.GetIO().ToArray(), moduleSize.X, MarginForIO, MarginForIO, IgnoreUnusedIO);
 
         if (moduleSize.Y > ExternalIO.HeightNeeded)
         {
@@ -198,12 +198,12 @@
 
     protected override List<DirectedIO> OnMakeInputs(int width, int height)
     {
-        return IOPositionCalc.EvenVertical(height, Operation.GetInternalInputs(), width + ContentPadding, MarginForIO);
+        return IOPositionCalc.EvenVertical(height, Operation.GetInternalInputs().ToArray(), width + ContentPadding, MarginForIO);
     }
 
     protected override List<DirectedIO> OnMakeOutputs(int width, int height)
     {
-        return IOPositionCalc.EvenVertical(height, Operation.GetInternalOutputs(), -ContentPadding, MarginForIO);
+        return IOPositionCalc.EvenVertical(height, Operation.GetInternalOutputs().ToArray(), -ContentPadding, MarginForIO);
     }
 
     private List<DirectedIO> MakeExternalInputs(int width, int height)

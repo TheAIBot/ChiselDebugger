@@ -26,13 +26,10 @@ namespace ChiselDebug.GraphFIR
             return new Input[] { In };
         }
 
-        public override FIRIO[] GetIO()
+        public override IEnumerable<FIRIO> GetIO()
         {
-            return new FIRIO[]
-            {
-                In,
-                Result
-            };
+            yield return In;
+            yield return Result;
         }
 
         public override void Compute()

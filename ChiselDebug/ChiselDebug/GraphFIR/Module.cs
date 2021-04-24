@@ -299,9 +299,12 @@ namespace ChiselDebug.GraphFIR
             }
             foreach (var node in Nodes)
             {
-                foreach (var io in node.GetIO().Flatten())
+                foreach (var nodeIO in node.GetIO())
                 {
-                    io.SetEnabledCondition(enableCon);
+                    foreach (var scalar in nodeIO.Flatten())
+                    {
+                        scalar.SetEnabledCondition(enableCon);
+                    }
                 }
             }
         }

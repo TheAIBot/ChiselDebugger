@@ -1,6 +1,7 @@
 ﻿using ChiselDebug.GraphFIR.IO;
 using FIRRTL;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 using VCDReader;
@@ -28,14 +29,11 @@ namespace ChiselDebug.GraphFIR
             return new Input[] { A, B };
         }
 
-        public override FIRIO[] GetIO()
+        public override IEnumerable<FIRIO> GetIO()
         {
-            return new FIRIO[]
-            {
-                A,
-                B,
-                Result
-            };
+            yield return A;
+            yield return B;
+            yield return Result;
         }
 
         public override void Compute()

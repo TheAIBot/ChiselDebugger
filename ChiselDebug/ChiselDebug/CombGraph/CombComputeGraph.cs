@@ -130,7 +130,7 @@ namespace ChiselDebug.CombGraph
                 toMake.Enqueue(mem.GetOutputs());
             }
 
-            Output[] rootModuleIncommingPorts = module.GetInternalOutputs();
+            Output[] rootModuleIncommingPorts = module.GetInternalOutputs().ToArray();
             if (rootModuleIncommingPorts.Length > 0)
             {
                 toMake.Enqueue(rootModuleIncommingPorts);
