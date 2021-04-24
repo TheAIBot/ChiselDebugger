@@ -46,12 +46,9 @@ namespace ChiselDebug.GraphFIR
             return FlattenAndFilterIO<Output>(ExternalIO);
         }
 
-        public override IEnumerable<FIRIO> GetIO()
+        public override Dictionary<string, FIRIO>.ValueCollection GetIO()
         {
-            foreach (var extIO in ExternalIO.Values)
-            {
-                yield return extIO;
-            }
+            return ExternalIO.Values;
         }
 
         public FIRIO[] GetInternalIO()
