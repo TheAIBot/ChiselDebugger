@@ -104,6 +104,11 @@ namespace ChiselDebug
             return LowFirGraph != null;
         }
 
+        public bool IsHighFirGrapth()
+        {
+            return HasLowFirGraph();
+        }
+
         public FIRRTL.FirrtlNode GetDefNodeFromLowFirrtlGraph(string nodeName)
         {
             GraphFIR.Module lowFirMod = LowFirGraph.MainModule;
@@ -720,7 +725,20 @@ namespace ChiselDebug
             }
             else if (exp is FIRRTL.SubField subField)
             {
-                refContainer = VisitExp(helper, subField.Expr, gender).GetIO(subField.Name);
+                var subContainer = VisitExp(helper, subField.Expr, gender);
+
+                //Memory ports in high level firrtl are acceses in a different
+                //way compared to low level firrtl. In high level firrtl, a
+                //memory port is trated like a wire connected to its datain/out
+                //sub field whereas in low level firrtl the subfield has to be
+                //specified.
+                if (helper.IsHighFirGrapth() && 
+                    subContainer is GraphFIR.IO.MemPort memPort)
+                {
+                    subContainer = memPort.GetAsGender(gender);
+                }
+
+                refContainer = subContainer.GetIO(subField.Name);
             }
             else if (exp is FIRRTL.SubIndex subIndex)
             {
