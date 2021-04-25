@@ -55,12 +55,18 @@ namespace ChiselDebug.GraphFIR
 
         public override Input[] GetInputs()
         {
-            return In.Flatten().OfType<Input>().ToArray();
+            List<Input> inputs = new List<Input>();
+            inputs.AddRange(In.Flatten().OfType<Input>());
+            inputs.AddRange(Result.Flatten().OfType<Input>());
+            return inputs.ToArray();
         }
 
         public override Output[] GetOutputs()
         {
-            return Result.Flatten().OfType<Output>().ToArray();
+            List<Output> outputs = new List<Output>();
+            outputs.AddRange(In.Flatten().OfType<Output>());
+            outputs.AddRange(Result.Flatten().OfType<Output>());
+            return outputs.ToArray();
         }
 
         public override IEnumerable<FIRIO> GetIO()
