@@ -269,7 +269,10 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.Block block)
             {
-                block.Statements.ForEach(x => VisitStatement(helper, x));
+                for (int i = 0; i < block.Statements.Count; i++)
+                {
+                    VisitStatement(helper, block.Statements[i]);
+                }
             }
             else if (statement is FIRRTL.Conditionally conditional)
             {
