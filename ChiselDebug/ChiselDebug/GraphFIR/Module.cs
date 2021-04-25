@@ -326,6 +326,16 @@ namespace ChiselDebug.GraphFIR
                     AddDuplexOuputWire(input);
                 }
             }
+            foreach (IOBundle modBundle in BundleToModule.Keys)
+            {
+                foreach (Input input in modBundle.Flatten().OfType<Input>())
+                {
+                    if (!HasDunplexInput(input))
+                    {
+                        AddDuplexOuputWire(input);
+                    }
+                }
+            }
 
             mod.ReserveMemory(InternalIO.Count + NameToIO.Count);
 
