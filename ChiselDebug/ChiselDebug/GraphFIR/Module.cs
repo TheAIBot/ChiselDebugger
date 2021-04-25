@@ -230,7 +230,7 @@ namespace ChiselDebug.GraphFIR
                     //Everything connected to duplex input is now being connected to the
                     //wires input
                     Input wireIn = (Input)keyValue.Value.In;
-                    if (keyValue.Key != null)
+                    if (keyValue.Key.Con != null)
                     {
                         keyValue.Key.Con.ConnectToInput(wireIn);
                     }
