@@ -543,7 +543,7 @@ namespace ChiselDebug
 
             if (exp is FIRRTL.Literal lit)
             {
-                GraphFIR.ConstValue value = new GraphFIR.ConstValue(helper.GetUniqueName(), lit);
+                GraphFIR.ConstValue value = new GraphFIR.ConstValue(null, lit);
 
                 helper.AddNodeToModule(value);
                 return value.Result;
