@@ -726,18 +726,6 @@ namespace ChiselDebug
             else if (exp is FIRRTL.SubField subField)
             {
                 var subContainer = VisitExp(helper, subField.Expr, gender);
-
-                //Memory ports in high level firrtl are acceses in a different
-                //way compared to low level firrtl. In high level firrtl, a
-                //memory port is trated like a wire connected to its datain/out
-                //sub field whereas in low level firrtl the subfield has to be
-                //specified.
-                if (helper.IsHighFirGrapth() && 
-                    subContainer is GraphFIR.IO.MemPort memPort)
-                {
-                    subContainer = memPort.GetAsGender(gender);
-                }
-
                 refContainer = subContainer.GetIO(subField.Name);
             }
             else if (exp is FIRRTL.SubIndex subIndex)
@@ -758,6 +746,17 @@ namespace ChiselDebug
             else
             {
                 throw new NotImplementedException();
+            }
+
+            //Memory ports in high level firrtl are acceses in a different
+            //way compared to low level firrtl. In high level firrtl, a
+            //memory port is trated like a wire connected to its datain/out
+            //sub field whereas in low level firrtl the subfield has to be
+            //specified.
+            if (helper.IsHighFirGrapth() &&
+                refContainer is GraphFIR.IO.MemPort memPort)
+            {
+                refContainer = memPort.GetAsGender(gender);
             }
 
             //Never return bigender io. Only this method should have to deal
