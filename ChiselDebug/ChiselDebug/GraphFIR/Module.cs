@@ -55,7 +55,7 @@ namespace ChiselDebug.GraphFIR
         {
             Nodes.Add(mod);
 
-            IOBundle bundle = new IOBundle(mod, bundleName, mod.ExternalIO.Values.ToList(), false);
+            IOBundle bundle = new IOBundle(mod, bundleName, mod.ExternalIO.Values.ToList());
             NameToIO.Add(bundleName, bundle);
             BundleToModule.Add(bundle, mod);
         }
