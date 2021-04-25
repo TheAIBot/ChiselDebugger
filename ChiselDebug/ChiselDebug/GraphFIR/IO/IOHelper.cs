@@ -19,19 +19,8 @@ namespace ChiselDebug.GraphFIR.IO
 
         public static void BypassIO(FIRIO bypassFrom, FIRIO bypassTo)
         {
-            HashSet<ScalarIO> ignoreFromIO = new HashSet<ScalarIO>(bypassFrom.GetAllIOOfType<VectorAccess>().SelectMany(x => x.Flatten()));
-            HashSet<ScalarIO> ignoreToIO = new HashSet<ScalarIO>(bypassTo.GetAllIOOfType<VectorAccess>().SelectMany(x => x.Flatten()));
-            foreach (var item in ignoreFromIO)
-            {
-                item.DisconnectAll();
-            }
-            foreach (var item in ignoreToIO)
-            {
-                item.DisconnectAll();
-            }
-
-            ScalarIO[] bypassFromIO = bypassFrom.Flatten().Where(x => !ignoreFromIO.Contains(x)).ToArray();
-            ScalarIO[] bypassToIO = bypassTo.Flatten().Where(x => !ignoreToIO.Contains(x)).ToArray();
+            ScalarIO[] bypassFromIO = bypassFrom.Flatten().ToArray();
+            ScalarIO[] bypassToIO = bypassTo.Flatten().ToArray();
 
             if (bypassFromIO.Length != bypassToIO.Length)
             {
