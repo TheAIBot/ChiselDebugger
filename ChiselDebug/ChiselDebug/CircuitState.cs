@@ -1,6 +1,7 @@
 ﻿using ChiselDebug.GraphFIR;
 using ChiselDebug.GraphFIR.IO;
 using ChiselDebug.Timeline;
+using System;
 using System.Collections.Generic;
 using VCDReader;
 
@@ -25,6 +26,20 @@ namespace ChiselDebug
                 foreach (var variable in initValue.Variables)
                 {
                     VariableValues.Add(variable, initValue);
+                }
+            }
+        }
+
+        public CircuitState(List<List<VarDef>> varDefs)
+        {
+            foreach (var variables in varDefs)
+            {
+                foreach (var variable in variables)
+                {
+                    BitState[] bits = new BitState[variable.Size];
+                    Array.Fill(bits, BitState.Zero);
+
+                    VariableValues.Add(variable, new BinaryVarValue(bits, variables));
                 }
             }
         }

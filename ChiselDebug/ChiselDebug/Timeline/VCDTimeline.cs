@@ -18,8 +18,18 @@ namespace ChiselDebug.Timeline
         {
             this.TimeScale = vcd.Time;
 
-            DumpVars initDump = vcd.GetSimulationCommands().Take(1).First() as DumpVars;
-            CircuitState segmentStartState = new CircuitState(initDump);
+            var simCommands = vcd.GetSimulationCommands();
+            ISimCmd firstCmd = simCommands.First();
+            CircuitState segmentStartState;
+            if (firstCmd is DumpVars initDump)
+            {
+                segmentStartState = new CircuitState(initDump);
+            }
+            else
+            {
+                segmentStartState = new CircuitState(vcd.Variables.ToList());
+                simCommands = simCommands.Prepend(firstCmd);
+            }
             CircuitState followState = segmentStartState.Copy();
 
             ulong startTime = 0;
@@ -29,7 +39,7 @@ namespace ChiselDebug.Timeline
             int changeCounter = 0;
             const int maxChangesPerSegment = 10_000;
 
-            foreach (var simCmd in vcd.GetSimulationCommands())
+            foreach (var simCmd in simCommands)
             {
                 if (simCmd is SimTime time)
                 {
