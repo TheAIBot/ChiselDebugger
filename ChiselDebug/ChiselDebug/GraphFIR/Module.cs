@@ -268,50 +268,32 @@ namespace ChiselDebug.GraphFIR
 
         internal void SetConditional(Output enableCon)
         {
+            List<ScalarIO> scalars = new List<ScalarIO>();
             foreach (var io in InternalIO.Values)
             {
-                if (io is ScalarIO scalar)
+                scalars.Clear();
+                foreach (var scalarIO in io.Flatten(scalars))
                 {
-                    scalar.SetEnabledCondition(enableCon);
-                }
-                else
-                {
-                    foreach (var scalarIO in io.Flatten())
-                    {
-                        scalarIO.SetEnabledCondition(enableCon);
-                    }
+                    scalarIO.SetEnabledCondition(enableCon);
                 }
             }
             foreach (var io in ExternalIO.Values)
             {
-                if (io is ScalarIO scalar)
+                scalars.Clear();
+                foreach (var scalarIO in io.Flatten(scalars))
                 {
-                    scalar.SetEnabledCondition(enableCon);
-                }
-                else
-                {
-                    foreach (var scalarIO in io.Flatten())
-                    {
-                        scalarIO.SetEnabledCondition(enableCon);
-                    }
+                    scalarIO.SetEnabledCondition(enableCon);
                 }
             }
             foreach (var node in Nodes)
             {
                 foreach (var nodeIO in node.GetIO())
                 {
-                    if (nodeIO is ScalarIO scalar)
+                    scalars.Clear();
+                    foreach (var scalarIO in nodeIO.Flatten(scalars))
                     {
-                        scalar.SetEnabledCondition(enableCon);
+                        scalarIO.SetEnabledCondition(enableCon);
                     }
-                    else
-                    {
-                        foreach (var scalarIO in nodeIO.Flatten())
-                        {
-                            scalarIO.SetEnabledCondition(enableCon);
-                        }
-                    }
-
                 }
             }
         }
@@ -450,42 +432,33 @@ namespace ChiselDebug.GraphFIR
                 }
             }
 
-            ScalarIO[] oneExt = new ScalarIO[1];
-            ScalarIO[] oneInt = new ScalarIO[1];
+            List<ScalarIO> extFlat = new List<ScalarIO>();
+            List<ScalarIO> intFlat = new List<ScalarIO>();
+            List<ScalarIO> parentFlat = new List<ScalarIO>();
 
             foreach (var extIntKeyVal in ExternalIO.Zip(InternalIO))
             {
                 var extKeyVal = extIntKeyVal.First;
                 var intKeyVal = extIntKeyVal.Second;
 
-                ScalarIO[] extFlat;
-                ScalarIO[] intFlat;
-                if (extKeyVal.Value is ScalarIO extIO && intKeyVal.Value is ScalarIO intIO)
-                {
-                    oneExt[0] = extIO;
-                    oneInt[0] = intIO;
+                extFlat.Clear();
+                intFlat.Clear();
+                extKeyVal.Value.Flatten(extFlat);
+                intKeyVal.Value.Flatten(intFlat);
 
-                    extFlat = oneExt;
-                    intFlat = oneInt;
-                }
-                else
-                {
-                    extFlat = extKeyVal.Value.Flatten().ToArray();
-                    intFlat = intKeyVal.Value.Flatten().ToArray();
-                }
+                Debug.Assert(extFlat.Count == intFlat.Count);
 
-                Debug.Assert(extFlat.Length == intFlat.Length);
-
-                for (int x = 0; x < extFlat.Length; x++)
+                for (int x = 0; x < extFlat.Count; x++)
                 {
                     if (intFlat[x].IsConnectedToAnything())
                     {
                         if (parentMod.TryGetIO(intKeyVal.Key, false, out var parentContainer))
                         {
                             FIRIO parentIO = (FIRIO)parentContainer;
-                            ScalarIO[] parentIOFlat = parentIO.Flatten().ToArray();
+                            parentFlat.Clear();
+                            parentIO.Flatten(parentFlat);
 
-                            IOHelper.BiDirFullyConnectIO(extFlat[x], parentIOFlat[x], true);
+                            IOHelper.BiDirFullyConnectIO(extFlat[x], parentFlat[x], true);
                         }
                     }
                 }

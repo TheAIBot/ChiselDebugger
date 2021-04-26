@@ -56,23 +56,15 @@ namespace ChiselDebug.GraphFIR
 
         public IEnumerable<Input> GetInternalInputs()
         {
+            List<ScalarIO> scalars = new List<ScalarIO>();
             foreach (var intIO in InternalIO.Values)
             {
-                if (intIO is ScalarIO)
+                scalars.Clear();
+                foreach (var flat in intIO.Flatten(scalars))
                 {
-                    if (intIO is Input inT)
+                    if (flat is Input inT)
                     {
                         yield return inT;
-                    }
-                }
-                else
-                {
-                    foreach (var flat in intIO.Flatten())
-                    {
-                        if (flat is Input inT)
-                        {
-                            yield return inT;
-                        }
                     }
                 }
             }
@@ -80,23 +72,15 @@ namespace ChiselDebug.GraphFIR
 
         public IEnumerable<Output> GetInternalOutputs()
         {
+            List<ScalarIO> scalars = new List<ScalarIO>();
             foreach (var intIO in InternalIO.Values)
             {
-                if (intIO is ScalarIO)
+                scalars.Clear();
+                foreach (var flat in intIO.Flatten(scalars))
                 {
-                    if (intIO is Output outT)
+                    if (flat is Output outT)
                     {
                         yield return outT;
-                    }
-                }
-                else
-                {
-                    foreach (var flat in intIO.Flatten())
-                    {
-                        if (flat is Output outT)
-                        {
-                            yield return outT;
-                        }
                     }
                 }
             }
@@ -105,23 +89,15 @@ namespace ChiselDebug.GraphFIR
         internal static T[] FlattenAndFilterIO<T>(Dictionary<string, FIRIO> io)
         {
             List<T> filtered = new List<T>(io.Values.Count);
+            List<ScalarIO> scalars = new List<ScalarIO>();
             foreach (var value in io.Values)
             {
-                if (value is ScalarIO)
+                scalars.Clear();
+                foreach (var flatValue in value.Flatten(scalars))
                 {
-                    if (value is T tVal)
+                    if (flatValue is T tFlatVal)
                     {
-                        filtered.Add(tVal);
-                    }
-                }
-                else
-                {
-                    foreach (var flatValue in value.Flatten())
-                    {
-                        if (flatValue is T tFlatVal)
-                        {
-                            filtered.Add(tFlatVal);
-                        }
+                        filtered.Add(tFlatVal);
                     }
                 }
             }

@@ -126,6 +126,20 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
+        public override List<ScalarIO> Flatten(List<ScalarIO> list)
+        {
+            for (int i = 0; i < IO.Length; i++)
+            {
+                IO[i].Flatten(list);
+            }
+            for (int i = 0; i < VisiblePorts.Count; i++)
+            {
+                VisiblePorts[i].Flatten(list);
+            }
+
+            return list;
+        }
+
         public override bool IsPassiveOfType<T>()
         {
             return IO[0].IsPassiveOfType<T>();

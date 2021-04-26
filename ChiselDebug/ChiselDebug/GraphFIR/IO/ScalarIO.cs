@@ -43,6 +43,13 @@ namespace ChiselDebug.GraphFIR.IO
             yield return this;
         }
 
+        public override List<ScalarIO> Flatten(List<ScalarIO> list)
+        {
+            list.Add(this);
+
+            return list;
+        }
+
         public override IEnumerable<FIRIO> WalkIOTree()
         {
             yield return this;

@@ -31,6 +31,14 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
+        public override List<ScalarIO> Flatten(List<ScalarIO> list)
+        {
+            InIO.Flatten(list);
+            OutIO.Flatten(list);
+
+            return list;
+        }
+
         public override FIRIO GetInput()
         {
             return InIO;
