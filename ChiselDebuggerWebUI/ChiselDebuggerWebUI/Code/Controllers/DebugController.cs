@@ -25,9 +25,10 @@ namespace ChiselDebuggerWebUI.Code
         private readonly RouteTemplator RouteTemplates = new RouteTemplator();
         private readonly Dictionary<Output, string> ConToColor = new Dictionary<Output, string>();
         private readonly HashSet<Output> ConstCons = new HashSet<Output>();
+        private readonly bool IsVerilogVCD;
         public Point CircuitSize { get; private set; } = Point.Zero;
 
-        public DebugController(CircuitGraph graph, VCD vcd)
+        public DebugController(CircuitGraph graph, VCD vcd, bool isVerilogVCD)
         {
             this.Graph = graph;
 
@@ -39,6 +40,7 @@ namespace ChiselDebuggerWebUI.Code
 
                 SetCircuitState(Timeline.TimeInterval.StartInclusive);
             }
+            this.IsVerilogVCD = isVerilogVCD;
 
             Dictionary<Output, CombComputeNode> conToCombNode = new Dictionary<Output, CombComputeNode>();
             CombComputeNode[] combNodes = graph.ComputeGraph.GetValueChangingNodes();
@@ -156,7 +158,7 @@ namespace ChiselDebuggerWebUI.Code
         {
             TimeChanger.Post(() =>
             {
-                List<Output> changedConnections = Graph.SetState(Timeline.GetStateAtTime(time));
+                List<Output> changedConnections = Graph.SetState(Timeline.GetStateAtTime(time), IsVerilogVCD);
 
                 HashSet<ModuleLayout> modulesToReRender = new HashSet<ModuleLayout>();
 

@@ -92,7 +92,7 @@ namespace ChiselDebug
             }
         }
 
-        public Output GetConnection(VarDef variable)
+        public Output GetConnection(VarDef variable, bool isVerilogVCD)
         {
             if (VarDefToCon.TryGetValue(variable, out Output con))
             {
@@ -108,7 +108,11 @@ namespace ChiselDebug
                 return null;
             }
 
-            string[] modulePath = variable.Scopes.Skip(1).Select(x => x.Name).ToArray();
+            //Verilog creatred vcd adds a top level module to the module path which has to be
+            //ignore as it's not part of the firrtl code. Apart from that, the first module
+            //should always be skipped as it's the root module that is being searched from.
+            int modulesSkipped = isVerilogVCD ? 2 : 1;
+            string[] modulePath = variable.Scopes.Skip(modulesSkipped).Select(x => x.Name).ToArray();
             IContainerIO moduleIO = ((IContainerIO)MainModule).GetIO(modulePath, true);
 
             IContainerIO ioLink = null;
@@ -163,14 +167,14 @@ namespace ChiselDebug
             return null;
         }
 
-        public List<Output> SetState(CircuitState state)
+        public List<Output> SetState(CircuitState state, bool isVerilogVCD)
         {
 
             foreach (BinaryVarValue varValue in state.VariableValues.Values)
             {
                 foreach (var variable in varValue.Variables)
                 {
-                    Output con = GetConnection(variable);
+                    Output con = GetConnection(variable, isVerilogVCD);
                     if (con == null)
                     {
                         continue;

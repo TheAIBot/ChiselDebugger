@@ -35,7 +35,7 @@ namespace ChiselDebugTests
             return graph;
         }
 
-        internal static void VerifyChiselTest(string moduleName, string extension, bool testVCD, string modulePath = "ChiselTests")
+        internal static void VerifyChiselTest(string moduleName, string extension, bool testVCD, string modulePath = "ChiselTests", bool isVerilogVCD = true)
         {
             CircuitGraph lowFirGraph = null;
             if (extension == "fir")
@@ -52,22 +52,22 @@ namespace ChiselDebugTests
                 using VCD vcd = VCDReader.Parse.FromFile($"{modulePath}/{moduleName}.vcd");
                 VCDTimeline timeline = new VCDTimeline(vcd);
 
-                VerifyCircuitState(graph, timeline);
+                VerifyCircuitState(graph, timeline, isVerilogVCD);
             }
         }
 
-        internal static void VerifyCircuitState(CircuitGraph graph, VCDTimeline timeline)
+        internal static void VerifyCircuitState(CircuitGraph graph, VCDTimeline timeline, bool isVerilogVCD)
         {
             foreach (var time in timeline.GetAllSimTimes())
             {
                 CircuitState state = timeline.GetStateAtTime(time);
-                graph.SetState(state);
+                graph.SetState(state, isVerilogVCD);
 
                 foreach (BinaryVarValue expected in state.VariableValues.Values)
                 {
                     foreach (var variable in expected.Variables)
                     {
-                        Output varCon = graph.GetConnection(variable);
+                        Output varCon = graph.GetConnection(variable, isVerilogVCD);
                         if (varCon == null)
                         {
                             continue;

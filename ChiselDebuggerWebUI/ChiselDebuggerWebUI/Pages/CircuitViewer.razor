@@ -88,7 +88,7 @@ circuit ModL :
         CircuitGraph graph = CircuitToGraph.GetAsGraph(circuit);
         graph.InferTypes();
 
-        DebugCtrl = new DebugController(graph, vcd);
+        DebugCtrl = new DebugController(graph, vcd, false);
 
         ModulePosition = new Positioned<ChiselDebug.GraphFIR.Module>(Point.Zero, graph.MainModule);
 
