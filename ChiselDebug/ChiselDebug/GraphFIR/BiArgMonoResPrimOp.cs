@@ -251,8 +251,8 @@ namespace ChiselDebug.GraphFIR
 
         protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
         {
-            (UIntType a, UIntType b) => new UIntType(a.Width + (1 << b.Width)),
-            (SIntType a, UIntType b) => new SIntType(a.Width + (1 << b.Width)),
+            (UIntType a, UIntType b) => new UIntType(a.Width + (1 << b.Width) - 1),
+            (SIntType a, UIntType b) => new SIntType(a.Width + (1 << b.Width) - 1),
             _ => throw new Exception("Failed to infer type.")
         };
     }
