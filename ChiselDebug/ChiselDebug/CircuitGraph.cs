@@ -168,18 +168,21 @@ namespace ChiselDebug
 
             foreach (BinaryVarValue varValue in state.VariableValues.Values)
             {
-                Output con = GetConnection(varValue.Variable);
-                if (con == null)
+                foreach (var variable in varValue.Variables)
                 {
-                    continue;
-                }
+                    Output con = GetConnection(variable);
+                    if (con == null)
+                    {
+                        continue;
+                    }
 
-                if (!ComputeAllowsUpdate.Contains(con))
-                {
-                    continue;
-                }
+                    if (!ComputeAllowsUpdate.Contains(con))
+                    {
+                        continue;
+                    }
 
-                con.Value.UpdateValue(varValue);
+                    con.Value.UpdateValue(varValue);
+                }
             }
 
             return ComputeGraph.Compute();

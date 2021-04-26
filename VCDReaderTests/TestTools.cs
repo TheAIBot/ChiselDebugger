@@ -82,15 +82,19 @@ namespace VCDReaderTests
 
         internal static void VerifyValueChange(VarValue expected, VarValue actual)
         {
+            Assert.AreEqual(expected.Variables.Count, actual.Variables.Count);
+            for (int i = 0; i < expected.Variables.Count; i++)
+            {
+                VerifyVarDef(expected.Variables[i], actual.Variables[i]);
+            }
+
             if (expected is BinaryVarValue expectedBin && actual is BinaryVarValue actualBin)
             {
                 CollectionAssert.AreEqual(expectedBin.Bits, actualBin.Bits);
-                VerifyVarDef(expectedBin.Variable, actualBin.Variable);
             }
             else if (expected is RealVarValue expectedReal && actual is RealVarValue actualReal)
             {
                 Assert.AreEqual(expectedReal.Value, actualReal.Value);
-                VerifyVarDef(expectedReal.Variable, actualReal.Variable);
             }
             else
             {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 
@@ -6,11 +7,11 @@ namespace VCDReader
 {
     public abstract class VarValue : ISimCmd
     {
-        public readonly VarDef? Variable;
+        public readonly List<VarDef>? Variables;
 
-        public VarValue(VarDef? variable)
+        public VarValue(List<VarDef>? variables)
         {
-            this.Variable = variable;
+            this.Variables = variables;
         }
 
         public abstract bool SameValue(VarValue other);
@@ -20,9 +21,9 @@ namespace VCDReader
     {
         public readonly BitState[] Bits;
 
-        public BinaryVarValue(BitState[] bits, VarDef variable) : base(variable)
+        public BinaryVarValue(BitState[] bits, List<VarDef> variables) : base(variables)
         {
-            this.Bits = new BitState[variable.Size];
+            this.Bits = new BitState[variables[0].Size];
 
             Array.Fill(Bits, bits[^1].LeftExtendWith());
             bits.CopyTo(Bits, 0);
@@ -252,7 +253,7 @@ namespace VCDReader
     {
         public readonly double Value;
 
-        public RealVarValue(double value, VarDef variable) : base(variable)
+        public RealVarValue(double value, List<VarDef> variables) : base(variables)
         {
             this.Value = value;
         }

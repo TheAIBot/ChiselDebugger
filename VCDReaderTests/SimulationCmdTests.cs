@@ -36,7 +36,7 @@ $enddefinitions $end
                 var valueChange = simCmds[0] as BinaryVarValue;
                 Assert.AreEqual(1, valueChange.Bits.Length);
                 Assert.AreEqual(bitState, valueChange.Bits[0]);
-                Assert.AreEqual(variable, valueChange.Variable);
+                Assert.AreEqual(variable, valueChange.Variables[0]);
             }
         }
 
@@ -64,7 +64,7 @@ b{bitState.ToChar()} !";
                 var valueChange = simCmds[0] as BinaryVarValue;
                 Assert.AreEqual(1, valueChange.Bits.Length);
                 Assert.AreEqual(bitState, valueChange.Bits[0]);
-                Assert.AreEqual(variable, valueChange.Variable);
+                Assert.AreEqual(variable, valueChange.Variables[0]);
             }
         }
 
@@ -77,7 +77,7 @@ b{bitState.ToChar()} !";
             };
             ISimCmd[] expectedSimCmds = new ISimCmd[]
             {
-                new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero }, (VarDef)expectedDecls[0])
+                new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero }, new List<VarDef>() {(VarDef)expectedDecls[0] })
             };
 
             string vcdString = @$"
@@ -125,7 +125,7 @@ b{expectedBits.BitsToString()} !";
 
             var valueChange = simCmds[0] as BinaryVarValue;
             CollectionAssert.AreEqual(expectedBits, valueChange.Bits);
-            Assert.AreEqual(variable, valueChange.Variable);
+            Assert.AreEqual(variable, valueChange.Variables[0]);
         }
 
         [TestMethod]
@@ -149,7 +149,7 @@ r{expectedValue.ToString(CultureInfo.InvariantCulture)} !";
 
             var valueChange = simCmds[0] as RealVarValue;
             Assert.AreEqual(expectedValue, valueChange.Value);
-            Assert.AreEqual(variable, valueChange.Variable);
+            Assert.AreEqual(variable, valueChange.Variables[0]);
         }
 
         [TestMethod]
@@ -172,10 +172,10 @@ r{expectedValue.ToString(CultureInfo.InvariantCulture)} !";
             {
                 new DumpVars(new List<VarValue>()
                 {
-                    new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, (VarDef)expectedDecls[1]),
-                    new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, (VarDef)expectedDecls[4]),
-                    new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, (VarDef)expectedDecls[2]),
-                    new BinaryVarValue(new BitState[] { BitState.Zero }, (VarDef)expectedDecls[3])
+                    new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, new List<VarDef>() { (VarDef)expectedDecls[1] }),
+                    new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, new List<VarDef>() { (VarDef)expectedDecls[4] }),
+                    new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, new List<VarDef>() { (VarDef)expectedDecls[2] }),
+                    new BinaryVarValue(new BitState[] { BitState.Zero }, new List<VarDef>() { (VarDef)expectedDecls[3] })
                 })
             };
 

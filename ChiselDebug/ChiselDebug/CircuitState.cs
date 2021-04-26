@@ -22,7 +22,10 @@ namespace ChiselDebug
         {
             foreach (var initValue in initVarValues.InitialValues)
             {
-                VariableValues.Add(initValue.Variable, initValue);
+                foreach (var variable in initValue.Variables)
+                {
+                    VariableValues.Add(variable, initValue);
+                }
             }
         }
 
@@ -30,7 +33,10 @@ namespace ChiselDebug
         {
             foreach (var change in changes.Changes)
             {
-                VariableValues[change.Variable] = change;
+                foreach (var variable in change.Variables)
+                {
+                    VariableValues[variable] = change;
+                }
             }
         }
 

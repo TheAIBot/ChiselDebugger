@@ -65,26 +65,29 @@ namespace ChiselDebugTests
 
                 foreach (BinaryVarValue expected in state.VariableValues.Values)
                 {
-                    Output varCon = graph.GetConnection(expected.Variable);
-                    if (varCon == null)
+                    foreach (var variable in expected.Variables)
                     {
-                        continue;
-                    }
-
-                    BinaryVarValue actual = varCon.Value.GetValue();
-                    Assert.AreEqual(expected.Bits.Length, actual.Bits.Length);
-                    for (int i = 0; i < expected.Bits.Length; i++)
-                    {
-                        if (!actual.Bits[i].IsBinary())
+                        Output varCon = graph.GetConnection(variable);
+                        if (varCon == null)
                         {
                             continue;
                         }
 
-                        if (expected.Bits[i] != actual.Bits[i])
+                        BinaryVarValue actual = varCon.Value.GetValue();
+                        Assert.AreEqual(expected.Bits.Length, actual.Bits.Length);
+                        for (int i = 0; i < expected.Bits.Length; i++)
                         {
+                            if (!actual.Bits[i].IsBinary())
+                            {
+                                continue;
+                            }
 
+                            if (expected.Bits[i] != actual.Bits[i])
+                            {
+
+                            }
+                            Assert.AreEqual(expected.Bits[i], actual.Bits[i]);
                         }
-                        Assert.AreEqual(expected.Bits[i], actual.Bits[i]);
                     }
                 }
             }

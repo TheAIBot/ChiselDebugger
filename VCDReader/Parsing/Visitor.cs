@@ -13,10 +13,10 @@ namespace VCDReader.Parsing
             return new VCD(declAndVarID.declarations, declAndVarID.idToVariable, lexer);
         }
 
-        internal static (List<IDeclCmd> declarations, Dictionary<string, VarDef> idToVariable) VisitDeclCmdStream(VCDLexer lexer)
+        internal static (List<IDeclCmd> declarations, Dictionary<string, List<VarDef>> idToVariable) VisitDeclCmdStream(VCDLexer lexer)
         {
             List<IDeclCmd> declarations = new List<IDeclCmd>();
-            Dictionary<string, VarDef> idToVariable = new Dictionary<string, VarDef>();
+            Dictionary<string, List<VarDef>> idToVariable = new Dictionary<string, List<VarDef>>();
             Stack<Scope> scopes = new Stack<Scope>();
 
             while (!lexer.IsEmpty())
@@ -37,7 +37,7 @@ namespace VCDReader.Parsing
             return (declarations, idToVariable);
         }
 
-        internal static IDeclCmd? VisitDeclCmd(VCDLexer lexer, Dictionary<string, VarDef> idToVariable, Stack<Scope> scopes)
+        internal static IDeclCmd? VisitDeclCmd(VCDLexer lexer, Dictionary<string, List<VarDef>> idToVariable, Stack<Scope> scopes)
         {
             ReadOnlySpan<char> declWord = lexer.NextWord();
             if (declWord.SequenceEqual("$comment"))
@@ -88,7 +88,17 @@ namespace VCDReader.Parsing
                 string reference = lexer.NextWord().ToString();
 
                 VarDef variable = new VarDef(type, size, id, reference, scopes.Reverse().ToArray());
-                idToVariable.Add(id, variable);
+                List<VarDef> varDefs;
+                if (idToVariable.TryGetValue(id, out var currDefs))
+                {
+                    varDefs = currDefs;
+                }
+                else
+                {
+                    varDefs = new List<VarDef>();
+                    idToVariable.Add(id, varDefs);
+                }
+                varDefs.Add(variable);
 
                 lexer.ExpectNextWord("$end");
                 return variable;
@@ -119,7 +129,7 @@ namespace VCDReader.Parsing
             }
         }
 
-        internal static ISimCmd VisitSimCmd(VCDLexer lexer, Dictionary<string, VarDef> idToVariable)
+        internal static ISimCmd VisitSimCmd(VCDLexer lexer, Dictionary<string, List<VarDef>> idToVariable)
         {
             ReadOnlySpan<char> declWord = lexer.NextWord();
             if (declWord.SequenceEqual("$comment"))
@@ -155,7 +165,7 @@ namespace VCDReader.Parsing
             }
         }
 
-        internal static List<VarValue> VisitValueChangeStream(VCDLexer lexer, Dictionary<string, VarDef> idToVariable)
+        internal static List<VarValue> VisitValueChangeStream(VCDLexer lexer, Dictionary<string, List<VarDef>> idToVariable)
         {
             List<VarValue> changes = new List<VarValue>();
 
@@ -172,7 +182,7 @@ namespace VCDReader.Parsing
             return changes;
         }
 
-        internal static VarValue VisitValueChange(VCDLexer lexer, ReadOnlySpan<char> text, Dictionary<string, VarDef> idToVariable)
+        internal static VarValue VisitValueChange(VCDLexer lexer, ReadOnlySpan<char> text, Dictionary<string, List<VarDef>> idToVariable)
         {
             if (text.Length < 2)
             {
@@ -193,14 +203,14 @@ namespace VCDReader.Parsing
             }
         }
 
-        internal static VarValue VisitBinaryVectorValueChange(VCDLexer lexer, ReadOnlySpan<char> valueText, Dictionary<string, VarDef> idToVariable)
+        internal static VarValue VisitBinaryVectorValueChange(VCDLexer lexer, ReadOnlySpan<char> valueText, Dictionary<string, List<VarDef>> idToVariable)
         {
             BitState[] bits = ToBitStates(valueText);
             string id = lexer.NextWord().ToString();
 
-            if (idToVariable.TryGetValue(id, out VarDef? variable))
+            if (idToVariable.TryGetValue(id, out List<VarDef>? variables))
             {
-                return new BinaryVarValue(bits, variable);
+                return new BinaryVarValue(bits, variables);
             }
             else
             {
@@ -208,12 +218,12 @@ namespace VCDReader.Parsing
             }
         }
 
-        internal static VarValue VisitRealVectorValueChange(VCDLexer lexer, ReadOnlySpan<char> valueText, Dictionary<string, VarDef> idToVariable)
+        internal static VarValue VisitRealVectorValueChange(VCDLexer lexer, ReadOnlySpan<char> valueText, Dictionary<string, List<VarDef>> idToVariable)
         {
             double value = double.Parse(valueText, NumberStyles.Float, CultureInfo.InvariantCulture);
             string id = lexer.NextWord().ToString();
 
-            if (idToVariable.TryGetValue(id, out VarDef? variable))
+            if (idToVariable.TryGetValue(id, out List<VarDef>? variable))
             {
                 return new RealVarValue(value, variable);
             }
@@ -223,14 +233,14 @@ namespace VCDReader.Parsing
             }
         }
 
-        internal static VarValue VisitScalarValueChange(ReadOnlySpan<char> text, Dictionary<string, VarDef> idToVariable)
+        internal static VarValue VisitScalarValueChange(ReadOnlySpan<char> text, Dictionary<string, List<VarDef>> idToVariable)
         {
             BitState bit = ToBitState(text[0]);
             string id = text.Slice(1).ToString();
 
             BitState[] bits = new BitState[] { bit };
 
-            if (idToVariable.TryGetValue(id, out VarDef? variable))
+            if (idToVariable.TryGetValue(id, out List<VarDef>? variable))
             {
                 return new BinaryVarValue(bits, variable);
             }
