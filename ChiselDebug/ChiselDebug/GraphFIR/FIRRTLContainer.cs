@@ -32,8 +32,6 @@ namespace ChiselDebug.GraphFIR
             ExternalIO.EnsureCapacity(extIntSize);
             InternalIO.EnsureCapacity(extIntSize);
             AllIOInOrder.Capacity = extIntSize;
-
-            ReservePairMemory(extIntSize + extIntSize);
         }
 
         public override Input[] GetInputs()

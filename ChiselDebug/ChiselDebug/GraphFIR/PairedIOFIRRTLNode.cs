@@ -10,7 +10,6 @@ namespace ChiselDebug.GraphFIR
 {
     public abstract class PairedIOFIRRTLNode : FIRRTLNode
     {
-        private readonly Dictionary<FIRIO, FIRIO> IOPairs = new Dictionary<FIRIO, FIRIO>();
         private readonly Dictionary<FIRIO, List<FIRIO>> OneToManyPairs = new Dictionary<FIRIO, List<FIRIO>>();
 
         public PairedIOFIRRTLNode(FirrtlNode defNode) : base(defNode)
@@ -18,7 +17,21 @@ namespace ChiselDebug.GraphFIR
 
         internal void AddPairedIO(FIRIO io, FIRIO ioFlipped)
         {
-            IOHelper.PairIO(IOPairs, io, ioFlipped);
+            if (io is ScalarIO && ioFlipped is ScalarIO)
+            {
+                io.SetPaired(ioFlipped);
+                ioFlipped.SetPaired(io);
+            }
+            else
+            {
+                var ioWalk = io.WalkIOTree();
+                var ioFlipWalk = ioFlipped.WalkIOTree();
+                foreach (var pair in ioWalk.Zip(ioFlipWalk))
+                {
+                    pair.First.SetPaired(pair.Second);
+                    pair.Second.SetPaired(pair.First);
+                }
+            }
         }
 
         internal void AddOneToManyPairedIO(FIRIO io, List<FIRIO> flippedIOs)
@@ -46,27 +59,17 @@ namespace ChiselDebug.GraphFIR
             }
         }
 
-        internal void ReservePairMemory(int size)
-        {
-            IOPairs.EnsureCapacity(size);
-        }
-
-        internal int GetPairCount()
-        {
-            return IOPairs.Count;
-        }
-
         public FIRIO GetPairedIO(FIRIO io)
         {
-            return IOPairs[io];
+            return io.GetPaired();
         }
 
         public FIRIO[] GetAllPairedIO(FIRIO io)
         {
             List<FIRIO> allPairs = new List<FIRIO>();
-            if (IOPairs.TryGetValue(io, out var singlePair))
+            if (io.GetPaired() != null)
             {
-                allPairs.Add(singlePair);
+                allPairs.Add(io.GetPaired());
             }
             if (OneToManyPairs.TryGetValue(io, out var multiplePairs))
             {
@@ -78,7 +81,7 @@ namespace ChiselDebug.GraphFIR
 
         public bool IsPartOfPair(FIRIO io)
         {
-            return IOPairs.ContainsKey(io) || OneToManyPairs.ContainsKey(io);
+            return io.GetPaired() != null || OneToManyPairs.ContainsKey(io);
         }
     }
 }
