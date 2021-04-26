@@ -69,9 +69,21 @@ namespace VCDReader.Parsing
             return AvailableChars.Span.Slice(0, wordLength);
         }
 
+        public char PeekNextChar()
+        {
+            SkipStart();
+
+            return AvailableChars.Span[0];
+        }
+
         public void SkipWord(ReadOnlySpan<char> word)
         {
             AvailableChars = AvailableChars.Slice(word.Length);
+        }
+
+        public void SkipChar()
+        {
+            AvailableChars = AvailableChars.Slice(1);
         }
 
         public ReadOnlySpan<char> NextWord()

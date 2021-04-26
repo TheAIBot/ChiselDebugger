@@ -100,6 +100,13 @@ namespace VCDReader.Parsing
                 }
                 varDefs.Add(variable);
 
+                char nextChar = lexer.PeekNextChar();
+                if (nextChar == '[')
+                {
+                    lexer.NextUntil("]");
+                    lexer.SkipChar();
+                }
+
                 lexer.ExpectNextWord("$end");
                 return variable;
             }
