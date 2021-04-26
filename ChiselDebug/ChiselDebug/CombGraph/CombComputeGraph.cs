@@ -142,20 +142,48 @@ namespace ChiselDebug.CombGraph
             Dictionary<CombComputeNode, HashSet<Output>> extraDeps = new Dictionary<CombComputeNode, HashSet<Output>>();
 
 
-            while (toMake.Count > 0)
+            HashSet<Output> seenOuts = new HashSet<Output>();
+            foreach (var adw in constNodesAndCons.consFromConsts)
             {
-                var make = toMake.Dequeue();
-                var compInfo = MakeCombComputeNode(make, constNodesAndCons.consFromConsts, false);
-                extraDeps.Add(compInfo.node, compInfo.depOnCons);
-
-                computeNodes.Add(compInfo.node);
-
-                foreach (var depNode in compInfo.depTo)
+                seenOuts.Add(adw);
+            }
+            while (true)
+            {
+                while (toMake.Count > 0)
                 {
-                    if (alreadyNode.Add(depNode.First()))
+                    var make = toMake.Dequeue();
+                    var compInfo = MakeCombComputeNode(make, constNodesAndCons.consFromConsts, false);
+                    extraDeps.Add(compInfo.node, compInfo.depOnCons);
+
+                    computeNodes.Add(compInfo.node);
+
+                    foreach (var depNode in compInfo.depTo)
                     {
-                        toMake.Enqueue(depNode);
+                        if (alreadyNode.Add(depNode.First()))
+                        {
+                            toMake.Enqueue(depNode);
+                        }
                     }
+
+                    foreach (var fgr in compInfo.node.GetResponsibleConnections())
+                    {
+                        seenOuts.Add(fgr);
+                    }
+                }
+
+                bool addedAnything = false;
+                foreach (var wfe in constNodesAndCons.endPoints)
+                {
+                    if (wfe.All(x => seenOuts.Add(x)))
+                    {
+                        toMake.Enqueue(wfe);
+                        addedAnything = true;
+                    }
+                }
+
+                if (!addedAnything)
+                {
+                    break;
                 }
             }
 
@@ -258,15 +286,21 @@ namespace ChiselDebug.CombGraph
             return graph;
         }
 
-        private static (List<CombComputeNode> constNodes, HashSet<Output> consFromConsts) GetAllCombNodeFromConstValue(Module module)
+        private static (List<CombComputeNode> constNodes, HashSet<Output> consFromConsts, List<Output[]> endPoints) GetAllCombNodeFromConstValue(Module module)
         {
             List<CombComputeNode> constNodes = new List<CombComputeNode>();
             HashSet<Output> consFromConsts = new HashSet<Output>();
+            List<Output[]> endPoints = new List<Output[]>();
 
             foreach (var constValue in module.GetAllNestedNodesOfType<ConstValue>())
             {
                 var compInfo = MakeCombComputeNode(new[] { constValue.Result }, consFromConsts, true);
                 constNodes.Add(compInfo.node);
+
+                foreach (var adwf in compInfo.depTo)
+                {
+                    endPoints.Add(adwf);
+                }
 
                 foreach (var con in compInfo.node.GetResponsibleConnections())
                 {
@@ -274,7 +308,7 @@ namespace ChiselDebug.CombGraph
                 }
             }
 
-            return (constNodes, consFromConsts);
+            return (constNodes, consFromConsts, endPoints);
         }
 
         private static (CombComputeNode node, List<Output[]> depTo, HashSet<Output> depOnCons) MakeCombComputeNode(Output[] outputs, HashSet<Output> consFromConsts, bool ignoreConCondBorders)
@@ -304,8 +338,6 @@ namespace ChiselDebug.CombGraph
                 }
             }
 
-
-
             void AddMissingCons(HashSet<Output> missingCons, Input input)
             {
                 foreach (var con in input.GetAllConnections())
@@ -325,7 +357,6 @@ namespace ChiselDebug.CombGraph
             }
 
             List<Computable> computeOrder = new List<Computable>();
-
             Dictionary<FIRRTLNode, HashSet<Output>> seenButMissingFirNodeInputs = new Dictionary<FIRRTLNode, HashSet<Output>>();
             Dictionary<Input, HashSet<Output>> seenButMissingModInputCons = new Dictionary<Input, HashSet<Output>>();
 

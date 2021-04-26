@@ -56,5 +56,17 @@ namespace ChiselDebug.CombGraph
 
             return null;
         }
+
+        public override string ToString()
+        {
+            if (Con!= null)
+            {
+                return $"Con: {Con.Node}";
+            }
+            else
+            {
+                return $"Node: {Node}";
+            }
+        }
     }
 }
