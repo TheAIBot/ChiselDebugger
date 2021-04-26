@@ -56,6 +56,88 @@ namespace ChiselDebugTests
             }
         }
 
+        private static VCDTimeline MakeTimeline(string moduleName, string modulePath)
+        {
+            using VCD vcd = VCDReader.Parse.FromFile($"{modulePath}/{moduleName}.vcd");
+            return new VCDTimeline(vcd);
+        }
+
+        internal static CircuitGraph VerifyMakeGraph(string moduleName, string extension, string modulePath)
+        {
+            CircuitGraph lowFirGraph = null;
+            if (extension == "fir")
+            {
+                string loFirPath = Path.Combine(modulePath, $"{moduleName}.lo.fir");
+                lowFirGraph = VerifyCanCreateGraphFromFile(loFirPath);
+            }
+
+            string firPath = Path.Combine(modulePath, $"{moduleName}.{extension}");
+            return VerifyCanCreateGraphFromFile(firPath, lowFirGraph);
+        }
+
+        internal static void VerifyInferTypes(string moduleName, string extension, bool isVerilogVCD, string modulePath)
+        {
+            CircuitGraph graph = VerifyMakeGraph(moduleName, extension, modulePath);
+
+            VCDTimeline timeline = MakeTimeline(moduleName, modulePath);
+            CircuitState state = timeline.GetStateAtTime(timeline.TimeInterval.StartInclusive);
+
+            foreach (BinaryVarValue expected in state.VariableValues.Values)
+            {
+                foreach (var variable in expected.Variables)
+                {
+                    Output varCon = graph.GetConnection(variable, isVerilogVCD);
+                    if (varCon == null)
+                    {
+                        continue;
+                    }
+
+                    BinaryVarValue actual = varCon.Value.GetValue();
+                    Assert.AreEqual(expected.Bits.Length, actual.Bits.Length);
+                }
+            }
+        }
+
+        internal static void VerifyComputeGraph(string moduleName, string extension, bool isVerilogVCD, string modulePath)
+        {
+            CircuitGraph graph = VerifyMakeGraph(moduleName, extension, modulePath);
+            VCDTimeline timeline = MakeTimeline(moduleName, modulePath);
+
+            foreach (var time in timeline.GetAllSimTimes())
+            {
+                CircuitState state = timeline.GetStateAtTime(time);
+                graph.SetState(state, isVerilogVCD);
+
+                foreach (BinaryVarValue expected in state.VariableValues.Values)
+                {
+                    foreach (var variable in expected.Variables)
+                    {
+                        Output varCon = graph.GetConnection(variable, isVerilogVCD);
+                        if (varCon == null)
+                        {
+                            continue;
+                        }
+
+                        BinaryVarValue actual = varCon.Value.GetValue();
+                        Assert.AreEqual(expected.Bits.Length, actual.Bits.Length);
+                        for (int i = 0; i < expected.Bits.Length; i++)
+                        {
+                            if (!actual.Bits[i].IsBinary())
+                            {
+                                continue;
+                            }
+
+                            if (expected.Bits[i] != actual.Bits[i])
+                            {
+
+                            }
+                            Assert.AreEqual(expected.Bits[i], actual.Bits[i]);
+                        }
+                    }
+                }
+            }
+        }
+
         internal static void VerifyCircuitState(CircuitGraph graph, VCDTimeline timeline, bool isVerilogVCD)
         {
             foreach (var time in timeline.GetAllSimTimes())
