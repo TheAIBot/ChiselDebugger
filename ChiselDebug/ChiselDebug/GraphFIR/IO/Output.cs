@@ -10,6 +10,7 @@ namespace ChiselDebug.GraphFIR.IO
         private HashSet<Input> To = null;
         public ValueType Value;
 
+
         public Output(FIRRTLNode node, string name, IFIRType type) : base(node, name, type)
         { }
 
@@ -93,6 +94,16 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
+        public override List<T> GetAllIOOfType<T>(List<T> list)
+        {
+            if (this is T tVal)
+            {
+                list.Add(tVal);
+            }
+
+            return list;
+        }
+
         public override void InferGroundType()
         {
             if (Node == null)
@@ -135,7 +146,6 @@ namespace ChiselDebug.GraphFIR.IO
         {
             return To ?? Enumerable.Empty<Input>();
         }
-
 
         public void SetDefaultvalue()
         {

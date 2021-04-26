@@ -138,6 +138,16 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
+        public override List<T> GetAllIOOfType<T>(List<T> list)
+        {
+            if (this is T tVal)
+            {
+                list.Add(tVal);
+            }
+
+            return list;
+        }
+
         public Output GetEnabledCon()
         {
             if (CondCons != null)

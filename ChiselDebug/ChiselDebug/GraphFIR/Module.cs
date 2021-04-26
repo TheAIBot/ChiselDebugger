@@ -364,6 +364,8 @@ namespace ChiselDebug.GraphFIR
         internal void ExternalConnectUsedIO(Module parentMod)
         {
             HashSet<IPortsIO> handledPortsIO = new HashSet<IPortsIO>();
+            List<IPortsIO> intHiddenPorts = new List<IPortsIO>();
+            List<IPortsIO> parentModHiddenPorts = new List<IPortsIO>();
             //Propagate hidden ports
             foreach (var intKeyVal in InternalIO)
             {
@@ -376,7 +378,9 @@ namespace ChiselDebug.GraphFIR
                 handledPortsIO.Clear();
                 while (true)
                 {
-                    var intHiddenPorts = intIO.GetAllIOOfType<IPortsIO>();
+                    intHiddenPorts.Clear();
+                    parentModHiddenPorts.Clear();
+                    intIO.GetAllIOOfType(intHiddenPorts);
 
                     //if this io contain no ports to begin with then
                     //skip it
@@ -386,14 +390,13 @@ namespace ChiselDebug.GraphFIR
                     }
 
                     FIRIO parentIO = (FIRIO)parentMod.GetIO(intKeyVal.Key);
-                    var parentModHiddenPorts = parentIO.GetAllIOOfType<IPortsIO>();
+                    parentIO.GetAllIOOfType(parentModHiddenPorts);
 
                     bool handledNewPort = false;
-
-                    foreach (var hiddenPorts in intHiddenPorts.Zip(parentModHiddenPorts))
+                    for (int i = 0; i < intHiddenPorts.Count; i++)
                     {
-                        IPortsIO internalHidden = hiddenPorts.First;
-                        IPortsIO parentModHidden = hiddenPorts.Second;
+                        IPortsIO internalHidden = intHiddenPorts[i];
+                        IPortsIO parentModHidden = parentModHiddenPorts[i];
 
                         //Has seen port before?
                         if (!handledPortsIO.Add(internalHidden))
@@ -447,16 +450,13 @@ namespace ChiselDebug.GraphFIR
                 }
             }
 
-            var extKeyVals = ExternalIO.ToArray();
-            var intKeyVals = InternalIO.ToArray();
-
             ScalarIO[] oneExt = new ScalarIO[1];
             ScalarIO[] oneInt = new ScalarIO[1];
 
-            for (int i = 0; i < extKeyVals.Length; i++)
+            foreach (var extIntKeyVal in ExternalIO.Zip(InternalIO))
             {
-                var extKeyVal = extKeyVals[i];
-                var intKeyVal = intKeyVals[i];
+                var extKeyVal = extIntKeyVal.First;
+                var intKeyVal = extIntKeyVal.Second;
 
                 ScalarIO[] extFlat;
                 ScalarIO[] intFlat;

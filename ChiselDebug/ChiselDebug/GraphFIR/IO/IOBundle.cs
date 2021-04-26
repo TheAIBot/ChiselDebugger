@@ -163,6 +163,21 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
+        public override List<T> GetAllIOOfType<T>(List<T> list)
+        {
+            if (this is T tVal)
+            {
+                list.Add(tVal);
+            }
+
+            foreach (var io in OrderedIO)
+            {
+                io.GetAllIOOfType<T>(list);
+            }
+
+            return list;
+        }
+
         public override IEnumerable<FIRIO> WalkIOTree()
         {
             yield return this;

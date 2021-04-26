@@ -83,6 +83,7 @@ namespace ChiselDebug.GraphFIR.IO
         }
         public abstract bool SameIO(FIRIO other);
         public abstract IEnumerable<T> GetAllIOOfType<T>();
+        public abstract List<T> GetAllIOOfType<T>(List<T> list);
         public abstract IEnumerable<FIRIO> WalkIOTree();
         public abstract bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container);
 
