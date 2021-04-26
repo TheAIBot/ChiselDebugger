@@ -346,5 +346,4 @@ ChiselTestGen/test_run_dir/
 #Ignore test files as they are too large for github
 TestGenerator/TestFolders/
 TestGenerator/OthersFIRRTL/
-TestGenerator/WithoutVCD.txt
-TestGenerator/withVCD.txt
+TestGenerator/TestTexts/

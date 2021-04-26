@@ -26,7 +26,11 @@ namespace TestGenerator
 
             List<TestInfo> movedTests = CopyTestsIntoFolder(foundTests, newTestDir);
 
-            MakeTestCode(movedTests, newTestDir);
+            const string testFilesDir = "TestTexts";
+            string testFilesPath = Path.Combine(Directory.GetCurrentDirectory(), testFilesDir);
+            Directory.CreateDirectory(testFilesPath);
+
+            MakeTestCode(movedTests, newTestDir, testFilesPath);
         }
 
         private static List<TestInfo> FindTests(string[] testDirs)
@@ -99,33 +103,43 @@ namespace TestGenerator
             return testsWithNewNames;
         }
 
-        private static void MakeTestCode(List<TestInfo> tests, string testDir)
+        private static void MakeTestCode(List<TestInfo> tests, string testDir, string testFilesPath)
         {
-            StringBuilder withoutVCD = new StringBuilder();
-            StringBuilder withVCD = new StringBuilder();
+            StringBuilder loadGraphTests = new StringBuilder();
+            StringBuilder inferTypeTests = new StringBuilder();
+            StringBuilder computeGraphTests = new StringBuilder();
 
-            withoutVCD.AppendLine($"const string TestDir = @\"{testDir}\";");
-            withoutVCD.AppendLine();
+            loadGraphTests.AppendLine($"const string TestDir = @\"{testDir}\";");
+            loadGraphTests.AppendLine();
 
-            withVCD.AppendLine($"const string TestDir = @\"{testDir}\";");
-            withVCD.AppendLine();
+            inferTypeTests.AppendLine($"const string TestDir = @\"{testDir}\";");
+            inferTypeTests.AppendLine();
+
+            computeGraphTests.AppendLine($"const string TestDir = @\"{testDir}\";");
+            computeGraphTests.AppendLine();
 
             foreach (var test in tests)
             {
                 string moduleName = Path.GetFileNameWithoutExtension(test.firPath);
+                string isVerilatorVCD = test.isVerilatorVCD.ToString().ToLower();
 
-                withoutVCD.AppendLine($"[TestMethod] public void {moduleName}_fir() => TestTools.VerifyChiselTest(\"{moduleName}\", \"fir\", false, TestDir);");
-                withoutVCD.AppendLine($"[TestMethod] public void {moduleName}_lo_fir() => TestTools.VerifyChiselTest(\"{moduleName}\", \"lo.fir\", false, TestDir);");
-                withoutVCD.AppendLine();
+                loadGraphTests.AppendLine($"[TestMethod] public void {moduleName}_fir() => TestTools.VerifyMakeGraph(\"{moduleName}\", \"fir\", TestDir);");
+                loadGraphTests.AppendLine($"[TestMethod] public void {moduleName}_lo_fir() => TestTools.VerifyMakeGraph(\"{moduleName}\", \"lo.fir\", TestDir);");
+                loadGraphTests.AppendLine();
 
 
-                withVCD.AppendLine($"[TestMethod] public void {moduleName}_fir() => TestTools.VerifyChiselTest(\"{moduleName}\", \"fir\", true, TestDir);");
-                withVCD.AppendLine($"[TestMethod] public void {moduleName}_lo_fir() => TestTools.VerifyChiselTest(\"{moduleName}\", \"lo.fir\", true, TestDir);");
-                withVCD.AppendLine();
+                inferTypeTests.AppendLine($"[TestMethod] public void {moduleName}_fir() => TestTools.VerifyInferTypes(\"{moduleName}\", \"fir\", {isVerilatorVCD}, TestDir);");
+                inferTypeTests.AppendLine($"[TestMethod] public void {moduleName}_lo_fir() => TestTools.VerifyInferTypes(\"{moduleName}\", \"lo.fir\", {isVerilatorVCD}, TestDir);");
+                inferTypeTests.AppendLine();
+
+                computeGraphTests.AppendLine($"[TestMethod] public void {moduleName}_fir() => TestTools.VerifyComputeGraph(\"{moduleName}\", \"fir\", {isVerilatorVCD}, TestDir);");
+                computeGraphTests.AppendLine($"[TestMethod] public void {moduleName}_lo_fir() => TestTools.VerifyComputeGraph(\"{moduleName}\", \"lo.fir\", {isVerilatorVCD}, TestDir);");
+                computeGraphTests.AppendLine();
             }
 
-            File.WriteAllText("WithoutVCD.txt", withoutVCD.ToString());
-            File.WriteAllText("withVCD.txt", withVCD.ToString());
+            File.WriteAllText(Path.Combine(testFilesPath, "TestLoadGraph.txt"), loadGraphTests.ToString());
+            File.WriteAllText(Path.Combine(testFilesPath, "TestTypeInferGraph.txt"), inferTypeTests.ToString());
+            File.WriteAllText(Path.Combine(testFilesPath, "TestComputeGraph.txt"), computeGraphTests.ToString());
         }
     }
 }
