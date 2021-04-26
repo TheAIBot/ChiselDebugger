@@ -95,7 +95,7 @@ namespace VCDReader.Parsing
             }
             else if (declWord.SequenceEqual("$version"))
             {
-                string versionTxt = lexer.NextWord().ToString();
+                string versionTxt = lexer.NextUntil("$").ToString();
                 string systemTaskString = string.Empty;
 
                 ReadOnlySpan<char> systemTask = lexer.PeekNextWord();
