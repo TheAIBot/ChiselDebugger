@@ -50,8 +50,16 @@ namespace TestGenerator
                 string[] files = Directory.EnumerateFiles(dir).ToArray();
                 if (files.Length > 0)
                 {
-                    string firFile = files.Single(x => !x.EndsWith(".lo.fir") && !x.EndsWith(".hi.fir") && x.EndsWith(".fir"));
-                    string loFirFile = files.Single(x => x.EndsWith(".lo.fir") || x.EndsWith(".hi.fir"));
+                    string firFile = files.Single(x => !x.EndsWith("treadle.lo.fir") && !x.EndsWith(".lo.fir") && !x.EndsWith(".hi.fir") && x.EndsWith(".fir"));
+                    string loFirFile;
+                    if (files.Any(x => x.EndsWith("treadle.lo.fir")))
+                    {
+                        loFirFile = files.Single(x => x.EndsWith("treadle.lo.fir"));
+                    }
+                    else
+                    {
+                        loFirFile = files.Single(x => x.EndsWith(".lo.fir") || x.EndsWith(".hi.fir"));
+                    }
                     string vcdFile = files.Single(x => x.EndsWith(".vcd"));
                     bool isVerilatorVCD = files.Any(x => x.EndsWith(".v"));
 
