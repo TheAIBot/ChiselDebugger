@@ -22,7 +22,8 @@ namespace ChiselDebug
         {
             this.Name = name;
             this.MainModule = mainModule;
-            this.ComputeGraph = CombComputeGraph.MakeGraph(MainModule);
+            this.ComputeGraph = CombComputeGraph.MakeMonoGraph(MainModule);
+            ComputeGraph.InferTypes();
 
             foreach (var root in ComputeGraph.GetRootNodes())
             {
@@ -185,6 +186,10 @@ namespace ChiselDebug
                         continue;
                     }
 
+                    if (con.Value.GetValue() == null)
+                    {
+                        continue;
+                    }
                     con.Value.UpdateValue(varValue);
                 }
             }

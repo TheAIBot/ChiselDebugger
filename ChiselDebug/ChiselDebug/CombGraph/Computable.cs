@@ -5,11 +5,11 @@ using VCDReader;
 
 namespace ChiselDebug.CombGraph
 {
-    public readonly struct Computable
+    public struct Computable
     {
         private readonly FIRRTLNode Node;
         private readonly Output Con;
-        private readonly BinaryVarValue OldValue;
+        private BinaryVarValue OldValue;
 
         public Computable(FIRRTLNode node)
         {
@@ -22,8 +22,8 @@ namespace ChiselDebug.CombGraph
         {
             this.Node = null;
             this.Con = con;
-            this.OldValue = new BinaryVarValue(Con.Value.GetValue().Bits.Length);
-            Array.Fill(OldValue.Bits, BitState.X);
+            this.OldValue = null;// new BinaryVarValue(Con.Value.GetValue().Bits.Length);
+            //Array.Fill(OldValue.Bits, BitState.X);
         }
 
         public Output Compute()
@@ -55,6 +55,21 @@ namespace ChiselDebug.CombGraph
             }
 
             return null;
+        }
+
+        public void InferType()
+        {
+            if (Node != null)
+            {
+                Node.InferType();
+            }
+            else
+            {
+                Con.InferType();
+                Con.SetDefaultvalue();
+                OldValue = new BinaryVarValue(Con.Value.GetValue().Bits.Length);
+                Array.Fill(OldValue.Bits, BitState.X);
+            }
         }
 
         public override string ToString()

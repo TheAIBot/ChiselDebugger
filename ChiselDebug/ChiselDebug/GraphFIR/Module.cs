@@ -531,43 +531,43 @@ namespace ChiselDebug.GraphFIR
 
         internal override void InferType()
         {
-            foreach (var node in Nodes)
-            {
-                node.InferType();
-            }
+            //foreach (var node in Nodes)
+            //{
+            //    node.InferType();
+            //}
 
-            foreach (Output output in GetInternalOutputs())
-            {
-                if (output.IsConnectedToAnything())
-                {
-                    output.InferType();
-                    Debug.Assert(output.Type != null);
+            //foreach (Output output in GetInternalOutputs())
+            //{
+            //    if (output.IsConnectedToAnything())
+            //    {
+            //        output.InferType();
+            //        Debug.Assert(output.Type != null);
 
-                    foreach (var input in output.GetConnectedInputs())
-                    {
-                        input.InferType();
-                        Debug.Assert(input.Type != null);
-                    }
-                }
-            }
+            //        foreach (var input in output.GetConnectedInputs())
+            //        {
+            //            input.InferType();
+            //            Debug.Assert(input.Type != null);
+            //        }
+            //    }
+            //}
 
-            foreach (var node in Nodes)
-            {
-                foreach (Output output in node.GetOutputs())
-                {
-                    if (output.IsConnectedToAnything())
-                    {
-                        output.InferType();
-                        Debug.Assert(output.Type != null);
+            //foreach (var node in Nodes)
+            //{
+            //    foreach (Output output in node.GetOutputs())
+            //    {
+            //        if (output.IsConnectedToAnything())
+            //        {
+            //            output.InferType();
+            //            Debug.Assert(output.Type != null);
 
-                        foreach (var input in output.GetConnectedInputs())
-                        {
-                            input.InferType();
-                            Debug.Assert(input.Type != null);
-                        }
-                    }
-                }
-            }
+            //            foreach (var input in output.GetConnectedInputs())
+            //            {
+            //                input.InferType();
+            //                Debug.Assert(input.Type != null);
+            //            }
+            //        }
+            //    }
+            //}
         }
 
         internal void FinishConnections()

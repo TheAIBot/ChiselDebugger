@@ -78,6 +78,11 @@ namespace ChiselDebug.GraphFIR.IO
             return allIO.ToArray();
         }
 
+        public FIRIO[] GetIndexesInOrder()
+        {
+            return IO.ToArray();
+        }
+
         public override bool IsVisibleAggregate()
         {
             return IO.FirstOrDefault()?.IsPartOfAggregateIO ?? false;

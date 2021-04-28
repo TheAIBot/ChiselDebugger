@@ -9,9 +9,9 @@ namespace ChiselDebug.CombGraph
     {
         private readonly Output[] StartOutputs;
         private readonly Input[] StopInputs;
-        private readonly Computable[] ComputeOrder;
+        private Computable[] ComputeOrder;
         private readonly Output[] ConsResponsibleFor;
-        private CombComputeNode[] OutgoingEdges;
+        private CombComputeNode[] OutgoingEdges = Array.Empty<CombComputeNode>();
         private int TotalComputeDependencies = 0;
         private int RemainingComputeDependencies = 0;
 
@@ -46,9 +46,9 @@ namespace ChiselDebug.CombGraph
         public List<Output> Compute()
         {
             List<Output> updatedConnections = new List<Output>();
-            foreach (var compute in ComputeOrder)
+            for (int i = 0; i < ComputeOrder.Length; i++)
             {
-                Output updated = compute.Compute();
+                Output updated = ComputeOrder[i].Compute();
                 if (updated != null)
                 {
                     updatedConnections.Add(updated);
@@ -61,6 +61,19 @@ namespace ChiselDebug.CombGraph
             }
 
             return updatedConnections;
+        }
+
+        public void inferTypes()
+        {
+            for (int i = 0; i < ComputeOrder.Length; i++)
+            {
+                ComputeOrder[i].InferType();
+            }
+
+            foreach (var edge in OutgoingEdges)
+            {
+                edge.RemainingComputeDependencies--;
+            }
         }
 
         public void ResetRemainingDependencies()

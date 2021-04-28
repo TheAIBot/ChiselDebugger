@@ -12,6 +12,8 @@ using System.Text;
 using System.Threading.Tasks;
 using VCDReader;
 
+//[assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
 namespace ChiselDebugTests
 {
     internal static class TestTools
@@ -35,7 +37,7 @@ namespace ChiselDebugTests
             return graph;
         }
 
-        internal static void VerifyChiselTest(string moduleName, string extension, bool testVCD, string modulePath = "ChiselTests", bool isVerilogVCD = true)
+        internal static void VerifyChiselTest(string moduleName, string extension, bool testVCD, string modulePath = "ChiselTests")
         {
             CircuitGraph lowFirGraph = null;
             if (extension == "fir")
@@ -52,7 +54,7 @@ namespace ChiselDebugTests
                 using VCD vcd = VCDReader.Parse.FromFile($"{modulePath}/{moduleName}.vcd");
                 VCDTimeline timeline = new VCDTimeline(vcd);
 
-                VerifyCircuitState(graph, timeline, isVerilogVCD);
+                VerifyCircuitState(graph, timeline, false);
             }
         }
 
@@ -86,6 +88,10 @@ namespace ChiselDebugTests
             {
                 foreach (var variable in expected.Variables)
                 {
+                    if (variable.Reference == "done")
+                    {
+
+                    }
                     Output varCon = graph.GetConnection(variable, isVerilogVCD);
                     if (varCon == null)
                     {
@@ -93,6 +99,14 @@ namespace ChiselDebugTests
                     }
 
                     BinaryVarValue actual = varCon.Value.GetValue();
+                    if (actual == null)
+                    {
+                        continue;
+                    }
+                    //if (expected.Bits.Length != actual.Bits.Length)
+                    //{
+                    //    Console.WriteLine($"Ref: {variable.Reference}, Expected: {expected.Bits.Length}, Actual: {actual.Bits.Length}");
+                    //}
                     Assert.AreEqual(expected.Bits.Length, actual.Bits.Length);
                 }
             }
@@ -119,6 +133,11 @@ namespace ChiselDebugTests
                         }
 
                         BinaryVarValue actual = varCon.Value.GetValue();
+                        if (actual == null)
+                        {
+                            continue;
+                        }
+
                         Assert.AreEqual(expected.Bits.Length, actual.Bits.Length);
                         for (int i = 0; i < expected.Bits.Length; i++)
                         {

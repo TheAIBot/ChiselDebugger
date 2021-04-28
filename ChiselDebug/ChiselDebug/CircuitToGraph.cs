@@ -744,7 +744,17 @@ namespace ChiselDebug
                 var vec = (GraphFIR.IO.Vector)GetIOGender(helper, subVec, gender);
                 var index = (GraphFIR.IO.Output)VisitExp(helper, subAccess.Index, GraphFIR.IO.IOGender.Male);
 
-                refContainer = vec.MakeWriteAccess(index, gender);
+                if (gender == GraphFIR.IO.IOGender.Male)
+                {
+                    GraphFIR.Mux node = new GraphFIR.Mux(vec.GetIndexesInOrder().ToList(), index, null, true);
+                    helper.AddNodeToModule(node);
+
+                    refContainer = node.Result;
+                }
+                else
+                {
+                    refContainer = vec.MakeWriteAccess(index, gender);
+                }
             }
             else
             {

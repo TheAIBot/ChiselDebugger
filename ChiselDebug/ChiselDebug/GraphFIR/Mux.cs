@@ -13,8 +13,9 @@ namespace ChiselDebug.GraphFIR
         public readonly FIRIO[] Choises;
         public readonly Input Decider;
         public readonly FIRIO Result;
+        public readonly bool IsVectorIndexer;
 
-        public Mux(List<FIRIO> choises, Output decider, FirrtlNode defNode) : base(defNode)
+        public Mux(List<FIRIO> choises, Output decider, FirrtlNode defNode, bool isVectorIndexer = false) : base(defNode)
         {
             choises = choises.Select(x => x.GetOutput()).ToList();
             if (!choises.All(x => x.IsPassiveOfType<Output>()))
@@ -25,6 +26,7 @@ namespace ChiselDebug.GraphFIR
             this.Choises = choises.Select(x => x.Flip(this)).ToArray();
             this.Decider = new Input(this, decider.Type);
             this.Result = choises.First().Copy(this);
+            this.IsVectorIndexer = isVectorIndexer;
             Result.SetName(null);
 
             for (int i = 0; i < Choises.Length; i++)
@@ -63,28 +65,35 @@ namespace ChiselDebug.GraphFIR
 
         public override void Compute()
         {
-            Debug.Assert(Choises.Length <= 2, "Only support multiplexer with two choises");
-
             FIRIO ChosenInput;
-            if (Decider.GetEnabledCon().Value.IsTrue())
+            if (!IsVectorIndexer)
             {
-                ChosenInput = Choises.First();
+                Debug.Assert(Choises.Length <= 2, "Only support multiplexer with two choises");
+
+                if (Decider.GetEnabledCon().Value.IsTrue())
+                {
+                    ChosenInput = Choises.First();
+                }
+                else
+                {
+                    //Conditionally valid
+                    if (Choises.Length == 1)
+                    {
+                        foreach (Output output in Result.Flatten())
+                        {
+                            BinaryVarValue binValue = output.Value.GetValue();
+                            Array.Fill(binValue.Bits, BitState.X);
+                        }
+
+                        return;
+                    }
+
+                    ChosenInput = Choises.Last();
+                }
             }
             else
             {
-                //Conditionally valid
-                if (Choises.Length == 1)
-                {
-                    foreach (Output output in Result.Flatten())
-                    {
-                        BinaryVarValue binValue = output.Value.GetValue();
-                        Array.Fill(binValue.Bits, BitState.X);
-                    }
-
-                    return;
-                }
-
-                ChosenInput = Choises.Last();
+                ChosenInput = Choises[Decider.GetEnabledCon().Value.GetValue().AsInt()];
             }
 
             Input[] from = ChosenInput.Flatten().Cast<Input>().ToArray();
