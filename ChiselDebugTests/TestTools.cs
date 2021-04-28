@@ -103,9 +103,8 @@ namespace ChiselDebugTests
             CircuitGraph graph = VerifyMakeGraph(moduleName, extension, modulePath);
             VCDTimeline timeline = MakeTimeline(moduleName, modulePath);
 
-            foreach (var time in timeline.GetAllSimTimes())
+            foreach (var state in timeline.GetAllDistinctStates())
             {
-                CircuitState state = timeline.GetStateAtTime(time);
                 graph.SetState(state, isVerilogVCD);
 
                 foreach (BinaryVarValue expected in state.VariableValues.Values)
