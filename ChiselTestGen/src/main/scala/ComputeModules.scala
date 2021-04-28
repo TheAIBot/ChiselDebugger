@@ -26,8 +26,8 @@ object ops {
         ("asSInt", io => io.out := io.a.asSInt().asUInt()),
         //("asClock", io => io.out := io.a =/= io.b), //Apparently asClock does not exist
 
-        ("shl", io => io.out := io.a >> io.const1.U),
-        ("shr", io => io.out := io.a << io.const1.U),
+        ("shl", io => io.out := io.a >> io.const1),
+        ("shr", io => io.out := io.a << io.const1),
         ("dshl", io => io.out := io.a >> io.b),
         ("dshr", io => io.out := io.a << io.b),
 
