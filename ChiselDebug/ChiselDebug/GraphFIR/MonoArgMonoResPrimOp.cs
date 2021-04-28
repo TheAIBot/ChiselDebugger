@@ -216,7 +216,7 @@ namespace ChiselDebug.GraphFIR
         protected override void MonoArgCompute(BinaryVarValue a, BinaryVarValue result)
         {
             int value = 1;
-            for (int i = 1; i < a.Bits.Length; i++)
+            for (int i = 0; i < a.Bits.Length; i++)
             {
                 value &= (int)a.Bits[i];
             }
@@ -239,7 +239,7 @@ namespace ChiselDebug.GraphFIR
         protected override void MonoArgCompute(BinaryVarValue a, BinaryVarValue result)
         {
             int value = 0;
-            for (int i = 1; i < a.Bits.Length; i++)
+            for (int i = 0; i < a.Bits.Length; i++)
             {
                 value &= (int)a.Bits[i];
             }
@@ -262,7 +262,7 @@ namespace ChiselDebug.GraphFIR
         protected override void MonoArgCompute(BinaryVarValue a, BinaryVarValue result)
         {
             int value = 0;
-            for (int i = 1; i < a.Bits.Length; i++)
+            for (int i = 0; i < a.Bits.Length; i++)
             {
                 value ^= (int)a.Bits[i];
             }
