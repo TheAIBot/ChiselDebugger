@@ -273,11 +273,11 @@ namespace ChiselDebug.GraphFIR
         protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
         {
             int shift = b.AsInt();
+            Array.Fill(result.Bits, BitState.Zero);
             for (int i = 0; i < a.Bits.Length; i++)
             {
                 result.Bits[i + shift] = a.Bits[i];
             }
-            Array.Fill(result.Bits, BitState.Zero, 0, shift);
         }
 
         protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
@@ -295,11 +295,8 @@ namespace ChiselDebug.GraphFIR
         protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
         {
             int shift = b.AsInt();
-            for (int i = 0; i < a.Bits.Length; i++)
-            {
-                result.Bits[i] = a.Bits[i + shift];
-            }
-            Array.Fill(result.Bits, a.Bits[^1], result.Bits.Length - 1 - shift, shift);
+            Array.Fill(result.Bits, a.Bits[^1]);
+            Array.Copy(a.Bits, Math.Min(a.Bits.Length - 1, shift), result.Bits, 0, Math.Max(0, a.Bits.Length - shift));
         }
 
         protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch

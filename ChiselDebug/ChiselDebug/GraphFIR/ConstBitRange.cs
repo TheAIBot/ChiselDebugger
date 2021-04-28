@@ -143,7 +143,7 @@ namespace ChiselDebug.GraphFIR
 
         protected override void ConstBitRangeCompute(BinaryVarValue a, BinaryVarValue result)
         {
-            Array.Copy(a.Bits, result.Bits, Math.Max(a.Bits.Length, WidthAfterPad));
+            Array.Copy(a.Bits, result.Bits, Math.Min(a.Bits.Length, WidthAfterPad));
 
             if (a.Bits.Length < WidthAfterPad)
             {
