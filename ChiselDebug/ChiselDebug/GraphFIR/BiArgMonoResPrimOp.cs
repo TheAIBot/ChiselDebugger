@@ -182,13 +182,29 @@ namespace ChiselDebug.GraphFIR
             {
                 ulong aVal = a.AsULong();
                 ulong bVal = b.AsULong();
-                result.SetBits(aVal / bVal);
+                //Handle divide by zero
+                if (bVal == 0)
+                {
+                    Array.Fill(result.Bits, BitState.X);
+                }
+                else
+                {
+                    result.SetBits(aVal / bVal);
+                }
             }
             else
             {
                 BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
                 BigInteger bVal = b.AsBigInteger(B.Type is SIntType);
-                result.SetBitsAndExtend(aVal / bVal, Result.Type is SIntType);
+                //Handle divide by zero
+                if (bVal == 0)
+                {
+                    Array.Fill(result.Bits, BitState.X);
+                }
+                else
+                {
+                    result.SetBitsAndExtend(aVal / bVal, Result.Type is SIntType);
+                }
             }
         }
 
@@ -215,13 +231,28 @@ namespace ChiselDebug.GraphFIR
             {
                 ulong aVal = a.AsULong();
                 ulong bVal = b.AsULong();
-                result.SetBits(aVal % bVal);
+                //Handle divide by zero
+                if (bVal == 0)
+                {
+                    Array.Fill(result.Bits, BitState.X);
+                }
+                else
+                {
+                    result.SetBits(aVal % bVal);
+                }
             }
             else
             {
                 BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
                 BigInteger bVal = b.AsBigInteger(B.Type is SIntType);
-                result.SetBitsAndExtend(aVal % bVal, Result.Type is SIntType);
+                if (bVal == 0)
+                {
+                    Array.Fill(result.Bits, BitState.X);
+                }
+                else
+                {
+                    result.SetBitsAndExtend(aVal % bVal, Result.Type is SIntType);
+                }
             }
         }
 
