@@ -34,11 +34,10 @@ namespace ChiselDebug.GraphFIR
 
         public override void Compute()
         {
-            Output aCon = In.GetEnabledCon();
-            Output resultCon = Result;
+            In.UpdateValueFromSource();
 
-            BinaryVarValue aVal = (BinaryVarValue)aCon.Value.GetValue();
-            BinaryVarValue resultVal = (BinaryVarValue)resultCon.Value.GetValue();
+            BinaryVarValue aVal = In.Value.GetValue();
+            BinaryVarValue resultVal = Result.Value.GetValue();
 
             if (!aVal.IsValidBinary())
             {

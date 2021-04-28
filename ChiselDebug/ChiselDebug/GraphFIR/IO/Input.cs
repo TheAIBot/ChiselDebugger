@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using VCDReader;
 
 namespace ChiselDebug.GraphFIR.IO
 {
@@ -171,6 +172,33 @@ namespace ChiselDebug.GraphFIR.IO
             //Just return random connection as they should all have the
             //same value.
             return CondCons.First();
+        }
+
+        public void UpdateValueFromSource()
+        {
+            if (CondCons != null)
+            {
+                foreach (var condCon in CondCons)
+                {
+                    if (condCon.IsEnabled)
+                    {
+                        Value.UpdateFrom(condCon.Value);
+                        return;
+                    }
+                }
+            }
+
+            if (Con != null)
+            {
+                Value.UpdateFrom(Con.Value);
+                return;
+            }
+
+            //No connection is enabled.
+            //This should only happen when circuit state isn't set yet.
+            //Just return random connection as they should all have the
+            //same value.
+            Value.UpdateFrom(CondCons.First().Value);
         }
 
         public override void InferGroundType()

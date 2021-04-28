@@ -15,7 +15,7 @@ namespace ChiselDebug
         public readonly string Name;
         public readonly Module MainModule;
         public readonly CombComputeGraph ComputeGraph;
-        public readonly Dictionary<VarDef, Output> VarDefToCon = new Dictionary<VarDef, Output>();
+        public readonly Dictionary<VarDef, ScalarIO> VarDefToCon = new Dictionary<VarDef, ScalarIO>();
         public readonly HashSet<Output> ComputeAllowsUpdate = new HashSet<Output>();
 
         public CircuitGraph(string name, Module mainModule)
@@ -89,9 +89,9 @@ namespace ChiselDebug
             }
         }
 
-        public Output GetConnection(VarDef variable, bool isVerilogVCD)
+        public ScalarIO GetConnection(VarDef variable, bool isVerilogVCD)
         {
-            if (VarDefToCon.TryGetValue(variable, out Output con))
+            if (VarDefToCon.TryGetValue(variable, out ScalarIO con))
             {
                 return con;
             }
@@ -155,17 +155,13 @@ namespace ChiselDebug
                 return null;
             }
 
-            if (ioLink is Output output)
+            if (ioLink is ScalarIO scalar)
             {
-                VarDefToCon.Add(variable, output);
-                return output;
-            }
-            else if (ioLink is Input input && input.GetAllConnections().Length == 1)
-            {
-                return input.GetAllConnections()[0];
+                VarDefToCon.Add(variable, scalar);
+                return scalar;
             }
 
-            return null;
+            throw new Exception("No");
         }
 
         public List<Output> SetState(CircuitState state, bool isVerilogVCD)
@@ -175,7 +171,7 @@ namespace ChiselDebug
             {
                 foreach (var variable in varValue.Variables)
                 {
-                    Output con = GetConnection(variable, isVerilogVCD);
+                    ScalarIO con = GetConnection(variable, isVerilogVCD);
                     if (con == null)
                     {
                         continue;

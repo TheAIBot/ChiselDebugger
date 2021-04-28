@@ -40,8 +40,8 @@ namespace ChiselDebug.CombGraph
                     Input input = (Input)mod.GetPairedIO(Con);
                     if (input.IsConnectedToAnything())
                     {
-                        Output copyFrom = input.GetEnabledCon();
-                        Con.Value.UpdateFrom(copyFrom.Value);
+                        input.UpdateValueFromSource();
+                        Con.Value.UpdateFrom(input.Value);
                     }
                 }
 

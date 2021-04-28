@@ -34,11 +34,10 @@ namespace ChiselDebug.GraphFIR
 
         public override void Compute()
         {
-            Output aCon = A.GetEnabledCon();
-            Output resultCon = Result;
+            A.UpdateValueFromSource();
 
-            BinaryVarValue aVal = (BinaryVarValue)aCon.Value.GetValue();
-            BinaryVarValue resultVal = (BinaryVarValue)resultCon.Value.GetValue();
+            BinaryVarValue aVal = A.Value.GetValue();
+            BinaryVarValue resultVal = Result.Value.GetValue();
 
             if (!aVal.IsValidBinary())
             {
@@ -216,7 +215,7 @@ namespace ChiselDebug.GraphFIR
 
         protected override void MonoArgCompute(BinaryVarValue a, BinaryVarValue result)
         {
-            int value = (int)a.Bits[0];
+            int value = 1;
             for (int i = 1; i < a.Bits.Length; i++)
             {
                 value &= (int)a.Bits[i];
@@ -239,7 +238,7 @@ namespace ChiselDebug.GraphFIR
 
         protected override void MonoArgCompute(BinaryVarValue a, BinaryVarValue result)
         {
-            int value = (int)a.Bits[0];
+            int value = 0;
             for (int i = 1; i < a.Bits.Length; i++)
             {
                 value &= (int)a.Bits[i];
@@ -262,7 +261,7 @@ namespace ChiselDebug.GraphFIR
 
         protected override void MonoArgCompute(BinaryVarValue a, BinaryVarValue result)
         {
-            int value = (int)a.Bits[0];
+            int value = 0;
             for (int i = 1; i < a.Bits.Length; i++)
             {
                 value ^= (int)a.Bits[i];

@@ -86,7 +86,7 @@ namespace ChiselDebugTests
             {
                 foreach (var variable in expected.Variables)
                 {
-                    Output varCon = graph.GetConnection(variable, isVerilogVCD);
+                    ScalarIO varCon = graph.GetConnection(variable, isVerilogVCD);
                     if (varCon == null)
                     {
                         continue;
@@ -103,6 +103,11 @@ namespace ChiselDebugTests
             CircuitGraph graph = VerifyMakeGraph(moduleName, extension, modulePath);
             VCDTimeline timeline = MakeTimeline(moduleName, modulePath);
 
+            VerifyCircuitState(graph, timeline, isVerilogVCD);
+        }
+
+        internal static void VerifyCircuitState(CircuitGraph graph, VCDTimeline timeline, bool isVerilogVCD)
+        {
             foreach (var state in timeline.GetAllDistinctStates())
             {
                 graph.SetState(state, isVerilogVCD);
@@ -111,13 +116,21 @@ namespace ChiselDebugTests
                 {
                     foreach (var variable in expected.Variables)
                     {
-                        Output varCon = graph.GetConnection(variable, isVerilogVCD);
+                        ScalarIO varCon = graph.GetConnection(variable, isVerilogVCD);
+                        if (varCon is Input input)
+                        {
+                            input.UpdateValueFromSource();
+                        }
                         if (varCon == null)
                         {
                             continue;
                         }
 
                         BinaryVarValue actual = varCon.Value.GetValue();
+                        if (expected.Bits.Length != actual.Bits.Length)
+                        {
+
+                        }
                         Assert.AreEqual(expected.Bits.Length, actual.Bits.Length);
                         for (int i = 0; i < expected.Bits.Length; i++)
                         {
@@ -132,43 +145,8 @@ namespace ChiselDebugTests
                             }
                             Assert.AreEqual(expected.Bits[i], actual.Bits[i]);
                         }
-                    }
-                }
-            }
-        }
 
-        internal static void VerifyCircuitState(CircuitGraph graph, VCDTimeline timeline, bool isVerilogVCD)
-        {
-            foreach (var time in timeline.GetAllSimTimes())
-            {
-                CircuitState state = timeline.GetStateAtTime(time);
-                graph.SetState(state, isVerilogVCD);
-
-                foreach (BinaryVarValue expected in state.VariableValues.Values)
-                {
-                    foreach (var variable in expected.Variables)
-                    {
-                        Output varCon = graph.GetConnection(variable, isVerilogVCD);
-                        if (varCon == null)
-                        {
-                            continue;
-                        }
-
-                        BinaryVarValue actual = varCon.Value.GetValue();
-                        Assert.AreEqual(expected.Bits.Length, actual.Bits.Length);
-                        for (int i = 0; i < expected.Bits.Length; i++)
-                        {
-                            if (!actual.Bits[i].IsBinary())
-                            {
-                                continue;
-                            }
-
-                            if (expected.Bits[i] != actual.Bits[i])
-                            {
-
-                            }
-                            Assert.AreEqual(expected.Bits[i], actual.Bits[i]);
-                        }
+                        //Console.WriteLine($"Name: {expected.Variables[0].Reference}\nExpected: {expected.BitsToString()}\nActual:   {actual.BitsToString()}\n");
                     }
                 }
             }

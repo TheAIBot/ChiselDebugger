@@ -66,7 +66,8 @@ namespace ChiselDebug.GraphFIR
             Debug.Assert(Choises.Length <= 2, "Only support multiplexer with two choises");
 
             FIRIO ChosenInput;
-            if (Decider.GetEnabledCon().Value.IsTrue())
+            Decider.UpdateValueFromSource();
+            if (Decider.Value.IsTrue())
             {
                 ChosenInput = Choises.First();
             }
@@ -93,7 +94,8 @@ namespace ChiselDebug.GraphFIR
 
             for (int i = 0; i < from.Length; i++)
             {
-                BinaryVarValue fromBin = from[i].GetEnabledCon().Value.GetValue();
+                from[i].UpdateValueFromSource();
+                BinaryVarValue fromBin = from[i].Value.GetValue();
                 BinaryVarValue toBin = to[i].Value.GetValue();
 
                 toBin.SetBitsAndExtend(fromBin, from[i].Type is SIntType);
