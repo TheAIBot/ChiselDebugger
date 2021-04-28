@@ -24,12 +24,9 @@ namespace ChiselDebug
             this.MainModule = mainModule;
             this.ComputeGraph = CombComputeGraph.MakeGraph(MainModule);
 
-            foreach (var root in ComputeGraph.GetRootNodes())
+            foreach (var rootStart in ComputeGraph.GetAllRootSources())
             {
-                foreach (var rootStart in root.GetStartOutputs())
-                {
-                    ComputeAllowsUpdate.Add(rootStart);
-                }
+                ComputeAllowsUpdate.Add(rootStart);
             }
         }
 

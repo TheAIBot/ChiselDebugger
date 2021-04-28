@@ -12,6 +12,12 @@ namespace ChiselDebug.CombGraph
         private readonly List<CombComputeNode> Nodes = new List<CombComputeNode>();
         private readonly List<CombComputeNode> ConstComputeNodes = new List<CombComputeNode>();
         private readonly List<CombComputeNode> RootNodes = new List<CombComputeNode>();
+        private readonly List<Output> RootSources;
+
+        public CombComputeGraph(List<Output> rootSources)
+        {
+            this.RootSources = rootSources;
+        }
 
         public void AddValueChangingNode(CombComputeNode combNode)
         {
@@ -115,6 +121,11 @@ namespace ChiselDebug.CombGraph
             return allNodes.ToArray();
         }
 
+        public Output[] GetAllRootSources()
+        {
+            return RootSources.ToArray();
+        }
+
         public static CombComputeGraph MakeGraph(Module module)
         {
             List<CombComputeNode> computeNodes = new List<CombComputeNode>();
@@ -135,6 +146,9 @@ namespace ChiselDebug.CombGraph
             {
                 toMake.Enqueue(rootModuleIncommingPorts);
             }
+
+            List<Output> rootSources = toMake.SelectMany(x => x).ToList();
+            rootSources.AddRange(module.GetAllNestedNodesOfType<ConstValue>().Select(x => x.Result));
 
 
             var constNodesAndCons = GetAllCombNodeFromConstValue(module);
@@ -187,7 +201,7 @@ namespace ChiselDebug.CombGraph
                 }
             }
 
-            CombComputeGraph graph = new CombComputeGraph();
+            CombComputeGraph graph = new CombComputeGraph(rootSources);
             foreach (var node in computeNodes)
             {
                 graph.AddValueChangingNode(node);
