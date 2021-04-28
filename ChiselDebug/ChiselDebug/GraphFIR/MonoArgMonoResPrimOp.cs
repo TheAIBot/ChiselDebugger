@@ -241,7 +241,7 @@ namespace ChiselDebug.GraphFIR
             int value = 0;
             for (int i = 0; i < a.Bits.Length; i++)
             {
-                value &= (int)a.Bits[i];
+                value |= (int)a.Bits[i];
             }
 
             result.Bits[0] = (BitState)value;
