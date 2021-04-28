@@ -160,6 +160,10 @@ namespace ChiselDebug
                 VarDefToCon.Add(variable, output);
                 return output;
             }
+            else if (ioLink is Input input && input.GetAllConnections().Length == 1)
+            {
+                return input.GetAllConnections()[0];
+            }
 
             return null;
         }
