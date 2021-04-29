@@ -272,11 +272,13 @@ namespace ChiselDebug.GraphFIR
         protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
         {
             int shift = b.AsInt();
-            Array.Fill(result.Bits, BitState.Zero);
-            for (int i = 0; i < a.Bits.Length; i++)
-            {
-                result.Bits[i + shift] = a.Bits[i];
-            }
+            Array.Fill(result.Bits, BitState.Zero, 0, shift);
+
+            int copyLength = Math.Min(result.Bits.Length - shift, a.Bits.Length);
+            Array.Copy(a.Bits, 0, result.Bits, shift, copyLength);
+
+            BitState signFill = A.Type is SIntType ? a.Bits[^1] : BitState.Zero;
+            result.Bits.AsSpan(shift + copyLength).Fill(signFill);
         }
 
         protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
