@@ -33,7 +33,11 @@ namespace VCDReader
         {
             while (Lexer.IsWordsRemaining())
             {
-                yield return Visitor.VisitSimCmd(Lexer, IDToVariable);
+                var simCmd = Visitor.VisitSimCmd(Lexer, IDToVariable);
+                if (simCmd != null)
+                {
+                    yield return simCmd;
+                }
             }
         }
 

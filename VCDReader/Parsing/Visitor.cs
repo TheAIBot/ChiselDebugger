@@ -136,9 +136,22 @@ namespace VCDReader.Parsing
             }
         }
 
-        internal static ISimCmd VisitSimCmd(VCDLexer lexer, Dictionary<string, List<VarDef>> idToVariable)
+        internal static ISimCmd? VisitSimCmd(VCDLexer lexer, Dictionary<string, List<VarDef>> idToVariable)
         {
             ReadOnlySpan<char> declWord = lexer.NextWord();
+
+            //It may be the case that it's first discovered now that
+            // the end of the file has been reached.
+            if (declWord.Length == 0)
+            {
+                if (lexer.IsWordsRemaining())
+                {
+                    throw new Exception("Invalid simulation command.");
+                }
+
+                return null;
+            }
+
             if (declWord.SequenceEqual("$comment"))
             {
                 string text = lexer.NextUntil("$end").ToString();
