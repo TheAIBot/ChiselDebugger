@@ -294,7 +294,7 @@ namespace ChiselDebug.GraphFIR
         protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
         {
             int shift = b.AsInt();
-            Array.Fill(result.Bits, a.Bits[^1]);
+            Array.Fill(result.Bits, A.Type is SIntType ? a.Bits[^1] : BitState.Zero);
             Array.Copy(a.Bits, Math.Min(a.Bits.Length - 1, shift), result.Bits, 0, Math.Max(0, a.Bits.Length - shift));
         }
 
