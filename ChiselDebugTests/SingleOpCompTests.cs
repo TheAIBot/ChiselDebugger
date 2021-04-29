@@ -10,7 +10,7 @@ namespace ChiselDebugTests
     [TestClass]
     public class SingleOpCompTests
     {
-        const string TestDir = @"...";
+        const string TestDir = "../../../../TestGenerator/OthersFIRRTL";
 
         [TestMethod] public void ComputeSingle_fir() => TestTools.VerifyComputeGraph("ComputeSingle", "fir", false, TestDir);
         [TestMethod] public void ComputeSingle_lo_fir() => TestTools.VerifyComputeGraph("ComputeSingle", "lo.fir", false, TestDir);

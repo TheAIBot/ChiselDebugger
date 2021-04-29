@@ -10,7 +10,7 @@ namespace ChiselDebugTests
     [TestClass]
     public class ComputeOthersFIRRTL
     {
-        const string TestDir = @"...";
+        const string TestDir = "../../../../TestGenerator/OthersFIRRTL";
 
         [TestMethod] public void AxonSystem_fir() => TestTools.VerifyComputeGraph("AxonSystem", "fir", false, TestDir);
         [TestMethod] public void AxonSystem_lo_fir() => TestTools.VerifyComputeGraph("AxonSystem", "lo.fir", false, TestDir);

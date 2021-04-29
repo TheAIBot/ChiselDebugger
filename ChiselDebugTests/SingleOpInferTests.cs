@@ -10,7 +10,7 @@ namespace ChiselDebugTests
     [TestClass]
     public class SingleOpInferTests
     {
-        const string TestDir = @"...";
+        const string TestDir = "../../../../TestGenerator/OthersFIRRTL";
 
         [TestMethod] public void ComputeSingle_fir() => TestTools.VerifyInferTypes("ComputeSingle", "fir", false, TestDir);
         [TestMethod] public void ComputeSingle_lo_fir() => TestTools.VerifyInferTypes("ComputeSingle", "lo.fir", false, TestDir);

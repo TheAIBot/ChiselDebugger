@@ -10,7 +10,7 @@ namespace ChiselDebugTests
     [TestClass]
     public class InferTypesOthersFIRRTL
     {
-        const string TestDir = @"...";
+        const string TestDir = "../../../../TestGenerator/OthersFIRRTL";
 
         [TestMethod] public void AxonSystem_fir() => TestTools.VerifyInferTypes("AxonSystem", "fir", false, TestDir);
         [TestMethod] public void AxonSystem_lo_fir() => TestTools.VerifyInferTypes("AxonSystem", "lo.fir", false, TestDir);
