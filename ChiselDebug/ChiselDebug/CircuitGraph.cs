@@ -118,6 +118,7 @@ namespace ChiselDebug
 
             if (!foundIO)
             {
+                VarDefToCon.Add(variable, null);
                 return null;
                 ////Wierd wires are added to memory ports that are not part of the
                 ////firrtl code. Just ignore those wires.
