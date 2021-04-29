@@ -11,6 +11,7 @@ namespace Benchmarker
     {
         static void Main(string[] args)
         {
+            const string dir = "";
             Circuit circuddit = FIRRTL.Parse.FromFile(Path.Combine(dir, "TileTester_4.lo.fir"));
             //ConcurrentBag<CircuitGraph> graphs = new ConcurrentBag<CircuitGraph>();
             //Parallel.For(0, 8, x =>

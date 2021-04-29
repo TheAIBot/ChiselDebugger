@@ -8,7 +8,7 @@ import firrtl.AnnotationSeq
 import firrtl.options.TargetDirAnnotation
 
 class ComputeTester extends FlatSpec with ChiselScalatestTester with Matchers {
-    def testModule(io: ComputeIO[UInt], clock: Clock) {
+    def testModuleUInt(io: ComputeIO[UInt], clock: Clock) {
         for (a <- 0 to 63) {
             for (b <- 0 to 63) {
                 io.a.poke(a.U)
@@ -23,14 +23,41 @@ class ComputeTester extends FlatSpec with ChiselScalatestTester with Matchers {
             }
         }
     }
+    def testModuleSInt(io: ComputeIO[SInt], clock: Clock) {
+        for (a <- 0 to 63) {
+            for (b <- 0 to 63) {
+                io.a.poke(a.S)
+                io.b.poke(b.S)
+                io.c.poke(true.B)
+                clock.step()
 
-    ops.scalarOps.foreach(x => {
-        it should "Test single " + x._1 in {
-            val testDir = "test_comp_dir/" + x._1
+                io.a.poke(a.S)
+                io.b.poke(b.S)
+                io.c.poke(false.B)
+                clock.step()
+            }
+        }
+    }
+
+    ops.scalarUIntOps.foreach(x => {
+        it should "Test single uint " + x._1 in {
+            val testDir = "test_comp_dir/UInt_" + x._1
             test(new ComputeSingle(x, new ComputeIO[UInt](UInt(6.W), 1, 3))).withAnnotations(Seq(TargetDirAnnotation(testDir))).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
                 {dut=> {
-                    testModule(dut.io, dut.clock)
-                }}
+                    testModuleUInt(dut.io, dut.clock)
+                }
+            }
+        }
+    })
+
+    ops.scalarSIntOps.foreach(x => {
+        it should "Test single sint " + x._1 in {
+            val testDir = "test_comp_dir/SInt_" + x._1
+            test(new ComputeSingle(x, new ComputeIO[SInt](SInt(6.W), 1, 3))).withAnnotations(Seq(TargetDirAnnotation(testDir))).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
+                {dut=> {
+                    testModuleSInt(dut.io, dut.clock)
+                }
+            }
         }
     })
 }

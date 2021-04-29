@@ -105,6 +105,17 @@ namespace ChiselDebug.Timeline
             return segment.GetStateAtTime(time);
         }
 
+        public IEnumerable<CircuitState> GetAllDistinctStates()
+        {
+            foreach (var segment in SegmentChanges)
+            {
+                foreach (var state in segment.GetAllDistinctStates())
+                {
+                    yield return state;
+                }
+            }
+        }
+
         public IEnumerable<ulong> GetAllSimTimes()
         {
             foreach (var segment in SegmentChanges)

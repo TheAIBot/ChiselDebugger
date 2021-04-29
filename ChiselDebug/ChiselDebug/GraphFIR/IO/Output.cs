@@ -8,7 +8,6 @@ namespace ChiselDebug.GraphFIR.IO
     public class Output : ScalarIO
     {
         private HashSet<Input> To = null;
-        public ValueType Value;
 
 
         public Output(FIRRTLNode node, string name, IFIRType type) : base(node, name, type)
@@ -145,11 +144,6 @@ namespace ChiselDebug.GraphFIR.IO
         public IEnumerable<Input> GetConnectedInputs()
         {
             return To ?? Enumerable.Empty<Input>();
-        }
-
-        public void SetDefaultvalue()
-        {
-            Value = new ValueType(Type);
         }
     }
 }

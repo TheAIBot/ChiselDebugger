@@ -237,7 +237,7 @@ namespace VCDReader
         {
             var value = BigInteger.Zero;
 
-            int sign = (int)Bits[^1];
+            int sign = -(int)Bits[^1];
             value |= sign;
 
             for (int i = Bits.Length - 1; i >= 0; i--)

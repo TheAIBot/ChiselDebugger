@@ -65,12 +65,14 @@ namespace ChiselDebug.GraphFIR
 
         public override void Compute()
         {
+            Decider.UpdateValueFromSource();
+
             FIRIO ChosenInput;
             if (!IsVectorIndexer)
             {
                 Debug.Assert(Choises.Length <= 2, "Only support multiplexer with two choises");
 
-                if (Decider.GetEnabledCon().Value.IsTrue())
+                if (Decider.Value.IsTrue())
                 {
                     ChosenInput = Choises.First();
                 }
@@ -93,7 +95,7 @@ namespace ChiselDebug.GraphFIR
             }
             else
             {
-                ChosenInput = Choises[Decider.GetEnabledCon().Value.GetValue().AsInt()];
+                ChosenInput = Choises[Decider.Value.GetValue().AsInt()];
             }
 
             Input[] from = ChosenInput.Flatten().Cast<Input>().ToArray();
@@ -102,7 +104,8 @@ namespace ChiselDebug.GraphFIR
 
             for (int i = 0; i < from.Length; i++)
             {
-                BinaryVarValue fromBin = from[i].GetEnabledCon().Value.GetValue();
+                from[i].UpdateValueFromSource();
+                BinaryVarValue fromBin = from[i].Value.GetValue();
                 BinaryVarValue toBin = to[i].Value.GetValue();
 
                 toBin.SetBitsAndExtend(fromBin, from[i].Type is SIntType);

@@ -577,6 +577,10 @@ namespace ChiselDebug.GraphFIR
                 if (output.Type != null)
                 {
                     output.SetDefaultvalue();
+                    foreach (var input in output.GetConnectedInputs())
+                    {
+                        input.SetDefaultvalue();
+                    }
                 }
             }
 
@@ -587,6 +591,10 @@ namespace ChiselDebug.GraphFIR
                     if (output.Type != null)
                     {
                         output.SetDefaultvalue();
+                        foreach (var input in output.GetConnectedInputs())
+                        {
+                            input.SetDefaultvalue();
+                        }
                     }
                 }
             }

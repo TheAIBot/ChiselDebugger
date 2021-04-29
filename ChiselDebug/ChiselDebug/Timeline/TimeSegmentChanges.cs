@@ -31,6 +31,16 @@ namespace ChiselDebug.Timeline
             return state;
         }
 
+        public IEnumerable<CircuitState> GetAllDistinctStates()
+        {
+            CircuitState state = StartState.Copy();
+            foreach (var step in StepChanges)
+            {
+                state.AddChanges(step);
+                yield return state;
+            }
+        }
+
         public IEnumerable<ulong> GetAllSimTimes()
         {
             foreach (var step in StepChanges)

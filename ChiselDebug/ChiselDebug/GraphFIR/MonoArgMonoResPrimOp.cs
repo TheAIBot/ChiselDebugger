@@ -34,11 +34,10 @@ namespace ChiselDebug.GraphFIR
 
         public override void Compute()
         {
-            Output aCon = A.GetEnabledCon();
-            Output resultCon = Result;
+            A.UpdateValueFromSource();
 
-            BinaryVarValue aVal = (BinaryVarValue)aCon.Value.GetValue();
-            BinaryVarValue resultVal = (BinaryVarValue)resultCon.Value.GetValue();
+            BinaryVarValue aVal = A.Value.GetValue();
+            BinaryVarValue resultVal = Result.Value.GetValue();
 
             if (!aVal.IsValidBinary())
             {
@@ -155,30 +154,30 @@ namespace ChiselDebug.GraphFIR
             const int bitsInLong = 64;
             if (A.Type is UIntType)
             {
-                if (a.Bits.Length <= bitsInLong && result.Bits.Length <= 64)
-                {
-                    long aVal = (long)a.AsULong();
-                    result.SetBits(-aVal);
-                }
-                else
-                {
+                //if (a.Bits.Length <= bitsInLong && result.Bits.Length <= 64)
+                //{
+                //    long aVal = (long)a.AsULong();
+                //    result.SetBits(-aVal);
+                //}
+                //else
+                //{
                     BigInteger aVal = a.AsUnsignedBigInteger();
                     result.SetBitsAndExtend(-aVal, Result.Type is SIntType);
-                }
+                //}
             }
             else
             {
-                Debug.Assert(A.Type is SIntType);
-                if (a.Bits.Length <= bitsInLong && result.Bits.Length <= 64)
-                {
-                    long aVal = a.AsLong();
-                    result.SetBits(-aVal);
-                }
-                else
-                {
+                //Debug.Assert(A.Type is SIntType);
+                //if (a.Bits.Length <= bitsInLong && result.Bits.Length <= 64)
+                //{
+                //    long aVal = a.AsLong();
+                //    result.SetBits(-aVal);
+                //}
+                //else
+                //{
                     BigInteger aVal = a.AsSignedBigInteger();
                     result.SetBitsAndExtend(-aVal, Result.Type is SIntType);
-                }
+                //}
             }
         }
 
@@ -216,8 +215,8 @@ namespace ChiselDebug.GraphFIR
 
         protected override void MonoArgCompute(BinaryVarValue a, BinaryVarValue result)
         {
-            int value = (int)a.Bits[0];
-            for (int i = 1; i < a.Bits.Length; i++)
+            int value = 1;
+            for (int i = 0; i < a.Bits.Length; i++)
             {
                 value &= (int)a.Bits[i];
             }
@@ -239,10 +238,10 @@ namespace ChiselDebug.GraphFIR
 
         protected override void MonoArgCompute(BinaryVarValue a, BinaryVarValue result)
         {
-            int value = (int)a.Bits[0];
-            for (int i = 1; i < a.Bits.Length; i++)
+            int value = 0;
+            for (int i = 0; i < a.Bits.Length; i++)
             {
-                value &= (int)a.Bits[i];
+                value |= (int)a.Bits[i];
             }
 
             result.Bits[0] = (BitState)value;
@@ -262,8 +261,8 @@ namespace ChiselDebug.GraphFIR
 
         protected override void MonoArgCompute(BinaryVarValue a, BinaryVarValue result)
         {
-            int value = (int)a.Bits[0];
-            for (int i = 1; i < a.Bits.Length; i++)
+            int value = 0;
+            for (int i = 0; i < a.Bits.Length; i++)
             {
                 value ^= (int)a.Bits[i];
             }

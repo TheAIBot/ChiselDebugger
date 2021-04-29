@@ -34,11 +34,10 @@ namespace ChiselDebug.GraphFIR
 
         public override void Compute()
         {
-            Output aCon = In.GetEnabledCon();
-            Output resultCon = Result;
+            In.UpdateValueFromSource();
 
-            BinaryVarValue aVal = (BinaryVarValue)aCon.Value.GetValue();
-            BinaryVarValue resultVal = (BinaryVarValue)resultCon.Value.GetValue();
+            BinaryVarValue aVal = In.Value.GetValue();
+            BinaryVarValue resultVal = Result.Value.GetValue();
 
             if (!aVal.IsValidBinary())
             {
@@ -143,7 +142,7 @@ namespace ChiselDebug.GraphFIR
 
         protected override void ConstBitRangeCompute(BinaryVarValue a, BinaryVarValue result)
         {
-            Array.Copy(a.Bits, result.Bits, Math.Max(a.Bits.Length, WidthAfterPad));
+            Array.Copy(a.Bits, result.Bits, Math.Min(a.Bits.Length, WidthAfterPad));
 
             if (a.Bits.Length < WidthAfterPad)
             {

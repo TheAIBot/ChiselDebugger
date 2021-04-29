@@ -40,8 +40,8 @@ namespace ChiselDebug.CombGraph
                     Input input = (Input)mod.GetPairedIO(Con);
                     if (input.IsConnectedToAnything())
                     {
-                        Output copyFrom = input.GetEnabledCon();
-                        Con.Value.UpdateFrom(copyFrom.Value);
+                        input.UpdateValueFromSource();
+                        Con.Value.UpdateFrom(input.Value);
                     }
                 }
 
@@ -69,6 +69,12 @@ namespace ChiselDebug.CombGraph
                 Con.SetDefaultvalue();
                 OldValue = new BinaryVarValue(Con.Value.GetValue().Bits.Length);
                 Array.Fill(OldValue.Bits, BitState.X);
+
+                foreach (var input in Con.GetConnectedInputs())
+                {
+                    input.InferType();
+                    input.SetDefaultvalue();
+                }
             }
         }
 

@@ -9,6 +9,7 @@ namespace ChiselDebug.GraphFIR.IO
         public GroundType Type { get; private set; }
         private Output EnabledCond = null;
         private bool IsInferingTypeNow = false;
+        public ValueType Value;
         public bool IsEnabled => EnabledCond == null || EnabledCond.Value.IsTrue();
 
         public ScalarIO(FIRRTLNode node, string name, IFIRType type) : base(node, name)
@@ -84,5 +85,10 @@ namespace ChiselDebug.GraphFIR.IO
         }
 
         public abstract void InferGroundType();
+
+        public void SetDefaultvalue()
+        {
+            Value = new ValueType(Type);
+        }
     }
 }
