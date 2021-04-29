@@ -101,8 +101,8 @@ namespace ChiselDebug.GraphFIR.IO
                 throw new Exception("Vectors must have the same when when fully connecting them.");
             }
 
-            int longestLength = Math.Max(Length, other.Length);
-            for (int i = 0; i < longestLength; i++)
+            int shortestLength = Math.Min(Length, other.Length);
+            for (int i = 0; i < shortestLength; i++)
             {
                 IO[i].ConnectToInput(other.IO[i], allowPartial, asPassive, isConditional);
             }
