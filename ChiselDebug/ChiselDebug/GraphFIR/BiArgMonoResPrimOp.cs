@@ -247,7 +247,7 @@ namespace ChiselDebug.GraphFIR
                 BigInteger bVal = b.AsBigInteger(B.Type is SIntType);
                 if (bVal == 0)
                 {
-                    Array.Fill(result.Bits, BitState.X);
+                    Array.Fill(result.Bits, BitState.Zero);
                 }
                 else
                 {
