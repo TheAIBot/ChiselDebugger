@@ -86,8 +86,8 @@ namespace ChiselDebug.GraphFIR
             //}
             //else
             //{
-                BigInteger aVal = a.AsUnsignedBigInteger();
-                BigInteger bVal = b.AsUnsignedBigInteger();
+                BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
+                BigInteger bVal = b.AsBigInteger(A.Type is SIntType);
                 result.SetBitsAndExtend(aVal + bVal, Result.Type is SIntType);
             //}
         }
@@ -119,8 +119,8 @@ namespace ChiselDebug.GraphFIR
             //}
             //else
             //{
-                BigInteger aVal = a.AsUnsignedBigInteger();
-                BigInteger bVal = b.AsUnsignedBigInteger();
+                BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
+                BigInteger bVal = b.AsBigInteger(A.Type is SIntType);
                 result.SetBitsAndExtend(aVal - bVal, Result.Type is SIntType);
             //}
         }
@@ -152,8 +152,8 @@ namespace ChiselDebug.GraphFIR
             //}
             //else
             //{
-                BigInteger aVal = a.AsUnsignedBigInteger();
-                BigInteger bVal = b.AsUnsignedBigInteger();
+                BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
+                BigInteger bVal = b.AsBigInteger(A.Type is SIntType);
                 result.SetBitsAndExtend(aVal * bVal, Result.Type is SIntType);
             //}
         }
