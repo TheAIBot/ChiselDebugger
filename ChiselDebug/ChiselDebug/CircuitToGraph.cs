@@ -163,8 +163,8 @@ namespace ChiselDebug
 
             FIRRTL.DefModule mainModDef = circuit.Modules.Single(x => x.Name == circuit.Main);
             GraphFIR.Module mainModule = VisitModule(helper, mainModDef);
-            mainModule.InferType();
-            mainModule.FinishConnections();
+            //mainModule.InferType();
+            //mainModule.FinishConnections();
             return new CircuitGraph(circuit.Main, mainModule);
         }
 
