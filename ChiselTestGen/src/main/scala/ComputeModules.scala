@@ -1,4 +1,6 @@
 import chisel3._
+import scala.collection.mutable.ListBuffer
+import scala.util.Random
 
 class ComputeIO[T <: Data](private val dtype: T, val const1: Int, val const2: Int) extends Bundle {
     val a = Input(dtype)
@@ -98,7 +100,30 @@ class ComputeSingle[T <: Data](op: (String, ComputeIO[T]=>Unit), modIO: ComputeI
     op._2(io);
 }
 
-class ComputeSeq[T <: Data](op: (String, ComputeIO[T]=>Unit), modIO: ComputeIO[T]) extends Module {
+class ComputeSeq(opCount: Int, modIO: ComputeIO[UInt], rng: Random) extends Module {
     val io = IO(modIO)
-    op._2(io);
+    
+    val outputs = ListBuffer[UInt]()
+    outputs += io.a
+    outputs += io.b
+
+    for (x <- 0 until opCount) {
+        var wire = Wire(new ComputeIO[UInt](UInt(modIO.a.getWidth.W), modIO.const1, modIO.const2))
+        wire.a := outputs(rng.nextInt(outputs.length))
+        wire.b := outputs(rng.nextInt(outputs.length))
+        wire.c := outputs(rng.nextInt(outputs.length))
+
+        val index = rng.nextInt(2)
+        if (index == 0) {
+            wire.a := outputs(outputs.length - 1)
+        }
+        else {
+            wire.b := outputs(outputs.length - 1)
+        }
+
+        ops.scalarUIntOps(rng.nextInt(ops.scalarUIntOps.length))._2(wire);
+        outputs += wire.out
+    }
+
+    io.out := outputs(outputs.length - 1)
 }
