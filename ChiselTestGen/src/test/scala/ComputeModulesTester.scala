@@ -6,6 +6,7 @@ import firrtl.annotations.Annotation
 import firrtl.ExecutionOptionsManager
 import firrtl.AnnotationSeq
 import firrtl.options.TargetDirAnnotation
+import scala.util.Random
 
 class ComputeTester extends FlatSpec with ChiselScalatestTester with Matchers {
     def testModuleUInt(io: ComputeIO[UInt], clock: Clock) {
@@ -60,4 +61,20 @@ class ComputeTester extends FlatSpec with ChiselScalatestTester with Matchers {
             }
         }
     })
+    val opsCounts = List(5, 10, 20, 50)
+
+    val rng = new Random(37)
+    for (opCountIdx <- 0 until opsCounts.length) {
+        val opCount = opsCounts(opCountIdx)
+        for (i <- 0 until 50) {
+            it should "Test multi uint ops: " + opCount + " test: " + i in {
+                val testDir = "test_multi_comp_dir/UInt/ops_" + opCount + "/test_" + i
+                test(new ComputeSeq(5, new ComputeIO[UInt](UInt(6.W), 1, 3), rng)).withAnnotations(Seq(TargetDirAnnotation(testDir))).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
+                    {dut=> {
+                        testModuleUInt(dut.io, dut.clock)
+                    }
+                }
+            }
+        }
+    }
 }
