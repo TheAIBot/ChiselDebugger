@@ -42,6 +42,7 @@ namespace ChiselDebug.GraphFIR
             if (!aVal.IsValidBinary())
             {
                 Array.Fill(resultVal.Bits, BitState.X);
+                return;
             }
 
             ConstBitRangeCompute(aVal, resultVal);

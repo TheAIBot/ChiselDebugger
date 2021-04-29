@@ -48,6 +48,7 @@ namespace ChiselDebug.GraphFIR
             if (!aVal.IsValidBinary() || !bVal.IsValidBinary())
             {
                 Array.Fill(resultVal.Bits, BitState.X);
+                return;
             }
 
             BiArgCompute(aVal, bVal, resultVal);
