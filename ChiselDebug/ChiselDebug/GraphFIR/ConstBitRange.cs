@@ -142,19 +142,10 @@ namespace ChiselDebug.GraphFIR
 
         protected override void ConstBitRangeCompute(BinaryVarValue a, BinaryVarValue result)
         {
-            Array.Copy(a.Bits, result.Bits, Math.Min(a.Bits.Length, WidthAfterPad));
+            Array.Copy(a.Bits, result.Bits, a.Bits.Length);
 
-            if (a.Bits.Length < WidthAfterPad)
-            {
-                if (In.Type is SIntType)
-                {
-                    Array.Fill(result.Bits, a.Bits[^1], a.Bits.Length, WidthAfterPad - a.Bits.Length);
-                }
-                else
-                {
-                    Array.Fill(result.Bits, BitState.Zero, a.Bits.Length, WidthAfterPad - a.Bits.Length);
-                }                
-            }
+            BitState signExt = In.Type is SIntType ? a.Bits[^1] : BitState.Zero;
+            Array.Fill(result.Bits, signExt, a.Bits.Length, WidthAfterPad - a.Bits.Length);
         }
 
         internal override void InferType()
