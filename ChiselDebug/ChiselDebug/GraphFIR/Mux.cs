@@ -65,7 +65,30 @@ namespace ChiselDebug.GraphFIR
 
         public override void Compute()
         {
+            //First pull all results toward the mux
             Decider.UpdateValueFromSource();
+            List<Input> foundInputs = new List<Input>();
+            foreach (var choise in Choises)
+            {
+                foundInputs.Clear();
+                foreach (var input in choise.GetAllIOOfType(foundInputs))
+                {
+                    input.UpdateValueFromSource();
+                }
+            }
+
+            //If decidor isn't binary then output can't be chosen
+            //so therefore it's set to undecided
+            if (!Decider.Value.GetValue().IsValidBinary())
+            {
+                foreach (var output in Result.Flatten())
+                {
+                    Array.Fill(output.Value.GetValue().Bits, BitState.X);
+                }
+                return;
+            }
+
+
 
             FIRIO ChosenInput;
             if (!IsVectorIndexer)
