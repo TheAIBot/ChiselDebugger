@@ -551,22 +551,35 @@ namespace ChiselDebug.CombGraph
                         //with the components output
                         if (missingCons.Count == 0)
                         {
-                            Output[] outfewpduts = conInput.input.Node.GetOutputs();
-                            if (ignoreConCondBorders || outfewpduts.All(x => !HasUnSeenConCond(x)))
+                            if (conInput.input.Node is not IStatePreserving)
                             {
-                                seenButMissingFirNodeInputs.Remove(conInput.input.Node);
-                                if (conInput.input.Node is not IStatePreserving)
-                                {
-                                    computeOrder.Add(new Computable(conInput.input.Node));
-                                    finishedNodes.Add(conInput.input.Node);
-                                }
+                                computeOrder.Add(new Computable(conInput.input.Node));
+                            }
 
-                                foreach (Output nodeOutput in outfewpduts)
+                            foreach (var nodeOutput in conInput.input.Node.GetOutputs())
+                            {
+                                if (ignoreConCondBorders || !HasUnSeenConCond(nodeOutput))
                                 {
                                     AddConnections(toTraverse, nodeOutput);
                                 }
+                                else
+                                {
+                                    List<Output> blocked;
+                                    if (!blockedOutputs.TryGetValue(nodeOutput.GetConditional(), out blocked))
+                                    {
+                                        blocked = new List<Output>();
+                                        blockedOutputs.Add(nodeOutput.GetConditional(), blocked);
+
+                                    }
+
+                                    blocked.Add(nodeOutput);
+                                }
                             }
 
+
+
+                            finishedNodes.Add(conInput.input.Node);
+                            seenButMissingFirNodeInputs.Remove(conInput.input.Node);
                         }
                     }
                 }
