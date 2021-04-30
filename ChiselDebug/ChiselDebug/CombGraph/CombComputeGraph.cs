@@ -359,7 +359,25 @@ namespace ChiselDebug.CombGraph
         public static CombComputeGraph MakeMonoGraph(Module module)
         {
             List<Output> startingPoints = new List<Output>();
-            startingPoints.AddRange(module.GetInternalOutputs());
+            foreach (var childMod in module.GetAllNestedNodesOfType<Module>())
+            {
+                foreach (var output in childMod.GetInternalOutputs())
+                {
+                    Input paired = (Input)output.GetPaired();
+                    if (output.IsConnectedToAnything() && !paired.IsConnectedToAnything())
+                    {
+                        startingPoints.Add(output);
+                    }
+                }
+                foreach (var input in childMod.GetInternalInputs())
+                {
+                    Output paired = (Output)input.GetPaired();
+                    if (paired.IsConnectedToAnything() && !input.IsConnectedToAnything())
+                    {
+                        startingPoints.Add(paired);
+                    }
+                }
+            }
             foreach (var constVal in module.GetAllNestedNodesOfType<ConstValue>())
             {
                 startingPoints.AddRange(constVal.GetOutputs());
