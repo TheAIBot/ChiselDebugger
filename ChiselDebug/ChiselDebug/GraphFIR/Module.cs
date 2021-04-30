@@ -500,11 +500,7 @@ namespace ChiselDebug.GraphFIR
 
             foreach (var node in Nodes)
             {
-                if (node is T tNode)
-                {
-                    yield return tNode;
-                }
-                else if (node is Module mod)
+                if (node is Module mod)
                 {
                     foreach (var tFound in mod.GetAllNestedNodesOfType<T>())
                     {
@@ -520,6 +516,10 @@ namespace ChiselDebug.GraphFIR
                             yield return tFound;
                         }
                     }
+                }
+                else if (node is T tNode)
+                {
+                    yield return tNode;
                 }
             }
         }
