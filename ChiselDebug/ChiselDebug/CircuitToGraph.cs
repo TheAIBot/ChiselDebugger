@@ -48,7 +48,12 @@ namespace ChiselDebug
 
         public VisitHelper ForNewModule(string moduleName, FIRRTL.DefModule moduleDef, bool isConditional)
         {
-            return new VisitHelper(new GraphFIR.Module(moduleName, moduleDef), LowFirGraph, ModuleRoots, this, isConditional, RootHelper ?? this);
+            return new VisitHelper(new GraphFIR.Module(moduleName, null, moduleDef), LowFirGraph, ModuleRoots, this, isConditional, RootHelper ?? this);
+        }
+
+        public VisitHelper ForNewCondModule(string moduleName, FIRRTL.DefModule moduleDef, bool isConditional)
+        {
+            return new VisitHelper(new GraphFIR.Module(moduleName, this.Mod, moduleDef), LowFirGraph, ModuleRoots, this, isConditional, RootHelper ?? this);
         }
 
         public void AddNodeToModule(GraphFIR.FIRRTLNode node)
@@ -163,6 +168,10 @@ namespace ChiselDebug
 
             FIRRTL.DefModule mainModDef = circuit.Modules.Single(x => x.Name == circuit.Main);
             GraphFIR.Module mainModule = VisitModule(helper, mainModDef);
+            foreach (var mod in mainModule.GetAllNestedNodesOfType<GraphFIR.Module>())
+            {
+                CleanupModule(mod);
+            }
             //mainModule.InferType();
             //mainModule.FinishConnections();
             return new CircuitGraph(circuit.Main, mainModule);
@@ -180,8 +189,6 @@ namespace ChiselDebug
 
                 VisitStatement(helper, mod.Body);
 
-                CleanupModule(helper);
-
                 return helper.Mod;
             }
             else
@@ -190,7 +197,7 @@ namespace ChiselDebug
             }
         }
 
-        private static void CleanupModule(VisitHelper helper)
+        private static void CleanupModule(GraphFIR.Module mod)
         {
             //In a truely stupid move, FIRRTL supports connecting
             //Sinks to other sinks. In order to support that case
@@ -200,12 +207,7 @@ namespace ChiselDebug
             //visible outside of graph creation. Everything else
             //should still work on the assumption that only
             //connections from a source to a sink are possible.
-            helper.Mod.RemoveAllWires();
-
-            //There may be connections inside a module that connects
-            //to nothing. These connections are comfusing to look at
-            //in the ui so just remove them instead.
-            helper.Mod.RemoveUnusedConnections();
+            mod.RemoveAllWires();
         }
 
         private static void VisitPort(VisitHelper helper, FIRRTL.Port port)
@@ -466,52 +468,22 @@ namespace ChiselDebug
 
             void AddCondModule(GraphFIR.IO.Output ena, FIRRTL.Statement body)
             {
-                VisitHelper helper = parentHelper.ForNewModule(parentHelper.GetUniqueName(), null, true);
+                VisitHelper helper = parentHelper.ForNewCondModule(parentHelper.GetUniqueName(), null, true);
 
-                //Connect wire that enables condition to module
-                GraphFIR.IO.Input enaInput = new GraphFIR.IO.Input(helper.Mod, new FIRRTL.UIntType(1));
-                string enaName = "ena module " + helper.GetUniqueName();
-                enaInput.SetName(enaName);
-                ena.ConnectToInput(enaInput);
-                helper.Mod.AddExternalIO(enaInput);
-
-                //Connect internal enable wire to dummy component so it's
-                //not disconnected later because it isn't used
-                var internalEna = (GraphFIR.IO.Output)helper.Mod.GetIO(enaName);
-                var internalEnaDummy = new GraphFIR.DummySink(internalEna);
+                var internalEnaDummy = new GraphFIR.DummySink(ena);
                 helper.AddNodeToModule(internalEnaDummy);
 
                 //Set signal that enables this scope as things like memory
                 //ports need it
-                helper.EnterEnabledScope(internalEna);
-
-                //Make io from parent module visible to child module
-                //and connect all the io to the child module
-                parentHelper.Mod.CopyInternalAsExternalIO(helper.Mod);
+                helper.EnterEnabledScope(ena);
 
                 //Fill out module
                 VisitStatement(helper, body);
 
-                //Default things to do when a module is finished
-                CleanupModule(helper);
+                helper.Mod.SetConditional(internalEnaDummy);
+                internalEnaDummy.InIO.SetEnabledCondition(null);
 
-                //If internal io was used then connect its external io
-                //to parent modules corresponding io
-                helper.Mod.ExternalConnectUsedIO(parentHelper.Mod);
-
-                //If external io wasn't used internally then disconnect
-                //external io. Removing io from a module isn't currently
-                //possible. In order to avoid visualing all this unused io,
-                //unused is hidden in the visualization but that can only work
-                //if it's not connected to anything.
-                helper.Mod.DisconnectUnusedIO();
-
-                helper.Mod.SetConditional(internalEna);
-                enaInput.SetEnabledCondition(null);
-                internalEna.SetEnabledCondition(null);
-                ((GraphFIR.IO.Input)internalEnaDummy.InIO).SetEnabledCondition(null);
-
-                cond.AddConditionalModule((GraphFIR.IO.Input)internalEnaDummy.InIO, helper.Mod);
+                cond.AddConditionalModule(internalEnaDummy.InIO, helper.Mod);
 
                 helper.ExitEnabledScope();
             }

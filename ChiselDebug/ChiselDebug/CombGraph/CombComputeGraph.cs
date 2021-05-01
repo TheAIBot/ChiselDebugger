@@ -378,6 +378,13 @@ namespace ChiselDebug.CombGraph
                     }
                 }
             }
+            foreach (var output in module.GetInternalOutputs())
+            {
+                if (!startingPoints.Contains(output))
+                {
+                    startingPoints.Add(output);
+                }
+            }
             foreach (var constVal in module.GetAllNestedNodesOfType<ConstValue>())
             {
                 startingPoints.AddRange(constVal.GetOutputs());
@@ -555,7 +562,7 @@ namespace ChiselDebug.CombGraph
                             Debug.Assert(conInput.input.Node.GetInputs().SelectMany(x => x.GetAllConnections()).All(x => seenCons.Contains(x)));
                             continue;
                         }
-                        Debug.Assert(conInput.input.Node.GetIO().SelectMany(x => x.Flatten()).Select(x => x.GetConditional()).Where(x => x != null).Distinct().Count() <= 1);
+                        //Debug.Assert(conInput.input.Node.GetIO().SelectMany(x => x.Flatten()).Select(x => x.GetConditional()).Where(x => x != null).Distinct().Count() <= 1);
                         HashSet<Output> missingCons;
                         if (!seenButMissingFirNodeInputs.TryGetValue(conInput.input.Node, out missingCons))
                         {
