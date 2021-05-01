@@ -453,6 +453,26 @@ namespace ChiselDebug.CombGraph
                 }
             }
 
+            void AddMaybeBlockedCon(Queue<(Output con, Input input)> toTraverse, Dictionary<Output, List<Output>> blockedOutputs, Output output)
+            {
+                if (ignoreConCondBorders || !HasUnSeenConCond(output))
+                {
+                    AddConnections(toTraverse, output);
+                }
+                else
+                {
+                    List<Output> blocked;
+                    if (!blockedOutputs.TryGetValue(output.GetConditional(), out blocked))
+                    {
+                        blocked = new List<Output>();
+                        blockedOutputs.Add(output.GetConditional(), blocked);
+
+                    }
+
+                    blocked.Add(output);
+                }
+            }
+
             Dictionary<FIRRTLNode, HashSet<Output>> seenButMissingFirNodeInputs = new Dictionary<FIRRTLNode, HashSet<Output>>();
             Dictionary<Input, HashSet<Output>> seenButMissingModInputCons = new Dictionary<Input, HashSet<Output>>();
             HashSet<FIRRTLNode> finishedNodes = new HashSet<FIRRTLNode>();
@@ -498,22 +518,8 @@ namespace ChiselDebug.CombGraph
                         if (missingCons.Count == 0)
                         {
                             Output inPairedOut = (Output)mod.GetPairedIO(conInput.input);
-                            if (ignoreConCondBorders || !HasUnSeenConCond(inPairedOut))
-                            {
-                                AddConnections(toTraverse, inPairedOut);
-                            }
-                            else
-                            {
-                                List<Output> blocked;
-                                if (!blockedOutputs.TryGetValue(inPairedOut.GetConditional(), out blocked))
-                                {
-                                    blocked = new List<Output>();
-                                    blockedOutputs.Add(inPairedOut.GetConditional(), blocked);
+                            AddMaybeBlockedCon(toTraverse, blockedOutputs, inPairedOut);
 
-                                }
-
-                                blocked.Add(inPairedOut);
-                            }
                             seenButMissingModInputCons.Remove(conInput.input);
                         }
                     }
@@ -535,7 +541,7 @@ namespace ChiselDebug.CombGraph
                         var outs = conInput.input.Node.GetOutputs();
                         foreach (Output nodeOutput in outs)
                         {
-                            AddConnections(toTraverse, nodeOutput);
+                            AddMaybeBlockedCon(toTraverse, blockedOutputs, nodeOutput);
                         }
                     }
                     else if (conInput.input.Node is DummySink)
@@ -546,6 +552,7 @@ namespace ChiselDebug.CombGraph
                     {
                         if (finishedNodes.Contains(conInput.input.Node))
                         {
+                            Debug.Assert(conInput.input.Node.GetInputs().SelectMany(x => x.GetAllConnections()).All(x => seenCons.Contains(x)));
                             continue;
                         }
                         Debug.Assert(conInput.input.Node.GetIO().SelectMany(x => x.Flatten()).Select(x => x.GetConditional()).Where(x => x != null).Distinct().Count() <= 1);
@@ -576,25 +583,8 @@ namespace ChiselDebug.CombGraph
 
                             foreach (var nodeOutput in conInput.input.Node.GetOutputs())
                             {
-                                if (ignoreConCondBorders || !HasUnSeenConCond(nodeOutput))
-                                {
-                                    AddConnections(toTraverse, nodeOutput);
-                                }
-                                else
-                                {
-                                    List<Output> blocked;
-                                    if (!blockedOutputs.TryGetValue(nodeOutput.GetConditional(), out blocked))
-                                    {
-                                        blocked = new List<Output>();
-                                        blockedOutputs.Add(nodeOutput.GetConditional(), blocked);
-
-                                    }
-
-                                    blocked.Add(nodeOutput);
-                                }
+                                AddMaybeBlockedCon(toTraverse, blockedOutputs, nodeOutput);
                             }
-
-
 
                             finishedNodes.Add(conInput.input.Node);
                             seenButMissingFirNodeInputs.Remove(conInput.input.Node);
