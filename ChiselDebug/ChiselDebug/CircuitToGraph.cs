@@ -766,8 +766,10 @@ namespace ChiselDebug
                     return (GraphFIR.IO.Output)wireOut;
                 }
 
-                //Duplex output for this input wasn't created before so make it now
-                return helper.Mod.AddDuplexOuputWire(input);
+                //Duplex output for this input wasn't created before so make it now.
+                //Make it in the module that the input comes from so there won't
+                //be multiple duplex inputs residing in different cond modules.
+                return input.GetModResideIn().AddDuplexOuputWire(input);
             }
 
             return io.GetAsGender(gender);
