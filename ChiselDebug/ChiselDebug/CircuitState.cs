@@ -10,6 +10,7 @@ namespace ChiselDebug
     public class CircuitState
     {
         public readonly Dictionary<VarDef, VarValue> VariableValues = new Dictionary<VarDef, VarValue>();
+        public ulong Time { get; private set; }
 
         private CircuitState(CircuitState copyFrom)
         {
@@ -17,6 +18,8 @@ namespace ChiselDebug
             {
                 VariableValues.Add(keyValue.Key, keyValue.Value);
             }
+
+            this.Time = copyFrom.Time;
         }
 
         public CircuitState(DumpVars initVarValues)
@@ -28,6 +31,8 @@ namespace ChiselDebug
                     VariableValues.Add(variable, initValue);
                 }
             }
+
+            this.Time = 0;
         }
 
         public CircuitState(List<List<VarDef>> varDefs)
@@ -42,6 +47,8 @@ namespace ChiselDebug
                     VariableValues.Add(variable, new BinaryVarValue(bits, variables));
                 }
             }
+
+            this.Time = 0;
         }
 
         internal void AddChanges(TimeStepChanges changes)
@@ -53,6 +60,8 @@ namespace ChiselDebug
                     VariableValues[variable] = change;
                 }
             }
+
+            Time = changes.Time;
         }
 
         public CircuitState Copy()
