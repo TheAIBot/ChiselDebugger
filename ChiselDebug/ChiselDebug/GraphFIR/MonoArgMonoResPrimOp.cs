@@ -77,7 +77,7 @@ namespace ChiselDebug.GraphFIR
             UIntType a => new UIntType(a.Width),
             SIntType a => new UIntType(a.Width),
             ClockType a => new UIntType(1),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -95,7 +95,7 @@ namespace ChiselDebug.GraphFIR
             UIntType a => new SIntType(a.Width),
             SIntType a => new SIntType(a.Width),
             ClockType a => new SIntType(1),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -113,7 +113,7 @@ namespace ChiselDebug.GraphFIR
             UIntType a => new ClockType(),
             SIntType a => new ClockType(),
             ClockType a => new ClockType(),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -142,7 +142,7 @@ namespace ChiselDebug.GraphFIR
         {
             UIntType a => new SIntType(a.Width + 1),
             SIntType a => new SIntType(a.Width),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -186,7 +186,7 @@ namespace ChiselDebug.GraphFIR
         {
             UIntType a => new SIntType(a.Width + 1),
             SIntType a => new SIntType(a.Width + 1),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -206,7 +206,7 @@ namespace ChiselDebug.GraphFIR
         {
             UIntType a => new UIntType(a.Width),
             SIntType a => new UIntType(a.Width),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -229,7 +229,7 @@ namespace ChiselDebug.GraphFIR
         {
             UIntType a => new UIntType(1),
             SIntType a => new UIntType(1),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -252,7 +252,7 @@ namespace ChiselDebug.GraphFIR
         {
             UIntType a => new UIntType(1),
             SIntType a => new UIntType(1),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -275,7 +275,7 @@ namespace ChiselDebug.GraphFIR
         {
             UIntType a => new UIntType(1),
             SIntType a => new UIntType(1),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 }

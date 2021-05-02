@@ -22,6 +22,11 @@ namespace ChiselDebug.GraphFIR
                 }
             }
 
+            if (inputTypes.Count == 0)
+            {
+                return null;
+            }
+
             int maxWidth = inputTypes.Max(x => x.Width);
             if (inputTypes.All(x => x is UIntType))
             {

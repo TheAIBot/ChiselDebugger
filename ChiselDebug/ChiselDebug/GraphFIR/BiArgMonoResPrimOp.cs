@@ -99,7 +99,7 @@ namespace ChiselDebug.GraphFIR
             (UIntType a, SIntType b) => new SIntType(Math.Max(a.Width, b.Width) + 1),
             (SIntType a, UIntType b) => new SIntType(Math.Max(a.Width, b.Width) + 1),
             (SIntType a, SIntType b) => new SIntType(Math.Max(a.Width, b.Width) + 1),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -132,7 +132,7 @@ namespace ChiselDebug.GraphFIR
             (UIntType a, SIntType b) => new SIntType(Math.Max(a.Width, b.Width) + 1),
             (SIntType a, UIntType b) => new SIntType(Math.Max(a.Width, b.Width) + 1),
             (SIntType a, SIntType b) => new SIntType(Math.Max(a.Width, b.Width) + 1),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -165,7 +165,7 @@ namespace ChiselDebug.GraphFIR
             (UIntType a, SIntType b) => new SIntType(a.Width + b.Width),
             (SIntType a, UIntType b) => new SIntType(a.Width + b.Width),
             (SIntType a, SIntType b) => new SIntType(a.Width + b.Width),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -214,7 +214,7 @@ namespace ChiselDebug.GraphFIR
             (UIntType a, SIntType b) => new SIntType(a.Width + 1),
             (SIntType a, UIntType b) => new SIntType(a.Width),
             (SIntType a, SIntType b) => new SIntType(a.Width + 1),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -262,7 +262,7 @@ namespace ChiselDebug.GraphFIR
             (UIntType a, SIntType b) => new UIntType(Math.Min(a.Width, b.Width)),
             (SIntType a, UIntType b) => new SIntType(Math.Min(a.Width, b.Width) + 1),
             (SIntType a, SIntType b) => new SIntType(Math.Min(a.Width, b.Width)),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -286,7 +286,7 @@ namespace ChiselDebug.GraphFIR
         {
             (UIntType a, UIntType b) => new UIntType(a.Width + (1 << b.Width) - 1),
             (SIntType a, UIntType b) => new SIntType(a.Width + (1 << b.Width) - 1),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -305,7 +305,7 @@ namespace ChiselDebug.GraphFIR
         {
             (UIntType a, UIntType b) => new UIntType(a.Width),
             (SIntType a, UIntType b) => new SIntType(a.Width),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -325,7 +325,7 @@ namespace ChiselDebug.GraphFIR
             (UIntType a, SIntType b) => new UIntType(a.Width + b.Width),
             (SIntType a, UIntType b) => new UIntType(a.Width + b.Width),
             (SIntType a, SIntType b) => new UIntType(a.Width + b.Width),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -339,7 +339,7 @@ namespace ChiselDebug.GraphFIR
             (UIntType a, SIntType b) => new UIntType(1),
             (SIntType a, UIntType b) => new UIntType(1),
             (SIntType a, SIntType b) => new UIntType(1),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -511,7 +511,7 @@ namespace ChiselDebug.GraphFIR
             (UIntType a, SIntType b) => new UIntType(Math.Max(a.Width, b.Width)),
             (SIntType a, UIntType b) => new UIntType(Math.Max(a.Width, b.Width)),
             (SIntType a, SIntType b) => new UIntType(Math.Max(a.Width, b.Width)),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -608,7 +608,7 @@ namespace ChiselDebug.GraphFIR
         {
             UIntType a => new UIntType(a.Width + ShiftBy),
             SIntType a => new SIntType(a.Width + ShiftBy),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -648,7 +648,7 @@ namespace ChiselDebug.GraphFIR
         {
             UIntType a => new UIntType(Math.Max(a.Width - ShiftBy, 1)),
             SIntType a => new SIntType(Math.Max(a.Width - ShiftBy, 1)),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 }
