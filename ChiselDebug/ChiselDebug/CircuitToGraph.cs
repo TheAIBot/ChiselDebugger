@@ -46,14 +46,14 @@ namespace ChiselDebug
             this.RootHelper = rootHelper;
         }
 
-        public VisitHelper ForNewModule(string moduleName, FIRRTL.DefModule moduleDef, bool isConditional)
+        public VisitHelper ForNewModule(string moduleName, FIRRTL.DefModule moduleDef)
         {
-            return new VisitHelper(new GraphFIR.Module(moduleName, null, moduleDef), LowFirGraph, ModuleRoots, this, isConditional, RootHelper ?? this);
+            return new VisitHelper(new GraphFIR.Module(moduleName, null, moduleDef), LowFirGraph, ModuleRoots, this, false, RootHelper ?? this);
         }
 
-        public VisitHelper ForNewCondModule(string moduleName, FIRRTL.DefModule moduleDef, bool isConditional)
+        public VisitHelper ForNewCondModule(string moduleName, FIRRTL.DefModule moduleDef)
         {
-            return new VisitHelper(new GraphFIR.Module(moduleName, this.Mod, moduleDef), LowFirGraph, ModuleRoots, this, isConditional, RootHelper ?? this);
+            return new VisitHelper(new GraphFIR.Module(moduleName, this.Mod, moduleDef), LowFirGraph, ModuleRoots, this, true, RootHelper ?? this);
         }
 
         public void AddNodeToModule(GraphFIR.FIRRTLNode node)
@@ -181,7 +181,7 @@ namespace ChiselDebug
         {
             if (moduleDef is FIRRTL.Module mod)
             {
-                VisitHelper helper = parentHelper.ForNewModule(mod.Name, mod, false);
+                VisitHelper helper = parentHelper.ForNewModule(mod.Name, mod);
                 foreach (var port in mod.Ports)
                 {
                     VisitPort(helper, port);
@@ -468,7 +468,7 @@ namespace ChiselDebug
 
             void AddCondModule(GraphFIR.IO.Output ena, FIRRTL.Statement body)
             {
-                VisitHelper helper = parentHelper.ForNewCondModule(parentHelper.GetUniqueName(), null, true);
+                VisitHelper helper = parentHelper.ForNewCondModule(parentHelper.GetUniqueName(), null);
 
                 var internalEnaDummy = new GraphFIR.DummySink(ena);
                 helper.AddNodeToModule(internalEnaDummy);
