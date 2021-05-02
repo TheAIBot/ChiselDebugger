@@ -71,6 +71,11 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
+        internal void RemoveType()
+        {
+            Type = null;
+        }
+
         public abstract void DisconnectAll();
 
         public void InferType()

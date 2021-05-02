@@ -28,6 +28,10 @@ namespace ChiselDebug.GraphFIR
             this.Result = choises.First().Copy(this);
             this.IsVectorIndexer = isVectorIndexer;
             Result.SetName(null);
+            foreach (var res in Result.Flatten())
+            {
+                res.RemoveType();
+            }
 
             for (int i = 0; i < Choises.Length; i++)
             {
