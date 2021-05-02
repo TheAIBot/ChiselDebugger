@@ -31,6 +31,10 @@ namespace ChiselDebug.GraphFIR
             {
                 return new SIntType(maxWidth);
             }
+            else if (inputTypes.All(x => x is ClockType))
+            {
+                return new ClockType();
+            }
             else
             {
                 throw new Exception("All input types for mux output must be of the same ground type.");
