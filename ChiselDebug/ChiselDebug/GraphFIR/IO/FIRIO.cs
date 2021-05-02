@@ -29,6 +29,11 @@ namespace ChiselDebug.GraphFIR.IO
             ParentIO = aggIO;
         }
 
+        public Module GetModResideIn()
+        {
+            return Node.ResideIn;
+        }
+
         public string GetFullName()
         {
             List<string> pathToRoot = new List<string>();

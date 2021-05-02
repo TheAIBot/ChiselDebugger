@@ -22,10 +22,12 @@ namespace ChiselDebug.GraphFIR
         {
             this.Name = name;
             this.ParentScopeView = parentScope;
+            SetModResideIn(this);
         }
 
         public void AddNode(FIRRTLNode node)
         {
+            node.SetModResideIn(this);
             Nodes.Add(node);
             foreach (var io in node.GetIO())
             {
@@ -38,6 +40,7 @@ namespace ChiselDebug.GraphFIR
 
         public void AddRegister(Register reg)
         {
+            reg.SetModResideIn(this);
             Nodes.Add(reg);
 
             DuplexIO regIO = reg.GetAsDuplex();
@@ -47,6 +50,7 @@ namespace ChiselDebug.GraphFIR
 
         public void AddWire(Wire wire)
         {
+            wire.SetModResideIn(this);
             Nodes.Add(wire);
 
             DuplexIO wireIO = wire.GetAsDuplex();
@@ -55,6 +59,7 @@ namespace ChiselDebug.GraphFIR
 
         public void AddModule(Module mod, string bundleName)
         {
+            mod.SetModResideIn(this);
             Nodes.Add(mod);
 
             IOBundle bundle = new IOBundle(mod, bundleName, mod.ExternalIO.Values.ToList());
@@ -64,6 +69,7 @@ namespace ChiselDebug.GraphFIR
 
         public void AddMemory(Memory mem)
         {
+            mem.SetModResideIn(this);
             Nodes.Add(mem);
 
             MemoryIO memIO = mem.GetIOAsBundle();
@@ -86,12 +92,14 @@ namespace ChiselDebug.GraphFIR
 
         public void AddConditional(Conditional cond)
         {
+            cond.SetModResideIn(this);
             Nodes.Add(cond);
         }
 
         public Output AddDuplexOuputWire(Input input)
         {
             Wire wire = new Wire(GetDuplexOutputName(input), input, null);
+            wire.SetModResideIn(this);
 
             DuplexIO wireIO = wire.GetAsDuplex();
             NameToIO.Add(wireIO.Name, wireIO.GetOutput());
