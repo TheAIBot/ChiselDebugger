@@ -34,6 +34,7 @@ namespace ChiselDebug.GraphFIR
 
         public override void Compute()
         {
+            InIO.UpdateValueFromSource();
         }
 
         internal override void InferType()
