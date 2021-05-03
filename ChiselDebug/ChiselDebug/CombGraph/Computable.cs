@@ -82,7 +82,7 @@ namespace ChiselDebug.CombGraph
         {
             if (Con!= null)
             {
-                return $"Con: {Con.Node}";
+                return $"Con: {Con.Node}{(Con.Name != null ? $", Name: {Con.Name}" : string.Empty)}";
             }
             else
             {

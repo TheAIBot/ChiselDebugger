@@ -25,5 +25,10 @@
             this.Reference = reference;
             this.Scopes = scopes;
         }
+
+        public override string ToString()
+        {
+            return $"Ref: {Reference}, Size: {Size}";
+        }
     }
 }
