@@ -94,6 +94,15 @@ namespace VCDReader.Parsing
             return word;
         }
 
+        public ReadOnlyMemory<char> NextWordAsMem()
+        {
+            ReadOnlySpan<char> word = PeekNextWord();
+            ReadOnlyMemory<char> wordMem = AvailableChars.Slice(0, word.Length);
+            SkipWord(word);
+
+            return wordMem;
+        }
+
         public ReadOnlySpan<char> NextUntil(ReadOnlySpan<char> stopAt)
         {
             SkipStart();

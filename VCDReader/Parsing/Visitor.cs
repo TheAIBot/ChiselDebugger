@@ -137,9 +137,10 @@ namespace VCDReader.Parsing
             }
         }
 
-        internal static void VisitSimCmd(VCDLexer lexer, Dictionary<string, List<VarDef>> idToVariable, SimPass pass, BitAllocator bitAlloc)
+        internal static void VisitSimCmd(VCDLexer lexer, Dictionary<SpanString, List<VarDef>> idToVariable, SimPass pass, BitAllocator bitAlloc)
         {
-            ReadOnlySpan<char> declWord = lexer.NextWord();
+            ReadOnlyMemory<char> declWordMem = lexer.NextWordAsMem();
+            ReadOnlySpan<char> declWord = declWordMem.Span;
 
             //It may be the case that it's first discovered now that
             // the end of the file has been reached.
@@ -182,18 +183,18 @@ namespace VCDReader.Parsing
             }
             else
             {
-                VisitValueChange(lexer, declWord, idToVariable, pass, bitAlloc);
+                VisitValueChange(lexer, declWordMem, idToVariable, pass, bitAlloc);
             }
         }
 
-        internal static List<VarValue> VisitValueChangeStream(VCDLexer lexer, Dictionary<string, List<VarDef>> idToVariable, SimPass pass, BitAllocator bitAlloc)
+        internal static List<VarValue> VisitValueChangeStream(VCDLexer lexer, Dictionary<SpanString, List<VarDef>> idToVariable, SimPass pass, BitAllocator bitAlloc)
         {
             List<VarValue> changes = new List<VarValue>();
 
             while (!lexer.IsEmpty())
             {
-                ReadOnlySpan<char> text = lexer.NextWord();
-                if (text.SequenceEqual("$end"))
+                ReadOnlyMemory<char> text = lexer.NextWordAsMem();
+                if (text.Span.SequenceEqual("$end"))
                 {
                     break;
                 }
@@ -217,20 +218,21 @@ namespace VCDReader.Parsing
             return changes;
         }
 
-        internal static void VisitValueChange(VCDLexer lexer, ReadOnlySpan<char> text, Dictionary<string, List<VarDef>> idToVariable, SimPass pass, BitAllocator bitAlloc)
+        internal static void VisitValueChange(VCDLexer lexer, ReadOnlyMemory<char> text, Dictionary<SpanString, List<VarDef>> idToVariable, SimPass pass, BitAllocator bitAlloc)
         {
             if (text.Length < 2)
             {
                 throw new Exception($"Invalid value change: {text.ToString()}");
             }
 
-            if (text[0] == 'b' || text[0] == 'B')
+            ReadOnlySpan<char> textSpan = text.Span;
+            if (textSpan[0] == 'b' || textSpan[0] == 'B')
             {
-                VisitBinaryVectorValueChange(lexer, text.Slice(1), idToVariable, pass, bitAlloc);
+                VisitBinaryVectorValueChange(lexer, textSpan.Slice(1), idToVariable, pass, bitAlloc);
             }
-            else if (text[0] == 'r' || text[0] == 'R')
+            else if (textSpan[0] == 'r' || textSpan[0] == 'R')
             {
-                VisitRealVectorValueChange(lexer, text.Slice(1), idToVariable, pass, bitAlloc);
+                VisitRealVectorValueChange(lexer, textSpan.Slice(1), idToVariable, pass, bitAlloc);
             }
             else
             {
@@ -238,10 +240,10 @@ namespace VCDReader.Parsing
             }
         }
 
-        internal static void VisitBinaryVectorValueChange(VCDLexer lexer, ReadOnlySpan<char> valueText, Dictionary<string, List<VarDef>> idToVariable, SimPass pass, BitAllocator bitAlloc)
+        internal static void VisitBinaryVectorValueChange(VCDLexer lexer, ReadOnlySpan<char> valueText, Dictionary<SpanString, List<VarDef>> idToVariable, SimPass pass, BitAllocator bitAlloc)
         {
             Memory<BitState> bits = ToBitStates(valueText, bitAlloc);
-            string id = lexer.NextWord().ToString();
+            var id = new SpanString(lexer.NextWordAsMem());
 
             if (idToVariable.TryGetValue(id, out List<VarDef>? variables))
             {
@@ -253,10 +255,10 @@ namespace VCDReader.Parsing
             }
         }
 
-        internal static void VisitRealVectorValueChange(VCDLexer lexer, ReadOnlySpan<char> valueText, Dictionary<string, List<VarDef>> idToVariable, SimPass pass, BitAllocator bitAlloc)
+        internal static void VisitRealVectorValueChange(VCDLexer lexer, ReadOnlySpan<char> valueText, Dictionary<SpanString, List<VarDef>> idToVariable, SimPass pass, BitAllocator bitAlloc)
         {
             double value = double.Parse(valueText, NumberStyles.Float, CultureInfo.InvariantCulture);
-            string id = lexer.NextWord().ToString();
+            var id = new SpanString(lexer.NextWordAsMem());
 
             if (idToVariable.TryGetValue(id, out List<VarDef>? variable))
             {
@@ -268,11 +270,11 @@ namespace VCDReader.Parsing
             }
         }
 
-        internal static void VisitScalarValueChange(ReadOnlySpan<char> text, Dictionary<string, List<VarDef>> idToVariable, SimPass pass, BitAllocator bitAlloc)
+        internal static void VisitScalarValueChange(ReadOnlyMemory<char> text, Dictionary<SpanString, List<VarDef>> idToVariable, SimPass pass, BitAllocator bitAlloc)
         {
             Memory<BitState> bits = bitAlloc.GetBits(1);
-            BitState bit = ToBitState(text[0]);
-            string id = text.Slice(1).ToString();
+            BitState bit = ToBitState(text.Span[0]);
+            var id = new SpanString(text.Slice(1));
 
             bits.Span[0] = bit;
 
