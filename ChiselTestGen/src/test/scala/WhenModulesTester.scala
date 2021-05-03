@@ -5,6 +5,7 @@ import chisel3.tester.experimental.TestOptionBuilder._
 import firrtl.annotations.Annotation
 import firrtl.ExecutionOptionsManager
 import firrtl.AnnotationSeq
+import scala.util.Random
 
 class WhenTester extends FlatSpec with ChiselScalatestTester with Matchers {
     it should "Test When1xVectorAccess" in {
@@ -34,6 +35,30 @@ class WhenTester extends FlatSpec with ChiselScalatestTester with Matchers {
     it should "Test When1xDuplexInput" in {
         test(new When1xDuplexInput()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
             {_=> {}}
+    }
+    it should "Test WhenWireCondInput" in {
+        test(new WhenWireCondInput()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
+            {
+                dut=> {
+                val rng = new Random(37)
+                for (x <- 0 to 20) {
+                    dut.io.en1.poke(rng.nextBoolean().B)
+                    dut.io.din.poke(rng.nextInt(256).U)
+                    dut.clock.step()
+                }
+            }}
+    }
+    it should "Test WhenConstCondInput" in {
+        test(new WhenConstCondInput()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
+            {
+                dut=> {
+                val rng = new Random(37)
+                for (x <- 0 to 20) {
+                    dut.io.en1.poke(rng.nextBoolean().B)
+                    dut.io.din.poke(rng.nextInt(256).U)
+                    dut.clock.step()
+                }
+            }}
     }
     it should "Test Test2" in {
         test(new Test2()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))

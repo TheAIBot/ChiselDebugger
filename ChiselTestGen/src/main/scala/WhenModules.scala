@@ -178,6 +178,46 @@ class When1xDuplexInput extends Module {
     }
 }
 
+class WhenWireCondInput extends Module {
+    val io = IO(new Bundle{
+        val en1 = Input(Bool())
+        val din = Input(UInt(8.W))
+        val dout1 = Output(UInt(8.W))
+    })
+
+    var wire = Wire(UInt(1.W))
+    wire := 0.U
+
+    when(io.en1) {
+        wire := io.din
+    }
+
+    io.dout1 := 0.U
+    when(wire.asBool()) {
+        io.dout1 := io.din
+    }
+}
+
+class WhenConstCondInput extends Module {
+    val io = IO(new Bundle{
+        val en1 = Input(Bool())
+        val din = Input(UInt(8.W))
+        val dout1 = Output(UInt(8.W))
+    })
+
+    var wire = Wire(UInt(1.W))
+    wire := 0.U
+
+    when(true.B) {
+        wire := io.din
+    }
+
+    io.dout1 := 0.U
+    when(wire.asBool()) {
+        io.dout1 := io.din + io.din
+    }
+}
+
 class SyncReadMemScopeIssue extends Module {
     val io = IO(new Bundle{
         val read = Input(Bool())
@@ -213,7 +253,4 @@ class Test2 extends Module {
         test.io.in := io.in
         io.out1 := test.io.out
     }
-
-    
-
 }
