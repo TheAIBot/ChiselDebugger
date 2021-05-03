@@ -5,33 +5,32 @@ using System.Numerics;
 
 namespace VCDReader
 {
-    public abstract class VarValue : ISimCmd
+    public interface VarValue : ISimCmd
     {
-        public readonly List<VarDef>? Variables;
+        public List<VarDef>? Variables { get; }
 
-        public VarValue(List<VarDef>? variables)
-        {
-            this.Variables = variables;
-        }
-
-        public abstract bool SameValue(VarValue other);
+        public bool SameValue(VarValue other);
     }
 
-    public class BinaryVarValue : VarValue
+    public readonly struct BinaryVarValue : VarValue
     {
         public readonly BitState[] Bits;
+        private readonly List<VarDef>? Vars;
+        public List<VarDef>? Variables => Vars;
 
-        public BinaryVarValue(BitState[] bits, List<VarDef> variables) : base(variables)
+        public BinaryVarValue(BitState[] bits, List<VarDef> variables)
         {
             this.Bits = new BitState[variables[0].Size];
+            this.Vars = variables;
 
             Array.Fill(Bits, bits[^1].LeftExtendWith());
             bits.CopyTo(Bits, 0);
         }
 
-        public BinaryVarValue(int bitCount) : base(null)
+        public BinaryVarValue(int bitCount)
         {
             this.Bits = new BitState[bitCount];
+            this.Vars = null;
         }
 
         public string BitsToString()
@@ -52,7 +51,7 @@ namespace VCDReader
             return true;
         }
 
-        public override bool SameValue(VarValue other)
+        public bool SameValue(VarValue other)
         {
             return other is BinaryVarValue binary && SameValue(binary);
         }
@@ -249,16 +248,19 @@ namespace VCDReader
             return value;
         }
     }
-    public class RealVarValue: VarValue
+    public readonly struct RealVarValue: VarValue
     {
         public readonly double Value;
+        private readonly List<VarDef>? Vars;
+        public List<VarDef>? Variables => Vars;
 
-        public RealVarValue(double value, List<VarDef> variables) : base(variables)
+        public RealVarValue(double value, List<VarDef> variables)
         {
             this.Value = value;
-        }
+            this.Vars = variables;
+        }        
 
-        public override bool SameValue(VarValue other)
+        public bool SameValue(VarValue other)
         {
             return other is RealVarValue real &&
                    Value == real.Value;

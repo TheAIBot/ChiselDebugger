@@ -15,15 +15,14 @@ namespace ChiselDebug.CombGraph
         {
             this.Node = node;
             this.Con = null;
-            this.OldValue = null;
+            this.OldValue = new BinaryVarValue();
         }
 
         public Computable(Output con)
         {
             this.Node = null;
             this.Con = con;
-            this.OldValue = null;// new BinaryVarValue(Con.Value.GetValue().Bits.Length);
-            //Array.Fill(OldValue.Bits, BitState.X);
+            this.OldValue = new BinaryVarValue();
         }
 
         public Output Compute()

@@ -46,6 +46,11 @@ namespace ChiselDebug.GraphFIR
             return Value;
         }
 
+        public bool IsInitialized()
+        {
+            return Type != null;
+        }
+
         public bool IsTrue()
         {
             if (Value.Bits.Length > 1)

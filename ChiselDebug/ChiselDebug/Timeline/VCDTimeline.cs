@@ -19,9 +19,9 @@ namespace ChiselDebug.Timeline
             this.TimeScale = vcd.Time;
 
             var simCommands = vcd.GetSimulationCommands();
-            ISimCmd firstCmd = simCommands.First();
+            SimPass firstCmd = simCommands.First();
             CircuitState segmentStartState;
-            if (firstCmd is DumpVars initDump)
+            if (firstCmd.SimCmd is DumpVars initDump)
             {
                 segmentStartState = new CircuitState(initDump);
             }
@@ -41,7 +41,7 @@ namespace ChiselDebug.Timeline
 
             foreach (var simCmd in simCommands)
             {
-                if (simCmd is SimTime time)
+                if (simCmd.SimCmd is SimTime time)
                 {
                     if (currTimeStep != null)
                     {
@@ -71,9 +71,9 @@ namespace ChiselDebug.Timeline
 
                     currTimeStep = new TimeStepChanges(time.Time);
                 }
-                else if (simCmd is VarValue change)
+                else if (simCmd.BinValue.HasValue)
                 {
-                    currTimeStep.Changes.Add(change);
+                    currTimeStep.Changes.Add(simCmd.BinValue.Value);
                     changeCounter++;
                 }
             }

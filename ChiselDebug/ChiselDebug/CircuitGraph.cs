@@ -184,7 +184,7 @@ namespace ChiselDebug
                         continue;
                     }
 
-                    if (con.Value.GetValue() == null)
+                    if (!con.Value.IsInitialized())
                     {
                         continue;
                     }

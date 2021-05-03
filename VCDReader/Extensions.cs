@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Text;
 
 namespace VCDReader
 {
@@ -31,6 +32,17 @@ namespace VCDReader
             }
 
             return sBuilder.ToString();
+        }
+
+        public static ISimCmd[] ToArray(this IEnumerable<SimPass> iter)
+        {
+            List<ISimCmd> cmds = new List<ISimCmd>();
+            foreach (var cmd in iter)
+            {
+                cmds.Add(cmd.GetCmd());
+            }
+
+            return cmds.ToArray();
         }
     }
 }

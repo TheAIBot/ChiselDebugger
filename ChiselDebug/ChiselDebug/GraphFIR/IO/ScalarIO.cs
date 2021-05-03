@@ -19,7 +19,6 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-
         public abstract bool IsConnected();
 
         public abstract bool IsConnectedToAnything();

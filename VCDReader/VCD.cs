@@ -29,14 +29,16 @@ namespace VCDReader
             this.Version = Declarations.FirstOrDefault(x => x is Version) as Version;
         }
 
-        public IEnumerable<ISimCmd> GetSimulationCommands()
+        public IEnumerable<SimPass> GetSimulationCommands()
         {
+            SimPass pass = new SimPass();
             while (Lexer.IsWordsRemaining())
             {
-                var simCmd = Visitor.VisitSimCmd(Lexer, IDToVariable);
-                if (simCmd != null)
+                pass.Reset();
+                Visitor.VisitSimCmd(Lexer, IDToVariable, pass);
+                if (pass.HasCmd())
                 {
-                    yield return simCmd;
+                    yield return pass;
                 }
             }
         }

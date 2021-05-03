@@ -33,7 +33,7 @@ $enddefinitions $end
                 Assert.AreEqual(1, simCmds.Length);
                 Assert.IsTrue(simCmds[0] is BinaryVarValue);
 
-                var valueChange = simCmds[0] as BinaryVarValue;
+                var valueChange = (BinaryVarValue)simCmds[0];
                 Assert.AreEqual(1, valueChange.Bits.Length);
                 Assert.AreEqual(bitState, valueChange.Bits[0]);
                 Assert.AreEqual(variable, valueChange.Variables[0]);
@@ -61,7 +61,7 @@ b{bitState.ToChar()} !";
                 Assert.AreEqual(1, simCmds.Length);
                 Assert.IsTrue(simCmds[0] is BinaryVarValue);
 
-                var valueChange = simCmds[0] as BinaryVarValue;
+                var valueChange = (BinaryVarValue)simCmds[0];
                 Assert.AreEqual(1, valueChange.Bits.Length);
                 Assert.AreEqual(bitState, valueChange.Bits[0]);
                 Assert.AreEqual(variable, valueChange.Variables[0]);
@@ -123,7 +123,7 @@ b{expectedBits.BitsToString()} !";
             Assert.AreEqual(1, simCmds.Length);
             Assert.IsTrue(simCmds[0] is BinaryVarValue);
 
-            var valueChange = simCmds[0] as BinaryVarValue;
+            var valueChange = (BinaryVarValue)simCmds[0];
             CollectionAssert.AreEqual(expectedBits, valueChange.Bits);
             Assert.AreEqual(variable, valueChange.Variables[0]);
         }
@@ -147,7 +147,7 @@ r{expectedValue.ToString(CultureInfo.InvariantCulture)} !";
             Assert.AreEqual(1, simCmds.Length);
             Assert.IsTrue(simCmds[0] is RealVarValue);
 
-            var valueChange = simCmds[0] as RealVarValue;
+            var valueChange = (RealVarValue)simCmds[0];
             Assert.AreEqual(expectedValue, valueChange.Value);
             Assert.AreEqual(variable, valueChange.Variables[0]);
         }
