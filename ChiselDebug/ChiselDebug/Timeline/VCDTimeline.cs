@@ -45,23 +45,26 @@ namespace ChiselDebug.Timeline
                 {
                     if (currTimeStep != null)
                     {
-                        followState.AddChanges(currTimeStep);
-                        stepChanges.Add(currTimeStep);
-
-                        //If segment is full then store the segment and
-                        //prepare for the next segment
-                        if (changeCounter > maxChangesPerSegment)
+                        if (currTimeStep.Changes.Count > 0)
                         {
-                            TimeSpan tSpan = new TimeSpan(startTime, time.Time);
-                            SegmentChanges.Add(new TimeSegmentChanges(tSpan, segmentStartState, stepChanges));
+                            followState.AddChanges(currTimeStep);
+                            stepChanges.Add(currTimeStep);
 
-                            segmentStartState = followState;
-                            followState = segmentStartState.Copy();
+                            //If segment is full then store the segment and
+                            //prepare for the next segment
+                            if (changeCounter > maxChangesPerSegment)
+                            {
+                                TimeSpan tSpan = new TimeSpan(startTime, time.Time);
+                                SegmentChanges.Add(new TimeSegmentChanges(tSpan, segmentStartState, stepChanges));
 
-                            stepChanges = new List<TimeStepChanges>();
-                            changeCounter = 0;
+                                segmentStartState = followState;
+                                followState = segmentStartState.Copy();
 
-                            startTime = time.Time;
+                                stepChanges = new List<TimeStepChanges>();
+                                changeCounter = 0;
+
+                                startTime = time.Time;
+                            }
                         }
                     }
                     else
@@ -81,7 +84,7 @@ namespace ChiselDebug.Timeline
             //Add last segment if it's not empty.
             //Segment isn't added by above loop if the vcd file doesn't 
             //end with a simulation time command.
-            if (currTimeStep != null)
+            if (currTimeStep != null && currTimeStep.Changes.Count > 0)
             {
                 stepChanges.Add(currTimeStep);
             }
