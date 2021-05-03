@@ -60,8 +60,13 @@ namespace ChiselDebugTests
 
         private static VCDTimeline MakeTimeline(string moduleName, string modulePath)
         {
-            using VCD vcd = VCDReader.Parse.FromFile($"{modulePath}/{moduleName}.vcd");
+            using VCD vcd = LoadVCD(moduleName, modulePath);
             return new VCDTimeline(vcd);
+        }
+
+        private static VCD LoadVCD(string moduleName, string modulePath)
+        {
+            return VCDReader.Parse.FromFile($"{modulePath}/{moduleName}.vcd");
         }
 
         internal static CircuitGraph VerifyMakeGraph(string moduleName, string extension, string modulePath)
@@ -80,11 +85,9 @@ namespace ChiselDebugTests
         internal static void VerifyInferTypes(string moduleName, string extension, bool isVerilogVCD, string modulePath)
         {
             CircuitGraph graph = VerifyMakeGraph(moduleName, extension, modulePath);
+            using VCD vcd = LoadVCD(moduleName, modulePath);
 
-            VCDTimeline timeline = MakeTimeline(moduleName, modulePath);
-            CircuitState state = timeline.GetStateAtTime(timeline.TimeInterval.StartInclusive);
-
-            foreach (BinaryVarValue expected in state.VariableValues.Values)
+            foreach (var variables in vcd.Variables)
             {
                 foreach (var variable in expected.Variables)
                 {
@@ -99,11 +102,11 @@ namespace ChiselDebugTests
                     {
                         continue;
                     }
-                    //if (expected.Bits.Length != actual.Bits.Length)
-                    //{
-                    //    Console.WriteLine($"Ref: {variable.Reference}, Expected: {expected.Bits.Length}, Actual: {actual.Bits.Length}");
-                    //}
-                    Assert.AreEqual(expected.Bits.Length, actual.Bits.Length);
+                    if (variable.Size != actual.Bits.Length)
+                    {
+                        Console.WriteLine($"Ref: {variable.Reference}, Expected: {variable.Size}, Actual: {actual.Bits.Length}");
+                    }
+                    Assert.AreEqual(variable.Size, actual.Bits.Length);
                 }
             }
         }
