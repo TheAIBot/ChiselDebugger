@@ -9,7 +9,7 @@ namespace ChiselDebug
 {
     public class CircuitState
     {
-        public readonly Dictionary<VarDef, VarValue> VariableValues = new Dictionary<VarDef, VarValue>();
+        public readonly Dictionary<VarDef, BinaryVarValue> VariableValues = new Dictionary<VarDef, BinaryVarValue>();
         public ulong Time { get; private set; }
 
         private CircuitState(CircuitState copyFrom)
@@ -28,7 +28,7 @@ namespace ChiselDebug
             {
                 foreach (var variable in initValue.Variables)
                 {
-                    VariableValues.Add(variable, initValue);
+                    VariableValues.Add(variable, (BinaryVarValue)initValue);
                 }
             }
 
