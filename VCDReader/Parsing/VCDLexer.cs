@@ -135,10 +135,16 @@ namespace VCDReader.Parsing
 
         private void SkipStart()
         {
-            ReadOnlySpan<char> ToSkip = SkipChars;
             while (true)
             {
-                AvailableChars = AvailableChars.TrimStart(ToSkip);
+                int skip = 0;
+                ReadOnlySpan<char> chars = AvailableChars.Span;
+                while (skip < chars.Length && chars[skip] < '!')
+                {
+                    skip++;
+                }
+
+                AvailableChars = AvailableChars.Slice(skip);
                 if (AvailableChars.Length == 0 && !ReachedEOF)
                 {
                     FillBuffer(true);
