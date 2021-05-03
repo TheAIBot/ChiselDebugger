@@ -415,19 +415,8 @@ namespace ChiselDebug.CombGraph
             HashSet<Output> seenCons = new HashSet<Output>();
             List<Computable> computeOrder = new List<Computable>();
 
-            bool HasUnSeenConCond(Output output)
-            {
-                if (output.IsConditional() && !seenCons.Contains(output.GetConditional()))
-                {
-                    return true;
-                }
-
-                return false;
-            }
-
             void AddConnections(Queue<(Output con, Input input)> toTraverse, Output output)
             {
-                Debug.Assert(!seenCons.Contains(output));
                 if (seenCons.Add(output))
                 {
                     computeOrder.Add(new Computable(output));
@@ -436,54 +425,59 @@ namespace ChiselDebug.CombGraph
                 {
                     toTraverse.Enqueue((output, input));
                 }
-                if (output.IsConditional())
-                {
-                    depOnCons.Add(output.GetConditional());
-                }
             }
 
             void AddMissingCons(HashSet<Output> missingCons, Input input)
             {
-                foreach (var con in input.GetAllConnections())
+                foreach (var con in input.GetConnections())
                 {
                     //Connections from constant will never change value
                     //and they will be always be computed before everyting
                     //else. Therefore they will not be a dependency which
                     //is why they can be skipped here.
-                    if (consFromConsts.Contains(con))
+                    if (consFromConsts.Contains(con.From))
                     {
                         //Still need to mark as dependency 
-                        depOnCons.Add(con);
+                        depOnCons.Add(con.From);
                         continue;
                     }
-                    missingCons.Add(con);
+                    missingCons.Add(con.From);
                 }
             }
 
-            void AddMaybeBlockedCon(Queue<(Output con, Input input)> toTraverse, Dictionary<Output, List<Output>> blockedOutputs, Output output)
+            void AddMaybeBlockedCon(Queue<(Output con, Input input)> toTraverse, Dictionary<Output, HashSet<Output>> blockedOutputs, Output output)
             {
-                if (ignoreConCondBorders || !HasUnSeenConCond(output))
+                if (seenCons.Add(output))
                 {
-                    AddConnections(toTraverse, output);
+                    computeOrder.Add(new Computable(output));
                 }
-                else
+
+                foreach (var input in output.GetConnectedInputs())
                 {
-                    List<Output> blocked;
-                    if (!blockedOutputs.TryGetValue(output.GetConditional(), out blocked))
+                    Output condition = input.GetConnectionCondition(output);
+                    if (condition != null && !seenCons.Contains(condition))
                     {
-                        blocked = new List<Output>();
-                        blockedOutputs.Add(output.GetConditional(), blocked);
+                        HashSet<Output> blocked;
+                        if (!blockedOutputs.TryGetValue(condition, out blocked))
+                        {
+                            blocked = new HashSet<Output>();
+                            blockedOutputs.Add(condition, blocked);
 
+                        }
+
+                        blocked.Add(output);
                     }
-
-                    blocked.Add(output);
+                    else
+                    {
+                        toTraverse.Enqueue((output, input));
+                    }
                 }
             }
 
             Dictionary<FIRRTLNode, HashSet<Output>> seenButMissingFirNodeInputs = new Dictionary<FIRRTLNode, HashSet<Output>>();
             Dictionary<Input, HashSet<Output>> seenButMissingModInputCons = new Dictionary<Input, HashSet<Output>>();
             HashSet<FIRRTLNode> finishedNodes = new HashSet<FIRRTLNode>();
-            Dictionary<Output, List<Output>> blockedOutputs = new Dictionary<Output, List<Output>>();
+            Dictionary<Output, HashSet<Output>> blockedOutputs = new Dictionary<Output, HashSet<Output>>();
 
             foreach (var computeFirst in outputs.Where(x => x.Node is not Module && (x.Node is not IStatePreserving || !skipStatePre)).Select(x => x.Node).Distinct())
             {
@@ -500,7 +494,6 @@ namespace ChiselDebug.CombGraph
                     var conInput = toTraverse.Dequeue();
                     if (blockedOutputs.TryGetValue(conInput.con, out var blockedOuts))
                     {
-                        Debug.Assert(blockedOuts.Distinct().Count() == blockedOuts.Count);
                         foreach (var blocked in blockedOuts)
                         {
                             AddConnections(toTraverse, blocked);
@@ -559,7 +552,7 @@ namespace ChiselDebug.CombGraph
                     {
                         if (finishedNodes.Contains(conInput.input.Node))
                         {
-                            Debug.Assert(conInput.input.Node.GetInputs().SelectMany(x => x.GetAllConnections()).All(x => seenCons.Contains(x)));
+                            Debug.Assert(conInput.input.Node.GetInputs().SelectMany(x => x.GetConnections()).All(x => seenCons.Contains(x.From)));
                             continue;
                         }
                         //Debug.Assert(conInput.input.Node.GetIO().SelectMany(x => x.Flatten()).Select(x => x.GetConditional()).Where(x => x != null).Distinct().Count() <= 1);

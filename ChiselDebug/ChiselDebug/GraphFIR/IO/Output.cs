@@ -37,11 +37,11 @@ namespace ChiselDebug.GraphFIR.IO
             return this;
         }
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, bool isConditional = false)
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Output condition = null)
         {
             if (input is Input ioIn)
             {
-                if (!isConditional && ioIn.IsConnected())
+                if (condition == null && ioIn.IsConnected())
                 {
                     if (ioIn.Con != null)
                     {
@@ -54,7 +54,7 @@ namespace ChiselDebug.GraphFIR.IO
                     To = new HashSet<Input>();
                 }
                 To.Add(ioIn);
-                ioIn.Connect(this, isConditional);
+                ioIn.Connect(this, condition);
             }
             else
             {

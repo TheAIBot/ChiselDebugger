@@ -262,9 +262,9 @@ namespace ChiselDebug.GraphFIR
                     {
                         keyValue.Key.Con.ConnectToInput(wireIn);
                     }
-                    foreach (var inputCondCon in keyValue.Key.GetConditionalConnections())
+                    foreach (var con in keyValue.Key.GetConnections())
                     {
-                        inputCondCon.ConnectToInput(wireIn, false, false, true);
+                        con.From.ConnectToInput(wireIn, false, false, con.Condition);
                     }
 
                     keyValue.Value.BypassWireIO();
@@ -274,38 +274,6 @@ namespace ChiselDebug.GraphFIR
             }
 
             DuplexOutputWires.Clear();
-        }
-
-        internal void SetConditional(Output enableCon)
-        {
-            List<ScalarIO> scalars = new List<ScalarIO>();
-            foreach (var io in InternalIO.Values)
-            {
-                scalars.Clear();
-                foreach (var scalarIO in io.Flatten(scalars))
-                {
-                    scalarIO.SetEnabledCondition(enableCon);
-                }
-            }
-            foreach (var io in ExternalIO.Values)
-            {
-                scalars.Clear();
-                foreach (var scalarIO in io.Flatten(scalars))
-                {
-                    scalarIO.SetEnabledCondition(enableCon);
-                }
-            }
-            foreach (var node in Nodes)
-            {
-                foreach (var nodeIO in node.GetIO())
-                {
-                    scalars.Clear();
-                    foreach (var scalarIO in nodeIO.Flatten(scalars))
-                    {
-                        scalarIO.SetEnabledCondition(enableCon);
-                    }
-                }
-            }
         }
 
         internal IEnumerable<T> GetAllNestedNodesOfType<T>()

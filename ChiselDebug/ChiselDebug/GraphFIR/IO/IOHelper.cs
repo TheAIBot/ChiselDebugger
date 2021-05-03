@@ -29,7 +29,7 @@ namespace ChiselDebug.GraphFIR.IO
 
             for (int i = 0; i < bypassFromIO.Length; i++)
             {
-                Output[] connectFromCons;
+                Connection[] connectFromCons;
                 Input[] connectTo;
 
                 //They must both either be connected or not.
@@ -41,13 +41,13 @@ namespace ChiselDebug.GraphFIR.IO
 
                 if (bypassFromIO[i] is Input fromIn && bypassToIO[i] is Output toOut)
                 {
-                    connectFromCons = fromIn.GetAllConnections();
+                    connectFromCons = fromIn.GetConnections();
                     connectTo = toOut.GetConnectedInputs().ToArray();
                     fromIn.DisconnectAll();
                 }
                 else if (bypassFromIO[i] is Output fromOut && bypassToIO[i] is Input toIn)
                 {
-                    connectFromCons = toIn.GetAllConnections();
+                    connectFromCons = toIn.GetConnections();
                     connectTo = fromOut.GetConnectedInputs().ToArray();
                     toIn.DisconnectAll();
                 }
@@ -61,7 +61,7 @@ namespace ChiselDebug.GraphFIR.IO
                     input.DisconnectAll();
                     foreach (var connection in connectFromCons)
                     {
-                        connection.ConnectToInput(input, false, false, true);
+                        connection.From.ConnectToInput(input, false, false, connection.Condition);
                     }
                 }
             }
@@ -70,104 +70,5 @@ namespace ChiselDebug.GraphFIR.IO
             Debug.Assert(bypassFromIO.All(x => !x.IsConnectedToAnything()));
             Debug.Assert(bypassToIO.All(x => !x.IsConnectedToAnything()));
         }
-
-        public static void BiDirFullyConnectIO(FIRIO a, FIRIO b, bool isConditional = false)
-        {
-            ScalarIO[] aFlat = a.Flatten().ToArray();
-            ScalarIO[] bFlat = b.Flatten().ToArray();
-
-            if (aFlat.Length != bFlat.Length)
-            {
-                throw new Exception($"Can't fully connect {nameof(a)} and {nameof(b)} because they do not contain the same number of IO.");
-            }
-
-            for (int i = 0; i < aFlat.Length; i++)
-            {
-                FIRIO aIO = aFlat[i];
-                FIRIO bIO = bFlat[i];
-
-                if (aIO is Input aIn && bIO is Output bOut)
-                {
-                    bOut.ConnectToInput(aIn, false, false, isConditional);
-                }
-                else if (aIO is Output aOut && bIO is Input bIn)
-                {
-                    aOut.ConnectToInput(bIn, false, false, isConditional);
-                }
-                else
-                {
-                    throw new Exception($"Can't connect IO of type {a.GetType()} to {b.GetType()}.");
-                }
-            }
-        }
-
-        public static void OneWayOnlyConnect(FIRIO fromIO, FIRIO toIO)
-        {
-            ScalarIO[] fromFlat = fromIO.Flatten().ToArray();
-            ScalarIO[] toFlat = toIO.Flatten().ToArray();
-
-            if (fromFlat.Length != toFlat.Length)
-            {
-                throw new Exception($"Can't connect {nameof(fromIO)} to {nameof(toIO)} because they do not contain the same number of IO.");
-            }
-
-            for (int i = 0; i < fromFlat.Length; i++)
-            {
-                ScalarIO from = fromFlat[i];
-                ScalarIO to = toFlat[i];
-
-                if (from is Output fromOutput && to is Input toInput)
-                {
-                    fromOutput.ConnectToInput(toInput);
-                }
-            }
-        }
-
-        public static void PairIO(Dictionary<FIRIO, FIRIO> pairs, FIRIO fromIO, FIRIO toIO)
-        {
-            if (fromIO is ScalarIO && toIO is ScalarIO)
-            {
-                pairs.Add(fromIO, toIO);
-                pairs.Add(toIO, fromIO);
-            }
-            else
-            {
-                var ioWalk = fromIO.WalkIOTree();
-                var ioFlipWalk = toIO.WalkIOTree();
-                foreach (var pair in ioWalk.Zip(ioFlipWalk))
-                {
-                    pairs.Add(pair.First, pair.Second);
-                    pairs.Add(pair.Second, pair.First);
-                }
-            }
-        }
-
-        //internal static void PropegatePorts(IPortsIO fromPortIO)
-        //{
-        //    while (true)
-        //    {
-        //        FIRRTLNode fromNode = ((FIRIO)fromPortIO).Node;
-
-        //    }
-
-
-        //    //HashSet<FIRRTLNode> seenDestinations = new HashSet<FIRRTLNode>();
-        //    //FIRRTLNode fromNode = ((FIRIO)fromHidden).Node;
-        //    //while (seenDestinations.Add(fromNode) && fromNode is Module dstMod)// || dstNode is Wire)
-        //    //{
-        //    //    IHiddenPorts toHidden = (IHiddenPorts)dstMod.GetPairedIO((FIRIO)fromHidden);
-
-        //    //    FIRIO[] fromPorts = fromHidden.GetHiddenPorts();
-        //    //    FIRIO[] toPorts = toHidden.CopyHiddenPortsFrom(fromHidden);
-
-        //    //    for (int y = 0; y < fromPorts.Length; y++)
-        //    //    {
-        //    //        fromPorts[y].ConnectToInput(toPorts[y]);
-        //    //    }
-
-        //    //    fromNode = ((FIRIO)toHidden).Node;
-        //    //    fromHidden = toHidden;
-        //    //}
-        //}
     }
 }
