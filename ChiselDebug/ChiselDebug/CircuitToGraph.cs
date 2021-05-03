@@ -459,7 +459,10 @@ namespace ChiselDebug
                 to = to.GetInput();
             }
 
-            from.ConnectToInput(to, isPartial);
+            bool isConditionalCon = from.GetModResideIn() != helper.Mod || to.GetModResideIn() != helper.Mod;
+            Debug.Assert(!isConditionalCon || (isConditionalCon && helper.Mod.EnableCon != null));
+
+            from.ConnectToInput(to, isPartial, false, isConditionalCon);
         }
 
         private static void VisitConditional(VisitHelper parentHelper, FIRRTL.Conditionally conditional)
@@ -472,6 +475,7 @@ namespace ChiselDebug
 
                 var internalEnaDummy = new GraphFIR.DummySink(ena);
                 helper.AddNodeToModule(internalEnaDummy);
+                helper.Mod.SetEnableCond(internalEnaDummy.Result);
 
                 //Set signal that enables this scope as things like memory
                 //ports need it
@@ -480,8 +484,9 @@ namespace ChiselDebug
                 //Fill out module
                 VisitStatement(helper, body);
 
-                helper.Mod.SetConditional(internalEnaDummy);
+                helper.Mod.SetConditional(internalEnaDummy.Result);
                 internalEnaDummy.InIO.SetEnabledCondition(null);
+                internalEnaDummy.Result.SetEnabledCondition(null);
 
                 cond.AddConditionalModule(internalEnaDummy.InIO, helper.Mod);
 

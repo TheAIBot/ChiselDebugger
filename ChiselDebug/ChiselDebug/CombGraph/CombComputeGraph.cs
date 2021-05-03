@@ -551,10 +551,10 @@ namespace ChiselDebug.CombGraph
                             AddMaybeBlockedCon(toTraverse, blockedOutputs, nodeOutput);
                         }
                     }
-                    else if (conInput.input.Node is DummySink)
-                    {
-                        continue;
-                    }
+                    //else if (conInput.input.Node is DummySink)
+                    //{
+                    //    continue;
+                    //}
                     else
                     {
                         if (finishedNodes.Contains(conInput.input.Node))

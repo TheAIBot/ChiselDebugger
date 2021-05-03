@@ -16,6 +16,7 @@ namespace ChiselDebug.GraphFIR
         private readonly Dictionary<IOBundle, Module> BundleToModule = new Dictionary<IOBundle, Module>();
         private readonly Dictionary<Input, Wire> DuplexOutputWires = new Dictionary<Input, Wire>();
         private readonly Module ParentScopeView;
+        public Output EnableCon { get; private set; }
         
 
         public Module(string name, Module parentScope, FirrtlNode defNode) : base(defNode)
@@ -23,6 +24,11 @@ namespace ChiselDebug.GraphFIR
             this.Name = name;
             this.ParentScopeView = parentScope;
             SetModResideIn(this);
+        }
+
+        public void SetEnableCond(Output enable)
+        {
+            EnableCon = enable;
         }
 
         public void AddNode(FIRRTLNode node)
@@ -222,7 +228,7 @@ namespace ChiselDebug.GraphFIR
         {
             FixDuplexOutputWires();
 
-            for (int i = Nodes.Count - 1; i >= 0 ; i--)
+            for (int i = Nodes.Count - 1; i >= 0; i--)
             {
                 FIRRTLNode node = Nodes[i];
                 if (node is Wire wire)
@@ -270,7 +276,7 @@ namespace ChiselDebug.GraphFIR
             DuplexOutputWires.Clear();
         }
 
-        internal void SetConditional(DummySink enableCon)
+        internal void SetConditional(Output enableCon)
         {
             List<ScalarIO> scalars = new List<ScalarIO>();
             foreach (var io in InternalIO.Values)
