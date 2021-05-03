@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace VCDReader.Parsing
 {
@@ -291,25 +292,19 @@ namespace VCDReader.Parsing
             Span<BitState> bits = bitsMem.Span;
             for (int i = 0; i < bits.Length; i++)
             {
-                bits[i] = ToBitState(valueText[i]);
+                bits[bits.Length - i - 1] = ToBitState(valueText[i]);
             }
 
-            bits.Reverse();
             return bitsMem;
         }
 
-        internal static BitState ToBitState(char value)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static BitState ToBitState(int value)
         {
-            return value switch
-            {
-                '0' => BitState.Zero,
-                '1' => BitState.One,
-                'x' => BitState.X,
-                'X' => BitState.X,
-                'z' => BitState.Z,
-                'Z' => BitState.Z,
-                var error => throw new Exception($"Invalid bit state: {error}")
-            };
+            value = value & 0b101_1111;
+            int firstBit = (value & 0b1) | ((value >> 1) & 0b1);
+            int secondBit = value >> 5;
+            return (BitState)(secondBit | firstBit);
         }
 
         internal static ScopeType VisitScopeType(VCDLexer lexer)
