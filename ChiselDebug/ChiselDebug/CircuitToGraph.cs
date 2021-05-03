@@ -362,22 +362,22 @@ namespace ChiselDebug
                         var error => throw new Exception($"Unknown memory port type. Type: {error}")
                     };
 
-                    VisitExp(helper, memPort.Exps[0], GraphFIR.IO.IOGender.Male).ConnectToInput(port.Address);
-                    VisitExp(helper, memPort.Exps[1], GraphFIR.IO.IOGender.Male).ConnectToInput(port.Clock);
-                    helper.ScopeEnabledCond.ConnectToInput(port.Enabled);
-
-                    //if port has mask then by default set whole mask to true
-                    if (port.HasMask())
-                    {
-                        GraphFIR.IO.FIRIO mask = port.GetMask();
-                        GraphFIR.IO.Output const1 = (GraphFIR.IO.Output)VisitExp(helper, new FIRRTL.UIntLiteral(1, 1), GraphFIR.IO.IOGender.Male);
-                        foreach (var maskInput in mask.Flatten())
-                        {
-                            const1.ConnectToInput(maskInput);
-                        }
-                    }
-
                     helper.Mod.AddMemoryPort(port);
+                }
+
+                VisitExp(helper, memPort.Exps[0], GraphFIR.IO.IOGender.Male).ConnectToInput(port.Address);
+                VisitExp(helper, memPort.Exps[1], GraphFIR.IO.IOGender.Male).ConnectToInput(port.Clock);
+                helper.ScopeEnabledCond.ConnectToInput(port.Enabled);
+
+                //if port has mask then by default set whole mask to true
+                if (port.HasMask())
+                {
+                    GraphFIR.IO.FIRIO mask = port.GetMask();
+                    GraphFIR.IO.Output const1 = (GraphFIR.IO.Output)VisitExp(helper, new FIRRTL.UIntLiteral(1, 1), GraphFIR.IO.IOGender.Male);
+                    foreach (var maskInput in mask.Flatten())
+                    {
+                        const1.ConnectToInput(maskInput);
+                    }
                 }
             }
             else if (statement is FIRRTL.DefWire defWire)
