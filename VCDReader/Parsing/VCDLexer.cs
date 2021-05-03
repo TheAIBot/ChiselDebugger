@@ -54,18 +54,24 @@ namespace VCDReader.Parsing
             int wordLength = 0;
             while (!IsEmpty() && wordLength < AvailableChars.Length)
             {
-                if (!IsWordChar(AvailableChars.Span[wordLength]))
+                ReadOnlySpan<char> chars = AvailableChars.Span;
+                while (wordLength < chars.Length)
                 {
-                    break;
+                    if (!IsWordChar(chars[wordLength]))
+                    {
+                        goto skipStop;
+                    }
+
+                    wordLength++;
                 }
 
-                wordLength++;
                 if (AvailableChars.Length == wordLength && !ReachedEOF)
                 {
                     FillBuffer(false);
                 }
             }
 
+            skipStop:
             return AvailableChars.Slice(0, wordLength);
         }
 
