@@ -9,7 +9,7 @@ namespace ChiselDebug
 {
     public class CircuitState
     {
-        public readonly Dictionary<VarDef, BinaryVarValue> VariableValues = new Dictionary<VarDef, BinaryVarValue>();
+        public readonly Dictionary<VarDef, BinaryVarValue> VariableValues = new Dictionary<VarDef, BinaryVarValue>(new VarDefComparar());
         public ulong Time { get; private set; }
 
         private CircuitState(CircuitState copyFrom)
