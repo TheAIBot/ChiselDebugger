@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace VCDReader
@@ -24,6 +25,11 @@ namespace VCDReader
         }
 
         public static string BitsToString(this BitState[] bits)
+        {
+            return bits.AsSpan().BitsToString();
+        }
+
+        public static string BitsToString(this Span<BitState> bits)
         {
             StringBuilder sBuilder = new StringBuilder();
             for (int i = bits.Length - 1; i >= 0; i--)

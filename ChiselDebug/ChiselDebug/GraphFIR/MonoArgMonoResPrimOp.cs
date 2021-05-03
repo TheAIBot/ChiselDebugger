@@ -41,7 +41,7 @@ namespace ChiselDebug.GraphFIR
 
             if (!aVal.IsValidBinary())
             {
-                Array.Fill(resultVal.Bits, BitState.X);
+                resultVal.Bits.Fill(BitState.X);
                 return;
             }
 
@@ -69,7 +69,7 @@ namespace ChiselDebug.GraphFIR
 
         protected override void MonoArgCompute(BinaryVarValue a, BinaryVarValue result)
         {
-            Array.Copy(a.Bits, result.Bits, a.Bits.Length);
+            a.Bits.CopyTo(result.Bits);
         }
 
         protected override IFIRType MonoArgInferType() => A.Type switch
@@ -87,7 +87,7 @@ namespace ChiselDebug.GraphFIR
 
         protected override void MonoArgCompute(BinaryVarValue a, BinaryVarValue result)
         {
-            Array.Copy(a.Bits, result.Bits, a.Bits.Length);
+            a.Bits.CopyTo(result.Bits);
         }
 
         protected override IFIRType MonoArgInferType() => A.Type switch
@@ -125,12 +125,12 @@ namespace ChiselDebug.GraphFIR
         {
             if (A.Type is UIntType)
             {
-                Array.Copy(a.Bits, result.Bits, a.Bits.Length);
+                a.Bits.CopyTo(result.Bits);
                 result.Bits[^1] = result.Bits[^2];
             }
             else if (A.Type is SIntType)
             {
-                Array.Copy(a.Bits, result.Bits, a.Bits.Length);
+                a.Bits.CopyTo(result.Bits);
             }
             else
             {

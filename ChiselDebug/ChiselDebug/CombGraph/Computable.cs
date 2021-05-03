@@ -67,7 +67,7 @@ namespace ChiselDebug.CombGraph
                 Con.InferType();
                 Con.SetDefaultvalue();
                 OldValue = new BinaryVarValue(Con.Value.GetValue().Bits.Length);
-                Array.Fill(OldValue.Bits, BitState.X);
+                OldValue.Bits.Fill(BitState.X);
 
                 foreach (var input in Con.GetConnectedInputs())
                 {

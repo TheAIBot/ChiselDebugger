@@ -32,10 +32,11 @@ namespace VCDReader
         public IEnumerable<SimPass> GetSimulationCommands()
         {
             SimPass pass = new SimPass();
+            BitAllocator bitAlloc = new BitAllocator();
             while (Lexer.IsWordsRemaining())
             {
                 pass.Reset();
-                Visitor.VisitSimCmd(Lexer, IDToVariable, pass);
+                Visitor.VisitSimCmd(Lexer, IDToVariable, pass, bitAlloc);
                 if (pass.HasCmd())
                 {
                     yield return pass;

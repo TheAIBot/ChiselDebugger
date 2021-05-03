@@ -15,7 +15,7 @@ namespace ChiselDebug.GraphFIR
         {
             this.Type = type;
             this.Value = new BinaryVarValue(Type.Width);
-            Array.Fill(Value.Bits, BitState.X);
+            Value.Bits.Fill(BitState.X);
 
             this.ValueString = null;
         }

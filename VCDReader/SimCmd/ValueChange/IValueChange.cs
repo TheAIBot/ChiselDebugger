@@ -14,22 +14,21 @@ namespace VCDReader
 
     public readonly struct BinaryVarValue : VarValue
     {
-        public readonly BitState[] Bits;
+        private readonly Memory<BitState> BitSlice;
         private readonly List<VarDef>? Vars;
+
+        public Span<BitState> Bits => BitSlice.Span;
         public List<VarDef>? Variables => Vars;
 
-        public BinaryVarValue(BitState[] bits, List<VarDef> variables)
+        public BinaryVarValue(Memory<BitState> bits, List<VarDef> variables)
         {
-            this.Bits = new BitState[variables[0].Size];
+            this.BitSlice = bits;
             this.Vars = variables;
-
-            Array.Fill(Bits, bits[^1].LeftExtendWith());
-            bits.CopyTo(Bits, 0);
         }
 
         public BinaryVarValue(int bitCount)
         {
-            this.Bits = new BitState[bitCount];
+            this.BitSlice = new BitState[bitCount];
             this.Vars = null;
         }
 
@@ -113,11 +112,11 @@ namespace VCDReader
         {
             if (Bits.Length <= value.Bits.Length)
             {
-                Array.Copy(value.Bits, Bits, Bits.Length);
+                value.Bits.Slice(0, Bits.Length).CopyTo(Bits);
             }
             else
             {
-                Array.Copy(value.Bits, Bits, value.Bits.Length);
+                value.Bits.CopyTo(Bits);
                 ExtendBits(value.Bits.Length, asSigned);
             }
         }
@@ -130,7 +129,7 @@ namespace VCDReader
             }
 
             BitState extendWith = asSigned ? Bits[lengthAlreadySet - 1] : BitState.Zero;
-            Array.Fill(Bits, extendWith, lengthAlreadySet, Bits.Length - lengthAlreadySet);
+            Bits.Slice(lengthAlreadySet, Bits.Length - lengthAlreadySet).Fill(extendWith);
         }
 
         public void SetBits(ulong value)
@@ -162,7 +161,7 @@ namespace VCDReader
             if (valueBits < Bits.Length)
             {
                 BitState sign = value.Sign == -1 ? BitState.One : BitState.Zero;
-                Array.Fill(Bits, sign, valueBits, Bits.Length - valueBits);
+                Bits.Slice(valueBits, Bits.Length - valueBits).Fill(sign);
             }
         }
 

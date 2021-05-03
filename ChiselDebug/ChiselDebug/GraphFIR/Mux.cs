@@ -87,7 +87,7 @@ namespace ChiselDebug.GraphFIR
             {
                 foreach (var output in Result.Flatten())
                 {
-                    Array.Fill(output.Value.GetValue().Bits, BitState.X);
+                    output.Value.GetValue().Bits.Fill(BitState.X);
                 }
                 return;
             }
@@ -111,7 +111,7 @@ namespace ChiselDebug.GraphFIR
                         foreach (Output output in Result.Flatten())
                         {
                             BinaryVarValue binValue = output.Value.GetValue();
-                            Array.Fill(binValue.Bits, BitState.X);
+                            binValue.Bits.Fill(BitState.X);
                         }
 
                         return;

@@ -47,7 +47,7 @@ namespace ChiselDebug.GraphFIR
 
             if (!aVal.IsValidBinary() || !bVal.IsValidBinary())
             {
-                Array.Fill(resultVal.Bits, BitState.X);
+                resultVal.Bits.Fill(BitState.X);
                 return;
             }
 
@@ -199,7 +199,7 @@ namespace ChiselDebug.GraphFIR
                 //Handle divide by zero
                 if (bVal == 0)
                 {
-                    Array.Fill(result.Bits, BitState.X);
+                    result.Bits.Fill(BitState.X);
                 }
                 else
                 {
@@ -247,7 +247,7 @@ namespace ChiselDebug.GraphFIR
                 BigInteger bVal = b.AsBigInteger(B.Type is SIntType);
                 if (bVal == 0)
                 {
-                    Array.Fill(result.Bits, BitState.Zero);
+                    result.Bits.Fill(BitState.Zero);
                 }
                 else
                 {
@@ -273,13 +273,13 @@ namespace ChiselDebug.GraphFIR
         protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
         {
             int shift = b.AsInt();
-            Array.Fill(result.Bits, BitState.Zero, 0, shift);
+            result.Bits.Slice(0, shift).Fill(BitState.Zero);
 
             int copyLength = Math.Min(result.Bits.Length - shift, a.Bits.Length);
-            Array.Copy(a.Bits, 0, result.Bits, shift, copyLength);
+            a.Bits.CopyTo(result.Bits.Slice(shift, copyLength));
 
             BitState signFill = A.Type is SIntType ? a.Bits[^1] : BitState.Zero;
-            result.Bits.AsSpan(shift + copyLength).Fill(signFill);
+            result.Bits.Slice(shift + copyLength).Fill(signFill);
         }
 
         protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
@@ -297,8 +297,8 @@ namespace ChiselDebug.GraphFIR
         protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
         {
             int shift = b.AsInt();
-            Array.Fill(result.Bits, A.Type is SIntType ? a.Bits[^1] : BitState.Zero);
-            Array.Copy(a.Bits, Math.Min(a.Bits.Length - 1, shift), result.Bits, 0, Math.Max(0, a.Bits.Length - shift));
+            result.Bits.Fill(A.Type is SIntType ? a.Bits[^1] : BitState.Zero);
+            a.Bits.Slice(Math.Min(a.Bits.Length - 1, shift), Math.Max(0, a.Bits.Length - shift)).CopyTo(result.Bits);
         }
 
         protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
@@ -315,8 +315,11 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
         {
-            Array.Copy(a.Bits, 0, result.Bits, b.Bits.Length, a.Bits.Length);
-            Array.Copy(b.Bits, result.Bits, b.Bits.Length);
+            Span<BitState> aCopy = result.Bits.Slice(b.Bits.Length);
+            Span<BitState> bCopy = result.Bits.Slice(0);
+
+            a.Bits.CopyTo(aCopy);
+            b.Bits.CopyTo(bCopy);
         }
 
         protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
@@ -601,7 +604,7 @@ namespace ChiselDebug.GraphFIR
             {
                 result.Bits[i + ShiftBy] = a.Bits[i];
             }
-            Array.Fill(result.Bits, BitState.Zero, 0, ShiftBy);
+            result.Bits.Slice(0, ShiftBy).Fill(BitState.Zero);
         }
 
         protected override IFIRType BiArgInferType() => A.Type switch

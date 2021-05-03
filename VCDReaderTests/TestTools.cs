@@ -90,7 +90,7 @@ namespace VCDReaderTests
 
             if (expected is BinaryVarValue expectedBin && actual is BinaryVarValue actualBin)
             {
-                CollectionAssert.AreEqual(expectedBin.Bits, actualBin.Bits);
+                CollectionAssert.AreEqual(expectedBin.Bits.ToArray(), actualBin.Bits.ToArray());
             }
             else if (expected is RealVarValue expectedReal && actual is RealVarValue actualReal)
             {

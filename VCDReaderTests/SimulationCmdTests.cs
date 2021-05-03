@@ -83,7 +83,7 @@ b{bitState.ToChar()} !";
             string vcdString = @$"
 $var wire 2 b1 b1 $end
 $enddefinitions $end
-b0 b1";
+b00 b1";
             VCD vcd = Parse.FromString(vcdString);
 
             TestTools.VerifyDeclarations(expectedDecls, vcd.Declarations);
@@ -124,7 +124,7 @@ b{expectedBits.BitsToString()} !";
             Assert.IsTrue(simCmds[0] is BinaryVarValue);
 
             var valueChange = (BinaryVarValue)simCmds[0];
-            CollectionAssert.AreEqual(expectedBits, valueChange.Bits);
+            CollectionAssert.AreEqual(expectedBits, valueChange.Bits.ToArray());
             Assert.AreEqual(variable, valueChange.Variables[0]);
         }
 
