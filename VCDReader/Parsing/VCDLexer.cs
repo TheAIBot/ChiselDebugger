@@ -47,7 +47,7 @@ namespace VCDReader.Parsing
             return numbers;
         }
 
-        public ReadOnlySpan<char> PeekNextWord()
+        public ReadOnlyMemory<char> PeekNextWord()
         {
             SkipStart();
 
@@ -66,7 +66,7 @@ namespace VCDReader.Parsing
                 }
             }
 
-            return AvailableChars.Span.Slice(0, wordLength);
+            return AvailableChars.Slice(0, wordLength);
         }
 
         public char PeekNextChar()
@@ -88,7 +88,7 @@ namespace VCDReader.Parsing
 
         public ReadOnlySpan<char> NextWord()
         {
-            ReadOnlySpan<char> word = PeekNextWord();
+            ReadOnlySpan<char> word = PeekNextWord().Span;
             SkipWord(word);
 
             return word;
@@ -96,9 +96,8 @@ namespace VCDReader.Parsing
 
         public ReadOnlyMemory<char> NextWordAsMem()
         {
-            ReadOnlySpan<char> word = PeekNextWord();
-            ReadOnlyMemory<char> wordMem = AvailableChars.Slice(0, word.Length);
-            SkipWord(word);
+            ReadOnlyMemory<char> wordMem = PeekNextWord();
+            SkipWord(wordMem.Span);
 
             return wordMem;
         }

@@ -116,7 +116,7 @@ namespace VCDReader.Parsing
                 string versionTxt = lexer.NextUntil("$").ToString();
                 string systemTaskString = string.Empty;
 
-                ReadOnlySpan<char> systemTask = lexer.PeekNextWord();
+                ReadOnlySpan<char> systemTask = lexer.PeekNextWord().Span;
                 if (systemTask.StartsWith("$") && !systemTask.SequenceEqual("$end"))
                 {
                     lexer.SkipWord(systemTask);
