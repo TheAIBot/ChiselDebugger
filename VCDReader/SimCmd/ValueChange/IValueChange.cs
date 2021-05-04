@@ -52,6 +52,9 @@ namespace VCDReader
                 val |= (ulong)Bits[i];
             }
 
+            //If is binary then only the first bit in each
+            //byte should be set as BitState.Zero and Bitstate.One
+            //only sets the first bit
             return (val & (~0x0101_0101_0101_0101ul)) == 0;
         }
 
