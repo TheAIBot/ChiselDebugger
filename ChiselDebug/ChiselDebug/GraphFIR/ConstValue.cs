@@ -11,6 +11,7 @@ namespace ChiselDebug.GraphFIR
     {
         public readonly Literal Value;
         public readonly Output Result;
+        private bool FirstCompute = true;
 
         public ConstValue(string outputName, Literal value) : base(value)
         {
@@ -35,9 +36,14 @@ namespace ChiselDebug.GraphFIR
 
         public override void Compute()
         {
-            BinaryVarValue binValue = new BinaryVarValue(Value.Width);
-            binValue.SetBitsAndExtend(Value.Value, false);
-            Result.Value.UpdateValue(binValue);
+            if (FirstCompute)
+            {
+                FirstCompute = false;
+
+                BinaryVarValue binValue = new BinaryVarValue(Value.Width);
+                binValue.SetBitsAndExtend(Value.Value, false);
+                Result.Value.UpdateValue(binValue);
+            }
         }
 
         internal override void InferType()
