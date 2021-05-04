@@ -145,6 +145,27 @@ namespace ChiselDebug.GraphFIR.IO
                     CondCons = new List<Connection>();
                 }
 
+                /*
+                 * handle this
+                 * 
+                 * when en:
+                 *      a <= b
+                 *      a <= c
+                 *      skip
+                 *      
+                 * Check if connection exists with same condition
+                 * and remove it so it's replaced with the new one.
+                 */
+                for (int i = 0; i < CondCons.Count; i++)
+                {
+                    var condCon = CondCons[i];
+                    if (condCon.Condition == condition)
+                    {
+                        condCon.From.DisconnectInput(this);
+                        break;
+                    }
+                }
+
                 CondCons.Add(new Connection(con, condition));
             }
             else
