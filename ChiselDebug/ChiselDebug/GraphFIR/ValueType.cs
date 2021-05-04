@@ -20,20 +20,14 @@ namespace ChiselDebug.GraphFIR
             this.ValueString = null;
         }
 
-        public bool UpdateValue(in BinaryVarValue update)
+        public void UpdateValue(in BinaryVarValue update)
         {
-            if (Value.SameValue(in update, Type is SIntType))
-            {
-                return false;
-            }
-
             Value.SetBitsAndExtend(in update, Type is SIntType);
-            return true;
         }
 
-        public bool UpdateFrom(ValueType copyFrom)
+        public void UpdateFrom(ValueType copyFrom)
         {
-            return UpdateValue(in copyFrom.Value);
+            UpdateValue(in copyFrom.Value);
         }
 
         public void UpdateValueString()
