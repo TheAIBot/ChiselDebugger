@@ -22,7 +22,7 @@ namespace ChiselDebug.GraphFIR
 
         public bool UpdateValue(BinaryVarValue update)
         {
-            if (Value.SameValueZeroExtend(update))
+            if (Value.SameValue(update, Type is SIntType))
             {
                 return false;
             }

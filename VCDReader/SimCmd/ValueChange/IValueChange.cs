@@ -73,35 +73,49 @@ namespace VCDReader
             return true;
         }
 
-        public bool SameValueZeroExtend(BinaryVarValue other)
+        public bool SameValue(BinaryVarValue other, bool isSigned)
         {
-            int minLength = Math.Min(Bits.Length, other.Bits.Length);
-            for (int i = 0; i < minLength; i++)
+            if (Bits.Length == other.Bits.Length)
             {
-                if (Bits[i] != other.Bits[i])
+                for (int i = 0; i < Bits.Length; i++)
+                {
+                    if (Bits[i] != other.Bits[i])
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            ReadOnlySpan<BitState> minL = Bits.Length < other.Bits.Length ? Bits : other.Bits;
+            ReadOnlySpan<BitState> maxL = Bits.Length < other.Bits.Length ? other.Bits : Bits;
+            if (minL.Length == 0)
+            {
+                for (int i = 0; i < maxL.Length; i++)
+                {
+                    if (maxL[i] != BitState.Zero)
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            BitState expectedRemainer = isSigned ? minL[^1] : BitState.Zero;
+            for (int i = 0; i < minL.Length; i++)
+            {
+                if (minL[i] != maxL[i])
                 {
                     return false;
                 }
             }
-
-            if (Bits.Length > other.Bits.Length)
+            for (int i = minL.Length; i < maxL.Length; i++)
             {
-                for (int i = minLength; i < Bits.Length; i++)
+                if (maxL[i] != expectedRemainer)
                 {
-                    if (Bits[i] != BitState.Zero)
-                    {
-                        return false;
-                    }
-                }
-            }
-            else if (Bits.Length < other.Bits.Length)
-            {
-                for (int i = minLength; i < other.Bits.Length; i++)
-                {
-                    if (other.Bits[i] != BitState.Zero)
-                    {
-                        return false;
-                    }
+                    return false;
                 }
             }
 
