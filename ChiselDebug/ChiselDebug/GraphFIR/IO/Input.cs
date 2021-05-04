@@ -203,8 +203,9 @@ namespace ChiselDebug.GraphFIR.IO
         {
             if (CondCons != null)
             {
-                foreach (var condCon in CondCons)
+                for (int i = CondCons.Count - 1; i >= 0; i--)
                 {
+                    var condCon = CondCons[i];
                     if (condCon.IsEnabled())
                     {
                         Value.UpdateFrom(condCon.From.Value);
