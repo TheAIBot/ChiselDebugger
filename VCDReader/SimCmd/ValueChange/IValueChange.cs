@@ -41,17 +41,24 @@ namespace VCDReader
         public bool IsValidBinary()
         {
             ReadOnlySpan<BitState> rBits = Bits;
-            ReadOnlySpan<ulong> uBits = MemoryMarshal.Cast<BitState, ulong>(rBits);
             ulong val = 0;
-            for (int i = 0; i < uBits.Length; i++)
+            int index = 0;
+            if (rBits.Length >= sizeof(ulong))
             {
-                val |= uBits[i];
+                ReadOnlySpan<ulong> uBits = MemoryMarshal.Cast<BitState, ulong>(rBits);
+
+                for (; index < uBits.Length; index++)
+                {
+                    val |= uBits[index];
+                }
+
+                const int sizeDiff = sizeof(BitState) / sizeof(ulong);
+                index *= sizeDiff;
             }
 
-            const int sizeDiff = sizeof(BitState) / sizeof(ulong);
-            for (int i = uBits.Length * sizeDiff; i < rBits.Length; i++)
+            for (; index < rBits.Length; index++)
             {
-                val |= (ulong)rBits[i];
+                val |= (ulong)rBits[index];
             }
 
             //If is binary then only the first bit in each
@@ -80,7 +87,7 @@ namespace VCDReader
             //addition to that, poor simd is used to xor 8 BitStates at once.
             ulong xored = 0;
             int index = 0;
-            if (rBits.Length > sizeof(ulong))
+            if (rBits.Length >= sizeof(ulong))
             {
                 ReadOnlySpan<ulong> uBits = MemoryMarshal.Cast<BitState, ulong>(rBits);
                 ReadOnlySpan<ulong> uBitsOther = MemoryMarshal.Cast<BitState, ulong>(rBitsOther);
