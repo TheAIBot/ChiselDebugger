@@ -173,7 +173,7 @@ namespace ChiselDebug
             {
                 foreach (var variable in varValue.Variables)
                 {
-                    ScalarIO con = GetConnection(variable, isVerilogVCD);
+                    Output con = GetConnection(variable, isVerilogVCD) as Output;
                     if (con == null)
                     {
                         continue;
