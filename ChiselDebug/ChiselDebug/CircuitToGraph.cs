@@ -365,9 +365,9 @@ namespace ChiselDebug
                     helper.Mod.AddMemoryPort(port);
                 }
 
-                VisitExp(helper, memPort.Exps[0], GraphFIR.IO.IOGender.Male).ConnectToInput(port.Address);
-                VisitExp(helper, memPort.Exps[1], GraphFIR.IO.IOGender.Male).ConnectToInput(port.Clock);
-                helper.ScopeEnabledCond.ConnectToInput(port.Enabled);
+                ConnectIO(helper, VisitExp(helper, memPort.Exps[0], GraphFIR.IO.IOGender.Male), port.Address, false);
+                ConnectIO(helper, VisitExp(helper, memPort.Exps[1], GraphFIR.IO.IOGender.Male), port.Clock, false);
+                ConnectIO(helper, helper.ScopeEnabledCond, port.Enabled, false);
 
                 //if port has mask then by default set whole mask to true
                 if (port.HasMask())
@@ -376,7 +376,7 @@ namespace ChiselDebug
                     GraphFIR.IO.Output const1 = (GraphFIR.IO.Output)VisitExp(helper, new FIRRTL.UIntLiteral(1, 1), GraphFIR.IO.IOGender.Male);
                     foreach (var maskInput in mask.Flatten())
                     {
-                        const1.ConnectToInput(maskInput);
+                        ConnectIO(helper, const1, maskInput, false);
                     }
                 }
             }
@@ -459,10 +459,29 @@ namespace ChiselDebug
                 to = to.GetInput();
             }
 
+            ConnectIO(helper, from, to, isPartial);
+        }
+
+        private static void ConnectIO(VisitHelper helper, GraphFIR.IO.FIRIO from, GraphFIR.IO.FIRIO to, bool isPartial)
+        {
             bool isConditionalCon = from.GetModResideIn() != helper.Mod || to.GetModResideIn() != helper.Mod;
             Debug.Assert(!isConditionalCon || (isConditionalCon && helper.Mod.EnableCon != null));
 
-            from.ConnectToInput(to, isPartial, false, helper.Mod.EnableCon);
+            GraphFIR.Module fromMod = from.GetModResideIn();
+            GraphFIR.Module toMod = to.GetModResideIn();
+
+            //If going from inside to outside or outside to outside
+            //then add condition to that connection if currently in
+            //conditional module.
+            if ((fromMod == helper.Mod && toMod != helper.Mod) ||
+                (fromMod != helper.Mod && toMod != helper.Mod))
+            {
+                from.ConnectToInput(to, isPartial, false, helper.Mod.EnableCon);
+            }
+            else
+            {
+                from.ConnectToInput(to, isPartial, false, null);
+            }
         }
 
         private static void VisitConditional(VisitHelper parentHelper, FIRRTL.Conditionally conditional)
@@ -481,7 +500,7 @@ namespace ChiselDebug
 
                 //Set signal that enables this scope as things like memory
                 //ports need it
-                helper.EnterEnabledScope(ena);
+                helper.EnterEnabledScope(internalEnaDummy.Result);
 
                 //Fill out module
                 VisitStatement(helper, body);
