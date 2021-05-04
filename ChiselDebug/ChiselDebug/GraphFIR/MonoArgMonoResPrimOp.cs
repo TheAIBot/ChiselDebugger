@@ -126,7 +126,7 @@ namespace ChiselDebug.GraphFIR
             if (A.Type is UIntType)
             {
                 a.Bits.CopyTo(result.Bits);
-                result.Bits[^1] = result.Bits[^2];
+                result.Bits[^1] = BitState.Zero;
             }
             else if (A.Type is SIntType)
             {
