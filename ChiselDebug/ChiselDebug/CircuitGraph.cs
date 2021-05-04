@@ -182,7 +182,7 @@ namespace ChiselDebug
                         continue;
                     }
 
-                    if (!ComputeAllowsUpdate.Contains(con))
+                    if (!ComputeAllowsUpdate.Contains(con) && con.Node is not IStatePreserving)
                     {
                         continue;
                     }
