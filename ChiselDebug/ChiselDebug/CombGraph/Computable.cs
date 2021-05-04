@@ -81,7 +81,7 @@ namespace ChiselDebug.CombGraph
         {
             if (Con!= null)
             {
-                return $"Con: {Con.Node}{(Con.Name != null ? $", Name: {Con.Name}" : string.Empty)}";
+                return $"Con: {Con.Node}, Module: {Con.GetModResideIn().Name}, Name: {Con.GetFullName()}";
             }
             else
             {
