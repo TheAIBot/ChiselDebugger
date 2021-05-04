@@ -352,7 +352,7 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(in BinaryVarValue a, in BinaryVarValue b, in BinaryVarValue result)
         {
-            bool value = a.SameValue(b, A.Type is SIntType);
+            bool value = a.SameValue(in b, A.Type is SIntType);
             result.Bits[0] = value ? BitState.One : BitState.Zero;
         }
     }
@@ -363,7 +363,7 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(in BinaryVarValue a, in BinaryVarValue b, in BinaryVarValue result)
         {
-            bool value = a.SameValue(b, A.Type is SIntType);
+            bool value = a.SameValue(in b, A.Type is SIntType);
             result.Bits[0] = !value ? BitState.One : BitState.Zero;
         }
     }

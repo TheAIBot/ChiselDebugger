@@ -42,7 +42,7 @@ namespace ChiselDebug.GraphFIR
 
                 BinaryVarValue binValue = new BinaryVarValue(Value.Width);
                 binValue.SetBitsAndExtend(Value.Value, false);
-                Result.Value.UpdateValue(binValue);
+                Result.Value.UpdateValue(in binValue);
             }
         }
 

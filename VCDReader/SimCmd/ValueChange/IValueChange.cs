@@ -62,7 +62,7 @@ namespace VCDReader
 
         public bool SameValue(VarValue other)
         {
-            return other is BinaryVarValue binary && SameValue(binary);
+            return other is BinaryVarValue binary && SameValue(in binary);
         }
 
         public bool SameValue(in BinaryVarValue other)
@@ -106,7 +106,7 @@ namespace VCDReader
         {
             if (Bits.Length == other.Bits.Length)
             {
-                return SameValue(other);
+                return SameValue(in other);
             }
 
             ReadOnlySpan<BitState> minL = Bits.Length < other.Bits.Length ? Bits : other.Bits;

@@ -135,7 +135,7 @@ namespace ChiselDebug.GraphFIR
                 ref readonly BinaryVarValue fromBin = ref from[i].GetValue();
                 ref readonly BinaryVarValue toBin = ref to[i].GetValue();
 
-                toBin.SetBitsAndExtend(fromBin, from[i].Type is SIntType);
+                toBin.SetBitsAndExtend(in fromBin, from[i].Type is SIntType);
             }
         }
 
