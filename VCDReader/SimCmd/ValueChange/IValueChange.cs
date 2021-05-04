@@ -114,22 +114,17 @@ namespace VCDReader
             {
                 value.Bits.Slice(0, Bits.Length).CopyTo(Bits);
             }
+            else if (value.Bits.Length == 0)
+            {
+                Bits.Fill(BitState.Zero);
+            }
             else
             {
                 value.Bits.CopyTo(Bits);
-                ExtendBits(value.Bits.Length, asSigned);
-            }
-        }
 
-        private void ExtendBits(int lengthAlreadySet, bool asSigned)
-        {
-            if (lengthAlreadySet == Bits.Length)
-            {
-                return;
+                BitState extendWith = asSigned ? value.Bits[^1] : BitState.Zero;
+                Bits.Slice(value.Bits.Length).Fill(extendWith);
             }
-
-            BitState extendWith = asSigned ? Bits[lengthAlreadySet - 1] : BitState.Zero;
-            Bits.Slice(lengthAlreadySet, Bits.Length - lengthAlreadySet).Fill(extendWith);
         }
 
         public void SetBits(ulong value)
