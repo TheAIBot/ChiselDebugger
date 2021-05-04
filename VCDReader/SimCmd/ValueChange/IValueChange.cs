@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace VCDReader
 {
@@ -39,15 +40,19 @@ namespace VCDReader
 
         public bool IsValidBinary()
         {
-            for (int i = 0; i < Bits.Length; i++)
+            ReadOnlySpan<ulong> uBits = MemoryMarshal.Cast<BitState, ulong>(Bits);
+            ulong val = 0;
+            for (int i = 0; i < uBits.Length; i++)
             {
-                if (!Bits[i].IsBinary())
-                {
-                    return false;
-                }
+                val |= uBits[i];
+            }
+            
+            for (int i = uBits.Length * Marshal.SizeOf<ulong>(); i < Bits.Length; i++)
+            {
+                val |= (ulong)Bits[i];
             }
 
-            return true;
+            return (val & (~0x0101_0101_0101_0101ul)) == 0;
         }
 
         public bool SameValue(VarValue other)
