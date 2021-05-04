@@ -67,7 +67,7 @@ namespace FIRRTL.Parsing
             };
         }
 
-        private BigInteger StringToBigInteger(string str)
+        private BigInteger StringToBigInteger(string str, bool asUnsigned = false)
         {
             if (Regex.IsMatch(str, ZeroPattern, RegexOptions.Compiled))
             {
@@ -77,6 +77,10 @@ namespace FIRRTL.Parsing
             {
                 string withoutQuotes = RemoveSurroundingQuotes(str);
                 string withoutHexPrefix = withoutQuotes.Substring(1);
+                if (asUnsigned)
+                {
+                    withoutHexPrefix = "0" + withoutHexPrefix;
+                }
                 return BigInteger.Parse(withoutHexPrefix, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
             }
             else if (Regex.IsMatch(str, OctalPattern, RegexOptions.Compiled))
@@ -607,12 +611,12 @@ namespace FIRRTL.Parsing
                     if (context.ChildCount > 4)
                     {
                         width = StringToInt(context.intLit(0).GetText());
-                        value = StringToBigInteger(context.intLit(1).GetText());
+                        value = StringToBigInteger(context.intLit(1).GetText(), exprStr == "UInt");
                     }
                     else
                     {
                         width = GroundType.UnknownWidth;
-                        value = StringToBigInteger(context.intLit(0).GetText());
+                        value = StringToBigInteger(context.intLit(0).GetText(), exprStr == "UInt");
                     }
 
                     if (exprStr == "UInt")
