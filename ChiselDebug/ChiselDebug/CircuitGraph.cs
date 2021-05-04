@@ -27,7 +27,10 @@ namespace ChiselDebug
 
             foreach (var rootStart in ComputeGraph.GetAllRootSources())
             {
-                ComputeAllowsUpdate.Add(rootStart);
+                if (rootStart.Node is not ConstValue)
+                {
+                    ComputeAllowsUpdate.Add(rootStart);
+                }
             }
         }
 
