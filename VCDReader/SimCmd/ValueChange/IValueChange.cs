@@ -70,30 +70,38 @@ namespace VCDReader
                 return false;
             }
 
-            for (int i = 0; i < Bits.Length; i++)
+            //xor of two equivalent values gives 0 and anything else
+            //gives not 0. If check can be replaced with this check by checking
+            //that all xors give 0 in return. That's how this check work. In
+            //addition to that, poor simd is used to xor 8 BitStates at once.
+            ulong xored = 0;
+            int index = 0;
+            if (Bits.Length > Marshal.SizeOf<ulong>())
             {
-                if (Bits[i] != other.Bits[i])
+                ReadOnlySpan<ulong> uBits = MemoryMarshal.Cast<BitState, ulong>(Bits);
+                ReadOnlySpan<ulong> uBitsOther = MemoryMarshal.Cast<BitState, ulong>(other.Bits);
+
+                for (; index < uBits.Length; index++)
                 {
-                    return false;
+                    xored |= uBits[index] ^ uBitsOther[index];
                 }
+
+                index *= Marshal.SizeOf<ulong>();
             }
 
-            return true;
+            for (; index < Bits.Length; index++)
+            {
+                xored |= (ulong)Bits[index] ^ (ulong)other.Bits[index];
+            }
+
+            return xored == 0;
         }
 
         public bool SameValue(BinaryVarValue other, bool isSigned)
         {
             if (Bits.Length == other.Bits.Length)
             {
-                for (int i = 0; i < Bits.Length; i++)
-                {
-                    if (Bits[i] != other.Bits[i])
-                    {
-                        return false;
-                    }
-                }
-
-                return true;
+                return SameValue(other);
             }
 
             ReadOnlySpan<BitState> minL = Bits.Length < other.Bits.Length ? Bits : other.Bits;
