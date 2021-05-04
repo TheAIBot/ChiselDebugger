@@ -40,7 +40,8 @@ namespace VCDReader
 
         public bool IsValidBinary()
         {
-            ReadOnlySpan<ulong> uBits = MemoryMarshal.Cast<BitState, ulong>(Bits);
+            ReadOnlySpan<BitState> rBits = Bits;
+            ReadOnlySpan<ulong> uBits = MemoryMarshal.Cast<BitState, ulong>(rBits);
             ulong val = 0;
             for (int i = 0; i < uBits.Length; i++)
             {
@@ -49,7 +50,7 @@ namespace VCDReader
             
             for (int i = uBits.Length * Marshal.SizeOf<ulong>(); i < Bits.Length; i++)
             {
-                val |= (ulong)Bits[i];
+                val |= (ulong)rBits[i];
             }
 
             //If is binary then only the first bit in each
@@ -65,7 +66,9 @@ namespace VCDReader
 
         public bool SameValue(BinaryVarValue other)
         {
-            if (Bits.Length != other.Bits.Length)
+            ReadOnlySpan<BitState> rBits = Bits;
+            ReadOnlySpan<BitState> rBitsOther = other.Bits;
+            if (rBits.Length != rBitsOther.Length)
             {
                 return false;
             }
@@ -76,22 +79,23 @@ namespace VCDReader
             //addition to that, poor simd is used to xor 8 BitStates at once.
             ulong xored = 0;
             int index = 0;
-            if (Bits.Length > Marshal.SizeOf<ulong>())
+            if (rBits.Length > sizeof(ulong))
             {
-                ReadOnlySpan<ulong> uBits = MemoryMarshal.Cast<BitState, ulong>(Bits);
-                ReadOnlySpan<ulong> uBitsOther = MemoryMarshal.Cast<BitState, ulong>(other.Bits);
+                ReadOnlySpan<ulong> uBits = MemoryMarshal.Cast<BitState, ulong>(rBits);
+                ReadOnlySpan<ulong> uBitsOther = MemoryMarshal.Cast<BitState, ulong>(rBitsOther);
 
                 for (; index < uBits.Length; index++)
                 {
                     xored |= uBits[index] ^ uBitsOther[index];
                 }
 
-                index *= Marshal.SizeOf<ulong>();
+                const int sizeDiff = sizeof(BitState) / sizeof(ulong);
+                index *= sizeDiff;
             }
 
-            for (; index < Bits.Length; index++)
+            for (; index < rBits.Length; index++)
             {
-                xored |= (ulong)Bits[index] ^ (ulong)other.Bits[index];
+                xored |= (ulong)rBits[index] ^ (ulong)rBitsOther[index];
             }
 
             return xored == 0;
