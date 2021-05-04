@@ -47,8 +47,9 @@ namespace VCDReader
             {
                 val |= uBits[i];
             }
-            
-            for (int i = uBits.Length * Marshal.SizeOf<ulong>(); i < Bits.Length; i++)
+
+            const int sizeDiff = sizeof(BitState) / sizeof(ulong);
+            for (int i = uBits.Length * sizeDiff; i < rBits.Length; i++)
             {
                 val |= (ulong)rBits[i];
             }
