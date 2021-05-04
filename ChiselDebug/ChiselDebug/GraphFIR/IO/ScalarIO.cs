@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using VCDReader;
 
 namespace ChiselDebug.GraphFIR.IO
 {
@@ -78,6 +79,11 @@ namespace ChiselDebug.GraphFIR.IO
         public void SetDefaultvalue()
         {
             Value = new ValueType(Type);
+        }
+
+        public ref readonly BinaryVarValue GetValue()
+        {
+            return ref Value.Value;
         }
     }
 }

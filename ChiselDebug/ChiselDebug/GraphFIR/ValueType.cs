@@ -8,7 +8,7 @@ namespace ChiselDebug.GraphFIR
     public struct ValueType
     {
         private readonly GroundType Type;
-        private readonly BinaryVarValue Value;
+        internal readonly BinaryVarValue Value;
         private string ValueString;
 
         public ValueType(GroundType type)
@@ -39,11 +39,6 @@ namespace ChiselDebug.GraphFIR
         public void UpdateValueString()
         {
             ValueString = Value.BitsToString();
-        }
-
-        public BinaryVarValue GetValue()
-        {
-            return Value;
         }
 
         public bool IsInitialized()

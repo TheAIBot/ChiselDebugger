@@ -83,11 +83,11 @@ namespace ChiselDebug.GraphFIR
 
             //If decidor isn't binary then output can't be chosen
             //so therefore it's set to undecided
-            if (!Decider.Value.GetValue().IsValidBinary())
+            if (!Decider.GetValue().IsValidBinary())
             {
                 foreach (var output in Result.Flatten())
                 {
-                    output.Value.GetValue().Bits.Fill(BitState.X);
+                    output.GetValue().Bits.Fill(BitState.X);
                 }
                 return;
             }
@@ -110,7 +110,7 @@ namespace ChiselDebug.GraphFIR
                     {
                         foreach (Output output in Result.Flatten())
                         {
-                            BinaryVarValue binValue = output.Value.GetValue();
+                            ref readonly BinaryVarValue binValue = ref output.GetValue();
                             binValue.Bits.Fill(BitState.X);
                         }
 
@@ -122,7 +122,7 @@ namespace ChiselDebug.GraphFIR
             }
             else
             {
-                ChosenInput = Choises[Decider.Value.GetValue().AsInt()];
+                ChosenInput = Choises[Decider.GetValue().AsInt()];
             }
 
             Input[] from = ChosenInput.Flatten().Cast<Input>().ToArray();
@@ -132,8 +132,8 @@ namespace ChiselDebug.GraphFIR
             for (int i = 0; i < from.Length; i++)
             {
                 from[i].UpdateValueFromSource();
-                BinaryVarValue fromBin = from[i].Value.GetValue();
-                BinaryVarValue toBin = to[i].Value.GetValue();
+                ref readonly BinaryVarValue fromBin = ref from[i].GetValue();
+                ref readonly BinaryVarValue toBin = ref to[i].GetValue();
 
                 toBin.SetBitsAndExtend(fromBin, from[i].Type is SIntType);
             }

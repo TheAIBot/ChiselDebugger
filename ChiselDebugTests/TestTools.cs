@@ -97,7 +97,7 @@ namespace ChiselDebugTests
                         continue;
                     }
 
-                    BinaryVarValue actual = varCon.Value.GetValue();
+                    ref readonly BinaryVarValue  actual = ref varCon.GetValue();
                     if (actual == null)
                     {
                         continue;
@@ -139,7 +139,7 @@ namespace ChiselDebugTests
                             continue;
                         }
 
-                        BinaryVarValue actual = varCon.Value.GetValue();
+                        ref readonly BinaryVarValue actual = ref varCon.GetValue();
                         if (expected.Bits.Length != actual.Bits.Length)
                         {
 

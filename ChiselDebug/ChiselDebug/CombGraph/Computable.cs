@@ -45,9 +45,9 @@ namespace ChiselDebug.CombGraph
                 }
 
                 //Did connection value change?
-                if (!OldValue.SameValue(Con.Value.GetValue()))
+                if (!OldValue.SameValue(in Con.GetValue()))
                 {
-                    OldValue.SetBitsAndExtend(Con.Value.GetValue(), false);
+                    OldValue.SetBitsAndExtend(in Con.GetValue(), false);
                     Con.Value.UpdateValueString();
                     return Con;
                 }
@@ -66,7 +66,7 @@ namespace ChiselDebug.CombGraph
             {
                 Con.InferType();
                 Con.SetDefaultvalue();
-                OldValue = new BinaryVarValue(Con.Value.GetValue().Bits.Length);
+                OldValue = new BinaryVarValue(Con.GetValue().Bits.Length);
                 OldValue.Bits.Fill(BitState.X);
 
                 foreach (var input in Con.GetConnectedInputs())

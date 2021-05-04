@@ -41,9 +41,9 @@ namespace ChiselDebug.GraphFIR
             A.UpdateValueFromSource();
             B.UpdateValueFromSource();
 
-            BinaryVarValue aVal = A.Value.GetValue();
-            BinaryVarValue bVal = B.Value.GetValue();
-            BinaryVarValue resultVal = Result.Value.GetValue();
+            ref readonly BinaryVarValue aVal = ref A.GetValue();
+            ref readonly BinaryVarValue bVal = ref B.GetValue();
+            ref readonly BinaryVarValue resultVal = ref Result.GetValue();
 
             if (!aVal.IsValidBinary() || !bVal.IsValidBinary())
             {
@@ -51,9 +51,9 @@ namespace ChiselDebug.GraphFIR
                 return;
             }
 
-            BiArgCompute(aVal, bVal, resultVal);
+            BiArgCompute(in aVal, in bVal, in resultVal);
         }
-        protected abstract void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result);
+        protected abstract void BiArgCompute(in BinaryVarValue a, in BinaryVarValue b, in BinaryVarValue result);
 
         internal override void InferType()
         {
@@ -74,7 +74,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRAdd(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("+", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(in BinaryVarValue a, in BinaryVarValue b, in BinaryVarValue result)
         {
             //const int bitsInLong = 64;
             //if (a.Bits.Length <= bitsInLong && 
@@ -107,7 +107,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRSub(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("-", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(in BinaryVarValue a, in BinaryVarValue b, in BinaryVarValue result)
         {
             //const int bitsInLong = 64;
             //if (a.Bits.Length <= bitsInLong &&
@@ -140,7 +140,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRMul(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("*", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(in BinaryVarValue a, in BinaryVarValue b, in BinaryVarValue result)
         {
             //const int bitsInLong = 64;
             //if (a.Bits.Length <= bitsInLong &&
@@ -173,7 +173,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRDiv(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("/", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(in BinaryVarValue a, in BinaryVarValue b, in BinaryVarValue result)
         {
             //const int bitsInLong = 64;
             //if (a.Bits.Length <= bitsInLong &&
@@ -222,7 +222,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRRem(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("%", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(in BinaryVarValue a, in BinaryVarValue b, in BinaryVarValue result)
         {
             //const int bitsInLong = 64;
             //if (a.Bits.Length <= bitsInLong &&
@@ -270,7 +270,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRDshl(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("<<", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(in BinaryVarValue a, in BinaryVarValue b, in BinaryVarValue result)
         {
             int shift = b.AsInt();
             result.Bits.Slice(0, shift).Fill(BitState.Zero);
@@ -294,7 +294,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRDshr(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base(">>", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(in BinaryVarValue a, in BinaryVarValue b, in BinaryVarValue result)
         {
             int shift = b.AsInt();
             result.Bits.Fill(A.Type is SIntType ? a.Bits[^1] : BitState.Zero);
@@ -313,7 +313,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRCat(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("cat", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(in BinaryVarValue a, in BinaryVarValue b, in BinaryVarValue result)
         {
             Span<BitState> aCopy = result.Bits.Slice(b.Bits.Length);
             Span<BitState> bCopy = result.Bits.Slice(0);
@@ -350,7 +350,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIREq(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("=", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(in BinaryVarValue a, in BinaryVarValue b, in BinaryVarValue result)
         {
             bool value = a.SameValue(b, A.Type is SIntType);
             result.Bits[0] = value ? BitState.One : BitState.Zero;
@@ -361,7 +361,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRNeq(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("≠", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(in BinaryVarValue a, in BinaryVarValue b, in BinaryVarValue result)
         {
             bool value = a.SameValue(b, A.Type is SIntType);
             result.Bits[0] = !value ? BitState.One : BitState.Zero;
@@ -372,7 +372,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRGeq(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("≥", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(in BinaryVarValue a, in BinaryVarValue b, in BinaryVarValue result)
         {
             //const int bitsInLong = 64;
             //if (a.Bits.Length <= bitsInLong &&
@@ -406,7 +406,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRLeq(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("≤", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(in BinaryVarValue a, in BinaryVarValue b, in BinaryVarValue result)
         {
             //const int bitsInLong = 64;
             //if (a.Bits.Length <= bitsInLong &&
@@ -440,7 +440,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRGt(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base(">", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(in BinaryVarValue a, in BinaryVarValue b, in BinaryVarValue result)
         {
             //const int bitsInLong = 64;
             //if (a.Bits.Length <= bitsInLong &&
@@ -474,7 +474,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRLt(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("<", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(in BinaryVarValue a, in BinaryVarValue b, in BinaryVarValue result)
         {
             //const int bitsInLong = 64;
             //if (a.Bits.Length <= bitsInLong &&
@@ -522,7 +522,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRAnd(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("&", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(in BinaryVarValue a, in BinaryVarValue b, in BinaryVarValue result)
         {
             //const int bitsInLong = 64;
             //if (a.Bits.Length <= bitsInLong &&
@@ -546,7 +546,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIROr(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("|", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(in BinaryVarValue a, in BinaryVarValue b, in BinaryVarValue result)
         {
             //const int bitsInLong = 64;
             //if (a.Bits.Length <= bitsInLong &&
@@ -570,7 +570,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRXor(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("^", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(in BinaryVarValue a, in BinaryVarValue b, in BinaryVarValue result)
         {
             //const int bitsInLong = 64;
             //if (a.Bits.Length <= bitsInLong &&
@@ -598,7 +598,7 @@ namespace ChiselDebug.GraphFIR
             this.ShiftBy = (int)((ConstValue)bIn.Node).Value.Value;
         }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(in BinaryVarValue a, in BinaryVarValue b, in BinaryVarValue result)
         {
             for (int i = 0; i < a.Bits.Length; i++)
             {
@@ -623,7 +623,7 @@ namespace ChiselDebug.GraphFIR
             this.ShiftBy = (int)((ConstValue)bIn.Node).Value.Value;
         }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(in BinaryVarValue a, in BinaryVarValue b, in BinaryVarValue result)
         {
             //Special logic for when shifting by more than the wire length.
             //In that case the result should be equal to zero if unsigned and
