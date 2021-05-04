@@ -15,13 +15,13 @@ namespace VCDReader
 
     public readonly struct BinaryVarValue : VarValue
     {
-        private readonly Memory<BitState> BitSlice;
+        private readonly UnsafeMemory<BitState> BitSlice;
         private readonly List<VarDef>? Vars;
 
         public Span<BitState> Bits => BitSlice.Span;
         public List<VarDef>? Variables => Vars;
 
-        public BinaryVarValue(Memory<BitState> bits, List<VarDef> variables)
+        public BinaryVarValue(UnsafeMemory<BitState> bits, List<VarDef> variables)
         {
             this.BitSlice = bits;
             this.Vars = variables;
