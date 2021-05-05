@@ -7,14 +7,16 @@ namespace ChiselDebug.GraphFIR
 {
     public struct ValueType
     {
-        private readonly GroundType Type;
+        private readonly bool IsSigned;
+        private readonly bool HasInitialized;
         internal BinaryVarValue Value;
         private string ValueString;
 
         public ValueType(GroundType type)
         {
-            this.Type = type;
-            this.Value = new BinaryVarValue(Type.Width, false);
+            this.IsSigned = type is SIntType;
+            this.HasInitialized = true;
+            this.Value = new BinaryVarValue(type.Width, false);
             Value.SetAllUnknown();
 
             this.ValueString = null;
@@ -22,7 +24,7 @@ namespace ChiselDebug.GraphFIR
 
         public void UpdateValue(in BinaryVarValue update)
         {
-            Value.SetBitsAndExtend(in update, Type is SIntType);
+            Value.SetBitsAndExtend(in update, IsSigned);
         }
 
         public void UpdateFrom(ref ValueType copyFrom)
@@ -37,7 +39,7 @@ namespace ChiselDebug.GraphFIR
 
         public bool IsInitialized()
         {
-            return Type != null;
+            return HasInitialized;
         }
 
         public bool IsTrue()
