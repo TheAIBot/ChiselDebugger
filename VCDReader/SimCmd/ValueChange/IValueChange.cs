@@ -245,14 +245,29 @@ namespace VCDReader
 
         public BigInteger AsUnsignedBigInteger()
         {
-            var value = BigInteger.Zero;
-            for (int i = Bits.Length - 1; i >= 0; i--)
+            const int ulongBitCount = 64;
+            if (Bits.Length <= ulongBitCount)
             {
-                value = value << 1;
-                value |= 1 & (int)Bits[i];
-            }
+                ulong value = 0;
+                for (int i = Bits.Length - 1; i >= 0; i--)
+                {
+                    value = value << 1;
+                    value |= 1 & (ulong)Bits[i];
+                }
 
-            return value;
+                return new BigInteger(value);
+            }
+            else
+            {
+                var value = BigInteger.Zero;
+                for (int i = Bits.Length - 1; i >= 0; i--)
+                {
+                    value = value << 1;
+                    value |= 1 & (int)Bits[i];
+                }
+
+                return value;
+            }
         }
 
         public BigInteger AsSignedBigInteger()
