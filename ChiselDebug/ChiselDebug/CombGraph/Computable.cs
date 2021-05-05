@@ -41,7 +41,7 @@ namespace ChiselDebug.CombGraph
                 Input input = (Input)Con.GetPaired();
                 if (input.IsConnectedToAnything())
                 {
-                    Con.Value.UpdateValue(in input.UpdateValueFromSourceFast());
+                    Con.Value.UpdateValue(ref input.UpdateValueFromSourceFast());
                 }
             }
         }
@@ -57,9 +57,9 @@ namespace ChiselDebug.CombGraph
                 ComputeCon();
 
                 //Did connection value change?
-                if (!OldValue.SameValue(in Con.GetValue()))
+                if (!OldValue.SameValue(ref Con.GetValue()))
                 {
-                    OldValue.SetBitsAndExtend(in Con.GetValue(), false);
+                    OldValue.SetBitsAndExtend(ref Con.GetValue(), false);
                     Con.Value.UpdateValueString();
                     return Con;
                 }

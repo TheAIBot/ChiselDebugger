@@ -124,10 +124,10 @@ namespace ChiselDebug.GraphFIR
 
             for (int i = 0; i < from.Count; i++)
             {
-                ref readonly BinaryVarValue fromBin = ref ((Input)from[i]).UpdateValueFromSourceFast();
+                ref BinaryVarValue fromBin = ref ((Input)from[i]).UpdateValueFromSourceFast();
                 ref BinaryVarValue toBin = ref to[i].GetValue();
 
-                toBin.SetBitsAndExtend(in fromBin, from[i].Type is SIntType);
+                toBin.SetBitsAndExtend(ref fromBin, from[i].Type is SIntType);
             }
         }
 

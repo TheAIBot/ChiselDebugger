@@ -97,7 +97,7 @@ namespace ChiselDebugTests
                         continue;
                     }
 
-                    ref readonly BinaryVarValue  actual = ref varCon.GetValue();
+                    ref BinaryVarValue  actual = ref varCon.GetValue();
                     if (!varCon.Value.IsInitialized())
                     {
                         continue;
@@ -148,7 +148,7 @@ namespace ChiselDebugTests
                         }
 
                         totalWireStates++;
-                        ref readonly BinaryVarValue actual = ref varCon.GetValue();
+                        ref BinaryVarValue actual = ref varCon.GetValue();
 
                         for (int i = 0; i < Math.Min(expected.Bits.Length, actual.Bits.Length); i++)
                         {

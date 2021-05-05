@@ -192,7 +192,9 @@ namespace ChiselDebug
                         continue;
                     }
                     missingToSet.Remove(con);
-                    con.Value.UpdateValue(in varValue);
+
+                    var varCopy = varValue;
+                    con.Value.UpdateValue(ref varCopy);
                 }
             }
 
@@ -220,7 +222,9 @@ namespace ChiselDebug
                     {
                         continue;
                     }
-                    con.Value.UpdateValue(in varValue);
+
+                    var varCopy = varValue;
+                    con.Value.UpdateValue(ref varCopy);
                 }
             }
 

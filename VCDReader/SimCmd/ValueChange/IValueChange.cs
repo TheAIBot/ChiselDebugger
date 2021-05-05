@@ -51,10 +51,10 @@ namespace VCDReader
 
         public bool SameValue(VarValue other)
         {
-            return other is BinaryVarValue binary && SameValue(in binary);
+            return other is BinaryVarValue binary && SameValue(ref binary);
         }
 
-        public bool SameValue(in BinaryVarValue other)
+        public bool SameValue(ref BinaryVarValue other)
         {
             ReadOnlySpan<BitState> rBits = Bits;
             ReadOnlySpan<BitState> rBitsOther = other.Bits;
@@ -91,11 +91,11 @@ namespace VCDReader
             return xored == 0;
         }
 
-        public bool SameValue(in BinaryVarValue other, bool isSigned)
+        public bool SameValue(ref BinaryVarValue other, bool isSigned)
         {
             if (Bits.Length == other.Bits.Length)
             {
-                return SameValue(in other);
+                return SameValue(ref other);
             }
 
             ReadOnlySpan<BitState> minL = Bits.Length < other.Bits.Length ? Bits : other.Bits;
@@ -132,7 +132,7 @@ namespace VCDReader
             return true;
         }
 
-        public void SetBitsAndExtend(in BinaryVarValue value, bool asSigned)
+        public void SetBitsAndExtend(ref BinaryVarValue value, bool asSigned)
         {
             IsValidBinary = value.IsValidBinary;
 

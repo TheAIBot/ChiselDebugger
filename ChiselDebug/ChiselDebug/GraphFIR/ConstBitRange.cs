@@ -35,7 +35,7 @@ namespace ChiselDebug.GraphFIR
 
         public override void Compute()
         {
-            ref readonly BinaryVarValue aVal = ref In.UpdateValueFromSourceFast();
+            ref BinaryVarValue aVal = ref In.UpdateValueFromSourceFast();
             ref BinaryVarValue resultVal = ref Result.GetValue();
 
             Debug.Assert(aVal.IsValidBinary == aVal.Bits.IsAllBinary());
@@ -46,10 +46,10 @@ namespace ChiselDebug.GraphFIR
             }
 
             resultVal.IsValidBinary = true;
-            ConstBitRangeCompute(in aVal, ref resultVal);
+            ConstBitRangeCompute(ref aVal, ref resultVal);
             Debug.Assert(resultVal.IsValidBinary == resultVal.Bits.IsAllBinary());
         }
-        protected abstract void ConstBitRangeCompute(in BinaryVarValue a, ref BinaryVarValue result);
+        protected abstract void ConstBitRangeCompute(ref BinaryVarValue a, ref BinaryVarValue result);
     }
 
     public class Head : ConstBitRange
@@ -60,7 +60,7 @@ namespace ChiselDebug.GraphFIR
             this.FromMSB = fromMSB;
         }
 
-        protected override void ConstBitRangeCompute(in BinaryVarValue a, ref BinaryVarValue result)
+        protected override void ConstBitRangeCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
             a.Bits.Slice(a.Bits.Length - FromMSB).CopyTo(result.Bits);
         }
@@ -87,7 +87,7 @@ namespace ChiselDebug.GraphFIR
             this.FromLSB = fromLSB;
         }
 
-        protected override void ConstBitRangeCompute(in BinaryVarValue a, ref BinaryVarValue result)
+        protected override void ConstBitRangeCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
             a.Bits.Slice(0, a.Bits.Length - FromLSB).CopyTo(result.Bits);
         }
@@ -116,7 +116,7 @@ namespace ChiselDebug.GraphFIR
             this.EndInclusive = endInclusive;
         }
 
-        protected override void ConstBitRangeCompute(in BinaryVarValue a, ref BinaryVarValue result)
+        protected override void ConstBitRangeCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
             a.Bits.Slice(StartInclusive, EndInclusive - StartInclusive + 1).CopyTo(result.Bits);
         }
@@ -143,7 +143,7 @@ namespace ChiselDebug.GraphFIR
             this.WidthAfterPad = newWidth;
         }
 
-        protected override void ConstBitRangeCompute(in BinaryVarValue a, ref BinaryVarValue result)
+        protected override void ConstBitRangeCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
             a.Bits.CopyTo(result.Bits);
 

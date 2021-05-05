@@ -34,7 +34,7 @@ namespace ChiselDebug.GraphFIR
 
         public override void Compute()
         {
-            ref readonly BinaryVarValue aVal = ref A.UpdateValueFromSourceFast();
+            ref BinaryVarValue aVal = ref A.UpdateValueFromSourceFast();
             ref BinaryVarValue resultVal = ref Result.GetValue();
 
             Debug.Assert(aVal.IsValidBinary == aVal.Bits.IsAllBinary());
@@ -45,10 +45,10 @@ namespace ChiselDebug.GraphFIR
             }
 
             resultVal.IsValidBinary = true;
-            MonoArgCompute(in aVal, ref resultVal);
+            MonoArgCompute(ref aVal, ref resultVal);
             Debug.Assert(resultVal.IsValidBinary == resultVal.Bits.IsAllBinary());
         }
-        protected abstract void MonoArgCompute(in BinaryVarValue a, ref BinaryVarValue result);
+        protected abstract void MonoArgCompute(ref BinaryVarValue a, ref BinaryVarValue result);
 
         internal override void InferType()
         {
@@ -68,7 +68,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRAsUInt(Output aIn, IFIRType outType, FirrtlNode defNode) : base("asUInt", aIn, outType, defNode) { }
 
-        protected override void MonoArgCompute(in BinaryVarValue a, ref BinaryVarValue result)
+        protected override void MonoArgCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
             a.Bits.CopyTo(result.Bits);
         }
@@ -86,7 +86,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRAsSInt(Output aIn, IFIRType outType, FirrtlNode defNode) : base("asSInt", aIn, outType, defNode) { }
 
-        protected override void MonoArgCompute(in BinaryVarValue a, ref BinaryVarValue result)
+        protected override void MonoArgCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
             a.Bits.CopyTo(result.Bits);
         }
@@ -104,7 +104,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRAsClock(Output aIn, IFIRType outType, FirrtlNode defNode) : base("asClock", aIn, outType, defNode) { }
 
-        protected override void MonoArgCompute(in BinaryVarValue a, ref BinaryVarValue result)
+        protected override void MonoArgCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
             result.Bits[0] = a.Bits[0];
         }
@@ -122,7 +122,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRCvt(Output aIn, IFIRType outType, FirrtlNode defNode) : base("cvt", aIn, outType, defNode) { }
 
-        protected override void MonoArgCompute(in BinaryVarValue a, ref BinaryVarValue result)
+        protected override void MonoArgCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
             if (A.Type is UIntType)
             {
@@ -151,7 +151,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRNeg(Output aIn, IFIRType outType, FirrtlNode defNode) : base("-", aIn, outType, defNode) { }
 
-        protected override void MonoArgCompute(in BinaryVarValue a, ref BinaryVarValue result)
+        protected override void MonoArgCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
             const int bitsInLong = 64;
             if (A.Type is UIntType)
@@ -195,7 +195,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRNot(Output aIn, IFIRType outType, FirrtlNode defNode) : base("~", aIn, outType, defNode) { }
 
-        protected override void MonoArgCompute(in BinaryVarValue a, ref BinaryVarValue result)
+        protected override void MonoArgCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
             for (int i = 0; i < a.Bits.Length; i++)
             {
@@ -215,7 +215,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRAndr(Output aIn, IFIRType outType, FirrtlNode defNode) : base("andr", aIn, outType, defNode) { }
 
-        protected override void MonoArgCompute(in BinaryVarValue a, ref BinaryVarValue result)
+        protected override void MonoArgCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
             int value = 1;
             for (int i = 0; i < a.Bits.Length; i++)
@@ -238,7 +238,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIROrr(Output aIn, IFIRType outType, FirrtlNode defNode) : base("orr", aIn, outType, defNode) { }
 
-        protected override void MonoArgCompute(in BinaryVarValue a, ref BinaryVarValue result)
+        protected override void MonoArgCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
             int value = 0;
             for (int i = 0; i < a.Bits.Length; i++)
@@ -261,7 +261,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRXorr(Output aIn, IFIRType outType, FirrtlNode defNode) : base("xorr", aIn, outType, defNode) { }
 
-        protected override void MonoArgCompute(in BinaryVarValue a, ref BinaryVarValue result)
+        protected override void MonoArgCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
             int value = 0;
             for (int i = 0; i < a.Bits.Length; i++)

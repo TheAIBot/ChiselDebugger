@@ -22,14 +22,14 @@ namespace ChiselDebug.GraphFIR
             this.ValueString = null;
         }
 
-        public void UpdateValue(in BinaryVarValue update)
+        public void UpdateValue(ref BinaryVarValue update)
         {
-            Value.SetBitsAndExtend(in update, IsSigned);
+            Value.SetBitsAndExtend(ref update, IsSigned);
         }
 
         public void UpdateFrom(ref ValueType copyFrom)
         {
-            UpdateValue(in copyFrom.Value);
+            UpdateValue(ref copyFrom.Value);
         }
 
         public void UpdateValueString()
