@@ -9,12 +9,14 @@ namespace ChiselDebug.CombGraph
     {
         private readonly FIRRTLNode Node;
         private readonly Output Con;
+        private readonly bool IsConModIO;
         private BinaryVarValue OldValue;
 
         public Computable(FIRRTLNode node)
         {
             this.Node = node;
             this.Con = null;
+            this.IsConModIO = false;
             this.OldValue = new BinaryVarValue();
         }
 
@@ -22,6 +24,7 @@ namespace ChiselDebug.CombGraph
         {
             this.Node = null;
             this.Con = con;
+            this.IsConModIO = Con.Node is Module;
             this.OldValue = new BinaryVarValue();
         }
 
@@ -33,9 +36,9 @@ namespace ChiselDebug.CombGraph
         private void ComputeCon()
         {
             //Copy value from other side of module
-            if (Con.Node is Module mod)
+            if (IsConModIO)
             {
-                Input input = (Input)mod.GetPairedIO(Con);
+                Input input = (Input)Con.GetPaired();
                 if (input.IsConnectedToAnything())
                 {
                     input.UpdateValueFromSource();
