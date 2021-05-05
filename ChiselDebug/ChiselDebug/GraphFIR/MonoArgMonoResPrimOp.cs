@@ -34,9 +34,7 @@ namespace ChiselDebug.GraphFIR
 
         public override void Compute()
         {
-            A.UpdateValueFromSource();
-
-            ref readonly BinaryVarValue aVal = ref A.GetValue();
+            ref readonly BinaryVarValue aVal = ref A.UpdateValueFromSourceFast();
             ref BinaryVarValue resultVal = ref Result.GetValue();
 
             Debug.Assert(aVal.IsValidBinary == aVal.Bits.IsAllBinary());

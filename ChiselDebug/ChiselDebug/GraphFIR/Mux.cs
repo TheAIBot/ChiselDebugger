@@ -70,20 +70,11 @@ namespace ChiselDebug.GraphFIR
         public override void Compute()
         {
             //First pull all results toward the mux
-            Decider.UpdateValueFromSource();
-            List<Input> foundInputs = new List<Input>();
-            foreach (var choise in Choises)
-            {
-                foundInputs.Clear();
-                foreach (var input in choise.GetAllIOOfType(foundInputs))
-                {
-                    input.UpdateValueFromSource();
-                }
-            }
+            ref BinaryVarValue deciderValue = ref Decider.UpdateValueFromSourceFast();
 
             //If decidor isn't binary then output can't be chosen
             //so therefore it's set to undecided
-            if (!Decider.GetValue().IsValidBinary)
+            if (!deciderValue.IsValidBinary)
             {
                 foreach (var output in Result.Flatten())
                 {
@@ -99,7 +90,7 @@ namespace ChiselDebug.GraphFIR
             {
                 Debug.Assert(Choises.Length <= 2, "Only support multiplexer with two choises");
 
-                if (Decider.Value.IsTrue())
+                if (deciderValue.Bits[0] == BitState.One)
                 {
                     ChosenInput = Choises.First();
                 }
@@ -121,7 +112,7 @@ namespace ChiselDebug.GraphFIR
             }
             else
             {
-                ChosenInput = Choises[Decider.GetValue().AsInt()];
+                ChosenInput = Choises[deciderValue.AsInt()];
             }
 
             List<ScalarIO> from = new List<ScalarIO>();
@@ -133,7 +124,7 @@ namespace ChiselDebug.GraphFIR
 
             for (int i = 0; i < from.Count; i++)
             {
-                ref readonly BinaryVarValue fromBin = ref from[i].GetValue();
+                ref readonly BinaryVarValue fromBin = ref ((Input)from[i]).UpdateValueFromSourceFast();
                 ref BinaryVarValue toBin = ref to[i].GetValue();
 
                 toBin.SetBitsAndExtend(in fromBin, from[i].Type is SIntType);

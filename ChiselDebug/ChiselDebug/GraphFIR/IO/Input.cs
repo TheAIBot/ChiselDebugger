@@ -248,6 +248,45 @@ namespace ChiselDebug.GraphFIR.IO
             Value.UpdateFrom(ref CondCons[0].From.Value);
         }
 
+        public ref BinaryVarValue UpdateValueFromSourceFast()
+        {
+            if (CondCons != null)
+            {
+                for (int i = CondCons.Count - 1; i >= 0; i--)
+                {
+                    var condCon = CondCons[i];
+                    if (condCon.IsEnabled())
+                    {
+                        if (condCon.From.Type.Width == Type.Width)
+                        {
+                            return ref condCon.From.GetValue();
+                        }
+
+                        Value.UpdateFrom(ref condCon.From.Value);
+                        return ref GetValue();
+                    }
+                }
+            }
+
+            if (Con != null)
+            {
+                if (Con.Type.Width == Type.Width)
+                {
+                    return ref Con.GetValue();
+                }
+
+                Value.UpdateFrom(ref Con.Value);
+                return ref GetValue();
+            }
+
+            //No connection is enabled.
+            //This should only happen when circuit state isn't set yet.
+            //Just return random connection as they should all have the
+            //same value.
+            Value.UpdateFrom(ref CondCons[0].From.Value);
+            return ref GetValue();
+        }
+
         public override void InferGroundType()
         {
             if (Type is GroundType ground && ground.IsTypeFullyKnown())

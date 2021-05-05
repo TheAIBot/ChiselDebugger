@@ -41,8 +41,7 @@ namespace ChiselDebug.CombGraph
                 Input input = (Input)Con.GetPaired();
                 if (input.IsConnectedToAnything())
                 {
-                    input.UpdateValueFromSource();
-                    Con.Value.UpdateFrom(ref input.Value);
+                    Con.Value.UpdateValue(in input.UpdateValueFromSourceFast());
                 }
             }
         }
