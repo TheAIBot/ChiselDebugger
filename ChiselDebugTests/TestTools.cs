@@ -89,7 +89,7 @@ namespace ChiselDebugTests
 
             foreach (var variables in vcd.Variables)
             {
-                foreach (var variable in expected.Variables)
+                foreach (var variable in variables)
                 {
                     ScalarIO varCon = graph.GetConnection(variable, isVerilogVCD);
                     if (varCon == null)
@@ -98,7 +98,7 @@ namespace ChiselDebugTests
                     }
 
                     ref readonly BinaryVarValue  actual = ref varCon.GetValue();
-                    if (actual == null)
+                    if (!varCon.Value.IsInitialized())
                     {
                         continue;
                     }
@@ -121,12 +121,20 @@ namespace ChiselDebugTests
 
         internal static void VerifyCircuitState(CircuitGraph graph, VCDTimeline timeline, bool isVerilogVCD)
         {
+            int totalWireStates = 0;
+            int ignoredWireStates = 0;
+            List<string> stateErrors = new List<string>();
             foreach (var state in timeline.GetAllDistinctStates())
             {
+                if (state.Time == timeline.TimeInterval.InclusiveEnd())
+                {
+                    break;
+                }
                 graph.SetStateFast(state, isVerilogVCD);
 
                 foreach (BinaryVarValue expected in state.VariableValues.Values)
                 {
+                
                     foreach (var variable in expected.Variables)
                     {
                         ScalarIO varCon = graph.GetConnection(variable, isVerilogVCD);
@@ -139,30 +147,37 @@ namespace ChiselDebugTests
                             continue;
                         }
 
+                        totalWireStates++;
                         ref readonly BinaryVarValue actual = ref varCon.GetValue();
-                        if (expected.Bits.Length != actual.Bits.Length)
-                        {
 
-                        }
-                        Assert.AreEqual(expected.Bits.Length, actual.Bits.Length);
-                        for (int i = 0; i < expected.Bits.Length; i++)
+                        for (int i = 0; i < Math.Min(expected.Bits.Length, actual.Bits.Length); i++)
                         {
                             if (!actual.Bits[i].IsBinary())
                             {
-                                continue;
+                                ignoredWireStates++;
+                                break;
                             }
 
                             if (expected.Bits[i] != actual.Bits[i])
                             {
-
+                                //graph.SetStateFast(state, isVerilogVCD);
+                                stateErrors.Add($"\nTime: {state.Time.ToString("N0")}\nName: {expected.Variables[0].Reference}\nExpected: {expected.BitsToString()}\nActual:   {actual.BitsToString()}\n");
+                                goto skipCheckRest;
                             }
-                            Assert.AreEqual(expected.Bits[i], actual.Bits[i]);
                         }
-
-                        //Console.WriteLine($"Name: {expected.Variables[0].Reference}\nExpected: {expected.BitsToString()}\nActual:   {actual.BitsToString()}\n");
                     }
+                skipCheckRest:
+                    int q = 0;
+                }
+
+                if (stateErrors.Count > 0)
+                {
+                    Console.WriteLine($"Wire states: {totalWireStates.ToString("N0")}\nIgnored: {ignoredWireStates.ToString("N0")}");
+                    Assert.Fail(string.Join('\n', stateErrors));
                 }
             }
+
+            Console.WriteLine($"Wire states: {totalWireStates.ToString("N0")}\nIgnored: {ignoredWireStates.ToString("N0")}");
         }
     }
 }
