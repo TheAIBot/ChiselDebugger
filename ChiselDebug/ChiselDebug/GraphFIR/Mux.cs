@@ -124,13 +124,15 @@ namespace ChiselDebug.GraphFIR
                 ChosenInput = Choises[Decider.GetValue().AsInt()];
             }
 
-            Input[] from = ChosenInput.Flatten().Cast<Input>().ToArray();
-            Output[] to = Result.Flatten().Cast<Output>().ToArray();
-            Debug.Assert(from.Length == to.Length);
+            List<ScalarIO> from = new List<ScalarIO>();
+            ChosenInput.Flatten(from);
 
-            for (int i = 0; i < from.Length; i++)
+            List<ScalarIO> to = new List<ScalarIO>();
+            Result.Flatten(to);
+            Debug.Assert(from.Count == to.Count);
+
+            for (int i = 0; i < from.Count; i++)
             {
-                from[i].UpdateValueFromSource();
                 ref readonly BinaryVarValue fromBin = ref from[i].GetValue();
                 ref BinaryVarValue toBin = ref to[i].GetValue();
 
