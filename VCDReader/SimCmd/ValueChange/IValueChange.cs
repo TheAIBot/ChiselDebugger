@@ -41,6 +41,12 @@ namespace VCDReader
         public bool IsValidBinary()
         {
             ReadOnlySpan<BitState> rBits = Bits;
+            if (rBits.Length == 1)
+            {
+                return ((int)rBits[0] & (~1)) == 0;
+            }
+
+
             ulong val = 0;
             int index = 0;
             if (rBits.Length >= sizeof(ulong))
