@@ -51,11 +51,11 @@ namespace ChiselDebug.CombGraph
         {
             foreach (var node in ConstComputeNodes)
             {
-                node.Compute();
+                node.ComputeFast();
             }
         }
 
-        public List<Output> Compute()
+        public List<Output> ComputeAndGetChanged()
         {
             Reset();
 
@@ -73,7 +73,7 @@ namespace ChiselDebug.CombGraph
                 CombComputeNode node = nodesReady.Dequeue();
                 remainingNodes--;
 
-                updatedCons.AddRange(node.Compute());
+                updatedCons.AddRange(node.ComputeAndGetChanged());
 
                 foreach (var maybeReady in node.GetEdges())
                 {
@@ -87,6 +87,37 @@ namespace ChiselDebug.CombGraph
             Debug.Assert(remainingNodes == 0);
 
             return updatedCons;
+        }
+
+        public void ComputeFast()
+        {
+            Reset();
+
+            int remainingNodes = Nodes.Count + ConstComputeNodes.Count;
+
+            Queue<CombComputeNode> nodesReady = new Queue<CombComputeNode>();
+            foreach (var root in RootNodes)
+            {
+                nodesReady.Enqueue(root);
+            }
+
+            while (nodesReady.Count > 0)
+            {
+                CombComputeNode node = nodesReady.Dequeue();
+                remainingNodes--;
+
+                node.ComputeFast();
+
+                foreach (var maybeReady in node.GetEdges())
+                {
+                    if (!maybeReady.IsWaitingForDependencies())
+                    {
+                        nodesReady.Enqueue(maybeReady);
+                    }
+                }
+            }
+
+            Debug.Assert(remainingNodes == 0);
         }
 
         public void InferTypes()

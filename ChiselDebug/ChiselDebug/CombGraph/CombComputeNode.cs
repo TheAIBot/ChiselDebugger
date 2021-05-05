@@ -43,12 +43,12 @@ namespace ChiselDebug.CombGraph
             return RemainingComputeDependencies > 0;
         }
 
-        public List<Output> Compute()
+        public List<Output> ComputeAndGetChanged()
         {
             List<Output> updatedConnections = new List<Output>();
             for (int i = 0; i < ComputeOrder.Length; i++)
             {
-                Output updated = ComputeOrder[i].Compute();
+                Output updated = ComputeOrder[i].ComputeGetIfChanged();
                 if (updated != null)
                 {
                     updatedConnections.Add(updated);
@@ -61,6 +61,19 @@ namespace ChiselDebug.CombGraph
             }
 
             return updatedConnections;
+        }
+
+        public void ComputeFast()
+        {
+            for (int i = 0; i < ComputeOrder.Length; i++)
+            {
+                ComputeOrder[i].ComputeFast();
+            }
+
+            foreach (var edge in OutgoingEdges)
+            {
+                edge.RemainingComputeDependencies--;
+            }
         }
 
         public void inferTypes()

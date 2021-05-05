@@ -123,7 +123,7 @@ namespace ChiselDebugTests
         {
             foreach (var state in timeline.GetAllDistinctStates())
             {
-                graph.SetState(state, isVerilogVCD);
+                graph.SetStateFast(state, isVerilogVCD);
 
                 foreach (BinaryVarValue expected in state.VariableValues.Values)
                 {

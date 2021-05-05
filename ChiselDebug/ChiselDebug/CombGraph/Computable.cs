@@ -25,24 +25,34 @@ namespace ChiselDebug.CombGraph
             this.OldValue = new BinaryVarValue();
         }
 
-        public Output Compute()
+        private void ComputeNode()
+        {
+            Node.Compute();
+        }
+
+        private void ComputeCon()
+        {
+            //Copy value from other side of module
+            if (Con.Node is Module mod)
+            {
+                Input input = (Input)mod.GetPairedIO(Con);
+                if (input.IsConnectedToAnything())
+                {
+                    input.UpdateValueFromSource();
+                    Con.Value.UpdateFrom(input.Value);
+                }
+            }
+        }
+
+        public Output ComputeGetIfChanged()
         {
             if (Node != null)
             {
-                Node.Compute();
+                ComputeNode();
             }
             else
             {
-                //Copy value from other side of module
-                if (Con.Node is Module mod)
-                {
-                    Input input = (Input)mod.GetPairedIO(Con);
-                    if (input.IsConnectedToAnything())
-                    {
-                        input.UpdateValueFromSource();
-                        Con.Value.UpdateFrom(input.Value);
-                    }
-                }
+                ComputeCon();
 
                 //Did connection value change?
                 if (!OldValue.SameValue(in Con.GetValue()))
@@ -54,6 +64,18 @@ namespace ChiselDebug.CombGraph
             }
 
             return null;
+        }
+
+        public void ComputeFast()
+        {
+            if (Node != null)
+            {
+                ComputeNode();
+            }
+            else
+            {
+                ComputeCon();
+            }
         }
 
         public void InferType()
