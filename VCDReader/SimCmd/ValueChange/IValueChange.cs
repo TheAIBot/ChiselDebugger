@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
@@ -13,24 +14,28 @@ namespace VCDReader
         public bool SameValue(VarValue other);
     }
 
-    public readonly struct BinaryVarValue : VarValue
+    public struct BinaryVarValue : VarValue
     {
         private readonly UnsafeMemory<BitState> BitSlice;
         private readonly List<VarDef>? Vars;
+        public bool IsValidBinary;
 
         public Span<BitState> Bits => BitSlice.Span;
         public List<VarDef>? Variables => Vars;
 
-        public BinaryVarValue(UnsafeMemory<BitState> bits, List<VarDef> variables)
+        public BinaryVarValue(UnsafeMemory<BitState> bits, List<VarDef> variables, bool isValidBinary)
         {
+            Debug.Assert(isValidBinary == bits.Span.IsAllBinary());
             this.BitSlice = bits;
             this.Vars = variables;
+            this.IsValidBinary = isValidBinary;
         }
 
-        public BinaryVarValue(int bitCount)
+        public BinaryVarValue(int bitCount, bool isValidBinary)
         {
             this.BitSlice = new BitState[bitCount];
             this.Vars = null;
+            this.IsValidBinary = isValidBinary;
         }
 
         public string BitsToString()
@@ -38,39 +43,10 @@ namespace VCDReader
             return Bits.BitsToString();
         }
 
-        public bool IsValidBinary()
+        public void SetAllUnknown()
         {
-            ReadOnlySpan<BitState> rBits = Bits;
-            if (rBits.Length == 1)
-            {
-                return ((int)rBits[0] & (~1)) == 0;
-            }
-
-
-            ulong val = 0;
-            int index = 0;
-            if (rBits.Length >= sizeof(ulong))
-            {
-                ReadOnlySpan<ulong> uBits = MemoryMarshal.Cast<BitState, ulong>(rBits);
-
-                for (; index < uBits.Length; index++)
-                {
-                    val |= uBits[index];
-                }
-
-                const int sizeDiff = sizeof(BitState) / sizeof(ulong);
-                index *= sizeDiff;
-            }
-
-            for (; index < rBits.Length; index++)
-            {
-                val |= (ulong)rBits[index];
-            }
-
-            //If is binary then only the first bit in each
-            //byte should be set as BitState.Zero and Bitstate.One
-            //only sets the first bit
-            return (val & (~0x0101_0101_0101_0101ul)) == 0;
+            IsValidBinary = false;
+            Bits.Fill(BitState.X);
         }
 
         public bool SameValue(VarValue other)
@@ -158,6 +134,8 @@ namespace VCDReader
 
         public void SetBitsAndExtend(in BinaryVarValue value, bool asSigned)
         {
+            IsValidBinary = value.IsValidBinary;
+
             if (Bits.Length <= value.Bits.Length)
             {
                 value.Bits.Slice(0, Bits.Length).CopyTo(Bits);
@@ -178,6 +156,7 @@ namespace VCDReader
         public void SetBits(ulong value)
         {
             Debug.Assert(Bits.Length <= 64);
+            IsValidBinary = true;
 
             for (int i = 0; i < Bits.Length; i++)
             {
@@ -193,6 +172,8 @@ namespace VCDReader
 
         public void SetBitsAndExtend(BigInteger value, bool asSigned)
         {
+            IsValidBinary = true;
+
             int valueBits = (int)value.GetBitLength();
             int minBits = Math.Min(valueBits, Bits.Length);
             for (int i = 0; i < minBits; i++)

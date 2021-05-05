@@ -77,7 +77,7 @@ b{bitState.ToChar()} !";
             };
             ISimCmd[] expectedSimCmds = new ISimCmd[]
             {
-                new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero }, new List<VarDef>() {(VarDef)expectedDecls[0] })
+                new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero }, new List<VarDef>() {(VarDef)expectedDecls[0] }, true)
             };
 
             string vcdString = @$"
@@ -172,10 +172,10 @@ r{expectedValue.ToString(CultureInfo.InvariantCulture)} !";
             {
                 new DumpVars(new List<VarValue>()
                 {
-                    new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, new List<VarDef>() { (VarDef)expectedDecls[1] }),
-                    new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, new List<VarDef>() { (VarDef)expectedDecls[4] }),
-                    new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, new List<VarDef>() { (VarDef)expectedDecls[2] }),
-                    new BinaryVarValue(new BitState[] { BitState.Zero }, new List<VarDef>() { (VarDef)expectedDecls[3] })
+                    new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, new List<VarDef>() { (VarDef)expectedDecls[1] }, true),
+                    new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, new List<VarDef>() { (VarDef)expectedDecls[4] }, true),
+                    new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, new List<VarDef>() { (VarDef)expectedDecls[2] }, true),
+                    new BinaryVarValue(new BitState[] { BitState.Zero }, new List<VarDef>() { (VarDef)expectedDecls[3] }, true)
                 })
             };
 

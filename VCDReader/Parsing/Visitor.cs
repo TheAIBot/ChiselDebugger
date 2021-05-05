@@ -242,12 +242,12 @@ namespace VCDReader.Parsing
 
         internal static void VisitBinaryVectorValueChange(VCDLexer lexer, ReadOnlySpan<char> valueText, Dictionary<SpanString, List<VarDef>> idToVariable, SimPass pass, BitAllocator bitAlloc)
         {
-            UnsafeMemory<BitState> bits = ToBitStates(valueText, bitAlloc);
+            (UnsafeMemory<BitState> bits, bool isValidBinary) = ToBitStates(valueText, bitAlloc);
             var id = new SpanString(lexer.NextWordAsMem());
 
             if (idToVariable.TryGetValue(id, out List<VarDef>? variables))
             {
-                pass.BinValue = new BinaryVarValue(bits, variables);
+                pass.BinValue = new BinaryVarValue(bits, variables, isValidBinary);
             }
             else
             {
@@ -280,7 +280,7 @@ namespace VCDReader.Parsing
 
             if (idToVariable.TryGetValue(id, out List<VarDef>? variable))
             {
-                pass.BinValue = new BinaryVarValue(bits, variable);
+                pass.BinValue = new BinaryVarValue(bits, variable, ((int)bit & 0b10) == 0);
             }
             else
             {
@@ -288,16 +288,19 @@ namespace VCDReader.Parsing
             }
         }
 
-        internal static UnsafeMemory<BitState> ToBitStates(ReadOnlySpan<char> valueText, BitAllocator bitAlloc)
+        internal static (UnsafeMemory<BitState> bits, bool isValidBinary) ToBitStates(ReadOnlySpan<char> valueText, BitAllocator bitAlloc)
         {
             UnsafeMemory<BitState> bitsMem = bitAlloc.GetBits(valueText.Length);
             Span<BitState> bits = bitsMem.Span;
+            int isValidBinary = 0;
             for (int i = 0; i < bits.Length; i++)
             {
-                bits[bits.Length - i - 1] = ToBitState(valueText[i]);
+                BitState bit = ToBitState(valueText[i]);
+                bits[bits.Length - i - 1] = bit;
+                isValidBinary |= (int)bit & 0b10;
             }
 
-            return bitsMem;
+            return (bitsMem, isValidBinary == 0);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

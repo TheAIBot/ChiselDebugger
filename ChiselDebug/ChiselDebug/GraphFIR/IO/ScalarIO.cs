@@ -81,7 +81,7 @@ namespace ChiselDebug.GraphFIR.IO
             Value = new ValueType(Type);
         }
 
-        public ref readonly BinaryVarValue GetValue()
+        public ref BinaryVarValue GetValue()
         {
             return ref Value.Value;
         }

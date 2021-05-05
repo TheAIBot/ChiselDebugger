@@ -8,14 +8,14 @@ namespace ChiselDebug.GraphFIR
     public struct ValueType
     {
         private readonly GroundType Type;
-        internal readonly BinaryVarValue Value;
+        internal BinaryVarValue Value;
         private string ValueString;
 
         public ValueType(GroundType type)
         {
             this.Type = type;
-            this.Value = new BinaryVarValue(Type.Width);
-            Value.Bits.Fill(BitState.X);
+            this.Value = new BinaryVarValue(Type.Width, false);
+            Value.SetAllUnknown();
 
             this.ValueString = null;
         }

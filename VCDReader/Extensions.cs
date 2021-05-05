@@ -24,6 +24,19 @@ namespace VCDReader
             return bit == BitState.Zero || bit == BitState.One;
         }
 
+        public static bool IsAllBinary(this Span<BitState> bits)
+        {
+            for (int i = 0; i < bits.Length; i++)
+            {
+                if (bits[i] != BitState.Zero && bits[i] != BitState.One)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         public static string BitsToString(this BitState[] bits)
         {
             return bits.AsSpan().BitsToString();

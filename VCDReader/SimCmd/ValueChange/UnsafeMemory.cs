@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace VCDReader
@@ -8,6 +9,7 @@ namespace VCDReader
         private readonly T[] Arr;
         private readonly int StartIndex;
         public readonly int Length;
+        private static readonly T[] LengthOne = new T[1];
 
         public Span<T> Span => GetSpan();
 
@@ -18,8 +20,16 @@ namespace VCDReader
 
         public UnsafeMemory(T[] arr, int startIndex, int length)
         {
-            this.Arr = arr;
-            this.StartIndex = startIndex;
+            if (length == 0)
+            {
+                this.Arr = LengthOne;
+                this.StartIndex = 0;
+            }
+            else
+            {
+                this.Arr = arr;
+                this.StartIndex = startIndex;
+            }
             this.Length = length;
         }
 

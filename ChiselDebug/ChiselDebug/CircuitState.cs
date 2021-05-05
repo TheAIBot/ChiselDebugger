@@ -44,7 +44,7 @@ namespace ChiselDebug
                     BitState[] bits = new BitState[variable.Size];
                     Array.Fill(bits, BitState.Zero);
 
-                    VariableValues.Add(variable, new BinaryVarValue(bits, variables));
+                    VariableValues.Add(variable, new BinaryVarValue(bits, variables, true));
                 }
             }
 
