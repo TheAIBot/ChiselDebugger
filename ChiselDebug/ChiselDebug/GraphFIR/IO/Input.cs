@@ -229,7 +229,7 @@ namespace ChiselDebug.GraphFIR.IO
                     var condCon = CondCons[i];
                     if (condCon.IsEnabled())
                     {
-                        Value.UpdateFrom(condCon.From.Value);
+                        Value.UpdateFrom(ref condCon.From.Value);
                         return;
                     }
                 }
@@ -237,7 +237,7 @@ namespace ChiselDebug.GraphFIR.IO
 
             if (Con != null)
             {
-                Value.UpdateFrom(Con.Value);
+                Value.UpdateFrom(ref Con.Value);
                 return;
             }
 
@@ -245,7 +245,7 @@ namespace ChiselDebug.GraphFIR.IO
             //This should only happen when circuit state isn't set yet.
             //Just return random connection as they should all have the
             //same value.
-            Value.UpdateFrom(CondCons.First().From.Value);
+            Value.UpdateFrom(ref CondCons[0].From.Value);
         }
 
         public override void InferGroundType()

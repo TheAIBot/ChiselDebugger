@@ -39,7 +39,7 @@ namespace ChiselDebug.CombGraph
                 if (input.IsConnectedToAnything())
                 {
                     input.UpdateValueFromSource();
-                    Con.Value.UpdateFrom(input.Value);
+                    Con.Value.UpdateFrom(ref input.Value);
                 }
             }
         }

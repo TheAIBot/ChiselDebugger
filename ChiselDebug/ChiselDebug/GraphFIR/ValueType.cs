@@ -25,7 +25,7 @@ namespace ChiselDebug.GraphFIR
             Value.SetBitsAndExtend(in update, Type is SIntType);
         }
 
-        public void UpdateFrom(ValueType copyFrom)
+        public void UpdateFrom(ref ValueType copyFrom)
         {
             UpdateValue(in copyFrom.Value);
         }
