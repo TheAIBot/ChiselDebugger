@@ -40,7 +40,7 @@ namespace ChiselDebug.GraphFIR
             Debug.Assert(aVal.IsValidBinary == aVal.Bits.IsAllBinary());
             if (!aVal.IsValidBinary)
             {
-                resultVal.Bits.Fill(BitState.X);
+                resultVal.SetAllUnknown();
                 return;
             }
 
