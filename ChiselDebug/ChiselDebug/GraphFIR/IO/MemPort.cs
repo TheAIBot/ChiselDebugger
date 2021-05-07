@@ -9,6 +9,7 @@ namespace ChiselDebug.GraphFIR.IO
         internal readonly FIRIO Address;
         internal readonly FIRIO Enabled;
         internal readonly FIRIO Clock;
+        internal bool FromHighLevelFIRRTL = false;
 
         public MemPort(FIRRTLNode node, string name, List<FIRIO> io) : base(node, name, io)
         {
@@ -19,14 +20,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         protected static void AsMaskType(FIRIO maskFrom)
         {
-            if (maskFrom is IOBundle bundle)
-            {
-                foreach (ScalarIO scalar in bundle.Flatten())
-                {
-                    scalar.SetType(new UIntType(1));
-                }
-            }
-            else if (maskFrom is ScalarIO scalar)
+            foreach (ScalarIO scalar in maskFrom.Flatten())
             {
                 scalar.SetType(new UIntType(1));
             }

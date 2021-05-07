@@ -329,6 +329,7 @@ namespace ChiselDebug
                     var lowMem = (GraphFIR.IO.IPortsIO)helper.Mod.GetIO(cmem.Name);
                     foreach (GraphFIR.IO.MemPort port in lowMem.GetAllPorts())
                     {
+                        port.FromHighLevelFIRRTL = true;
                         helper.Mod.AddMemoryPort(port);
                     }
                 }
@@ -362,6 +363,7 @@ namespace ChiselDebug
                         var error => throw new Exception($"Unknown memory port type. Type: {error}")
                     };
 
+                    port.FromHighLevelFIRRTL = true;
                     helper.Mod.AddMemoryPort(port);
                 }
 
@@ -728,14 +730,14 @@ namespace ChiselDebug
             else if (exp is FIRRTL.SubIndex subIndex)
             {
                 var subVec = VisitExp(helper, subIndex.Expr, gender);
-                var vec = (GraphFIR.IO.Vector)GetIOGender(helper, subVec, gender);
+                var vec = (GraphFIR.IO.Vector)subVec;
 
                 refContainer = vec.GetIndex(subIndex.Value);
             }
             else if (exp is FIRRTL.SubAccess subAccess)
             {
                 var subVec = VisitExp(helper, subAccess.Expr, gender);
-                var vec = (GraphFIR.IO.Vector)GetIOGender(helper, subVec, gender);
+                var vec = (GraphFIR.IO.Vector)subVec;
                 var index = (GraphFIR.IO.Output)VisitExp(helper, subAccess.Index, GraphFIR.IO.IOGender.Male);
 
                 if (gender == GraphFIR.IO.IOGender.Male)
@@ -755,24 +757,29 @@ namespace ChiselDebug
                 throw new NotImplementedException();
             }
 
-            //Memory ports in high level firrtl are acceses in a different
-            //way compared to low level firrtl. In high level firrtl, a
-            //memory port is trated like a wire connected to its datain/out
-            //sub field whereas in low level firrtl the subfield has to be
-            //specified.
-            if (helper.IsHighFirGrapth() &&
-                refContainer is GraphFIR.IO.MemPort memPort)
+            if (refContainer is GraphFIR.IO.MemPort memPort)
             {
-                refContainer = memPort.GetAsGender(gender);
+                //Memory ports in high level firrtl are acceses in a different
+                //way compared to low level firrtl. In high level firrtl, a
+                //memory port is treated like a wire connected to its datain/out
+                //sub field whereas in low level firrtl the subfield has to be
+                //specified.
+                if (memPort.FromHighLevelFIRRTL)
+                {
+                    return GetIOGender(helper, memPort, gender);
+                }
+            }
+            else
+            {
+                //Never return bigender io. Only this method should have to deal
+                //with that mess so the rest of the code doesn't have to.
+                //Dealing with it is ugly which is why i want to contain it.
+                if (refContainer is GraphFIR.IO.FIRIO firIO)
+                {
+                    return GetIOGender(helper, firIO, gender);
+                }
             }
 
-            //Never return bigender io. Only this method should have to deal
-            //with that mess so the rest of the code doesn't have to.
-            //Dealing with it is ugly which is why i want to contain it.
-            if (refContainer is GraphFIR.IO.FIRIO firIO && refContainer is not GraphFIR.IO.IPreserveDuplex)
-            {
-                return GetIOGender(helper, firIO, gender);
-            }
             return refContainer;
         }
 
