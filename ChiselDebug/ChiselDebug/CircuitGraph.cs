@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using VCDReader;
 
 namespace ChiselDebug
@@ -229,6 +230,93 @@ namespace ChiselDebug
             }
 
             ComputeGraph.ComputeFast();
+        }
+
+        public string StateToString()
+        {
+            StringBuilder builder = new StringBuilder();
+            ModuleStateToString(builder, MainModule, string.Empty);
+
+            return builder.ToString();
+        }
+
+        private void ModuleStateToString(StringBuilder builder, Module mod, string indentation)
+        {
+            if (mod.Name == "Queue_5")
+            {
+
+            }
+            builder.Append(indentation);
+            builder.Append(' ');
+            builder.AppendLine(mod.Name);
+
+            foreach (var io in mod.GetInternalIO())
+            {
+                foreach (var scalar in io.Flatten())
+                {
+                    if (!scalar.IsAnonymous && scalar.Value.IsInitialized())
+                    {
+                        builder.Append(indentation + '\t');
+                        builder.Append(scalar.GetFullName());
+                        builder.Append(" = ");
+                        builder.AppendLine(scalar.Value.ToBinaryString());
+                    }
+                }
+            }
+
+            NodesStateToString(builder, mod.GetAllNodes(), indentation);
+        }
+
+        private void NodesStateToString(StringBuilder builder, FIRRTLNode[] nodes, string indentation)
+        {
+            indentation = indentation + '\t';
+
+            foreach (var node in nodes)
+            {
+                if (node is Module childMod)
+                {
+                    ModuleStateToString(builder, childMod, indentation);
+                }
+                else if (node is Conditional cond)
+                {
+                    foreach (var condMod in cond.CondMods)
+                    {
+                        builder.Append(indentation);
+                        builder.AppendLine("when");
+                        NodesStateToString(builder, condMod.Mod.GetAllNodes(), indentation);
+                    }
+                }
+                else
+                {
+                    foreach (ScalarIO scalar in node.GetIO().SelectMany(x => x.Flatten()))
+                    {
+                        if (!scalar.IsAnonymous)
+                        {
+                            string ioName = scalar.GetFullName();
+                            if (node is Memory mem)
+                            {
+                                ioName = mem.Name + "." + ioName;
+                            }
+                            if (node is Register reg)
+                            {
+                                ioName = reg.Name + "." + ioName;
+                            }
+
+                            builder.Append(indentation);
+                            builder.Append(ioName);
+                            builder.Append(" = ");
+                            if (scalar.Value.IsInitialized())
+                            {
+                                builder.AppendLine(scalar.Value.ToBinaryString());
+                            }
+                            else
+                            {
+                                builder.AppendLine("???");
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
