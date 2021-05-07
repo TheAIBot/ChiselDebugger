@@ -446,18 +446,6 @@ namespace ChiselDebug.CombGraph
             HashSet<Output> seenCons = new HashSet<Output>();
             List<Computable> computeOrder = new List<Computable>();
 
-            void AddConnections(Queue<(Output con, Input input)> toTraverse, Output output)
-            {
-                if (seenCons.Add(output))
-                {
-                    computeOrder.Add(new Computable(output));
-                }
-                foreach (var input in output.GetConnectedInputs())
-                {
-                    toTraverse.Enqueue((output, input));
-                }
-            }
-
             void AddMissingCons(HashSet<Output> missingCons, Input input)
             {
                 foreach (var con in input.GetConnections())
@@ -478,12 +466,16 @@ namespace ChiselDebug.CombGraph
 
             void AddMaybeBlockedCon(Queue<(Output con, Input input)> toTraverse, Dictionary<Output, HashSet<Output>> blockedOutputs, Output output)
             {
-                if (seenCons.Add(output))
+                Input[] conInputs = output.GetConnectedInputs().ToArray();
+                if (conInputs.Length == 0)
                 {
-                    computeOrder.Add(new Computable(output));
+                    if (seenCons.Add(output))
+                    {
+                        computeOrder.Add(new Computable(output));
+                    }
+                    return;
                 }
-
-                foreach (var input in output.GetConnectedInputs())
+                foreach (var input in conInputs)
                 {
                     Output condition = input.GetConnectionCondition(output);
                     if (condition != null && !seenCons.Contains(condition))
@@ -500,15 +492,23 @@ namespace ChiselDebug.CombGraph
                     }
                     else
                     {
+                        if (seenCons.Add(output))
+                        {
+                            computeOrder.Add(new Computable(output));
+                        }
                         toTraverse.Enqueue((output, input));
                     }
                 }
             }
 
+
+
             Dictionary<FIRRTLNode, HashSet<Output>> seenButMissingFirNodeInputs = new Dictionary<FIRRTLNode, HashSet<Output>>();
             Dictionary<Input, HashSet<Output>> seenButMissingModInputCons = new Dictionary<Input, HashSet<Output>>();
             HashSet<FIRRTLNode> finishedNodes = new HashSet<FIRRTLNode>();
             Dictionary<Output, HashSet<Output>> blockedOutputs = new Dictionary<Output, HashSet<Output>>();
+            Dictionary<Output, List<FIRRTLNode>> nodeInputBlocker = new Dictionary<Output, List<FIRRTLNode>>();
+            Dictionary<Output, List<Input>> modInputBlocker = new Dictionary<Output, List<Input>>();
 
             foreach (var computeFirst in outputs.Where(x => x.Node is not Module && (x.Node is not IStatePreserving || !skipStatePre)).Select(x => x.Node).Distinct())
             {
@@ -516,9 +516,49 @@ namespace ChiselDebug.CombGraph
             }
 
             Queue<(Output con, Input input)> toTraverse = new Queue<(Output con, Input input)>();
+
+
+            void FoundNodeDep(Output con, FIRRTLNode node, HashSet<Output> missingCons)
+            {
+                missingCons.Remove(con);
+
+                //If this graph has provided all inputs to this component then
+                //it can finally compute the component and continue the graph
+                //with the components output
+                if (missingCons.Count == 0)
+                {
+                    if (node is not IStatePreserving)
+                    {
+                        computeOrder.Add(new Computable(node));
+                    }
+
+                    foreach (var nodeOutput in node.GetOutputs())
+                    {
+                        AddMaybeBlockedCon(toTraverse, blockedOutputs, nodeOutput);
+                    }
+
+                    finishedNodes.Add(node);
+                    seenButMissingFirNodeInputs.Remove(node);
+                }
+            }
+
+            void FoundModInputDep(Output con, Input modInput, HashSet<Output> missingCons)
+            {
+                missingCons.Remove(con);
+
+                if (missingCons.Count == 0)
+                {
+                    Output inPairedOut = (Output)modInput.GetPaired();
+                    AddMaybeBlockedCon(toTraverse, blockedOutputs, inPairedOut);
+
+                    seenButMissingModInputCons.Remove(modInput);
+                }
+            }
+
+
             foreach (var output in outputs)
             {
-                AddConnections(toTraverse, output);
+                AddMaybeBlockedCon(toTraverse, blockedOutputs, output);
 
                 while (toTraverse.Count > 0)
                 {
@@ -527,9 +567,25 @@ namespace ChiselDebug.CombGraph
                     {
                         foreach (var blocked in blockedOuts)
                         {
-                            AddConnections(toTraverse, blocked);
+                            AddMaybeBlockedCon(toTraverse, blockedOutputs, blocked);
                         }
                         blockedOutputs.Remove(conInput.con);
+                    }
+                    if (nodeInputBlocker.TryGetValue(conInput.con, out var blockedNodeInputs))
+                    {
+                        foreach (var blockedNode in blockedNodeInputs)
+                        {
+                            FoundNodeDep(conInput.con, blockedNode, seenButMissingFirNodeInputs[blockedNode]);
+                        }
+                        nodeInputBlocker.Remove(conInput.con);
+                    }
+                    if (modInputBlocker.TryGetValue(conInput.con, out var blockedModInputs))
+                    {
+                        foreach (var blockedInput in blockedModInputs)
+                        {
+                            FoundModInputDep(conInput.con, blockedInput, seenButMissingModInputCons[blockedInput]);
+                        }
+                        modInputBlocker.Remove(conInput.con);
                     }
 
                     //Punch through module border to continue search on the other side
@@ -542,17 +598,19 @@ namespace ChiselDebug.CombGraph
                             seenButMissingModInputCons.Add(conInput.input, missingCons);
 
                             AddMissingCons(missingCons, conInput.input);
+
+                            foreach (var condCon in conInput.input.GetConnections())
+                            {
+                                if (condCon.Condition != null && !seenCons.Contains(condCon.Condition))
+                                {
+                                    missingCons.Add(condCon.Condition);
+                                    modInputBlocker.TryAdd(condCon.Condition, new List<Input>());
+                                    modInputBlocker[condCon.Condition].Add(conInput.input);
+                                }
+                            }
                         }
 
-                        missingCons.Remove(conInput.con);
-
-                        if (missingCons.Count == 0)
-                        {
-                            Output inPairedOut = (Output)mod.GetPairedIO(conInput.input);
-                            AddMaybeBlockedCon(toTraverse, blockedOutputs, inPairedOut);
-
-                            seenButMissingModInputCons.Remove(conInput.input);
-                        }
+                        FoundModInputDep(conInput.con, conInput.input, missingCons);
                     }
                     //Ignore state preserving components as a combinatorial graph
                     //shouldn't cross those
@@ -598,28 +656,21 @@ namespace ChiselDebug.CombGraph
                             {
                                 AddMissingCons(missingCons, input);
                             }
+                            foreach (Input input in nodeInputs)
+                            {
+                                foreach (var condCon in input.GetConnections())
+                                {
+                                    if (condCon.Condition != null && !seenCons.Contains(condCon.Condition))
+                                    {
+                                        missingCons.Add(condCon.Condition);
+                                        nodeInputBlocker.TryAdd(condCon.Condition, new List<FIRRTLNode>());
+                                        nodeInputBlocker[condCon.Condition].Add(conInput.input.Node);
+                                    }
+                                }
+                            }
                         }
 
-                        missingCons.Remove(conInput.con);
-
-                        //If this graph has provided all inputs to this component then
-                        //it can finally compute the component and continue the graph
-                        //with the components output
-                        if (missingCons.Count == 0)
-                        {
-                            if (conInput.input.Node is not IStatePreserving)
-                            {
-                                computeOrder.Add(new Computable(conInput.input.Node));
-                            }
-
-                            foreach (var nodeOutput in conInput.input.Node.GetOutputs())
-                            {
-                                AddMaybeBlockedCon(toTraverse, blockedOutputs, nodeOutput);
-                            }
-
-                            finishedNodes.Add(conInput.input.Node);
-                            seenButMissingFirNodeInputs.Remove(conInput.input.Node);
-                        }
+                        FoundNodeDep(conInput.con, conInput.input.Node, missingCons);
                     }
                 }
             }
