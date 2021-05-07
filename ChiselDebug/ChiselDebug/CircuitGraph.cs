@@ -35,13 +35,54 @@ namespace ChiselDebug
             }
         }
 
-        private bool TryFindIO(string ioName, IContainerIO container, out IContainerIO foundIO)
+        private bool TryFindVerilogMemPort(string ioName, MemoryIO memory, out IContainerIO foundIO)
         {
+            foreach (MemPort port in memory.GetIOInOrder())
+            {
+                if (ioName.Contains(port.Name))
+                {
+                    int portNameStart = ioName.IndexOf(port.Name);
+                    string remaining = ioName.Substring(0, portNameStart);
+                    string portPath = ioName.Substring(portNameStart);
+
+                    if (TryFindIO(portPath, memory, false, out foundIO))
+                    {
+                        if (foundIO is ScalarIO)
+                        {
+                            return true;
+                        }
+
+                        if (TryFindIO(remaining, foundIO, false, out var fullFoundIO))
+                        {
+                            if (fullFoundIO is not ScalarIO)
+                            {
+                                foundIO = null;
+                                return false;
+                            }
+
+                            foundIO = fullFoundIO;
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            foundIO = null;
+            return false;
+        }
+
+        private bool TryFindIO(string ioName, IContainerIO container, bool isVerilogVCD, out IContainerIO foundIO)
+        {
+            if (ioName == "_T_35_data__T_68_data")
+            {
+
+            }
+
             string remainingName = ioName;
             string searchName = remainingName;
             while (true)
             {
-                if (container.TryGetIO(searchName, false, out foundIO))
+                if (container.TryGetIO(searchName, true, out foundIO))
                 {
                     container = foundIO;
 
@@ -57,6 +98,19 @@ namespace ChiselDebug
                     if (remainingName.Length == 0)
                     {
                         return true;
+                    }
+
+                    //Verilog represents memport names in a wierd way in the vcd
+                    //which is why that case has to be specially handled
+                    if (isVerilogVCD && container is MemoryIO memory && memory.GetDataType() is AggregateIO)
+                    {
+                        if (TryFindVerilogMemPort(remainingName, memory, out foundIO))
+                        {
+                            return true;
+                        }
+
+                        foundIO = null;
+                        return false;
                     }
 
                     if (container is ScalarIO)
@@ -118,7 +172,7 @@ namespace ChiselDebug
             IContainerIO moduleIO = ((IContainerIO)MainModule).GetIO(modulePath, true);
 
             IContainerIO ioLink = null;
-            bool foundIO = TryFindIO(variable.Reference, moduleIO, out ioLink);
+            bool foundIO = TryFindIO(variable.Reference, moduleIO, isVerilogVCD, out ioLink);
 
             if (!foundIO)
             {
@@ -155,7 +209,17 @@ namespace ChiselDebug
             //then it will also have a wire with the instance name in the vcd
             //file. Ends up with a bundle when this happens so just ignore the
             //change.
-            if (ioLink is IOBundle)
+            if (ioLink is Module)
+            {
+                VarDefToCon.Add(variable, null);
+                return null;
+            }
+            if (ioLink is MemoryIO)
+            {
+                VarDefToCon.Add(variable, null);
+                return null;
+            }
+            if (ioLink is MemPort)
             {
                 VarDefToCon.Add(variable, null);
                 return null;

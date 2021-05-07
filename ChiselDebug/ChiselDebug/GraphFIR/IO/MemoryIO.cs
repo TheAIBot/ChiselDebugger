@@ -53,6 +53,11 @@ namespace ChiselDebug.GraphFIR.IO
             return port;
         }
 
+        public FIRIO GetDataType()
+        {
+            return InputType;
+        }
+
         FIRIO[] IPortsIO.GetAllPorts()
         {
             return VisiblePorts.ToArray();
