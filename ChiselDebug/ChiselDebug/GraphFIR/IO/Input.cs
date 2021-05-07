@@ -241,11 +241,7 @@ namespace ChiselDebug.GraphFIR.IO
                 return;
             }
 
-            //No connection is enabled.
-            //This should only happen when circuit state isn't set yet.
-            //Just return random connection as they should all have the
-            //same value.
-            Value.UpdateFrom(ref CondCons[0].From.Value);
+            Value.Value.SetAllUnknown();
         }
 
         public ref BinaryVarValue UpdateValueFromSourceFast()
@@ -279,11 +275,7 @@ namespace ChiselDebug.GraphFIR.IO
                 return ref GetValue();
             }
 
-            //No connection is enabled.
-            //This should only happen when circuit state isn't set yet.
-            //Just return random connection as they should all have the
-            //same value.
-            Value.UpdateFrom(ref CondCons[0].From.Value);
+            Value.Value.SetAllUnknown();
             return ref GetValue();
         }
 
