@@ -516,13 +516,30 @@ namespace ChiselDebug
 
             if (conditional.HasIf())
             {
-                AddCondModule(enableCond, conditional.WhenTrue);
+                GraphFIR.IO.Output ifEnableCond = enableCond;
+                if (parentHelper.Mod.EnableCon != null)
+                {
+                    GraphFIR.FIRAnd chainConditions = new GraphFIR.FIRAnd(parentHelper.Mod.EnableCon, enableCond, new FIRRTL.UIntType(1), null);
+                    parentHelper.AddNodeToModule(chainConditions);
+
+                    ifEnableCond = chainConditions.Result;
+                }
+
+                AddCondModule(ifEnableCond, conditional.WhenTrue);
             }
             if (conditional.HasElse())
             {
                 GraphFIR.FIRNot notEnableComponent = new GraphFIR.FIRNot(enableCond, new FIRRTL.UIntType(1), null);
                 parentHelper.AddNodeToModule(notEnableComponent);
+
                 GraphFIR.IO.Output elseEnableCond = notEnableComponent.Result;
+                if (parentHelper.Mod.EnableCon != null)
+                {
+                    GraphFIR.FIRAnd chainConditions = new GraphFIR.FIRAnd(parentHelper.Mod.EnableCon, elseEnableCond, new FIRRTL.UIntType(1), null);
+                    parentHelper.AddNodeToModule(chainConditions);
+
+                    elseEnableCond = chainConditions.Result;
+                }
 
                 AddCondModule(elseEnableCond, conditional.Alt);
             }
