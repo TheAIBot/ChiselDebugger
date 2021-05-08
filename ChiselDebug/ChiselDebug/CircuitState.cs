@@ -9,21 +9,18 @@ namespace ChiselDebug
 {
     public class CircuitState
     {
-        public readonly Dictionary<VarDef, BinaryVarValue> VariableValues = new Dictionary<VarDef, BinaryVarValue>(new VarDefComparar());
+        public readonly Dictionary<VarDef, BinaryVarValue> VariableValues;
         public ulong Time { get; private set; }
 
         private CircuitState(CircuitState copyFrom)
         {
-            foreach (var keyValue in copyFrom.VariableValues)
-            {
-                VariableValues.Add(keyValue.Key, keyValue.Value);
-            }
-
+            this.VariableValues = new Dictionary<VarDef, BinaryVarValue>(copyFrom.VariableValues, new VarDefComparar());
             this.Time = copyFrom.Time;
         }
 
         public CircuitState(DumpVars initVarValues)
         {
+            VariableValues = new Dictionary<VarDef, BinaryVarValue>(initVarValues.InitialValues.Count, new VarDefComparar());
             foreach (var initValue in initVarValues.InitialValues)
             {
                 foreach (var variable in initValue.Variables)
@@ -37,6 +34,7 @@ namespace ChiselDebug
 
         public CircuitState(List<List<VarDef>> varDefs)
         {
+            VariableValues = new Dictionary<VarDef, BinaryVarValue>(varDefs.Count, new VarDefComparar());
             foreach (var variables in varDefs)
             {
                 foreach (var variable in variables)
