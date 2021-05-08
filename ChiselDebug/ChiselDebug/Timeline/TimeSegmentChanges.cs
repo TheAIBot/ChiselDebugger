@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using VCDReader;
 
 namespace ChiselDebug.Timeline
 {
@@ -6,18 +9,21 @@ namespace ChiselDebug.Timeline
     {
         public readonly TimeSpan TimeInterval;
         private readonly CircuitState StartState;
-        private readonly List<TimeStepChanges> StepChanges = new List<TimeStepChanges>();
+        private readonly BinaryVarValue[] Changes;
+        private readonly List<TimeStepChanges> StepChanges;
 
-        public TimeSegmentChanges(TimeSpan interval, CircuitState startState, List<TimeStepChanges> changes)
+        public TimeSegmentChanges(TimeSpan interval, CircuitState startState, BinaryVarValue[] changes, List<TimeStepChanges> timeSteps)
         {
             this.TimeInterval = interval;
             this.StartState = startState;
-            this.StepChanges = changes;
+            this.Changes = changes;
+            this.StepChanges = timeSteps;
         }
 
         public CircuitState GetStateAtTime(ulong time)
         {
             CircuitState state = StartState.Copy();
+            int length = 0;
             foreach (var step in StepChanges)
             {
                 if (step.Time > time)
@@ -25,8 +31,10 @@ namespace ChiselDebug.Timeline
                     break;
                 }
 
-                state.AddChanges(step);
+                length = step.StartIndex;
             }
+
+            state.AddChanges(Changes.AsSpan(0, length), time);
 
             return state;
         }
@@ -36,7 +44,7 @@ namespace ChiselDebug.Timeline
             CircuitState state = StartState.Copy();
             foreach (var step in StepChanges)
             {
-                state.AddChanges(step);
+                state.AddChanges(step.GetChanges(Changes), step.Time);
                 yield return state;
             }
         }

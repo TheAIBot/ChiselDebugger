@@ -33,65 +33,63 @@ namespace ChiselDebug.Timeline
             CircuitState followState = segmentStartState.Copy();
 
             ulong startTime = 0;
-            List<TimeStepChanges> stepChanges = new List<TimeStepChanges>();
-            TimeStepChanges currTimeStep = null;
-
-            int changeCounter = 0;
             const int maxChangesPerSegment = 10_000;
+            List<BinaryVarValue> binChanges = new List<BinaryVarValue>(maxChangesPerSegment);
+            List<TimeStepChanges> stepChanges = new List<TimeStepChanges>();
+            int currTimeStepStart = 0;
+            int currTimeStepLength = 0;
+
 
             foreach (var simCmd in simCommands)
             {
                 if (simCmd.SimCmd is SimTime time)
                 {
-                    if (currTimeStep != null)
+                    TimeStepChanges timeStep = new TimeStepChanges(startTime, currTimeStepStart, currTimeStepLength);
+                    currTimeStepStart += currTimeStepLength;
+                    currTimeStepLength = 0;
+
+                    if (timeStep.Length > 0)
                     {
-                        if (currTimeStep.Changes.Count > 0)
+                        stepChanges.Add(timeStep);
+
+                        //If segment is full then store the segment and
+                        //prepare for the next segment
+                        if (binChanges.Count > maxChangesPerSegment)
                         {
-                            followState.AddChanges(currTimeStep);
-                            stepChanges.Add(currTimeStep);
+                            TimeSpan tSpan = new TimeSpan(startTime, time.Time);
+                            SegmentChanges.Add(new TimeSegmentChanges(tSpan, segmentStartState, binChanges.ToArray(), stepChanges));
+                            currTimeStepStart = 0;
+                            currTimeStepLength = 0;
 
-                            //If segment is full then store the segment and
-                            //prepare for the next segment
-                            if (changeCounter > maxChangesPerSegment)
-                            {
-                                TimeSpan tSpan = new TimeSpan(startTime, time.Time);
-                                SegmentChanges.Add(new TimeSegmentChanges(tSpan, segmentStartState, stepChanges));
+                            segmentStartState = followState;
+                            followState = segmentStartState.Copy();
 
-                                segmentStartState = followState;
-                                followState = segmentStartState.Copy();
-
-                                stepChanges = new List<TimeStepChanges>();
-                                changeCounter = 0;
-
-                                startTime = time.Time;
-                            }
+                            binChanges.Clear();
+                            stepChanges = new List<TimeStepChanges>();
                         }
                     }
-                    else
-                    {
-                        startTime = time.Time;
-                    }
 
-                    currTimeStep = new TimeStepChanges(time.Time);
+                    startTime = time.Time;
                 }
                 else if (simCmd.BinValue.HasValue)
                 {
-                    currTimeStep.Changes.Add(simCmd.BinValue.Value);
-                    changeCounter++;
+                    followState.AddChange(simCmd.BinValue.Value);
+                    binChanges.Add(simCmd.BinValue.Value);
+                    currTimeStepLength++;
                 }
             }
 
             //Add last segment if it's not empty.
             //Segment isn't added by above loop if the vcd file doesn't 
             //end with a simulation time command.
-            if (currTimeStep != null && currTimeStep.Changes.Count > 0)
+            if (currTimeStepLength > 0)
             {
-                stepChanges.Add(currTimeStep);
+                stepChanges.Add(new TimeStepChanges(startTime, currTimeStepStart, currTimeStepLength));
             }
             if (stepChanges.Count > 0)
             {
                 TimeSpan tSpan = new TimeSpan(startTime, stepChanges.Last().Time + 1);
-                SegmentChanges.Add(new TimeSegmentChanges(tSpan, segmentStartState, stepChanges));
+                SegmentChanges.Add(new TimeSegmentChanges(tSpan, segmentStartState, binChanges.ToArray(), stepChanges));
             }
 
             this.TimeInterval = new TimeSpan(SegmentChanges.First().TimeInterval.StartInclusive, SegmentChanges.Last().TimeInterval.EndExclusive);

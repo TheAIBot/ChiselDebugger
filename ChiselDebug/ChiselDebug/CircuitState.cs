@@ -51,9 +51,9 @@ namespace ChiselDebug
             this.Time = 0;
         }
 
-        internal void AddChanges(TimeStepChanges changes)
+        internal void AddChanges(ReadOnlySpan<BinaryVarValue> changes, ulong time)
         {
-            foreach (var change in changes.Changes)
+            foreach (var change in changes)
             {
                 foreach (var variable in change.Variables)
                 {
@@ -61,7 +61,15 @@ namespace ChiselDebug
                 }
             }
 
-            Time = changes.Time;
+            Time = Time;
+        }
+
+        internal void AddChange(BinaryVarValue value)
+        {
+            foreach (var variable in value.Variables)
+            {
+                VariableValues[variable] = value;
+            }
         }
 
         public CircuitState Copy()
