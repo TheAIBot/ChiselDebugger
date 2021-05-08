@@ -33,7 +33,7 @@ namespace ChiselDebug.Timeline
             CircuitState followState = segmentStartState.Copy();
 
             ulong startTime = 0;
-            const int maxChangesPerSegment = 10_000;
+            const int maxChangesPerSegment = 100_000;
             List<BinaryVarValue> binChanges = new List<BinaryVarValue>(maxChangesPerSegment);
             List<TimeStepChanges> stepChanges = new List<TimeStepChanges>();
             int currTimeStepStart = 0;
