@@ -292,54 +292,53 @@ namespace VCDReader.Parsing
 
         private static Vector128<byte> onlyFirstBit = Vector128.Create((byte)1);
         private static Vector128<byte> onlySecondBit = Vector128.Create((byte)2);
-        private static Vector128<byte> shuffleIdxs = Vector128.Create(0x80_80_80_80_00_02_04_06, 0x80_80_80_80_80_80_80_80).AsByte();
+        private static Vector128<byte> shuffleIdxs = Vector128.Create(0x00_02_04_06_08_0A_0C_0E, 0x80_80_80_80_80_80_80_80).AsByte();
 
         internal static unsafe (UnsafeMemory<BitState> bits, bool isValidBinary) ToBitStates(ReadOnlySpan<char> valueText, BitAllocator bitAlloc)
         {
             UnsafeMemory<BitState> bitsMem = bitAlloc.GetBits(valueText.Length);
             Span<BitState> bits = bitsMem.Span;
 
-
-            if (bits.Length % 4 == 0)
+            ulong isValidBinary = 0;
+            int index = 0;
+            if (bits.Length >= Vector128<ushort>.Count)
             {
-                int vecBitCount = bits.Length / 4;
+                int vecBitCount = bits.Length / Vector128<ushort>.Count;
                 fixed (BitState* bitsPtr = bits)
                 {
                     fixed (char* textPtr = valueText)
                     {
-                        uint* bits4x = (uint*)bitsPtr;
-                        ulong* text4x = (ulong*)textPtr;
+                        ulong* bits4x = (ulong*)bitsPtr;
 
-                        Vector128<uint> isValidBin = Vector128<uint>.Zero;
-                        for (int i = 0; i < vecBitCount; i++)
+                        Vector128<ulong> isValidBin = Vector128<ulong>.Zero;
+                        for (; index < vecBitCount; index++)
                         {
-                            var charText = Avx.LoadScalarVector128(text4x + i).AsByte();
+                            var charText = Avx.LoadVector128((byte*)textPtr + index * Vector128<byte>.Count);
                             var byteText = Avx.Shuffle(charText, shuffleIdxs);
 
                             var firstBit = Avx.And(onlyFirstBit, Avx.Or(byteText, Avx.ShiftRightLogical(byteText.AsInt32(), 1).AsByte()));
                             var secondBit = Avx.And(onlySecondBit, Avx.ShiftRightLogical(byteText.AsInt32(), 5).AsByte());
                             var bytesAsBitStates = Avx.Or(firstBit, secondBit);
 
-                            Avx.StoreScalar(bits4x + vecBitCount - i - 1, bytesAsBitStates.AsUInt32());
-                            isValidBin = Avx.Or(isValidBin, secondBit.AsUInt32());
+                            Avx.StoreScalar((ulong*)(bitsPtr + bits.Length) - index - 1, bytesAsBitStates.AsUInt64());
+                            isValidBin = Avx.Or(isValidBin, secondBit.AsUInt64());
                         }
 
-                        return (bitsMem, isValidBin.ToScalar() == 0);
+                        isValidBinary = isValidBin.ToScalar();
                     }
                 }
-            }
-            else
-            {
-                uint isValidBinary = 0;
-                for (int i = 0; i < bits.Length; i++)
-                {
-                    BitState bit = ToBitState(valueText[i]);
-                    bits[bits.Length - i - 1] = bit;
-                    isValidBinary |= (uint)bit & 0b10;
-                }
 
-                return (bitsMem, isValidBinary == 0);
+                index *= Vector128<ushort>.Count;
             }
+
+            for (; index < bits.Length; index++)
+            {
+                BitState bit = ToBitState(valueText[index]);
+                bits[bits.Length - index - 1] = bit;
+                isValidBinary |= (uint)bit & 0b10;
+            }
+
+            return (bitsMem, isValidBinary == 0);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
