@@ -6,6 +6,7 @@ namespace VCDReader
     internal readonly struct SpanString : IEquatable<SpanString>
     {
         private readonly ReadOnlyMemory<char> SpanStr;
+        public ReadOnlySpan<char> Span => SpanStr.Span;
 
         public SpanString(string str)
         {

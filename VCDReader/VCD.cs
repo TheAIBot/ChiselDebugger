@@ -8,7 +8,7 @@ namespace VCDReader
     public class VCD : IDisposable
     {
         public readonly List<IDeclCmd> Declarations;
-        private readonly Dictionary<SpanString, List<VarDef>> IDToVariable;
+        private readonly IDToVarDef IDToVariable;
 
         public readonly Date? Date;
         public readonly TimeScale? Time;
@@ -18,14 +18,11 @@ namespace VCDReader
 
         public IEnumerable<List<VarDef>> Variables => IDToVariable.Values;
 
-        internal VCD(List<IDeclCmd> declarations, Dictionary<string, List<VarDef>> idToVariable, VCDLexer lexer)
+        internal VCD(List<IDeclCmd> declarations, IDToVarDef idToVariable, VCDLexer lexer)
         {
             this.Declarations = declarations;
-            this.IDToVariable = new Dictionary<SpanString, List<VarDef>>();
-            foreach (var keyVal in idToVariable)
-            {
-                IDToVariable.Add(new SpanString(keyVal.Key), keyVal.Value);
-            }
+            this.IDToVariable = idToVariable;
+            IDToVariable.OptimizeVarDefAccess();
             this.Lexer = lexer;
 
             this.Date = Declarations.FirstOrDefault(x => x is Date) as Date;
