@@ -335,9 +335,8 @@ namespace VCDReader.Parsing
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static BitState ToBitState(int value)
         {
-            value = value & 0b101_1111;
-            int firstBit = (value & 0b1) | ((value >> 1) & 0b1);
-            int secondBit = value >> 5;
+            int firstBit = (value | (value >> 1)) & 0b1;
+            int secondBit = (value >> 5) & 0b10;
             return (BitState)(secondBit | firstBit);
         }
 
