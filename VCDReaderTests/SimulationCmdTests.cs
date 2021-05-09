@@ -129,6 +129,44 @@ b{expectedBits.BitsToString()} !";
         }
 
         [TestMethod]
+        public void ParseVectorBinarySize22ValueChange()
+        {
+            BitState[] expectedBits = new BitState[] 
+            { 
+                BitState.One, BitState.One,
+                BitState.Zero, BitState.Zero,
+                BitState.Zero, BitState.One,
+                BitState.Zero, BitState.Zero,
+                BitState.Zero, BitState.One,
+                BitState.Zero, BitState.One,
+                BitState.One, BitState.Zero,
+                BitState.Zero, BitState.One,
+                BitState.Zero, BitState.One,
+                BitState.One, BitState.One,
+                BitState.Zero, BitState.One
+            };
+
+            string vcdString = @$"
+$var wire {expectedBits.Length} ! _T_4 $end
+$enddefinitions $end
+b{expectedBits.BitsToString()} !";
+            VCD vcd = Parse.FromString(vcdString);
+
+            Assert.AreEqual(1, vcd.Declarations.Count);
+            Assert.IsTrue(vcd.Declarations[0] is VarDef);
+
+            var variable = vcd.Declarations[0] as VarDef;
+
+            ISimCmd[] simCmds = vcd.GetSimulationCommands().ToArray();
+            Assert.AreEqual(1, simCmds.Length);
+            Assert.IsTrue(simCmds[0] is BinaryVarValue);
+
+            var valueChange = (BinaryVarValue)simCmds[0];
+            CollectionAssert.AreEqual(expectedBits, valueChange.Bits.ToArray());
+            Assert.AreEqual(variable, valueChange.Variables[0]);
+        }
+
+        [TestMethod]
         public void ParseVectorRealSize4ValueChange()
         {
             double expectedValue = 3.1415;

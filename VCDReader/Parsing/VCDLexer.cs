@@ -6,31 +6,31 @@ namespace VCDReader.Parsing
 {
     internal class VCDLexer : IDisposable
     {
-        private readonly TextReader Reader;
-        private char[] Buffer; 
+        private readonly BinaryReader Reader;
+        private byte[] Buffer; 
         private bool ReachedEOF;
-        private Memory<char> AvailableChars;
+        private Memory<byte> AvailableChars;
         private const int DefaultBufferSize = 1024;
-        private const string SkipChars = " \t\r\n";
+        private static readonly byte[] SkipChars = new byte[] { (byte)' ', (byte)'\t', (byte)'\r', (byte)'\n' };
 
-        public VCDLexer(TextReader reader)
+        public VCDLexer(BinaryReader reader)
         {
             this.Reader = reader;
-            this.Buffer = new char[DefaultBufferSize];
+            this.Buffer = new byte[DefaultBufferSize];
             this.ReachedEOF = false;
-            this.AvailableChars = new Memory<char>();
+            this.AvailableChars = new Memory<byte>();
 
             FillBuffer(true);
         }
 
-        public ReadOnlySpan<char> NextInteger()
+        public ReadOnlySpan<byte> NextInteger()
         {
             SkipStart();
 
             int wordLength = 0;
             while (!IsEmpty() && wordLength < AvailableChars.Length)
             {
-                if (!char.IsDigit(AvailableChars.Span[wordLength]))
+                if (!char.IsDigit((char)AvailableChars.Span[wordLength]))
                 {
                     break;
                 }
@@ -42,22 +42,22 @@ namespace VCDReader.Parsing
                 }
             }
 
-            ReadOnlySpan<char> numbers = AvailableChars.Span.Slice(0, wordLength);
+            ReadOnlySpan<byte> numbers = AvailableChars.Span.Slice(0, wordLength);
             AvailableChars = AvailableChars.Slice(numbers.Length);
             return numbers;
         }
 
-        public ReadOnlyMemory<char> PeekNextWord()
+        public ReadOnlyMemory<byte> PeekNextWord()
         {
             SkipStart();
 
             int wordLength = 0;
             while (!IsEmpty() && wordLength < AvailableChars.Length)
             {
-                ReadOnlySpan<char> chars = AvailableChars.Span;
+                ReadOnlySpan<byte> chars = AvailableChars.Span;
                 while (wordLength < chars.Length)
                 {
-                    if (!IsWordChar(chars[wordLength]))
+                    if (!IsWordChar((char)chars[wordLength]))
                     {
                         goto skipStop;
                     }
@@ -79,10 +79,10 @@ namespace VCDReader.Parsing
         {
             SkipStart();
 
-            return AvailableChars.Span[0];
+            return (char)AvailableChars.Span[0];
         }
 
-        public void SkipWord(ReadOnlySpan<char> word)
+        public void SkipWord(ReadOnlySpan<byte> word)
         {
             AvailableChars = AvailableChars.Slice(word.Length);
         }
@@ -92,23 +92,23 @@ namespace VCDReader.Parsing
             AvailableChars = AvailableChars.Slice(1);
         }
 
-        public ReadOnlySpan<char> NextWord()
+        public ReadOnlySpan<byte> NextWord()
         {
-            ReadOnlySpan<char> word = PeekNextWord().Span;
+            ReadOnlySpan<byte> word = PeekNextWord().Span;
             SkipWord(word);
 
             return word;
         }
 
-        public ReadOnlyMemory<char> NextWordAsMem()
+        public ReadOnlyMemory<byte> NextWordAsMem()
         {
-            ReadOnlyMemory<char> wordMem = PeekNextWord();
+            ReadOnlyMemory<byte> wordMem = PeekNextWord();
             SkipWord(wordMem.Span);
 
             return wordMem;
         }
 
-        public ReadOnlySpan<char> NextUntil(ReadOnlySpan<char> stopAt)
+        public ReadOnlySpan<byte> NextUntil(ReadOnlySpan<byte> stopAt)
         {
             SkipStart();
 
@@ -121,21 +121,21 @@ namespace VCDReader.Parsing
                 {
                     if (ReachedEOF)
                     {
-                        throw new Exception($"Failed to find pattern before EOF. Pattern: {new string(stopAt)}");
+                        throw new Exception($"Failed to find pattern before EOF. Pattern: {new string(stopAt.ToString())}");
                     }
                     FillBuffer(false);
                 }
             } while (foundIndex == notFound);
 
-            ReadOnlySpan<char> text = AvailableChars.Span.Slice(0, foundIndex);
+            ReadOnlySpan<byte> text = AvailableChars.Span.Slice(0, foundIndex);
             AvailableChars = AvailableChars.Slice(foundIndex);
 
             return text.TrimEnd(SkipChars);
         }
 
-        public void ExpectNextWord(ReadOnlySpan<char> expectedWord)
+        public void ExpectNextWord(ReadOnlySpan<byte> expectedWord)
         {
-            ReadOnlySpan<char> actualword = NextWord();
+            ReadOnlySpan<byte> actualword = NextWord();
             if (!expectedWord.SequenceEqual(actualword))
             {
                 throw new Exception($"Expected next word to be {expectedWord.ToString()} but got {actualword.ToString()}");
@@ -152,7 +152,7 @@ namespace VCDReader.Parsing
             while (true)
             {
                 int skip = 0;
-                ReadOnlySpan<char> chars = AvailableChars.Span;
+                ReadOnlySpan<byte> chars = AvailableChars.Span;
                 while (skip < chars.Length && chars[skip] < '!')
                 {
                     skip++;
@@ -174,9 +174,9 @@ namespace VCDReader.Parsing
         {
             if (overwriteExisting)
             {
-                int copiedLength = Reader.ReadBlock(Buffer, 0, Buffer.Length);
+                int copiedLength = Reader.Read(Buffer, 0, Buffer.Length);
                 ReachedEOF = copiedLength < Buffer.Length;
-                AvailableChars = new Memory<char>(Buffer, 0, copiedLength);
+                AvailableChars = new Memory<byte>(Buffer, 0, copiedLength);
             }
             else
             {
@@ -186,7 +186,7 @@ namespace VCDReader.Parsing
                 //required for some operation.
                 if (AvailableChars.Length == Buffer.Length)
                 {
-                    char[] biggerBuffer = new char[Buffer.Length * 2];
+                    byte[] biggerBuffer = new byte[Buffer.Length * 2];
                     AvailableChars.CopyTo(biggerBuffer);
                     Buffer = biggerBuffer;
                 }
@@ -194,16 +194,16 @@ namespace VCDReader.Parsing
                 {
                     //Move remaining text to start of buffer so more
                     //text can be added to the end of it
-                    Memory<char> from = AvailableChars;
-                    Memory<char> to = new Memory<char>(Buffer, 0, AvailableChars.Length);
+                    Memory<byte> from = AvailableChars;
+                    Memory<byte> to = new Memory<byte>(Buffer, 0, AvailableChars.Length);
                     from.CopyTo(to);
                     AvailableChars = to;
                 }
 
                 int spaceLeft = Buffer.Length - AvailableChars.Length;
-                int copiedLength = Reader.ReadBlock(Buffer, AvailableChars.Length, spaceLeft);
+                int copiedLength = Reader.Read(Buffer, AvailableChars.Length, spaceLeft);
                 ReachedEOF = copiedLength < spaceLeft;
-                AvailableChars = new Memory<char>(Buffer, 0, AvailableChars.Length + copiedLength);
+                AvailableChars = new Memory<byte>(Buffer, 0, AvailableChars.Length + copiedLength);
             }
         }
 
@@ -220,6 +220,12 @@ namespace VCDReader.Parsing
             }
 
             return AvailableChars.Length > 0 && AvailableChars.Span.TrimStart(SkipChars).Length > 0;
+        }
+
+        internal string BufferToString()
+        {
+            ReadOnlySpan<byte> bufferBytes = Buffer.AsSpan();
+            return bufferBytes.ToCharString();
         }
 
         public void Dispose()

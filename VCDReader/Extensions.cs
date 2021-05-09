@@ -63,5 +63,26 @@ namespace VCDReader
 
             return cmds.ToArray();
         }
+
+        public static void CopyToCharArray(this ReadOnlySpan<byte> bytes, Span<char> chars)
+        {
+            if (bytes.Length > chars.Length)
+            {
+                throw new Exception("Failed to copy from byte array to char array as char array is not long enough.");
+            }
+
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                chars[i] = (char)bytes[i];
+            }
+        }
+
+        public static string ToCharString(this ReadOnlySpan<byte> bytes)
+        {
+            Span<char> chars = stackalloc char[bytes.Length];
+            bytes.CopyToCharArray(chars);
+
+            return chars.ToString();
+        }
     }
 }

@@ -42,53 +42,59 @@ namespace VCDReader.Parsing
 
         internal static IDeclCmd? VisitDeclCmd(VCDLexer lexer, IDToVarDef idToVariable, Stack<Scope> scopes)
         {
-            ReadOnlySpan<char> declWord = lexer.NextWord();
-            if (declWord.SequenceEqual("$comment"))
-            {
-                string text = lexer.NextUntil("$end").ToString();
+            ReadOnlySpan<byte> declWord = lexer.NextWord();
+            Span<char> chars = stackalloc char[declWord.Length];
+            declWord.CopyToCharArray(chars);
 
-                lexer.ExpectNextWord("$end");
+            ReadOnlySpan<byte> endToken = new byte[] { (byte)'$', (byte)'e', (byte)'n', (byte)'d' };
+            ReadOnlySpan<byte> dollarSign = new byte[] { (byte)'$' };
+
+            if (chars.SequenceEqual("$comment"))
+            {
+                string text = lexer.NextUntil(endToken).ToCharString();
+
+                lexer.ExpectNextWord(endToken);
                 return new Comment(text);
             }
-            else if (declWord.SequenceEqual("$date"))
+            else if (chars.SequenceEqual("$date"))
             {
-                string text = lexer.NextUntil("$end").ToString();
+                string text = lexer.NextUntil(endToken).ToCharString();
 
-                lexer.ExpectNextWord("$end");
+                lexer.ExpectNextWord(endToken);
                 return new Date(text);
             }
-            else if (declWord.SequenceEqual("$scope"))
+            else if (chars.SequenceEqual("$scope"))
             {
                 ScopeType type = VisitScopeType(lexer);
-                string id = lexer.NextWord().ToString();
+                string id = lexer.NextWord().ToCharString();
 
                 Scope scope = new Scope(type, id);
                 scopes.Push(scope);
 
-                lexer.ExpectNextWord("$end");
+                lexer.ExpectNextWord(endToken);
                 return scope;
             }
-            else if (declWord.SequenceEqual("$timescale"))
+            else if (chars.SequenceEqual("$timescale"))
             {
                 int scale = VisitTimeNumber(lexer);
                 TimeUnit unit = VisitTimeUnit(lexer);
 
-                lexer.ExpectNextWord("$end");
+                lexer.ExpectNextWord(endToken);
                 return new TimeScale(scale, unit);
             }
-            else if (declWord.SequenceEqual("$upscope"))
+            else if (chars.SequenceEqual("$upscope"))
             {
                 scopes.Pop();
 
-                lexer.ExpectNextWord("$end");
+                lexer.ExpectNextWord(endToken);
                 return new UpScope();
             }
-            else if (declWord.SequenceEqual("$var"))
+            else if (chars.SequenceEqual("$var"))
             {
                 VarType type = VisitVarType(lexer);
                 int size = VisitSize(lexer);
-                string id = lexer.NextWord().ToString();
-                string reference = lexer.NextWord().ToString();
+                string id = lexer.NextWord().ToCharString();
+                string reference = lexer.NextWord().ToCharString();
 
                 VarDef variable = new VarDef(type, size, id, reference, scopes.Reverse().ToArray());
                 idToVariable.AddVariable(variable);
@@ -97,43 +103,52 @@ namespace VCDReader.Parsing
                 char nextChar = lexer.PeekNextChar();
                 if (nextChar == '[')
                 {
-                    lexer.NextUntil("]");
+                    ReadOnlySpan<byte> endBracket = new byte[] { (byte)']' };
+                    lexer.NextUntil(endBracket);
                     lexer.SkipChar();
                 }
 
-                lexer.ExpectNextWord("$end");
+                lexer.ExpectNextWord(endToken);
                 return variable;
             }
-            else if (declWord.SequenceEqual("$version"))
+            else if (chars.SequenceEqual("$version"))
             {
-                string versionTxt = lexer.NextUntil("$").ToString();
+                string versionTxt = lexer.NextUntil(dollarSign).ToCharString();
                 string systemTaskString = string.Empty;
 
-                ReadOnlySpan<char> systemTask = lexer.PeekNextWord().Span;
-                if (systemTask.StartsWith("$") && !systemTask.SequenceEqual("$end"))
+                ReadOnlySpan<byte> systemTask = lexer.PeekNextWord().Span;
+                if (systemTask.StartsWith(dollarSign) && !systemTask.SequenceEqual(endToken))
                 {
                     lexer.SkipWord(systemTask);
-                    systemTaskString = systemTask.ToString();
+                    systemTaskString = systemTask.ToCharString();
                 }
 
-                lexer.ExpectNextWord("$end");
+                lexer.ExpectNextWord(endToken);
                 return new Version(versionTxt, systemTaskString);
             }
-            else if (declWord.SequenceEqual("$enddefinitions"))
+            else if (chars.SequenceEqual("$enddefinitions"))
             {
-                lexer.ExpectNextWord("$end");
+                lexer.ExpectNextWord(endToken);
                 return null;
             }
             else
             {
-                throw new Exception($"Invalid declaration command: {declWord.ToString()}");
+                throw new Exception($"Invalid declaration command: {declWord.ToCharString()}\nBuffer: {lexer.BufferToString()}");
             }
         }
 
         internal static void VisitSimCmd(VCDLexer lexer, IDToVarDef idToVariable, SimPass pass, BitAllocator bitAlloc)
         {
-            ReadOnlyMemory<char> declWordMem = lexer.NextWordAsMem();
-            ReadOnlySpan<char> declWord = declWordMem.Span;
+            ReadOnlyMemory<byte> declWordMem = lexer.NextWordAsMem();
+            ReadOnlySpan<byte> declWord = declWordMem.Span;
+
+            ReadOnlySpan<byte> endToken = new byte[] { (byte)'$', (byte)'e', (byte)'n', (byte)'d' };
+            ReadOnlySpan<byte> commentToken = new byte[] { (byte)'$', (byte)'c', (byte)'o', (byte)'m', (byte)'m', (byte)'e', (byte)'n', (byte)'t' };
+            ReadOnlySpan<byte> dumpAllToken = new byte[] { (byte)'$', (byte)'d', (byte)'u', (byte)'m', (byte)'p', (byte)'a', (byte)'l', (byte)'l' };
+            ReadOnlySpan<byte> dumpOffToken = new byte[] { (byte)'$', (byte)'d', (byte)'u', (byte)'m', (byte)'p', (byte)'o', (byte)'f', (byte)'f' };
+            ReadOnlySpan<byte> dumpOnToken = new byte[] { (byte)'$', (byte)'d', (byte)'u', (byte)'m', (byte)'p', (byte)'o', (byte)'n' };
+            ReadOnlySpan<byte> dumpVarsToken = new byte[] { (byte)'$', (byte)'d', (byte)'u', (byte)'m', (byte)'p', (byte)'v', (byte)'a', (byte)'r', (byte)'s' };
+            ReadOnlySpan<byte> hashtagToken = new byte[] { (byte)'#' };
 
             //It may be the case that it's first discovered now that
             // the end of the file has been reached.
@@ -147,30 +162,31 @@ namespace VCDReader.Parsing
                 return;
             }
 
-            if (declWord.SequenceEqual("$comment"))
+            if (declWord.SequenceEqual(commentToken))
             {
-                string text = lexer.NextUntil("$end").ToString();
+                
+                string text = lexer.NextUntil(endToken).ToCharString();
 
-                lexer.ExpectNextWord("$end");
+                lexer.ExpectNextWord(endToken);
                 pass.SimCmd = new Comment(text);
             }
-            else if (declWord.SequenceEqual("$dumpall"))
+            else if (declWord.SequenceEqual(dumpAllToken))
             {
                 pass.SimCmd = new DumpAll(VisitValueChangeStream(lexer, idToVariable, pass, bitAlloc));
             }
-            else if (declWord.SequenceEqual("$dumpoff"))
+            else if (declWord.SequenceEqual(dumpOffToken))
             {
                 pass.SimCmd = new DumpOff(VisitValueChangeStream(lexer, idToVariable, pass, bitAlloc));
             }
-            else if (declWord.SequenceEqual("$dumpon"))
+            else if (declWord.SequenceEqual(dumpOnToken))
             {
                 pass.SimCmd = new DumpOn(VisitValueChangeStream(lexer, idToVariable, pass, bitAlloc));
             }
-            else if (declWord.SequenceEqual("$dumpvars"))
+            else if (declWord.SequenceEqual(dumpVarsToken))
             {
                 pass.SimCmd = new DumpVars(VisitValueChangeStream(lexer, idToVariable, pass, bitAlloc));
             }
-            else if (declWord.StartsWith("#"))
+            else if (declWord.StartsWith(hashtagToken))
             {
                 pass.SimCmd = VisitSimTime(declWord);
             }
@@ -186,8 +202,9 @@ namespace VCDReader.Parsing
 
             while (!lexer.IsEmpty())
             {
-                ReadOnlyMemory<char> text = lexer.NextWordAsMem();
-                if (text.Span.SequenceEqual("$end"))
+                ReadOnlyMemory<byte> text = lexer.NextWordAsMem();
+                ReadOnlySpan<byte> endToken = new byte[] { (byte)'$', (byte)'e', (byte)'n', (byte)'d' };
+                if (text.Span.SequenceEqual(endToken))
                 {
                     break;
                 }
@@ -211,14 +228,14 @@ namespace VCDReader.Parsing
             return changes;
         }
 
-        internal static void VisitValueChange(VCDLexer lexer, ReadOnlyMemory<char> text, IDToVarDef idToVariable, SimPass pass, BitAllocator bitAlloc)
+        internal static void VisitValueChange(VCDLexer lexer, ReadOnlyMemory<byte> text, IDToVarDef idToVariable, SimPass pass, BitAllocator bitAlloc)
         {
             if (text.Length < 2)
             {
                 throw new Exception($"Invalid value change: {text.ToString()}");
             }
 
-            ReadOnlySpan<char> textSpan = text.Span;
+            ReadOnlySpan<byte> textSpan = text.Span;
             if (textSpan[0] == 'b' || textSpan[0] == 'B')
             {
                 VisitBinaryVectorValueChange(lexer, textSpan.Slice(1), idToVariable, pass, bitAlloc);
@@ -233,7 +250,7 @@ namespace VCDReader.Parsing
             }
         }
 
-        internal static void VisitBinaryVectorValueChange(VCDLexer lexer, ReadOnlySpan<char> valueText, IDToVarDef idToVariable, SimPass pass, BitAllocator bitAlloc)
+        internal static void VisitBinaryVectorValueChange(VCDLexer lexer, ReadOnlySpan<byte> valueText, IDToVarDef idToVariable, SimPass pass, BitAllocator bitAlloc)
         {
             (UnsafeMemory<BitState> bits, bool isValidBinary) = ToBitStates(valueText, bitAlloc);
             var id = lexer.NextWordAsMem();
@@ -248,9 +265,12 @@ namespace VCDReader.Parsing
             }
         }
 
-        internal static void VisitRealVectorValueChange(VCDLexer lexer, ReadOnlySpan<char> valueText, IDToVarDef idToVariable, SimPass pass, BitAllocator bitAlloc)
+        internal static void VisitRealVectorValueChange(VCDLexer lexer, ReadOnlySpan<byte> valueText, IDToVarDef idToVariable, SimPass pass, BitAllocator bitAlloc)
         {
-            double value = double.Parse(valueText, NumberStyles.Float, CultureInfo.InvariantCulture);
+            Span<char> chars = stackalloc char[valueText.Length];
+            valueText.CopyToCharArray(chars);
+
+            double value = double.Parse(chars, NumberStyles.Float, CultureInfo.InvariantCulture);
             var id = lexer.NextWordAsMem();
 
             if (idToVariable.TryGetValue(id, out List<VarDef>? variable))
@@ -263,7 +283,7 @@ namespace VCDReader.Parsing
             }
         }
 
-        internal static void VisitScalarValueChange(ReadOnlyMemory<char> text, IDToVarDef idToVariable, SimPass pass, BitAllocator bitAlloc)
+        internal static void VisitScalarValueChange(ReadOnlyMemory<byte> text, IDToVarDef idToVariable, SimPass pass, BitAllocator bitAlloc)
         {
             UnsafeMemory<BitState> bits = bitAlloc.GetBits(1);
             BitState bit = ToBitState(text.Span[0]);
@@ -283,43 +303,41 @@ namespace VCDReader.Parsing
 
         private static Vector128<byte> onlyFirstBit = Vector128.Create((byte)1);
         private static Vector128<byte> onlySecondBit = Vector128.Create((byte)2);
-        private static Vector128<byte> shuffleIdxs = Vector128.Create(0x00_02_04_06_08_0A_0C_0E, 0x80_80_80_80_80_80_80_80).AsByte();
+        private static Vector128<byte> shuffleIdxs = Vector128.Create(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0).AsByte();
 
-        internal static unsafe (UnsafeMemory<BitState> bits, bool isValidBinary) ToBitStates(ReadOnlySpan<char> valueText, BitAllocator bitAlloc)
+        internal static unsafe (UnsafeMemory<BitState> bits, bool isValidBinary) ToBitStates(ReadOnlySpan<byte> valueText, BitAllocator bitAlloc)
         {
             UnsafeMemory<BitState> bitsMem = bitAlloc.GetBits(valueText.Length);
             Span<BitState> bits = bitsMem.Span;
 
             ulong isValidBinary = 0;
             int index = 0;
-            if (bits.Length >= Vector128<ushort>.Count)
+            if (bits.Length >= Vector128<byte>.Count)
             {
-                int vecBitCount = bits.Length / Vector128<ushort>.Count;
+                int vecBitCount = bits.Length / Vector128<byte>.Count;
                 fixed (BitState* bitsPtr = bits)
                 {
-                    fixed (char* textPtr = valueText)
+                    fixed (byte* textPtr = valueText)
                     {
-                        ulong* bits4x = (ulong*)bitsPtr;
-
                         Vector128<ulong> isValidBin = Vector128<ulong>.Zero;
                         for (; index < vecBitCount; index++)
                         {
-                            var charText = Avx.LoadVector128((byte*)textPtr + index * Vector128<byte>.Count);
+                            var charText = Avx.LoadVector128(textPtr + index * Vector128<byte>.Count);
                             var byteText = Avx.Shuffle(charText, shuffleIdxs);
 
                             var firstBit = Avx.And(onlyFirstBit, Avx.Or(byteText, Avx.ShiftRightLogical(byteText.AsInt32(), 1).AsByte()));
                             var secondBit = Avx.And(onlySecondBit, Avx.ShiftRightLogical(byteText.AsInt32(), 5).AsByte());
                             var bytesAsBitStates = Avx.Or(firstBit, secondBit);
 
-                            Avx.StoreScalar((ulong*)(bitsPtr + bits.Length) - index - 1, bytesAsBitStates.AsUInt64());
+                            Avx.Store((byte*)bitsPtr + bits.Length - (index + 1) * Vector128<byte>.Count, bytesAsBitStates);
                             isValidBin = Avx.Or(isValidBin, secondBit.AsUInt64());
                         }
 
-                        isValidBinary = isValidBin.ToScalar();
+                        isValidBinary = isValidBin.GetElement(0) | isValidBin.GetElement(1);
                     }
                 }
 
-                index *= Vector128<ushort>.Count;
+                index *= Vector128<byte>.Count;
             }
 
             for (; index < bits.Length; index++)
@@ -342,7 +360,7 @@ namespace VCDReader.Parsing
 
         internal static ScopeType VisitScopeType(VCDLexer lexer)
         {
-            string text = lexer.NextWord().ToString();
+            string text = lexer.NextWord().ToCharString();
             if (Enum.TryParse(text, true, out ScopeType result))
             {
                 return result;
@@ -353,18 +371,21 @@ namespace VCDReader.Parsing
             }
         }
 
-        internal static SimTime VisitSimTime(ReadOnlySpan<char> text)
+        internal static SimTime VisitSimTime(ReadOnlySpan<byte> text)
         {
             if (text.Length < 2 || text[0] != '#')
             {
-                throw new Exception($"Invalid simulation time: {text.ToString()}");
+                throw new Exception($"Invalid simulation time: {text.ToCharString()}");
             }
             return new SimTime(ParseULong(text.Slice(1)));
         }
 
-        private static ulong ParseULong(ReadOnlySpan<char> text)
+        private static ulong ParseULong(ReadOnlySpan<byte> text)
         {
-            if (ulong.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out ulong result))
+            Span<char> chars = stackalloc char[text.Length];
+            text.CopyToCharArray(chars);
+
+            if (ulong.TryParse(chars, NumberStyles.Integer, CultureInfo.InvariantCulture, out ulong result))
             {
                 return result;
             }
@@ -374,9 +395,12 @@ namespace VCDReader.Parsing
             }
         }
 
-        private static int ParseInt(ReadOnlySpan<char> text)
+        private static int ParseInt(ReadOnlySpan<byte> text)
         {
-            if (int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out int result))
+            Span<char> chars = stackalloc char[text.Length];
+            text.CopyToCharArray(chars);
+
+            if (int.TryParse(chars, NumberStyles.Integer, CultureInfo.InvariantCulture, out int result))
             {
                 return result;
             }
@@ -393,16 +417,19 @@ namespace VCDReader.Parsing
 
         internal static int VisitTimeNumber(VCDLexer lexer)
         {
-            ReadOnlySpan<char> text = lexer.NextInteger();
-            if (text.SequenceEqual("1"))
+            ReadOnlySpan<byte> text = lexer.NextInteger();
+            Span<char> chars = stackalloc char[text.Length];
+            text.CopyToCharArray(chars);
+            
+            if (chars.SequenceEqual("1"))
             {
                 return 1;
             }
-            else if (text.SequenceEqual("10"))
+            else if (chars.SequenceEqual("10"))
             {
                 return 10;
             }
-            else if (text.SequenceEqual("100"))
+            else if (chars.SequenceEqual("100"))
             {
                 return 100;
             }
@@ -414,7 +441,7 @@ namespace VCDReader.Parsing
 
         internal static TimeUnit VisitTimeUnit(VCDLexer lexer)
         {
-            string text = lexer.NextWord().ToString();
+            string text = lexer.NextWord().ToCharString();
             if (Enum.TryParse(text, true, out TimeUnit result))
             {
                 return result;
@@ -427,7 +454,7 @@ namespace VCDReader.Parsing
 
         internal static VarType VisitVarType(VCDLexer lexer)
         {
-            string text = lexer.NextWord().ToString();
+            string text = lexer.NextWord().ToCharString();
             if (Enum.TryParse(text, true, out VarType result))
             {
                 return result;

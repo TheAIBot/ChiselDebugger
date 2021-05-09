@@ -8,7 +8,7 @@ namespace VCDReader.Parsing
     {
         private Dictionary<SpanString, List<VarDef>> IDToVariable = new Dictionary<SpanString, List<VarDef>>();
         private Dictionary<ulong, List<VarDef>> OptiIDToVariable = new Dictionary<ulong, List<VarDef>>();
-        private bool IsOptimized = false;
+        private char[] MaxLengthID = Array.Empty<char>();
         public IEnumerable<List<VarDef>> Values => IDToVariable.Values;
 
         public void AddVariable(VarDef variable)
@@ -29,15 +29,29 @@ namespace VCDReader.Parsing
 
         public void OptimizeVarDefAccess()
         {
-            if (IDToVariable.Keys.All(x => x.Span.Length <= sizeof(ulong)))
+            int maxLength = 0;
+            foreach (var keyVal in IDToVariable)
             {
-                foreach (var keyVal in IDToVariable)
+                maxLength = Math.Max(maxLength, keyVal.Key.Span.Length);
+                if (keyVal.Key.Span.Length <= sizeof(ulong))
                 {
-                    OptiIDToVariable.Add(SpanToULong(keyVal.Key.Span), keyVal.Value);
+                    ulong key = SpanToULong(keyVal.Key.Span);
+                    OptiIDToVariable.Add(key, keyVal.Value);
                 }
-
-                IsOptimized = true;
             }
+
+            MaxLengthID = new char[maxLength];
+        }
+
+        private ulong SpanToULong(ReadOnlySpan<byte> chars)
+        {
+            ulong key = 0;
+            for (int i = 0; i < chars.Length; i++)
+            {
+                key |= (ulong)chars[i] << (i * 8);
+            }
+
+            return key;
         }
 
         private ulong SpanToULong(ReadOnlySpan<char> chars)
@@ -51,16 +65,18 @@ namespace VCDReader.Parsing
             return key;
         }
 
-        public bool TryGetValue(ReadOnlyMemory<char> chars, out List<VarDef>? variables)
+        public bool TryGetValue(ReadOnlyMemory<byte> bytes, out List<VarDef>? variables)
         {
-            if (IsOptimized)
+            if (bytes.Length <= sizeof(ulong))
             {
-                ulong key = SpanToULong(chars.Span);
+                ulong key = SpanToULong(bytes.Span);
                 return OptiIDToVariable.TryGetValue(key, out variables);
             }
             else
             {
-                return IDToVariable.TryGetValue(new SpanString(chars), out variables);
+                bytes.Span.CopyToCharArray(MaxLengthID);
+                ReadOnlyMemory<char> charsMem = new ReadOnlyMemory<char>(MaxLengthID, 0, bytes.Span.Length);
+                return IDToVariable.TryGetValue(new SpanString(charsMem), out variables);
             }
         }
     }
