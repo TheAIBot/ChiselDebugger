@@ -53,7 +53,7 @@ namespace ChiselDebug
                 VariableValues[variable.ID] = change;
             }
 
-            Time = Time;
+            Time = time;
         }
 
         internal void AddChange(BinaryVarValue value)
