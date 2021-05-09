@@ -234,9 +234,8 @@ namespace ChiselDebug
             throw new Exception("No");
         }
 
-        public List<Output> SetState(CircuitState state, bool isVerilogVCD)
+        public void SetState(CircuitState state, bool isVerilogVCD)
         {
-            HashSet<Output> missingToSet = new HashSet<Output>(ComputeAllowsUpdate);
             foreach (BinaryVarValue varValue in state.VariableValues.Values)
             {
                 foreach (var variable in varValue.Variables)
@@ -256,43 +255,21 @@ namespace ChiselDebug
                     {
                         continue;
                     }
-                    missingToSet.Remove(con);
 
                     var varCopy = varValue;
                     con.Value.UpdateValue(ref varCopy);
                 }
             }
 
+        }
+
+        public List<Output> ComputeRemainingGraph()
+        {
             return ComputeGraph.ComputeAndGetChanged();
         }
 
-        public void SetStateFast(CircuitState state, bool isVerilogVCD)
+        public void ComputeRemainingGraphFast()
         {
-            foreach (BinaryVarValue varValue in state.VariableValues.Values)
-            {
-                foreach (var variable in varValue.Variables)
-                {
-                    Output con = GetConnection(variable, isVerilogVCD) as Output;
-                    if (con == null)
-                    {
-                        continue;
-                    }
-
-                    if (!ComputeAllowsUpdate.Contains(con) && con.Node is not IStatePreserving)
-                    {
-                        continue;
-                    }
-
-                    if (!con.Value.IsInitialized())
-                    {
-                        continue;
-                    }
-
-                    var varCopy = varValue;
-                    con.Value.UpdateValue(ref varCopy);
-                }
-            }
-
             ComputeGraph.ComputeFast();
         }
 

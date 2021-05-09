@@ -126,12 +126,17 @@ namespace ChiselDebugTests
             List<string> stateErrors = new List<string>();
             foreach (var state in timeline.GetAllDistinctStates())
             {
+                graph.SetState(state, isVerilogVCD);
+                if (state.Time == timeline.TimeInterval.StartInclusive)
+                {
+                    continue;
+                }
                 if (state.Time == timeline.TimeInterval.InclusiveEnd())
                 {
                     break;
                 }
-                graph.SetStateFast(state, isVerilogVCD);
 
+                graph.ComputeRemainingGraphFast();
                 foreach (BinaryVarValue expected in state.VariableValues.Values)
                 {
                 
@@ -173,6 +178,8 @@ namespace ChiselDebugTests
                 if (stateErrors.Count > 0)
                 {
                     Console.WriteLine($"Wire states: {totalWireStates.ToString("N0")}\nIgnored: {ignoredWireStates.ToString("N0")}");
+                    Console.WriteLine();
+                    Console.WriteLine(graph.StateToString());
                     Assert.Fail(string.Join('\n', stateErrors));
                 }
             }
