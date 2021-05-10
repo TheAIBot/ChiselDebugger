@@ -467,7 +467,7 @@ namespace ChiselDebug
         private static void ConnectIO(VisitHelper helper, GraphFIR.IO.FIRIO from, GraphFIR.IO.FIRIO to, bool isPartial)
         {
             bool isConditionalCon = from.GetModResideIn() != helper.Mod || to.GetModResideIn() != helper.Mod;
-            Debug.Assert(!isConditionalCon || (isConditionalCon && helper.Mod.EnableCon != null));
+            Debug.Assert(!isConditionalCon || (isConditionalCon && helper.Mod.IsConditional));
 
             GraphFIR.Module fromMod = from.GetModResideIn();
             GraphFIR.Module toMod = to.GetModResideIn();
@@ -517,7 +517,7 @@ namespace ChiselDebug
             if (conditional.HasIf())
             {
                 GraphFIR.IO.Output ifEnableCond = enableCond;
-                if (parentHelper.Mod.EnableCon != null)
+                if (parentHelper.Mod.IsConditional)
                 {
                     GraphFIR.FIRAnd chainConditions = new GraphFIR.FIRAnd(parentHelper.Mod.EnableCon, enableCond, new FIRRTL.UIntType(1), null);
                     parentHelper.AddNodeToModule(chainConditions);
@@ -533,7 +533,7 @@ namespace ChiselDebug
                 parentHelper.AddNodeToModule(notEnableComponent);
 
                 GraphFIR.IO.Output elseEnableCond = notEnableComponent.Result;
-                if (parentHelper.Mod.EnableCon != null)
+                if (parentHelper.Mod.IsConditional)
                 {
                     GraphFIR.FIRAnd chainConditions = new GraphFIR.FIRAnd(parentHelper.Mod.EnableCon, elseEnableCond, new FIRRTL.UIntType(1), null);
                     parentHelper.AddNodeToModule(chainConditions);

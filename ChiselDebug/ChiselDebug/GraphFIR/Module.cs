@@ -17,6 +17,7 @@ namespace ChiselDebug.GraphFIR
         private readonly Dictionary<Input, Wire> DuplexOutputWires = new Dictionary<Input, Wire>();
         private readonly Module ParentScopeView;
         public Output EnableCon { get; private set; }
+        public bool IsConditional => EnableCon != null;
         
 
         public Module(string name, Module parentScope, FirrtlNode defNode) : base(defNode)
