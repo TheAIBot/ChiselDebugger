@@ -464,7 +464,10 @@ namespace ChiselDebug.CombGraph
                         depOnCons.Add(con.From);
                         continue;
                     }
-                    missingCons.Add(con.From);
+                    if (!seenCons.Contains(con.From))
+                    {
+                        missingCons.Add(con.From);
+                    }
                 }
             }
 
@@ -479,17 +482,17 @@ namespace ChiselDebug.CombGraph
                     }
                     return;
                 }
+
                 foreach (var input in conInputs)
                 {
                     Output condition = input.GetConnectionCondition(output);
-                    if (condition != null && !seenCons.Contains(condition))
+                    if (condition != null && !seenCons.Contains(condition) && condition != output)
                     {
                         HashSet<Output> blocked;
                         if (!blockedOutputs.TryGetValue(condition, out blocked))
                         {
                             blocked = new HashSet<Output>();
                             blockedOutputs.Add(condition, blocked);
-
                         }
 
                         blocked.Add(output);
@@ -500,6 +503,7 @@ namespace ChiselDebug.CombGraph
                         {
                             computeOrder.Add(new Computable(output));
                         }
+
                         toTraverse.Enqueue((output, input));
                     }
                 }
@@ -694,6 +698,20 @@ namespace ChiselDebug.CombGraph
                 foreach (var output in blocked.Value)
                 {
                     depForOutputs.Add(new Output[] { output });
+                }
+            }
+            foreach (var blocked in nodeInputBlocker)
+            {
+                foreach (var node in blocked.Value)
+                {
+                    depForOutputs.Add(node.GetOutputs());
+                }
+            }
+            foreach (var blocked in modInputBlocker)
+            {
+                foreach (var inputs in blocked.Value)
+                {
+                    depForOutputs.Add(new Output[] { (Output)inputs.GetPaired() });
                 }
             }
 

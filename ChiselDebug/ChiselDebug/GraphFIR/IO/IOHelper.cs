@@ -74,12 +74,15 @@ namespace ChiselDebug.GraphFIR.IO
         public static void BypassCondConnectionsThroughCondModules(Module mod)
         {
             HashSet<Module> containedCondMods = new HashSet<Module>();
-            foreach (var condNode in mod.GetAllNodes().OfType<Conditional>())
+            foreach (var node in mod.GetAllNodes())
             {
-                foreach (var condMod in condNode.CondMods)
+                if (node is Conditional condNode)
                 {
-                    containedCondMods.Add(condMod.Mod);
-                    BypassCondConnectionsThroughCondModules(condMod.Mod);
+                    foreach (var condMod in condNode.CondMods)
+                    {
+                        containedCondMods.Add(condMod.Mod);
+                        BypassCondConnectionsThroughCondModules(condMod.Mod);
+                    }
                 }
             }
 
