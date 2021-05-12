@@ -1,6 +1,6 @@
 import chisel3._
 
-class When1xVectorAccess extends Module {
+class When1xVectorAccess extends ModuleWithIO {
     val io = IO(new Bundle{
         val read = Input(Bool())
         val write = Input(Bool())
@@ -21,7 +21,7 @@ class When1xVectorAccess extends Module {
     }
 }
 
-class When2xVectorAccess extends Module {
+class When2xVectorAccess extends ModuleWithIO {
     val io = IO(new Bundle{
         val read1 = Input(Bool())
         val read2 = Input(Bool())
@@ -48,7 +48,7 @@ class When2xVectorAccess extends Module {
     }
 }
 
-class When3xVectorAccess extends Module {
+class When3xVectorAccess extends ModuleWithIO {
     val io = IO(new Bundle{
         val read1 = Input(Bool())
         val read2 = Input(Bool())
@@ -81,7 +81,7 @@ class When3xVectorAccess extends Module {
     }
 }
 
-class When1xMemAccess extends Module {
+class When1xMemAccess extends ModuleWithIO {
     val io = IO(new Bundle{
         val read = Input(Bool())
         val write = Input(Bool())
@@ -102,7 +102,7 @@ class When1xMemAccess extends Module {
     }
 }
 
-class When2xMemAccess extends Module {
+class When2xMemAccess extends ModuleWithIO {
     val io = IO(new Bundle{
         val read1 = Input(Bool())
         val read2 = Input(Bool())
@@ -129,7 +129,7 @@ class When2xMemAccess extends Module {
     }
 }
 
-class When3xMemAccess extends Module {
+class When3xMemAccess extends ModuleWithIO {
     val io = IO(new Bundle{
         val read1 = Input(Bool())
         val read2 = Input(Bool())
@@ -162,7 +162,7 @@ class When3xMemAccess extends Module {
     }
 }
 
-class When1xDuplexInput extends Module {
+class When1xDuplexInput extends ModuleWithIO {
     val io = IO(new Bundle{
         val en1 = Input(Bool())
         val din = Input(UInt(8.W))
@@ -178,7 +178,7 @@ class When1xDuplexInput extends Module {
     }
 }
 
-class WhenWireCondInput extends Module {
+class WhenWireCondInput extends ModuleWithIO {
     val io = IO(new Bundle{
         val en1 = Input(Bool())
         val din = Input(UInt(8.W))
@@ -198,7 +198,7 @@ class WhenWireCondInput extends Module {
     }
 }
 
-class WhenConstCondInput extends Module {
+class WhenConstCondInput extends ModuleWithIO {
     val io = IO(new Bundle{
         val en1 = Input(Bool())
         val din = Input(UInt(8.W))
@@ -215,42 +215,5 @@ class WhenConstCondInput extends Module {
     io.dout1 := 0.U
     when(wire.asBool()) {
         io.dout1 := io.din + io.din
-    }
-}
-
-class SyncReadMemScopeIssue extends Module {
-    val io = IO(new Bundle{
-        val read = Input(Bool())
-        val index1 = Input(UInt(2.W))
-        val dout = Output(UInt(8.W))
-    })
-
-    val mem = SyncReadMem(4, UInt(8.W))
-    io.dout := mem.read(io.index1, io.read)
-}
-
-class Test1 extends Module {
-    val io = IO(new Bundle{
-        val in = Input(UInt(8.W))
-        val out = Output(UInt(8.W))
-    })
-
-    io.out := io.in
-}
-
-class Test2 extends Module {
-    val io = IO(new Bundle{
-        val in = Input(UInt(8.W))
-        val read = Input(Bool())
-        val out1 = Output(UInt(8.W))
-        val out2 = Output(UInt(8.W))
-    })
-
-    io.out1 := io.in
-    io.out2 := io.in
-    when (io.read) {
-        val test = Module(new Test1())
-        test.io.in := io.in
-        io.out1 := test.io.out
     }
 }
