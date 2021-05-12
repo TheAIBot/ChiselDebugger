@@ -70,5 +70,101 @@ namespace ChiselDebug.GraphFIR.IO
             Debug.Assert(bypassFromIO.All(x => !x.IsConnectedToAnything()));
             Debug.Assert(bypassToIO.All(x => !x.IsConnectedToAnything()));
         }
+
+        public static void BypassCondConnectionsThroughCondModules(Module mod)
+        {
+            HashSet<Module> containedCondMods = new HashSet<Module>();
+            foreach (var condNode in mod.GetAllNodes().OfType<Conditional>())
+            {
+                foreach (var condMod in condNode.CondMods)
+                {
+                    containedCondMods.Add(condMod.Mod);
+                    BypassCondConnectionsThroughCondModules(condMod.Mod);
+                }
+            }
+
+            if (!mod.IsConditional)
+            {
+                return;
+            }
+
+            List<ScalarIO> scalars = new List<ScalarIO>();
+            foreach (var node in mod.GetAllNodes())
+            {
+                foreach (var io in node.GetIO().ToArray())
+                {
+                    scalars.Clear();
+                    foreach (var scalar in io.Flatten(scalars))
+                    {
+                        if (scalar is Output output)
+                        {
+                            foreach (var input in output.GetConnectedInputs().ToArray())
+                            {
+                                if (input.GetModResideIn() == mod || containedCondMods.Contains(input.GetModResideIn()))
+                                {
+                                    continue;
+                                }
+
+                                Output condition = input.GetConnectionCondition(output);
+                                if (condition != null)
+                                {
+                                    Input flipped = (Input)output.Flip(mod);
+                                    mod.AddAnonymousInternalIO(flipped);
+                                    Output extOutput = (Output)flipped.GetPaired();
+
+
+                                    if (mod.IsAnonymousExtIntIO(output))
+                                    {
+                                        output.ConnectToInput(flipped, false, false, condition);
+                                    }
+                                    else
+                                    {
+                                        output.ConnectToInput(flipped);
+                                    }
+
+                                    input.ReplaceConditionalConnection(output, extOutput, condition);
+                                }
+                            }
+                        }
+                        else if (scalar is Input input)
+                        {
+                            foreach (var cons in input.GetConnections())
+                            {
+                                if (cons.From.GetModResideIn() == mod || containedCondMods.Contains(cons.From.GetModResideIn()))
+                                {
+                                    continue;
+                                }
+
+                                if (cons.From.GetModResideIn() != mod)
+                                {
+                                    Input flipped = (Input)cons.From.Flip(mod);
+                                    mod.AddAnonymousExternalIO(flipped);
+                                    Output intOutput = (Output)flipped.GetPaired();
+
+
+                                    if (cons.Condition != null)
+                                    {
+                                        cons.From.ConnectToInput(flipped, false, false, cons.Condition);
+                                        input.ReplaceConditionalConnection(cons.From, intOutput, cons.Condition);
+                                    }
+                                    else
+                                    {
+                                        cons.From.ConnectToInput(flipped);
+                                        cons.From.DisconnectInput(input);
+                                        intOutput.ConnectToInput(input);
+                                    }
+
+
+                                }
+                            }
+                        }
+                        else
+                        {
+                            throw new Exception($"Unknown ScalarIO: {scalar.GetType()}");
+                        }
+                    }
+                }
+            }
+        }
     }
 }

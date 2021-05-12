@@ -208,6 +208,11 @@ namespace ChiselDebug
             //should still work on the assumption that only
             //connections from a source to a sink are possible.
             mod.RemoveAllWires();
+
+            if (!mod.IsConditional)
+            {
+                GraphFIR.IO.IOHelper.BypassCondConnectionsThroughCondModules(mod);
+            }
         }
 
         private static void VisitPort(VisitHelper helper, FIRRTL.Port port)
@@ -466,9 +471,6 @@ namespace ChiselDebug
 
         private static void ConnectIO(VisitHelper helper, GraphFIR.IO.FIRIO from, GraphFIR.IO.FIRIO to, bool isPartial)
         {
-            bool isConditionalCon = from.GetModResideIn() != helper.Mod || to.GetModResideIn() != helper.Mod;
-            Debug.Assert(!isConditionalCon || (isConditionalCon && helper.Mod.IsConditional));
-
             GraphFIR.Module fromMod = from.GetModResideIn();
             GraphFIR.Module toMod = to.GetModResideIn();
 
@@ -807,7 +809,7 @@ namespace ChiselDebug
                 string duplexOutputName = helper.Mod.GetDuplexOutputName(input);
 
                 //Try see if it was already created
-                if (helper.Mod.TryGetIO(duplexOutputName, false, out var wireOut))
+                if (input.GetModResideIn().TryGetIO(duplexOutputName, false, out var wireOut))
                 {
                     return (GraphFIR.IO.Output)wireOut;
                 }

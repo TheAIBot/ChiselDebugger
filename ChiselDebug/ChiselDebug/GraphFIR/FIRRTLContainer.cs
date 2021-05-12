@@ -11,20 +11,73 @@ namespace ChiselDebug.GraphFIR
     {
         private readonly List<FIRIO> AllIOInOrder = new List<FIRIO>();
         public readonly Dictionary<string, FIRIO> ExternalIO = new Dictionary<string, FIRIO>();
-        public readonly Dictionary<string, FIRIO> InternalIO = new Dictionary<string, FIRIO>();   
+        public readonly Dictionary<string, FIRIO> InternalIO = new Dictionary<string, FIRIO>();
+        private int UniqueNameGen = 0;
 
         public FIRRTLContainer(FirrtlNode defNode) : base(defNode) { }
 
         public void AddExternalIO(FIRIO io)
         {
-            Debug.Assert(io.Flatten().All(x => x.Node == this));
-
             FIRIO flipped = io.Flip(this);
-            ExternalIO.Add(io.Name, io);
-            InternalIO.Add(io.Name, flipped);
-            AllIOInOrder.Add(flipped);
+            AddIO(io, flipped);
+        }
 
-            AddPairedIO(io, flipped);
+        public void AddInternalIO(FIRIO io)
+        {
+            FIRIO flipped = io.Flip(this);
+            AddIO(flipped, io);
+        }
+
+        private void AddIO(FIRIO externalIO, FIRIO internalIO)
+        {
+            Debug.Assert(externalIO.Flatten().All(x => x.Node == this));
+            Debug.Assert(internalIO.Flatten().All(x => x.Node == this));
+
+            ExternalIO.Add(externalIO.Name, externalIO);
+            InternalIO.Add(internalIO.Name, internalIO);
+            AllIOInOrder.Add(internalIO);
+
+            AddPairedIO(externalIO, internalIO);
+        }
+
+        public void AddAnonymousExternalIO(ScalarIO io)
+        {
+            string uniqueName = $"~${UniqueNameGen++}";
+            io.SetName(uniqueName);
+
+            AddExternalIO(io);
+        }
+
+        public void AddAnonymousInternalIO(ScalarIO io)
+        {
+            string uniqueName = $"~${UniqueNameGen++}";
+            io.SetName(uniqueName);
+
+            AddInternalIO(io);
+        }
+
+        public bool IsAnonymousExtIntIO(FIRIO io)
+        {
+            if (io.IsAnonymous)
+            {
+                return false;
+            }
+
+            return io.Name.StartsWith("~$");
+        }
+
+        public bool IsExternalModIO(FIRIO io)
+        {
+            FIRIO rootIO = io.GetRootIO();
+            Debug.Assert(rootIO.Node == this && (ExternalIO.ContainsKey(rootIO.Name) || InternalIO.ContainsKey(rootIO.Name)));
+            return ExternalIO.ContainsKey(rootIO.Name);
+        }
+
+        public bool IsInternalModIO(FIRIO io)
+        {
+            FIRIO rootIO = io.GetRootIO();
+            Debug.Assert(rootIO.Node == this && (ExternalIO.ContainsKey(rootIO.Name) || InternalIO.ContainsKey(rootIO.Name)));
+            return InternalIO.ContainsKey(rootIO.Name);
         }
 
         internal void ReserveMemory(int extIntSize)

@@ -69,7 +69,7 @@ namespace ChiselDebug.GraphFIR
             mod.SetModResideIn(this);
             Nodes.Add(mod);
 
-            IOBundle bundle = new IOBundle(mod, bundleName, mod.ExternalIO.Values.ToList());
+            IOBundle bundle = new IOBundle(mod, bundleName, mod.ExternalIO.Values.ToList(), false);
             NameToIO.Add(bundleName, bundle);
             BundleToModule.Add(bundle, mod);
         }
@@ -100,6 +100,10 @@ namespace ChiselDebug.GraphFIR
         public void AddConditional(Conditional cond)
         {
             cond.SetModResideIn(this);
+            foreach (var condMod in cond.CondMods)
+            {
+                condMod.Mod.SetModResideIn(this);
+            }
             Nodes.Add(cond);
         }
 
@@ -159,7 +163,7 @@ namespace ChiselDebug.GraphFIR
                 {
                     foreach (var condMod in condNode.CondMods)
                     {
-                        if (condMod.Mod.TryGetIOInternal(ioName, modulesOnly, false, out container))
+                        if (condMod.Mod.TryGetIO(ioName, modulesOnly, out container))
                         {
                             return true;
                         }

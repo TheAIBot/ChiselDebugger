@@ -31,6 +31,11 @@ namespace ChiselDebug.GraphFIR.IO
 
         public Module GetModResideIn()
         {
+            if (Node is Module mod)
+            {
+                return mod;
+            }
+
             return Node.ResideIn;
         }
 
@@ -54,6 +59,17 @@ namespace ChiselDebug.GraphFIR.IO
 
             pathToRoot.Reverse();
             return string.Join('.', pathToRoot);
+        }
+
+        public FIRIO GetRootIO()
+        {
+            FIRIO io = this;
+            while (io.ParentIO != null)
+            {
+                io = io.ParentIO;
+            }
+
+            return io;
         }
 
         public virtual FIRIO GetInput()

@@ -420,8 +420,12 @@ namespace ChiselDebug.CombGraph
             {
                 startingPoints.AddRange(constVal.GetOutputs());
             }
+            foreach (var statePres in module.GetAllNestedNodesOfType<IStatePreserving>())
+            {
+                startingPoints.AddRange(((FIRRTLNode)(statePres)).GetOutputs());
+            }
 
-            var monoComb = MakeCombComputeNode(startingPoints.ToArray(), new HashSet<Output>(), false, false);
+            var monoComb = MakeCombComputeNode(startingPoints.ToArray(), new HashSet<Output>(), false, true);
             if (monoComb.depTo.Count != 0)
             {
                 throw new Exception();

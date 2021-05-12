@@ -42,6 +42,25 @@ namespace ChiselDebug.GraphFIR.IO
             throw new Exception("Input is not connected to the given output.");
         }
 
+        public void ReplaceConditionalConnection(Output connectedTo, Output replaceWith, Output condition)
+        {
+            if (CondCons != null)
+            {
+                for (int i = 0; i < CondCons.Count; i++)
+                {
+                    if (CondCons[i].From == connectedTo)
+                    {
+                        connectedTo.DisconnectOnlyOutputSide(this);
+                        replaceWith.ConnectOnlyOutputSide(this);
+                        CondCons[i] = new Connection(replaceWith, condition);
+                        return;
+                    }
+                }
+            }
+
+            throw new Exception("Input is not conditionally connected to the given output.");
+        }
+
         public override bool IsConnected()
         {
             return Con != null || (CondCons != null && CondCons.Count > 0);
