@@ -124,6 +124,10 @@ namespace ChiselDebug
                                 continue;
                             }
 
+                            if (!inputToNode.ContainsKey(input))
+                            {
+                                continue;
+                            }
                             var to = inputToNode[input];
                             graph.AddEdge(from, to);
                         }
