@@ -42,23 +42,37 @@ namespace ChiselDebug.GraphFIR.IO
             throw new Exception("Input is not connected to the given output.");
         }
 
-        public void ReplaceConditionalConnection(Output connectedTo, Output replaceWith, Output condition)
+        public void ReplaceConnection(Output connectedTo, Output replaceWith, Output condition)
         {
-            if (CondCons != null)
+            if (condition == null)
             {
-                for (int i = 0; i < CondCons.Count; i++)
+                if (Con != connectedTo)
                 {
-                    if (CondCons[i].From == connectedTo)
+                    throw new Exception("Input is not connected to the given output.");
+                }
+
+                connectedTo.DisconnectOnlyOutputSide(this);
+                replaceWith.ConnectOnlyOutputSide(this);
+                Con = replaceWith;
+            }
+            else
+            {
+                if (CondCons != null)
+                {
+                    for (int i = 0; i < CondCons.Count; i++)
                     {
-                        connectedTo.DisconnectOnlyOutputSide(this);
-                        replaceWith.ConnectOnlyOutputSide(this);
-                        CondCons[i] = new Connection(replaceWith, condition);
-                        return;
+                        if (CondCons[i].From == connectedTo)
+                        {
+                            connectedTo.DisconnectOnlyOutputSide(this);
+                            replaceWith.ConnectOnlyOutputSide(this);
+                            CondCons[i] = new Connection(replaceWith, condition);
+                            return;
+                        }
                     }
                 }
-            }
 
-            throw new Exception("Input is not conditionally connected to the given output.");
+                throw new Exception("Input is not conditionally connected to the given output.");
+            }
         }
 
         public override bool IsConnected()
@@ -189,6 +203,14 @@ namespace ChiselDebug.GraphFIR.IO
             }
             else
             {
+                if (CondCons != null)
+                {
+                    foreach (var condCon in CondCons)
+                    {
+                        condCon.From.DisconnectOnlyOutputSide(this);
+                    }
+                    CondCons.Clear();
+                }
                 Con = con;
             }
         }

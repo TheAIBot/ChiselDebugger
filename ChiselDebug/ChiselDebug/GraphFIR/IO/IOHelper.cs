@@ -125,7 +125,7 @@ namespace ChiselDebug.GraphFIR.IO
                                         output.ConnectToInput(flipped);
                                     }
 
-                                    input.ReplaceConditionalConnection(output, extOutput, condition);
+                                    input.ReplaceConnection(output, extOutput, condition);
                                 }
                             }
                         }
@@ -144,20 +144,8 @@ namespace ChiselDebug.GraphFIR.IO
                                     mod.AddAnonymousExternalIO(flipped);
                                     Output intOutput = (Output)flipped.GetPaired();
 
-
-                                    if (cons.Condition != null)
-                                    {
-                                        cons.From.ConnectToInput(flipped, false, false, cons.Condition);
-                                        input.ReplaceConditionalConnection(cons.From, intOutput, cons.Condition);
-                                    }
-                                    else
-                                    {
-                                        cons.From.ConnectToInput(flipped);
-                                        cons.From.DisconnectInput(input);
-                                        intOutput.ConnectToInput(input);
-                                    }
-
-
+                                    cons.From.ConnectToInput(flipped, false, false, cons.Condition);
+                                    input.ReplaceConnection(cons.From, intOutput, cons.Condition);
                                 }
                             }
                         }
