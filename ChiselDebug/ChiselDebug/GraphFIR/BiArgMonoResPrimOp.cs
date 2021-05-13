@@ -38,21 +38,23 @@ namespace ChiselDebug.GraphFIR
 
         public override void Compute()
         {
-            A.UpdateValueFromSource();
-            B.UpdateValueFromSource();
+            ref BinaryVarValue aVal = ref A.UpdateValueFromSourceFast();
+            ref BinaryVarValue bVal = ref B.UpdateValueFromSourceFast();
+            ref BinaryVarValue resultVal = ref Result.GetValue();
 
-            BinaryVarValue aVal = A.Value.GetValue();
-            BinaryVarValue bVal = B.Value.GetValue();
-            BinaryVarValue resultVal = Result.Value.GetValue();
-
-            if (!aVal.IsValidBinary() || !bVal.IsValidBinary())
+            Debug.Assert(aVal.IsValidBinary == aVal.Bits.IsAllBinary());
+            Debug.Assert(bVal.IsValidBinary == bVal.Bits.IsAllBinary());
+            if (!aVal.IsValidBinary || !bVal.IsValidBinary)
             {
-                Array.Fill(resultVal.Bits, BitState.X);
+                resultVal.SetAllUnknown();
+                return;
             }
 
-            BiArgCompute(aVal, bVal, resultVal);
+            resultVal.IsValidBinary = true;
+            BiArgCompute(ref aVal, ref bVal, ref resultVal);
+            Debug.Assert(resultVal.IsValidBinary == resultVal.Bits.IsAllBinary());
         }
-        protected abstract void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result);
+        protected abstract void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result);
 
         internal override void InferType()
         {
@@ -73,7 +75,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRAdd(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("+", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
             //const int bitsInLong = 64;
             //if (a.Bits.Length <= bitsInLong && 
@@ -98,7 +100,7 @@ namespace ChiselDebug.GraphFIR
             (UIntType a, SIntType b) => new SIntType(Math.Max(a.Width, b.Width) + 1),
             (SIntType a, UIntType b) => new SIntType(Math.Max(a.Width, b.Width) + 1),
             (SIntType a, SIntType b) => new SIntType(Math.Max(a.Width, b.Width) + 1),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -106,7 +108,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRSub(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("-", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
             //const int bitsInLong = 64;
             //if (a.Bits.Length <= bitsInLong &&
@@ -131,7 +133,7 @@ namespace ChiselDebug.GraphFIR
             (UIntType a, SIntType b) => new SIntType(Math.Max(a.Width, b.Width) + 1),
             (SIntType a, UIntType b) => new SIntType(Math.Max(a.Width, b.Width) + 1),
             (SIntType a, SIntType b) => new SIntType(Math.Max(a.Width, b.Width) + 1),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -139,7 +141,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRMul(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("*", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
             //const int bitsInLong = 64;
             //if (a.Bits.Length <= bitsInLong &&
@@ -164,7 +166,7 @@ namespace ChiselDebug.GraphFIR
             (UIntType a, SIntType b) => new SIntType(a.Width + b.Width),
             (SIntType a, UIntType b) => new SIntType(a.Width + b.Width),
             (SIntType a, SIntType b) => new SIntType(a.Width + b.Width),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -172,7 +174,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRDiv(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("/", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
             //const int bitsInLong = 64;
             //if (a.Bits.Length <= bitsInLong &&
@@ -198,7 +200,7 @@ namespace ChiselDebug.GraphFIR
                 //Handle divide by zero
                 if (bVal == 0)
                 {
-                    Array.Fill(result.Bits, BitState.X);
+                    result.SetAllUnknown();
                 }
                 else
                 {
@@ -213,7 +215,7 @@ namespace ChiselDebug.GraphFIR
             (UIntType a, SIntType b) => new SIntType(a.Width + 1),
             (SIntType a, UIntType b) => new SIntType(a.Width),
             (SIntType a, SIntType b) => new SIntType(a.Width + 1),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -221,7 +223,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRRem(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("%", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
             //const int bitsInLong = 64;
             //if (a.Bits.Length <= bitsInLong &&
@@ -246,7 +248,7 @@ namespace ChiselDebug.GraphFIR
                 BigInteger bVal = b.AsBigInteger(B.Type is SIntType);
                 if (bVal == 0)
                 {
-                    Array.Fill(result.Bits, BitState.X);
+                    result.SetAllUnknown();
                 }
                 else
                 {
@@ -261,7 +263,7 @@ namespace ChiselDebug.GraphFIR
             (UIntType a, SIntType b) => new UIntType(Math.Min(a.Width, b.Width)),
             (SIntType a, UIntType b) => new SIntType(Math.Min(a.Width, b.Width) + 1),
             (SIntType a, SIntType b) => new SIntType(Math.Min(a.Width, b.Width)),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -269,23 +271,23 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRDshl(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("<<", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
             int shift = b.AsInt();
-            Array.Fill(result.Bits, BitState.Zero, 0, shift);
+            result.Bits.Slice(0, shift).Fill(BitState.Zero);
 
             int copyLength = Math.Min(result.Bits.Length - shift, a.Bits.Length);
-            Array.Copy(a.Bits, 0, result.Bits, shift, copyLength);
+            a.Bits.CopyTo(result.Bits.Slice(shift, copyLength));
 
             BitState signFill = A.Type is SIntType ? a.Bits[^1] : BitState.Zero;
-            result.Bits.AsSpan(shift + copyLength).Fill(signFill);
+            result.Bits.Slice(shift + copyLength).Fill(signFill);
         }
 
         protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
         {
             (UIntType a, UIntType b) => new UIntType(a.Width + (1 << b.Width) - 1),
             (SIntType a, UIntType b) => new SIntType(a.Width + (1 << b.Width) - 1),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -293,18 +295,18 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRDshr(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base(">>", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
             int shift = b.AsInt();
-            Array.Fill(result.Bits, A.Type is SIntType ? a.Bits[^1] : BitState.Zero);
-            Array.Copy(a.Bits, Math.Min(a.Bits.Length - 1, shift), result.Bits, 0, Math.Max(0, a.Bits.Length - shift));
+            result.Bits.Fill(A.Type is SIntType ? a.Bits[^1] : BitState.Zero);
+            a.Bits.Slice(Math.Min(a.Bits.Length - 1, shift), Math.Max(0, a.Bits.Length - shift)).CopyTo(result.Bits);
         }
 
         protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
         {
             (UIntType a, UIntType b) => new UIntType(a.Width),
             (SIntType a, UIntType b) => new SIntType(a.Width),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -312,10 +314,13 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRCat(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("cat", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
-            Array.Copy(a.Bits, 0, result.Bits, b.Bits.Length, a.Bits.Length);
-            Array.Copy(b.Bits, result.Bits, b.Bits.Length);
+            Span<BitState> aCopy = result.Bits.Slice(b.Bits.Length);
+            Span<BitState> bCopy = result.Bits.Slice(0);
+
+            a.Bits.CopyTo(aCopy);
+            b.Bits.CopyTo(bCopy);
         }
 
         protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
@@ -324,7 +329,7 @@ namespace ChiselDebug.GraphFIR
             (UIntType a, SIntType b) => new UIntType(a.Width + b.Width),
             (SIntType a, UIntType b) => new UIntType(a.Width + b.Width),
             (SIntType a, SIntType b) => new UIntType(a.Width + b.Width),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -338,7 +343,7 @@ namespace ChiselDebug.GraphFIR
             (UIntType a, SIntType b) => new UIntType(1),
             (SIntType a, UIntType b) => new UIntType(1),
             (SIntType a, SIntType b) => new UIntType(1),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -346,9 +351,9 @@ namespace ChiselDebug.GraphFIR
     {
         public FIREq(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("=", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
-            bool value = a.SameValueZeroExtend(b);
+            bool value = a.SameValue(ref b, A.Type is SIntType);
             result.Bits[0] = value ? BitState.One : BitState.Zero;
         }
     }
@@ -357,9 +362,9 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRNeq(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("≠", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
-            bool value = a.SameValueZeroExtend(b);
+            bool value = a.SameValue(ref b, A.Type is SIntType);
             result.Bits[0] = !value ? BitState.One : BitState.Zero;
         }
     }
@@ -368,7 +373,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRGeq(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("≥", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
             //const int bitsInLong = 64;
             //if (a.Bits.Length <= bitsInLong &&
@@ -402,7 +407,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRLeq(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("≤", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
             //const int bitsInLong = 64;
             //if (a.Bits.Length <= bitsInLong &&
@@ -436,7 +441,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRGt(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base(">", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
             //const int bitsInLong = 64;
             //if (a.Bits.Length <= bitsInLong &&
@@ -470,7 +475,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRLt(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("<", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
             //const int bitsInLong = 64;
             //if (a.Bits.Length <= bitsInLong &&
@@ -510,7 +515,7 @@ namespace ChiselDebug.GraphFIR
             (UIntType a, SIntType b) => new UIntType(Math.Max(a.Width, b.Width)),
             (SIntType a, UIntType b) => new UIntType(Math.Max(a.Width, b.Width)),
             (SIntType a, SIntType b) => new UIntType(Math.Max(a.Width, b.Width)),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -518,7 +523,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRAnd(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("&", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
             //const int bitsInLong = 64;
             //if (a.Bits.Length <= bitsInLong &&
@@ -542,7 +547,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIROr(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("|", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
             //const int bitsInLong = 64;
             //if (a.Bits.Length <= bitsInLong &&
@@ -566,7 +571,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRXor(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("^", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
             //const int bitsInLong = 64;
             //if (a.Bits.Length <= bitsInLong &&
@@ -594,20 +599,20 @@ namespace ChiselDebug.GraphFIR
             this.ShiftBy = (int)((ConstValue)bIn.Node).Value.Value;
         }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
             for (int i = 0; i < a.Bits.Length; i++)
             {
                 result.Bits[i + ShiftBy] = a.Bits[i];
             }
-            Array.Fill(result.Bits, BitState.Zero, 0, ShiftBy);
+            result.Bits.Slice(0, ShiftBy).Fill(BitState.Zero);
         }
 
         protected override IFIRType BiArgInferType() => A.Type switch
         {
             UIntType a => new UIntType(a.Width + ShiftBy),
             SIntType a => new SIntType(a.Width + ShiftBy),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -619,7 +624,7 @@ namespace ChiselDebug.GraphFIR
             this.ShiftBy = (int)((ConstValue)bIn.Node).Value.Value;
         }
 
-        protected override void BiArgCompute(BinaryVarValue a, BinaryVarValue b, BinaryVarValue result)
+        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
             //Special logic for when shifting by more than the wire length.
             //In that case the result should be equal to zero if unsigned and
@@ -647,7 +652,7 @@ namespace ChiselDebug.GraphFIR
         {
             UIntType a => new UIntType(Math.Max(a.Width - ShiftBy, 1)),
             SIntType a => new SIntType(Math.Max(a.Width - ShiftBy, 1)),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 }

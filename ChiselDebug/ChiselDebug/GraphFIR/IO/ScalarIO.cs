@@ -1,16 +1,16 @@
 ﻿using FIRRTL;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using VCDReader;
 
 namespace ChiselDebug.GraphFIR.IO
 {
     public abstract class ScalarIO : FIRIO
     {
         public GroundType Type { get; private set; }
-        private Output EnabledCond = null;
         private bool IsInferingTypeNow = false;
         public ValueType Value;
-        public bool IsEnabled => EnabledCond == null || EnabledCond.Value.IsTrue();
 
         public ScalarIO(FIRRTLNode node, string name, IFIRType type) : base(node, name)
         {
@@ -18,21 +18,6 @@ namespace ChiselDebug.GraphFIR.IO
             {
                 this.Type = ground;
             }
-        }
-
-        public void SetEnabledCondition(Output enabledCond)
-        {
-            EnabledCond = enabledCond;
-        }
-
-        public Output GetConditional()
-        {
-            return EnabledCond;
-        }
-
-        public bool IsConditional()
-        {
-            return EnabledCond != null;
         }
 
         public abstract bool IsConnected();
@@ -70,6 +55,11 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
+        internal void RemoveType()
+        {
+            Type = null;
+        }
+
         public abstract void DisconnectAll();
 
         public void InferType()
@@ -89,6 +79,11 @@ namespace ChiselDebug.GraphFIR.IO
         public void SetDefaultvalue()
         {
             Value = new ValueType(Type);
+        }
+
+        public ref BinaryVarValue GetValue()
+        {
+            return ref Value.Value;
         }
     }
 }

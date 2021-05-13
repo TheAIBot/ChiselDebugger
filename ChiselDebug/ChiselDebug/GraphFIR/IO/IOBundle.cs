@@ -37,7 +37,7 @@ namespace ChiselDebug.GraphFIR.IO
             return IO.Values.FirstOrDefault()?.IsPartOfAggregateIO ?? false;
         }
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, bool isConditional = false)
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Output condition = null)
         {
             if (input is not IOBundle)
             {
@@ -73,19 +73,19 @@ namespace ChiselDebug.GraphFIR.IO
 
                 if (a is Output aOut && b is Input bIn)
                 {
-                    aOut.ConnectToInput(bIn, allowPartial, asPassive, isConditional);
+                    aOut.ConnectToInput(bIn, allowPartial, asPassive, condition);
                 }
                 else if (a is Input aIn && b is Output bOut)
                 {
-                    bOut.ConnectToInput(aIn, allowPartial, asPassive, isConditional);
+                    bOut.ConnectToInput(aIn, allowPartial, asPassive, condition);
                 }
                 else if (a is IOBundle aBundle && b is IOBundle bBundle)
                 {
-                    aBundle.ConnectToInput(bBundle, allowPartial, asPassive, isConditional);
+                    aBundle.ConnectToInput(bBundle, allowPartial, asPassive, condition);
                 }
                 else if (a is Vector aVec && b is Vector bVec)
                 {
-                    aVec.ConnectToInput(bVec, allowPartial, asPassive, isConditional);
+                    aVec.ConnectToInput(bVec, allowPartial, asPassive, condition);
                 }
                 else
                 {

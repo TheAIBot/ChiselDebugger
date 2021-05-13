@@ -13,8 +13,9 @@ namespace ChiselDebug.GraphFIR
         public readonly FIRIO[] Choises;
         public readonly Input Decider;
         public readonly FIRIO Result;
+        public readonly bool IsVectorIndexer;
 
-        public Mux(List<FIRIO> choises, Output decider, FirrtlNode defNode) : base(defNode)
+        public Mux(List<FIRIO> choises, Output decider, FirrtlNode defNode, bool isVectorIndexer = false) : base(defNode)
         {
             choises = choises.Select(x => x.GetOutput()).ToList();
             if (!choises.All(x => x.IsPassiveOfType<Output>()))
@@ -25,7 +26,12 @@ namespace ChiselDebug.GraphFIR
             this.Choises = choises.Select(x => x.Flip(this)).ToArray();
             this.Decider = new Input(this, decider.Type);
             this.Result = choises.First().Copy(this);
+            this.IsVectorIndexer = isVectorIndexer;
             Result.SetName(null);
+            foreach (var res in Result.Flatten())
+            {
+                res.RemoveType();
+            }
 
             for (int i = 0; i < Choises.Length; i++)
             {
@@ -63,42 +69,65 @@ namespace ChiselDebug.GraphFIR
 
         public override void Compute()
         {
-            Debug.Assert(Choises.Length <= 2, "Only support multiplexer with two choises");
+            //First pull all results toward the mux
+            ref BinaryVarValue deciderValue = ref Decider.UpdateValueFromSourceFast();
+
+            //If decidor isn't binary then output can't be chosen
+            //so therefore it's set to undecided
+            if (!deciderValue.IsValidBinary)
+            {
+                foreach (var output in Result.Flatten())
+                {
+                    output.GetValue().SetAllUnknown();
+                }
+                return;
+            }
+
+
 
             FIRIO ChosenInput;
-            Decider.UpdateValueFromSource();
-            if (Decider.Value.IsTrue())
+            if (!IsVectorIndexer)
             {
-                ChosenInput = Choises.First();
+                Debug.Assert(Choises.Length <= 2, "Only support multiplexer with two choises");
+
+                if (deciderValue.Bits[0] == BitState.One)
+                {
+                    ChosenInput = Choises.First();
+                }
+                else
+                {
+                    //Conditionally valid
+                    if (Choises.Length == 1)
+                    {
+                        foreach (Output output in Result.Flatten())
+                        {
+                            output.GetValue().SetAllUnknown();
+                        }
+
+                        return;
+                    }
+
+                    ChosenInput = Choises.Last();
+                }
             }
             else
             {
-                //Conditionally valid
-                if (Choises.Length == 1)
-                {
-                    foreach (Output output in Result.Flatten())
-                    {
-                        BinaryVarValue binValue = output.Value.GetValue();
-                        Array.Fill(binValue.Bits, BitState.X);
-                    }
-
-                    return;
-                }
-
-                ChosenInput = Choises.Last();
+                ChosenInput = Choises[deciderValue.AsInt()];
             }
 
-            Input[] from = ChosenInput.Flatten().Cast<Input>().ToArray();
-            Output[] to = Result.Flatten().Cast<Output>().ToArray();
-            Debug.Assert(from.Length == to.Length);
+            List<ScalarIO> from = new List<ScalarIO>();
+            ChosenInput.Flatten(from);
 
-            for (int i = 0; i < from.Length; i++)
+            List<ScalarIO> to = new List<ScalarIO>();
+            Result.Flatten(to);
+            Debug.Assert(from.Count == to.Count);
+
+            for (int i = 0; i < from.Count; i++)
             {
-                from[i].UpdateValueFromSource();
-                BinaryVarValue fromBin = from[i].Value.GetValue();
-                BinaryVarValue toBin = to[i].Value.GetValue();
+                ref BinaryVarValue fromBin = ref ((Input)from[i]).UpdateValueFromSourceFast();
+                ref BinaryVarValue toBin = ref to[i].GetValue();
 
-                toBin.SetBitsAndExtend(fromBin, from[i].Type is SIntType);
+                toBin.SetBitsAndExtend(ref fromBin, from[i].Type is SIntType);
             }
         }
 

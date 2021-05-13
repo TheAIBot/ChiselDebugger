@@ -12,6 +12,8 @@ using System.Text;
 using System.Threading.Tasks;
 using VCDReader;
 
+//[assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
 namespace ChiselDebugTests
 {
     internal static class TestTools
@@ -35,7 +37,7 @@ namespace ChiselDebugTests
             return graph;
         }
 
-        internal static void VerifyChiselTest(string moduleName, string extension, bool testVCD, string modulePath = "ChiselTests", bool isVerilogVCD = true)
+        internal static void VerifyChiselTest(string moduleName, string extension, bool testVCD, string modulePath = "ChiselTests")
         {
             CircuitGraph lowFirGraph = null;
             if (extension == "fir")
@@ -52,14 +54,19 @@ namespace ChiselDebugTests
                 using VCD vcd = VCDReader.Parse.FromFile($"{modulePath}/{moduleName}.vcd");
                 VCDTimeline timeline = new VCDTimeline(vcd);
 
-                VerifyCircuitState(graph, timeline, isVerilogVCD);
+                VerifyCircuitState(graph, timeline, false);
             }
         }
 
         private static VCDTimeline MakeTimeline(string moduleName, string modulePath)
         {
-            using VCD vcd = VCDReader.Parse.FromFile($"{modulePath}/{moduleName}.vcd");
+            using VCD vcd = LoadVCD(moduleName, modulePath);
             return new VCDTimeline(vcd);
+        }
+
+        private static VCD LoadVCD(string moduleName, string modulePath)
+        {
+            return VCDReader.Parse.FromFile($"{modulePath}/{moduleName}.vcd");
         }
 
         internal static CircuitGraph VerifyMakeGraph(string moduleName, string extension, string modulePath)
@@ -78,13 +85,11 @@ namespace ChiselDebugTests
         internal static void VerifyInferTypes(string moduleName, string extension, bool isVerilogVCD, string modulePath)
         {
             CircuitGraph graph = VerifyMakeGraph(moduleName, extension, modulePath);
+            using VCD vcd = LoadVCD(moduleName, modulePath);
 
-            VCDTimeline timeline = MakeTimeline(moduleName, modulePath);
-            CircuitState state = timeline.GetStateAtTime(timeline.TimeInterval.StartInclusive);
-
-            foreach (BinaryVarValue expected in state.VariableValues.Values)
+            foreach (var variables in vcd.Variables)
             {
-                foreach (var variable in expected.Variables)
+                foreach (var variable in variables)
                 {
                     ScalarIO varCon = graph.GetConnection(variable, isVerilogVCD);
                     if (varCon == null)
@@ -92,8 +97,16 @@ namespace ChiselDebugTests
                         continue;
                     }
 
-                    BinaryVarValue actual = varCon.Value.GetValue();
-                    Assert.AreEqual(expected.Bits.Length, actual.Bits.Length);
+                    ref BinaryVarValue  actual = ref varCon.GetValue();
+                    if (!varCon.Value.IsInitialized())
+                    {
+                        continue;
+                    }
+                    if (variable.Size != actual.Bits.Length)
+                    {
+                        Console.WriteLine($"Ref: {variable.Reference}, Expected: {variable.Size}, Actual: {actual.Bits.Length}");
+                    }
+                    Assert.AreEqual(variable.Size, actual.Bits.Length);
                 }
             }
         }
@@ -108,12 +121,25 @@ namespace ChiselDebugTests
 
         internal static void VerifyCircuitState(CircuitGraph graph, VCDTimeline timeline, bool isVerilogVCD)
         {
+            int totalWireStates = 0;
+            int ignoredWireStates = 0;
+            List<string> stateErrors = new List<string>();
             foreach (var state in timeline.GetAllDistinctStates())
             {
                 graph.SetState(state, isVerilogVCD);
+                if (state.Time == timeline.TimeInterval.StartInclusive)
+                {
+                    continue;
+                }
+                if (state.Time == timeline.TimeInterval.InclusiveEnd())
+                {
+                    break;
+                }
 
+                graph.ComputeRemainingGraphFast();
                 foreach (BinaryVarValue expected in state.VariableValues.Values)
                 {
+                
                     foreach (var variable in expected.Variables)
                     {
                         ScalarIO varCon = graph.GetConnection(variable, isVerilogVCD);
@@ -126,30 +152,39 @@ namespace ChiselDebugTests
                             continue;
                         }
 
-                        BinaryVarValue actual = varCon.Value.GetValue();
-                        if (expected.Bits.Length != actual.Bits.Length)
-                        {
+                        totalWireStates++;
+                        ref BinaryVarValue actual = ref varCon.GetValue();
 
-                        }
-                        Assert.AreEqual(expected.Bits.Length, actual.Bits.Length);
-                        for (int i = 0; i < expected.Bits.Length; i++)
+                        for (int i = 0; i < Math.Min(expected.Bits.Length, actual.Bits.Length); i++)
                         {
                             if (!actual.Bits[i].IsBinary())
                             {
-                                continue;
+                                ignoredWireStates++;
+                                break;
                             }
 
                             if (expected.Bits[i] != actual.Bits[i])
                             {
-
+                                //graph.SetStateFast(state, isVerilogVCD);
+                                stateErrors.Add($"\nTime: {state.Time.ToString("N0")}\nName: {expected.Variables[0].Reference}\nExpected: {expected.BitsToString()}\nActual:   {actual.BitsToString()}\n");
+                                goto skipCheckRest;
                             }
-                            Assert.AreEqual(expected.Bits[i], actual.Bits[i]);
                         }
-
-                        //Console.WriteLine($"Name: {expected.Variables[0].Reference}\nExpected: {expected.BitsToString()}\nActual:   {actual.BitsToString()}\n");
                     }
+                skipCheckRest:
+                    int q = 0;
+                }
+
+                if (stateErrors.Count > 0)
+                {
+                    Console.WriteLine($"Wire states: {totalWireStates.ToString("N0")}\nIgnored: {ignoredWireStates.ToString("N0")}");
+                    Console.WriteLine();
+                    Console.WriteLine(graph.StateToString());
+                    Assert.Fail(string.Join('\n', stateErrors));
                 }
             }
+
+            Console.WriteLine($"Wire states: {totalWireStates.ToString("N0")}\nIgnored: {ignoredWireStates.ToString("N0")}");
         }
     }
 }

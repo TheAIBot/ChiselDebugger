@@ -7,8 +7,11 @@ import firrtl.ExecutionOptionsManager
 import firrtl.AnnotationSeq
 import firrtl.options.TargetDirAnnotation
 import scala.util.Random
+import org.scalatest.{FunSuite, ParallelTestExecution}
+import org.scalatest.concurrent.Eventually
 
-class ComputeTester extends FlatSpec with ChiselScalatestTester with Matchers {
+class ComputeTester extends FlatSpec with ChiselScalatestTester with Matchers with Eventually with ParallelTestExecution {
+    val widths = List(1, 2, 5, 6)
     def testModuleUInt(io: ComputeIO[UInt], clock: Clock) {
         for (a <- 0 to 63) {
             for (b <- 0 to 63) {
@@ -41,25 +44,41 @@ class ComputeTester extends FlatSpec with ChiselScalatestTester with Matchers {
     }
 
     ops.scalarUIntOps.foreach(x => {
-        it should "Test single uint " + x._1 in {
-            val testDir = "test_comp_dir/UInt_" + x._1
-            test(new ComputeSingle(x, new ComputeIO[UInt](UInt(6.W), 1, 3))).withAnnotations(Seq(TargetDirAnnotation(testDir))).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
-                {dut=> {
-                    testModuleUInt(dut.io, dut.clock)
+        widths.foreach(aWidth => {
+            widths.foreach(bWidth => {
+                val testName = "UInt" + aWidth + "_UInt" + bWidth + "_" + x._1
+                val testDir = "test_comp_dir/" + testName
+                if (!(x._1 == "bits" && (aWidth < 4 || bWidth < 4)))
+                {                
+                    it should "Test single " + testName in {
+                        test(new ComputeSingle(x, new ComputeIO[UInt](UInt(aWidth.W), UInt(bWidth.W), UInt(6.W), 1, 3))).withAnnotations(Seq(TargetDirAnnotation(testDir))).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
+                            {dut=> {
+                                testModuleUInt(dut.io, dut.clock)
+                            }
+                        }
+                    }
                 }
-            }
-        }
+            })
+        })
     })
 
     ops.scalarSIntOps.foreach(x => {
-        it should "Test single sint " + x._1 in {
-            val testDir = "test_comp_dir/SInt_" + x._1
-            test(new ComputeSingle(x, new ComputeIO[SInt](SInt(6.W), 1, 3))).withAnnotations(Seq(TargetDirAnnotation(testDir))).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
-                {dut=> {
-                    testModuleSInt(dut.io, dut.clock)
+        widths.foreach(aWidth => {
+            widths.foreach(bWidth => {
+                val testName = "SInt" + aWidth + "_SInt" + bWidth + "_" + x._1
+                val testDir = "test_comp_dir/" + testName
+                if (!(x._1 == "bits" && (aWidth < 4 || bWidth < 4)))
+                {                
+                    it should "Test single " + testName in {
+                        test(new ComputeSingle(x, new ComputeIO[SInt](SInt(aWidth.W), SInt(bWidth.W), SInt(6.W), 1, 3))).withAnnotations(Seq(TargetDirAnnotation(testDir))).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
+                            {dut=> {
+                                testModuleSInt(dut.io, dut.clock)
+                            }
+                        }
+                    }
                 }
-            }
-        }
+            })
+        })
     })
     val opsCounts = List(5, 10, 20, 50)
 
@@ -69,7 +88,7 @@ class ComputeTester extends FlatSpec with ChiselScalatestTester with Matchers {
         for (i <- 0 until 50) {
             it should "Test multi uint ops: " + opCount + " test: " + i in {
                 val testDir = "test_multi_comp_dir/UInt/ops_" + opCount + "/test_" + i
-                test(new ComputeSeq(5, new ComputeIO[UInt](UInt(6.W), 1, 3), rng)).withAnnotations(Seq(TargetDirAnnotation(testDir))).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
+                test(new ComputeSeq(5, new ComputeIO[UInt](UInt(6.W), UInt(6.W), UInt(6.W), 1, 3), rng)).withAnnotations(Seq(TargetDirAnnotation(testDir))).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
                     {dut=> {
                         testModuleUInt(dut.io, dut.clock)
                     }

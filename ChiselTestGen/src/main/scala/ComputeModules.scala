@@ -2,11 +2,11 @@ import chisel3._
 import scala.collection.mutable.ListBuffer
 import scala.util.Random
 
-class ComputeIO[T <: Data](private val dtype: T, val const1: Int, val const2: Int) extends Bundle {
-    val a = Input(dtype)
-    val b = Input(dtype)
+class ComputeIO[T <: Data](private val tIn1: T, private val tIn2: T, private val tOut: T, val const1: Int, val const2: Int) extends Bundle {
+    val a = Input(tIn1)
+    val b = Input(tIn2)
     val c = Input(Bool())
-    val out = Output(dtype)
+    val out = Output(tOut)
 }
 
 object ops {
@@ -108,7 +108,7 @@ class ComputeSeq(opCount: Int, modIO: ComputeIO[UInt], rng: Random) extends Modu
     outputs += io.b
 
     for (x <- 0 until opCount) {
-        var wire = Wire(new ComputeIO[UInt](UInt(modIO.a.getWidth.W), modIO.const1, modIO.const2))
+        var wire = Wire(new ComputeIO[UInt](UInt(modIO.a.getWidth.W), UInt(modIO.b.getWidth.W), UInt(modIO.out.getWidth.W), modIO.const1, modIO.const2))
         wire.a := outputs(rng.nextInt(outputs.length))
         wire.b := outputs(rng.nextInt(outputs.length))
         wire.c := outputs(rng.nextInt(outputs.length))

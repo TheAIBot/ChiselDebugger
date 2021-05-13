@@ -29,20 +29,47 @@ namespace ChiselDebug.GraphFIR.IO
             ParentIO = aggIO;
         }
 
+        public Module GetModResideIn()
+        {
+            if (Node is Module mod)
+            {
+                return mod;
+            }
+
+            return Node.ResideIn;
+        }
+
         public string GetFullName()
         {
             List<string> pathToRoot = new List<string>();
-            pathToRoot.Add(Name);
+            if (Name != null)
+            {
+                pathToRoot.Add(Name);
+            }
 
             FIRIO node = this;
             while (node.ParentIO != null)
             {
                 node = node.ParentIO;
-                pathToRoot.Add(node.Name);
+                if (Name != null)
+                {
+                    pathToRoot.Add(node.Name);
+                }
             }
 
             pathToRoot.Reverse();
             return string.Join('.', pathToRoot);
+        }
+
+        public FIRIO GetRootIO()
+        {
+            FIRIO io = this;
+            while (io.ParentIO != null)
+            {
+                io = io.ParentIO;
+            }
+
+            return io;
         }
 
         public virtual FIRIO GetInput()
@@ -65,7 +92,7 @@ namespace ChiselDebug.GraphFIR.IO
             };
         }
 
-        public abstract void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, bool isConditional = false);
+        public abstract void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Output condition = null);
         public abstract FIRIO ToFlow(FlowChange flow, FIRRTLNode node);
         public FIRIO Flip(FIRRTLNode node = null)
         {

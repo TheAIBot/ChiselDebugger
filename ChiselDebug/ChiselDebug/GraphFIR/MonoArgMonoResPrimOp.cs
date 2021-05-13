@@ -34,19 +34,21 @@ namespace ChiselDebug.GraphFIR
 
         public override void Compute()
         {
-            A.UpdateValueFromSource();
+            ref BinaryVarValue aVal = ref A.UpdateValueFromSourceFast();
+            ref BinaryVarValue resultVal = ref Result.GetValue();
 
-            BinaryVarValue aVal = A.Value.GetValue();
-            BinaryVarValue resultVal = Result.Value.GetValue();
-
-            if (!aVal.IsValidBinary())
+            Debug.Assert(aVal.IsValidBinary == aVal.Bits.IsAllBinary());
+            if (!aVal.IsValidBinary)
             {
-                Array.Fill(resultVal.Bits, BitState.X);
+                resultVal.SetAllUnknown();
+                return;
             }
 
-            MonoArgCompute(aVal, resultVal);
+            resultVal.IsValidBinary = true;
+            MonoArgCompute(ref aVal, ref resultVal);
+            Debug.Assert(resultVal.IsValidBinary == resultVal.Bits.IsAllBinary());
         }
-        protected abstract void MonoArgCompute(BinaryVarValue a, BinaryVarValue result);
+        protected abstract void MonoArgCompute(ref BinaryVarValue a, ref BinaryVarValue result);
 
         internal override void InferType()
         {
@@ -66,9 +68,9 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRAsUInt(Output aIn, IFIRType outType, FirrtlNode defNode) : base("asUInt", aIn, outType, defNode) { }
 
-        protected override void MonoArgCompute(BinaryVarValue a, BinaryVarValue result)
+        protected override void MonoArgCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
-            Array.Copy(a.Bits, result.Bits, a.Bits.Length);
+            a.Bits.CopyTo(result.Bits);
         }
 
         protected override IFIRType MonoArgInferType() => A.Type switch
@@ -76,7 +78,7 @@ namespace ChiselDebug.GraphFIR
             UIntType a => new UIntType(a.Width),
             SIntType a => new UIntType(a.Width),
             ClockType a => new UIntType(1),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -84,9 +86,9 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRAsSInt(Output aIn, IFIRType outType, FirrtlNode defNode) : base("asSInt", aIn, outType, defNode) { }
 
-        protected override void MonoArgCompute(BinaryVarValue a, BinaryVarValue result)
+        protected override void MonoArgCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
-            Array.Copy(a.Bits, result.Bits, a.Bits.Length);
+            a.Bits.CopyTo(result.Bits);
         }
 
         protected override IFIRType MonoArgInferType() => A.Type switch
@@ -94,7 +96,7 @@ namespace ChiselDebug.GraphFIR
             UIntType a => new SIntType(a.Width),
             SIntType a => new SIntType(a.Width),
             ClockType a => new SIntType(1),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -102,7 +104,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRAsClock(Output aIn, IFIRType outType, FirrtlNode defNode) : base("asClock", aIn, outType, defNode) { }
 
-        protected override void MonoArgCompute(BinaryVarValue a, BinaryVarValue result)
+        protected override void MonoArgCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
             result.Bits[0] = a.Bits[0];
         }
@@ -112,7 +114,7 @@ namespace ChiselDebug.GraphFIR
             UIntType a => new ClockType(),
             SIntType a => new ClockType(),
             ClockType a => new ClockType(),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -120,16 +122,16 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRCvt(Output aIn, IFIRType outType, FirrtlNode defNode) : base("cvt", aIn, outType, defNode) { }
 
-        protected override void MonoArgCompute(BinaryVarValue a, BinaryVarValue result)
+        protected override void MonoArgCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
             if (A.Type is UIntType)
             {
-                Array.Copy(a.Bits, result.Bits, a.Bits.Length);
-                result.Bits[^1] = result.Bits[^2];
+                a.Bits.CopyTo(result.Bits);
+                result.Bits[^1] = BitState.Zero;
             }
             else if (A.Type is SIntType)
             {
-                Array.Copy(a.Bits, result.Bits, a.Bits.Length);
+                a.Bits.CopyTo(result.Bits);
             }
             else
             {
@@ -141,7 +143,7 @@ namespace ChiselDebug.GraphFIR
         {
             UIntType a => new SIntType(a.Width + 1),
             SIntType a => new SIntType(a.Width),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -149,7 +151,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRNeg(Output aIn, IFIRType outType, FirrtlNode defNode) : base("-", aIn, outType, defNode) { }
 
-        protected override void MonoArgCompute(BinaryVarValue a, BinaryVarValue result)
+        protected override void MonoArgCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
             const int bitsInLong = 64;
             if (A.Type is UIntType)
@@ -185,7 +187,7 @@ namespace ChiselDebug.GraphFIR
         {
             UIntType a => new SIntType(a.Width + 1),
             SIntType a => new SIntType(a.Width + 1),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -193,7 +195,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRNot(Output aIn, IFIRType outType, FirrtlNode defNode) : base("~", aIn, outType, defNode) { }
 
-        protected override void MonoArgCompute(BinaryVarValue a, BinaryVarValue result)
+        protected override void MonoArgCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
             for (int i = 0; i < a.Bits.Length; i++)
             {
@@ -205,7 +207,7 @@ namespace ChiselDebug.GraphFIR
         {
             UIntType a => new UIntType(a.Width),
             SIntType a => new UIntType(a.Width),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -213,7 +215,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRAndr(Output aIn, IFIRType outType, FirrtlNode defNode) : base("andr", aIn, outType, defNode) { }
 
-        protected override void MonoArgCompute(BinaryVarValue a, BinaryVarValue result)
+        protected override void MonoArgCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
             int value = 1;
             for (int i = 0; i < a.Bits.Length; i++)
@@ -228,7 +230,7 @@ namespace ChiselDebug.GraphFIR
         {
             UIntType a => new UIntType(1),
             SIntType a => new UIntType(1),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -236,7 +238,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIROrr(Output aIn, IFIRType outType, FirrtlNode defNode) : base("orr", aIn, outType, defNode) { }
 
-        protected override void MonoArgCompute(BinaryVarValue a, BinaryVarValue result)
+        protected override void MonoArgCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
             int value = 0;
             for (int i = 0; i < a.Bits.Length; i++)
@@ -251,7 +253,7 @@ namespace ChiselDebug.GraphFIR
         {
             UIntType a => new UIntType(1),
             SIntType a => new UIntType(1),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 
@@ -259,7 +261,7 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRXorr(Output aIn, IFIRType outType, FirrtlNode defNode) : base("xorr", aIn, outType, defNode) { }
 
-        protected override void MonoArgCompute(BinaryVarValue a, BinaryVarValue result)
+        protected override void MonoArgCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
             int value = 0;
             for (int i = 0; i < a.Bits.Length; i++)
@@ -274,7 +276,7 @@ namespace ChiselDebug.GraphFIR
         {
             UIntType a => new UIntType(1),
             SIntType a => new UIntType(1),
-            _ => throw new Exception("Failed to infer type.")
+            _ => null
         };
     }
 }

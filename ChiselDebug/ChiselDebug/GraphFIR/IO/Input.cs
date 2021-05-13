@@ -9,13 +9,71 @@ namespace ChiselDebug.GraphFIR.IO
     public class Input : ScalarIO
     {
         internal Output Con;
-        private HashSet<Output> CondCons = null;
+        private List<Connection> CondCons = null;
 
         public Input(FIRRTLNode node, IFIRType type) : this(node, null, type)
         { }
 
         public Input(FIRRTLNode node, string name, IFIRType type) : base(node, name, type)
         { }
+
+        public bool HasConnectionCondition(Output connectedTo)
+        {
+            return GetConnectionCondition(connectedTo) != null;
+        }
+
+        public Output GetConnectionCondition(Output connectedTo)
+        {
+            if (Con == connectedTo)
+            {
+                return null;
+            }
+            if (CondCons != null)
+            {
+                for (int i = 0; i < CondCons.Count; i++)
+                {
+                    if (CondCons[i].From == connectedTo)
+                    {
+                        return CondCons[i].Condition;
+                    }
+                }
+            }
+
+            throw new Exception("Input is not connected to the given output.");
+        }
+
+        public void ReplaceConnection(Output connectedTo, Output replaceWith, Output condition)
+        {
+            if (condition == null)
+            {
+                if (Con != connectedTo)
+                {
+                    throw new Exception("Input is not connected to the given output.");
+                }
+
+                connectedTo.DisconnectOnlyOutputSide(this);
+                replaceWith.ConnectOnlyOutputSide(this);
+                Con = replaceWith;
+            }
+            else
+            {
+                if (CondCons != null)
+                {
+                    for (int i = 0; i < CondCons.Count; i++)
+                    {
+                        if (CondCons[i].From == connectedTo)
+                        {
+                            connectedTo.DisconnectOnlyOutputSide(this);
+                            replaceWith.ConnectOnlyOutputSide(this);
+                            CondCons[i] = new Connection(replaceWith, condition);
+                            return;
+                        }
+                    }
+                }
+
+                throw new Exception("Input is not conditionally connected to the given output.");
+            }
+        }
 
         public override bool IsConnected()
         {
@@ -27,16 +85,19 @@ namespace ChiselDebug.GraphFIR.IO
             return Con != null || (CondCons != null && CondCons.Count > 0);
         }
 
-        public Output[] GetAllConnections()
+        public Connection[] GetConnections()
         {
-            List<Output> cons = new List<Output>();
+            List<Connection> cons = new List<Connection>();
             if (Con != null)
             {
-                cons.Add(Con);
+                cons.Add(new Connection(Con));
             }
             if (CondCons != null)
             {
-                cons.AddRange(CondCons);
+                for (int i = 0; i < CondCons.Count; i++)
+                {
+                    cons.Add(CondCons[i]);
+                }
             }
 
             return cons.ToArray();
@@ -53,7 +114,14 @@ namespace ChiselDebug.GraphFIR.IO
             {
                 return Array.Empty<Output>();
             }
-            return CondCons.ToArray();
+
+            List<Output> cons = new List<Output>();
+            for (int i = 0; i < CondCons.Count; i++)
+            {
+                cons.Add(CondCons[i].From);
+            }
+
+            return cons.ToArray();
         }
 
         public void Disconnect(Output toDisconnect)
@@ -64,7 +132,21 @@ namespace ChiselDebug.GraphFIR.IO
             }
             else
             {
-                if (CondCons == null || !CondCons.Remove(toDisconnect))
+                bool didDisconnect = false;
+                if (CondCons != null)
+                {
+                    for (int i = 0; i < CondCons.Count; i++)
+                    {
+                        if (CondCons[i].From == toDisconnect)
+                        {
+                            CondCons.RemoveAt(i);
+                            didDisconnect = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!didDisconnect)
                 {
                     throw new Exception("Can't disconnect from a connection is wasn't connected to.");
                 }
@@ -82,28 +164,58 @@ namespace ChiselDebug.GraphFIR.IO
             {
                 foreach (var con in CondCons.ToArray())
                 {
-                    con.DisconnectInput(this);
+                    con.From.DisconnectInput(this);
                 }
             }
         }
 
-        public void Connect(Output con, bool isConditional)
+        public void Connect(Output con, Output condition)
         {
-            if (isConditional)
+            if (condition != null)
             {
                 if (CondCons == null)
                 {
-                    CondCons = new HashSet<Output>();
+                    CondCons = new List<Connection>();
                 }
-                CondCons.Add(con);
+
+                /*
+                 * handle this
+                 * 
+                 * when en:
+                 *      a <= b
+                 *      a <= c
+                 *      skip
+                 *      
+                 * Check if connection exists with same condition
+                 * and remove it so it's replaced with the new one.
+                 */
+                for (int i = 0; i < CondCons.Count; i++)
+                {
+                    var condCon = CondCons[i];
+                    if (condCon.Condition == condition)
+                    {
+                        condCon.From.DisconnectInput(this);
+                        break;
+                    }
+                }
+
+                CondCons.Add(new Connection(con, condition));
             }
             else
             {
+                if (CondCons != null)
+                {
+                    foreach (var condCon in CondCons)
+                    {
+                        condCon.From.DisconnectOnlyOutputSide(this);
+                    }
+                    CondCons.Clear();
+                }
                 Con = con;
             }
         }
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, bool isConditional = false)
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Output condition = null)
         {
             throw new Exception("Input can't be connected to output. Flow is reversed.");
         }
@@ -149,40 +261,16 @@ namespace ChiselDebug.GraphFIR.IO
             return list;
         }
 
-        public Output GetEnabledCon()
-        {
-            if (CondCons != null)
-            {
-                foreach (var condCon in CondCons)
-                {
-                    if (condCon.IsEnabled)
-                    {
-                        return condCon;
-                    }
-                }
-            }
-
-            if (Con != null)
-            {
-                return Con;
-            }
-
-            //No connection is enabled.
-            //This should only happen when circuit state isn't set yet.
-            //Just return random connection as they should all have the
-            //same value.
-            return CondCons.First();
-        }
-
         public void UpdateValueFromSource()
         {
             if (CondCons != null)
             {
-                foreach (var condCon in CondCons)
+                for (int i = CondCons.Count - 1; i >= 0; i--)
                 {
-                    if (condCon.IsEnabled)
+                    var condCon = CondCons[i];
+                    if (condCon.IsEnabled())
                     {
-                        Value.UpdateFrom(condCon.Value);
+                        Value.UpdateFrom(ref condCon.From.Value);
                         return;
                     }
                 }
@@ -190,15 +278,46 @@ namespace ChiselDebug.GraphFIR.IO
 
             if (Con != null)
             {
-                Value.UpdateFrom(Con.Value);
+                Value.UpdateFrom(ref Con.Value);
                 return;
             }
 
-            //No connection is enabled.
-            //This should only happen when circuit state isn't set yet.
-            //Just return random connection as they should all have the
-            //same value.
-            Value.UpdateFrom(CondCons.First().Value);
+            Value.Value.SetAllUnknown();
+        }
+
+        public ref BinaryVarValue UpdateValueFromSourceFast()
+        {
+            if (CondCons != null)
+            {
+                for (int i = CondCons.Count - 1; i >= 0; i--)
+                {
+                    var condCon = CondCons[i];
+                    if (condCon.IsEnabled())
+                    {
+                        if (condCon.From.Type.Width == Type.Width)
+                        {
+                            return ref condCon.From.GetValue();
+                        }
+
+                        Value.UpdateFrom(ref condCon.From.Value);
+                        return ref GetValue();
+                    }
+                }
+            }
+
+            if (Con != null)
+            {
+                if (Con.Type.Width == Type.Width)
+                {
+                    return ref Con.GetValue();
+                }
+
+                Value.UpdateFrom(ref Con.Value);
+                return ref GetValue();
+            }
+
+            Value.Value.SetAllUnknown();
+            return ref GetValue();
         }
 
         public override void InferGroundType()
@@ -216,8 +335,8 @@ namespace ChiselDebug.GraphFIR.IO
             {
                 foreach (var condCon in CondCons)
                 {
-                    condCon.InferType();
-                    SetType(condCon.Type);
+                    condCon.From.InferType();
+                    SetType(condCon.From.Type);
                 }
             }
         }

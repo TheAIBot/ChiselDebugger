@@ -33,7 +33,7 @@ $enddefinitions $end
                 Assert.AreEqual(1, simCmds.Length);
                 Assert.IsTrue(simCmds[0] is BinaryVarValue);
 
-                var valueChange = simCmds[0] as BinaryVarValue;
+                var valueChange = (BinaryVarValue)simCmds[0];
                 Assert.AreEqual(1, valueChange.Bits.Length);
                 Assert.AreEqual(bitState, valueChange.Bits[0]);
                 Assert.AreEqual(variable, valueChange.Variables[0]);
@@ -61,7 +61,7 @@ b{bitState.ToChar()} !";
                 Assert.AreEqual(1, simCmds.Length);
                 Assert.IsTrue(simCmds[0] is BinaryVarValue);
 
-                var valueChange = simCmds[0] as BinaryVarValue;
+                var valueChange = (BinaryVarValue)simCmds[0];
                 Assert.AreEqual(1, valueChange.Bits.Length);
                 Assert.AreEqual(bitState, valueChange.Bits[0]);
                 Assert.AreEqual(variable, valueChange.Variables[0]);
@@ -77,13 +77,13 @@ b{bitState.ToChar()} !";
             };
             ISimCmd[] expectedSimCmds = new ISimCmd[]
             {
-                new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero }, new List<VarDef>() {(VarDef)expectedDecls[0] })
+                new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero }, new List<VarDef>() {(VarDef)expectedDecls[0] }, true)
             };
 
             string vcdString = @$"
 $var wire 2 b1 b1 $end
 $enddefinitions $end
-b0 b1";
+b00 b1";
             VCD vcd = Parse.FromString(vcdString);
 
             TestTools.VerifyDeclarations(expectedDecls, vcd.Declarations);
@@ -123,8 +123,46 @@ b{expectedBits.BitsToString()} !";
             Assert.AreEqual(1, simCmds.Length);
             Assert.IsTrue(simCmds[0] is BinaryVarValue);
 
-            var valueChange = simCmds[0] as BinaryVarValue;
-            CollectionAssert.AreEqual(expectedBits, valueChange.Bits);
+            var valueChange = (BinaryVarValue)simCmds[0];
+            CollectionAssert.AreEqual(expectedBits, valueChange.Bits.ToArray());
+            Assert.AreEqual(variable, valueChange.Variables[0]);
+        }
+
+        [TestMethod]
+        public void ParseVectorBinarySize22ValueChange()
+        {
+            BitState[] expectedBits = new BitState[] 
+            { 
+                BitState.One, BitState.One,
+                BitState.Zero, BitState.Zero,
+                BitState.Zero, BitState.One,
+                BitState.Zero, BitState.Zero,
+                BitState.Zero, BitState.One,
+                BitState.Zero, BitState.One,
+                BitState.One, BitState.Zero,
+                BitState.Zero, BitState.One,
+                BitState.Zero, BitState.One,
+                BitState.One, BitState.One,
+                BitState.Zero, BitState.One
+            };
+
+            string vcdString = @$"
+$var wire {expectedBits.Length} ! _T_4 $end
+$enddefinitions $end
+b{expectedBits.BitsToString()} !";
+            VCD vcd = Parse.FromString(vcdString);
+
+            Assert.AreEqual(1, vcd.Declarations.Count);
+            Assert.IsTrue(vcd.Declarations[0] is VarDef);
+
+            var variable = vcd.Declarations[0] as VarDef;
+
+            ISimCmd[] simCmds = vcd.GetSimulationCommands().ToArray();
+            Assert.AreEqual(1, simCmds.Length);
+            Assert.IsTrue(simCmds[0] is BinaryVarValue);
+
+            var valueChange = (BinaryVarValue)simCmds[0];
+            CollectionAssert.AreEqual(expectedBits, valueChange.Bits.ToArray());
             Assert.AreEqual(variable, valueChange.Variables[0]);
         }
 
@@ -147,7 +185,7 @@ r{expectedValue.ToString(CultureInfo.InvariantCulture)} !";
             Assert.AreEqual(1, simCmds.Length);
             Assert.IsTrue(simCmds[0] is RealVarValue);
 
-            var valueChange = simCmds[0] as RealVarValue;
+            var valueChange = (RealVarValue)simCmds[0];
             Assert.AreEqual(expectedValue, valueChange.Value);
             Assert.AreEqual(variable, valueChange.Variables[0]);
         }
@@ -172,10 +210,10 @@ r{expectedValue.ToString(CultureInfo.InvariantCulture)} !";
             {
                 new DumpVars(new List<VarValue>()
                 {
-                    new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, new List<VarDef>() { (VarDef)expectedDecls[1] }),
-                    new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, new List<VarDef>() { (VarDef)expectedDecls[4] }),
-                    new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, new List<VarDef>() { (VarDef)expectedDecls[2] }),
-                    new BinaryVarValue(new BitState[] { BitState.Zero }, new List<VarDef>() { (VarDef)expectedDecls[3] })
+                    new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, new List<VarDef>() { (VarDef)expectedDecls[1] }, true),
+                    new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, new List<VarDef>() { (VarDef)expectedDecls[4] }, true),
+                    new BinaryVarValue(new BitState[] { BitState.Zero, BitState.Zero, BitState.Zero, BitState.Zero }, new List<VarDef>() { (VarDef)expectedDecls[2] }, true),
+                    new BinaryVarValue(new BitState[] { BitState.Zero }, new List<VarDef>() { (VarDef)expectedDecls[3] }, true)
                 })
             };
 

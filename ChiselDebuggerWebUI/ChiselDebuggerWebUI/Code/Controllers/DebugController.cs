@@ -158,7 +158,8 @@ namespace ChiselDebuggerWebUI.Code
         {
             TimeChanger.Post(() =>
             {
-                List<Output> changedConnections = Graph.SetState(Timeline.GetStateAtTime(time), IsVerilogVCD);
+                Graph.SetState(Timeline.GetStateAtTime(time), IsVerilogVCD);
+                List<Output> changedConnections = Graph.ComputeRemainingGraph();
 
                 HashSet<ModuleLayout> modulesToReRender = new HashSet<ModuleLayout>();
 

@@ -78,12 +78,17 @@ namespace ChiselDebug.GraphFIR.IO
             return allIO.ToArray();
         }
 
+        public FIRIO[] GetIndexesInOrder()
+        {
+            return IO.ToArray();
+        }
+
         public override bool IsVisibleAggregate()
         {
             return IO.FirstOrDefault()?.IsPartOfAggregateIO ?? false;
         }
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, bool isConditional = false)
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Output condition = null)
         {
             if (input is not Vector)
             {
@@ -96,10 +101,10 @@ namespace ChiselDebug.GraphFIR.IO
                 throw new Exception("Vectors must have the same when when fully connecting them.");
             }
 
-            int longestLength = Math.Max(Length, other.Length);
-            for (int i = 0; i < longestLength; i++)
+            int shortestLength = Math.Min(Length, other.Length);
+            for (int i = 0; i < shortestLength; i++)
             {
-                IO[i].ConnectToInput(other.IO[i], allowPartial, asPassive, isConditional);
+                IO[i].ConnectToInput(other.IO[i], allowPartial, asPassive, condition);
             }
         }
 

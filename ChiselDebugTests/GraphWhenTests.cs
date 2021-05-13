@@ -45,5 +45,15 @@ namespace ChiselDebugTests
         [TestMethod] public void When1xDuplexInput_lo_fir() => TestTools.VerifyChiselTest("When1xDuplexInput", "lo.fir", false);
         [TestMethod] public void When1xDuplexInput_treadle_lo_fir() => TestTools.VerifyChiselTest("When1xDuplexInput", "treadle.lo.fir", false);
         [TestMethod] public void When1xDuplexInput_vcd_treadle_lo_fir() => TestTools.VerifyChiselTest("When1xDuplexInput", "treadle.lo.fir", true);
+
+        [TestMethod] public void WhenWireCondInput_fir() => TestTools.VerifyChiselTest("WhenWireCondInput", "fir", false);
+        [TestMethod] public void WhenWireCondInput_lo_fir() => TestTools.VerifyChiselTest("WhenWireCondInput", "lo.fir", false);
+        [TestMethod] public void WhenWireCondInput_treadle_lo_fir() => TestTools.VerifyChiselTest("WhenWireCondInput", "treadle.lo.fir", false);
+        [TestMethod] public void WhenWireCondInput_vcd_treadle_lo_fir() => TestTools.VerifyChiselTest("WhenWireCondInput", "treadle.lo.fir", true);
+
+        [TestMethod] public void WhenConstCondInput_fir() => TestTools.VerifyChiselTest("WhenConstCondInput", "fir", false);
+        [TestMethod] public void WhenConstCondInput_lo_fir() => TestTools.VerifyChiselTest("WhenConstCondInput", "lo.fir", false);
+        [TestMethod] public void WhenConstCondInput_treadle_lo_fir() => TestTools.VerifyChiselTest("WhenConstCondInput", "treadle.lo.fir", false);
+        [TestMethod] public void WhenConstCondInput_vcd_treadle_lo_fir() => TestTools.VerifyChiselTest("WhenConstCondInput", "treadle.lo.fir", true);
     }
 }

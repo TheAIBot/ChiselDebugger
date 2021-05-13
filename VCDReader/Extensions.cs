@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace VCDReader
 {
@@ -22,7 +24,25 @@ namespace VCDReader
             return bit == BitState.Zero || bit == BitState.One;
         }
 
+        public static bool IsAllBinary(this Span<BitState> bits)
+        {
+            for (int i = 0; i < bits.Length; i++)
+            {
+                if (bits[i] != BitState.Zero && bits[i] != BitState.One)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         public static string BitsToString(this BitState[] bits)
+        {
+            return bits.AsSpan().BitsToString();
+        }
+
+        public static string BitsToString(this Span<BitState> bits)
         {
             StringBuilder sBuilder = new StringBuilder();
             for (int i = bits.Length - 1; i >= 0; i--)
@@ -31,6 +51,38 @@ namespace VCDReader
             }
 
             return sBuilder.ToString();
+        }
+
+        public static ISimCmd[] ToArray(this IEnumerable<SimPass> iter)
+        {
+            List<ISimCmd> cmds = new List<ISimCmd>();
+            foreach (var cmd in iter)
+            {
+                cmds.Add(cmd.GetCmd());
+            }
+
+            return cmds.ToArray();
+        }
+
+        public static void CopyToCharArray(this ReadOnlySpan<byte> bytes, Span<char> chars)
+        {
+            if (bytes.Length > chars.Length)
+            {
+                throw new Exception("Failed to copy from byte array to char array as char array is not long enough.");
+            }
+
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                chars[i] = (char)bytes[i];
+            }
+        }
+
+        public static string ToCharString(this ReadOnlySpan<byte> bytes)
+        {
+            Span<char> chars = stackalloc char[bytes.Length];
+            bytes.CopyToCharArray(chars);
+
+            return chars.ToString();
         }
     }
 }

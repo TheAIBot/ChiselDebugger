@@ -9,50 +9,57 @@ namespace ChiselDebug
 {
     public class CircuitState
     {
-        public readonly Dictionary<VarDef, VarValue> VariableValues = new Dictionary<VarDef, VarValue>();
+        public readonly Dictionary<string, BinaryVarValue> VariableValues;
+        public ulong Time { get; private set; }
 
         private CircuitState(CircuitState copyFrom)
         {
-            foreach (var keyValue in copyFrom.VariableValues)
-            {
-                VariableValues.Add(keyValue.Key, keyValue.Value);
-            }
+            this.VariableValues = new Dictionary<string, BinaryVarValue>(copyFrom.VariableValues);
+            this.Time = copyFrom.Time;
         }
 
         public CircuitState(DumpVars initVarValues)
         {
+            VariableValues = new Dictionary<string, BinaryVarValue>(initVarValues.InitialValues.Count);
             foreach (var initValue in initVarValues.InitialValues)
             {
-                foreach (var variable in initValue.Variables)
-                {
-                    VariableValues.Add(variable, initValue);
-                }
+                var variable = initValue.Variables[0];
+                VariableValues.Add(variable.ID, (BinaryVarValue)initValue);
             }
+
+            this.Time = 0;
         }
 
         public CircuitState(List<List<VarDef>> varDefs)
         {
+            VariableValues = new Dictionary<string, BinaryVarValue>(varDefs.Count);
             foreach (var variables in varDefs)
             {
-                foreach (var variable in variables)
-                {
-                    BitState[] bits = new BitState[variable.Size];
-                    Array.Fill(bits, BitState.Zero);
+                var variable = variables[0];
+                BitState[] bits = new BitState[variable.Size];
+                Array.Fill(bits, BitState.Zero);
 
-                    VariableValues.Add(variable, new BinaryVarValue(bits, variables));
-                }
+                VariableValues.Add(variable.ID, new BinaryVarValue(bits, variables, true));
             }
+
+            this.Time = 0;
         }
 
-        internal void AddChanges(TimeStepChanges changes)
+        internal void AddChanges(ReadOnlySpan<BinaryVarValue> changes, ulong time)
         {
-            foreach (var change in changes.Changes)
+            foreach (var change in changes)
             {
-                foreach (var variable in change.Variables)
-                {
-                    VariableValues[variable] = change;
-                }
+                var variable = change.Variables[0];
+                VariableValues[variable.ID] = change;
             }
+
+            Time = time;
+        }
+
+        internal void AddChange(BinaryVarValue value)
+        {
+            var variable = value.Variables[0];
+            VariableValues[variable.ID] = value;
         }
 
         public CircuitState Copy()

@@ -1,4 +1,8 @@
-﻿namespace VCDReader
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+
+namespace VCDReader
 {
     public interface IDeclCmd { }
 
@@ -24,6 +28,24 @@
             this.ID = id;
             this.Reference = reference;
             this.Scopes = scopes;
+        }
+
+        public override string ToString()
+        {
+            return $"Ref: {Reference}, Size: {Size}";
+        }
+    }
+
+    public class VarDefComparar : IEqualityComparer<VarDef>
+    {
+        public bool Equals(VarDef? x, VarDef? y)
+        {
+            return x == y;
+        }
+
+        public int GetHashCode([DisallowNull] VarDef obj)
+        {
+            return obj.GetHashCode();
         }
     }
 }

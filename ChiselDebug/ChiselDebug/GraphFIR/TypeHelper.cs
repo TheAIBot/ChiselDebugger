@@ -10,16 +10,21 @@ namespace ChiselDebug.GraphFIR
 {
     internal static class TypeHelper
     {
-        public static GroundType InferMuxOutputType(Output output, Mux mux)
+        public static GroundType InferMaxWidthType(Output output, PairedIOFIRRTLNode pairNode)
         {
             List<GroundType> inputTypes = new List<GroundType>();
-            foreach (Input paired in mux.GetAllPairedIO(output).OfType<Input>())
+            foreach (Input paired in pairNode.GetAllPairedIO(output).OfType<Input>())
             {
                 paired.InferType();
                 if (paired.Type != null)
                 {
                     inputTypes.Add(paired.Type);
                 }
+            }
+
+            if (inputTypes.Count == 0)
+            {
+                return null;
             }
 
             int maxWidth = inputTypes.Max(x => x.Width);
@@ -30,6 +35,10 @@ namespace ChiselDebug.GraphFIR
             else if (inputTypes.All(x => x is SIntType))
             {
                 return new SIntType(maxWidth);
+            }
+            else if (inputTypes.All(x => x is ClockType))
+            {
+                return new ClockType();
             }
             else
             {

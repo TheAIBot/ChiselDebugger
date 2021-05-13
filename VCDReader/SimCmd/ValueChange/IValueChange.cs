@@ -1,37 +1,41 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace VCDReader
 {
-    public abstract class VarValue : ISimCmd
+    public interface VarValue : ISimCmd
     {
-        public readonly List<VarDef>? Variables;
+        public List<VarDef>? Variables { get; }
 
-        public VarValue(List<VarDef>? variables)
-        {
-            this.Variables = variables;
-        }
-
-        public abstract bool SameValue(VarValue other);
+        public bool SameValue(VarValue other);
     }
 
-    public class BinaryVarValue : VarValue
+    public struct BinaryVarValue : VarValue
     {
-        public readonly BitState[] Bits;
+        private readonly UnsafeMemory<BitState> BitSlice;
+        private readonly List<VarDef>? Vars;
+        public bool IsValidBinary;
 
-        public BinaryVarValue(BitState[] bits, List<VarDef> variables) : base(variables)
+        public Span<BitState> Bits => BitSlice.Span;
+        public List<VarDef>? Variables => Vars;
+
+        public BinaryVarValue(UnsafeMemory<BitState> bits, List<VarDef> variables, bool isValidBinary)
         {
-            this.Bits = new BitState[variables[0].Size];
-
-            Array.Fill(Bits, bits[^1].LeftExtendWith());
-            bits.CopyTo(Bits, 0);
+            Debug.Assert(isValidBinary == bits.Span.IsAllBinary());
+            this.BitSlice = bits;
+            this.Vars = variables;
+            this.IsValidBinary = isValidBinary;
         }
 
-        public BinaryVarValue(int bitCount) : base(null)
+        public BinaryVarValue(int bitCount, bool isValidBinary)
         {
-            this.Bits = new BitState[bitCount];
+            this.BitSlice = new BitState[bitCount];
+            this.Vars = null;
+            this.IsValidBinary = isValidBinary;
         }
 
         public string BitsToString()
@@ -39,34 +43,87 @@ namespace VCDReader
             return Bits.BitsToString();
         }
 
-        public bool IsValidBinary()
+        public void SetAllUnknown()
         {
-            for (int i = 0; i < Bits.Length; i++)
-            {
-                if (!Bits[i].IsBinary())
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            IsValidBinary = false;
+            Bits.Fill(BitState.X);
         }
 
-        public override bool SameValue(VarValue other)
+        public bool SameValue(VarValue other)
         {
-            return other is BinaryVarValue binary && SameValue(binary);
+            return other is BinaryVarValue binary && SameValue(ref binary);
         }
 
-        public bool SameValue(BinaryVarValue other)
+        public bool SameValue(ref BinaryVarValue other)
         {
-            if (Bits.Length != other.Bits.Length)
+            ReadOnlySpan<BitState> rBits = Bits;
+            ReadOnlySpan<BitState> rBitsOther = other.Bits;
+            if (rBits.Length != rBitsOther.Length)
             {
                 return false;
             }
 
-            for (int i = 0; i < Bits.Length; i++)
+            //xor of two equivalent values gives 0 and anything else
+            //gives not 0. If check can be replaced with this check by checking
+            //that all xors give 0 in return. That's how this check work. In
+            //addition to that, poor simd is used to xor 8 BitStates at once.
+            ulong xored = 0;
+            int index = 0;
+            if (rBits.Length >= sizeof(ulong))
             {
-                if (Bits[i] != other.Bits[i])
+                ReadOnlySpan<ulong> uBits = MemoryMarshal.Cast<BitState, ulong>(rBits);
+                ReadOnlySpan<ulong> uBitsOther = MemoryMarshal.Cast<BitState, ulong>(rBitsOther);
+
+                for (; index < uBits.Length; index++)
+                {
+                    xored |= uBits[index] ^ uBitsOther[index];
+                }
+
+                const int sizeDiff = sizeof(BitState) / sizeof(ulong);
+                index *= sizeDiff;
+            }
+
+            for (; index < rBits.Length; index++)
+            {
+                xored |= (ulong)rBits[index] ^ (ulong)rBitsOther[index];
+            }
+
+            return xored == 0;
+        }
+
+        public bool SameValue(ref BinaryVarValue other, bool isSigned)
+        {
+            if (Bits.Length == other.Bits.Length)
+            {
+                return SameValue(ref other);
+            }
+
+            ReadOnlySpan<BitState> minL = Bits.Length < other.Bits.Length ? Bits : other.Bits;
+            ReadOnlySpan<BitState> maxL = Bits.Length < other.Bits.Length ? other.Bits : Bits;
+            if (minL.Length == 0)
+            {
+                for (int i = 0; i < maxL.Length; i++)
+                {
+                    if (maxL[i] != BitState.Zero)
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            BitState expectedRemainer = isSigned ? minL[^1] : BitState.Zero;
+            for (int i = 0; i < minL.Length; i++)
+            {
+                if (minL[i] != maxL[i])
+                {
+                    return false;
+                }
+            }
+            for (int i = minL.Length; i < maxL.Length; i++)
+            {
+                if (maxL[i] != expectedRemainer)
                 {
                     return false;
                 }
@@ -75,68 +132,31 @@ namespace VCDReader
             return true;
         }
 
-        public bool SameValueZeroExtend(BinaryVarValue other)
+        public void SetBitsAndExtend(ref BinaryVarValue value, bool asSigned)
         {
-            int minLength = Math.Min(Bits.Length, other.Bits.Length);
-            for (int i = 0; i < minLength; i++)
-            {
-                if (Bits[i] != other.Bits[i])
-                {
-                    return false;
-                }
-            }
+            IsValidBinary = value.IsValidBinary;
 
-            if (Bits.Length > other.Bits.Length)
-            {
-                for (int i = minLength; i < Bits.Length; i++)
-                {
-                    if (Bits[i] != BitState.Zero)
-                    {
-                        return false;
-                    }
-                }
-            }
-            else if (Bits.Length < other.Bits.Length)
-            {
-                for (int i = minLength; i < other.Bits.Length; i++)
-                {
-                    if (other.Bits[i] != BitState.Zero)
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        public void SetBitsAndExtend(BinaryVarValue value, bool asSigned)
-        {
             if (Bits.Length <= value.Bits.Length)
             {
-                Array.Copy(value.Bits, Bits, Bits.Length);
+                value.Bits.Slice(0, Bits.Length).CopyTo(Bits);
+            }
+            else if (value.Bits.Length == 0)
+            {
+                Bits.Fill(BitState.Zero);
             }
             else
             {
-                Array.Copy(value.Bits, Bits, value.Bits.Length);
-                ExtendBits(value.Bits.Length, asSigned);
-            }
-        }
+                value.Bits.CopyTo(Bits);
 
-        private void ExtendBits(int lengthAlreadySet, bool asSigned)
-        {
-            if (lengthAlreadySet == Bits.Length)
-            {
-                return;
+                BitState extendWith = asSigned ? value.Bits[^1] : BitState.Zero;
+                Bits.Slice(value.Bits.Length).Fill(extendWith);
             }
-
-            BitState extendWith = asSigned ? Bits[lengthAlreadySet - 1] : BitState.Zero;
-            Array.Fill(Bits, extendWith, lengthAlreadySet, Bits.Length - lengthAlreadySet);
         }
 
         public void SetBits(ulong value)
         {
             Debug.Assert(Bits.Length <= 64);
+            IsValidBinary = true;
 
             for (int i = 0; i < Bits.Length; i++)
             {
@@ -152,6 +172,8 @@ namespace VCDReader
 
         public void SetBitsAndExtend(BigInteger value, bool asSigned)
         {
+            IsValidBinary = true;
+
             int valueBits = (int)value.GetBitLength();
             int minBits = Math.Min(valueBits, Bits.Length);
             for (int i = 0; i < minBits; i++)
@@ -163,7 +185,7 @@ namespace VCDReader
             if (valueBits < Bits.Length)
             {
                 BitState sign = value.Sign == -1 ? BitState.One : BitState.Zero;
-                Array.Fill(Bits, sign, valueBits, Bits.Length - valueBits);
+                Bits.Slice(valueBits, Bits.Length - valueBits).Fill(sign);
             }
         }
 
@@ -223,14 +245,29 @@ namespace VCDReader
 
         public BigInteger AsUnsignedBigInteger()
         {
-            var value = BigInteger.Zero;
-            for (int i = Bits.Length - 1; i >= 0; i--)
+            const int ulongBitCount = 64;
+            if (Bits.Length <= ulongBitCount)
             {
-                value = value << 1;
-                value |= 1 & (int)Bits[i];
-            }
+                ulong value = 0;
+                for (int i = Bits.Length - 1; i >= 0; i--)
+                {
+                    value = value << 1;
+                    value |= 1 & (ulong)Bits[i];
+                }
 
-            return value;
+                return new BigInteger(value);
+            }
+            else
+            {
+                var value = BigInteger.Zero;
+                for (int i = Bits.Length - 1; i >= 0; i--)
+                {
+                    value = value << 1;
+                    value |= 1 & (int)Bits[i];
+                }
+
+                return value;
+            }
         }
 
         public BigInteger AsSignedBigInteger()
@@ -249,16 +286,19 @@ namespace VCDReader
             return value;
         }
     }
-    public class RealVarValue: VarValue
+    public readonly struct RealVarValue: VarValue
     {
         public readonly double Value;
+        private readonly List<VarDef>? Vars;
+        public List<VarDef>? Variables => Vars;
 
-        public RealVarValue(double value, List<VarDef> variables) : base(variables)
+        public RealVarValue(double value, List<VarDef> variables)
         {
             this.Value = value;
-        }
+            this.Vars = variables;
+        }        
 
-        public override bool SameValue(VarValue other)
+        public bool SameValue(VarValue other)
         {
             return other is RealVarValue real &&
                    Value == real.Value;

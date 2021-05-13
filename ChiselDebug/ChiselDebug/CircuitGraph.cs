@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using VCDReader;
 
 namespace ChiselDebug
@@ -22,21 +23,66 @@ namespace ChiselDebug
         {
             this.Name = name;
             this.MainModule = mainModule;
-            this.ComputeGraph = CombComputeGraph.MakeGraph(MainModule);
+            this.ComputeGraph = CombComputeGraph.MakeMonoGraph(MainModule);
+            ComputeGraph.InferTypes();
 
             foreach (var rootStart in ComputeGraph.GetAllRootSources())
             {
-                ComputeAllowsUpdate.Add(rootStart);
+                if (rootStart.Node is not ConstValue)
+                {
+                    ComputeAllowsUpdate.Add(rootStart);
+                }
             }
         }
 
-        private bool TryFindIO(string ioName, IContainerIO container, out IContainerIO foundIO)
+        private bool TryFindVerilogMemPort(string ioName, MemoryIO memory, out IContainerIO foundIO)
         {
+            foreach (MemPort port in memory.GetIOInOrder())
+            {
+                if (ioName.Contains(port.Name))
+                {
+                    int portNameStart = ioName.IndexOf(port.Name);
+                    string remaining = ioName.Substring(0, portNameStart);
+                    string portPath = ioName.Substring(portNameStart);
+
+                    if (TryFindIO(portPath, memory, false, out foundIO))
+                    {
+                        if (foundIO is ScalarIO)
+                        {
+                            return true;
+                        }
+
+                        if (TryFindIO(remaining, foundIO, false, out var fullFoundIO))
+                        {
+                            if (fullFoundIO is not ScalarIO)
+                            {
+                                foundIO = null;
+                                return false;
+                            }
+
+                            foundIO = fullFoundIO;
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            foundIO = null;
+            return false;
+        }
+
+        private bool TryFindIO(string ioName, IContainerIO container, bool isVerilogVCD, out IContainerIO foundIO)
+        {
+            if (ioName == "_T_35_data__T_68_data")
+            {
+
+            }
+
             string remainingName = ioName;
             string searchName = remainingName;
             while (true)
             {
-                if (container.TryGetIO(searchName, false, out foundIO))
+                if (container.TryGetIO(searchName, true, out foundIO))
                 {
                     container = foundIO;
 
@@ -52,6 +98,19 @@ namespace ChiselDebug
                     if (remainingName.Length == 0)
                     {
                         return true;
+                    }
+
+                    //Verilog represents memport names in a wierd way in the vcd
+                    //which is why that case has to be specially handled
+                    if (isVerilogVCD && container is MemoryIO memory && memory.GetDataType() is AggregateIO)
+                    {
+                        if (TryFindVerilogMemPort(remainingName, memory, out foundIO))
+                        {
+                            return true;
+                        }
+
+                        foundIO = null;
+                        return false;
                     }
 
                     if (container is ScalarIO)
@@ -113,10 +172,11 @@ namespace ChiselDebug
             IContainerIO moduleIO = ((IContainerIO)MainModule).GetIO(modulePath, true);
 
             IContainerIO ioLink = null;
-            bool foundIO = TryFindIO(variable.Reference, moduleIO, out ioLink);
+            bool foundIO = TryFindIO(variable.Reference, moduleIO, isVerilogVCD, out ioLink);
 
             if (!foundIO)
             {
+                VarDefToCon.Add(variable, null);
                 return null;
                 ////Wierd wires are added to memory ports that are not part of the
                 ////firrtl code. Just ignore those wires.
@@ -149,7 +209,17 @@ namespace ChiselDebug
             //then it will also have a wire with the instance name in the vcd
             //file. Ends up with a bundle when this happens so just ignore the
             //change.
-            if (ioLink is IOBundle)
+            if (ioLink is Module)
+            {
+                VarDefToCon.Add(variable, null);
+                return null;
+            }
+            if (ioLink is MemoryIO)
+            {
+                VarDefToCon.Add(variable, null);
+                return null;
+            }
+            if (ioLink is MemPort)
             {
                 VarDefToCon.Add(variable, null);
                 return null;
@@ -164,29 +234,130 @@ namespace ChiselDebug
             throw new Exception("No");
         }
 
-        public List<Output> SetState(CircuitState state, bool isVerilogVCD)
+        public void SetState(CircuitState state, bool isVerilogVCD)
         {
-
             foreach (BinaryVarValue varValue in state.VariableValues.Values)
             {
                 foreach (var variable in varValue.Variables)
                 {
-                    ScalarIO con = GetConnection(variable, isVerilogVCD);
+                    Output con = GetConnection(variable, isVerilogVCD) as Output;
                     if (con == null)
                     {
                         continue;
                     }
 
-                    if (!ComputeAllowsUpdate.Contains(con))
+                    if (!ComputeAllowsUpdate.Contains(con) && con.Node is not IStatePreserving)
                     {
                         continue;
                     }
 
-                    con.Value.UpdateValue(varValue);
+                    if (!con.Value.IsInitialized())
+                    {
+                        continue;
+                    }
+
+                    var varCopy = varValue;
+                    con.Value.UpdateValue(ref varCopy);
                 }
             }
 
-            return ComputeGraph.Compute();
+        }
+
+        public List<Output> ComputeRemainingGraph()
+        {
+            return ComputeGraph.ComputeAndGetChanged();
+        }
+
+        public void ComputeRemainingGraphFast()
+        {
+            ComputeGraph.ComputeFast();
+        }
+
+        public string StateToString()
+        {
+            StringBuilder builder = new StringBuilder();
+            ModuleStateToString(builder, MainModule, string.Empty);
+
+            return builder.ToString();
+        }
+
+        private void ModuleStateToString(StringBuilder builder, Module mod, string indentation)
+        {
+            if (mod.Name == "Queue_5")
+            {
+
+            }
+            builder.Append(indentation);
+            builder.Append(' ');
+            builder.AppendLine(mod.Name);
+
+            foreach (var io in mod.GetInternalIO())
+            {
+                foreach (var scalar in io.Flatten())
+                {
+                    if (!scalar.IsAnonymous && scalar.Value.IsInitialized())
+                    {
+                        builder.Append(indentation + '\t');
+                        builder.Append(scalar.GetFullName());
+                        builder.Append(" = ");
+                        builder.AppendLine(scalar.Value.ToBinaryString());
+                    }
+                }
+            }
+
+            NodesStateToString(builder, mod.GetAllNodes(), indentation);
+        }
+
+        private void NodesStateToString(StringBuilder builder, FIRRTLNode[] nodes, string indentation)
+        {
+            indentation = indentation + '\t';
+
+            foreach (var node in nodes)
+            {
+                if (node is Module childMod)
+                {
+                    ModuleStateToString(builder, childMod, indentation);
+                }
+                else if (node is Conditional cond)
+                {
+                    foreach (var condMod in cond.CondMods)
+                    {
+                        builder.Append(indentation);
+                        builder.AppendLine("when");
+                        NodesStateToString(builder, condMod.Mod.GetAllNodes(), indentation);
+                    }
+                }
+                else
+                {
+                    foreach (ScalarIO scalar in node.GetIO().SelectMany(x => x.Flatten()))
+                    {
+                        if (!scalar.IsAnonymous)
+                        {
+                            string ioName = scalar.GetFullName();
+                            if (node is Memory mem)
+                            {
+                                ioName = mem.Name + "." + ioName;
+                            }
+                            if (node is Register reg)
+                            {
+                                ioName = reg.Name + "." + ioName;
+                            }
+
+                            builder.Append(indentation);
+                            builder.Append(ioName);
+                            builder.Append(" = ");
+                            if (scalar.Value.IsInitialized())
+                            {
+                                builder.AppendLine(scalar.Value.ToBinaryString());
+                            }
+                            else
+                            {
+                                builder.AppendLine("???");
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

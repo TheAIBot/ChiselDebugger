@@ -77,7 +77,7 @@ namespace ChiselDebug.GraphFIR
 
         public override void Compute()
         {
-            throw new Exception("This node is not computable");
+            //throw new Exception("This node is not computable");
         }
 
         internal override void InferType()

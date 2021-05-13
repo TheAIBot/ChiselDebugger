@@ -5,50 +5,61 @@ using VCDReader;
 
 namespace ChiselDebug.CombGraph
 {
-    public readonly struct Computable
+    public struct Computable
     {
         private readonly FIRRTLNode Node;
         private readonly Output Con;
-        private readonly BinaryVarValue OldValue;
+        private readonly bool IsConModIO;
+        private BinaryVarValue OldValue;
 
         public Computable(FIRRTLNode node)
         {
             this.Node = node;
             this.Con = null;
-            this.OldValue = null;
+            this.IsConModIO = false;
+            this.OldValue = new BinaryVarValue();
         }
 
         public Computable(Output con)
         {
             this.Node = null;
             this.Con = con;
-            this.OldValue = new BinaryVarValue(Con.Value.GetValue().Bits.Length);
-            Array.Fill(OldValue.Bits, BitState.X);
+            this.IsConModIO = Con.Node is Module;
+            this.OldValue = new BinaryVarValue();
         }
 
-        public Output Compute()
+        private void ComputeNode()
+        {
+            Node.Compute();
+        }
+
+        private void ComputeCon()
+        {
+            //Copy value from other side of module
+            if (IsConModIO)
+            {
+                Input input = (Input)Con.GetPaired();
+                if (input.IsConnectedToAnything())
+                {
+                    Con.Value.UpdateValue(ref input.UpdateValueFromSourceFast());
+                }
+            }
+        }
+
+        public Output ComputeGetIfChanged()
         {
             if (Node != null)
             {
-                Node.Compute();
+                ComputeNode();
             }
             else
             {
-                //Copy value from other side of module
-                if (Con.Node is Module mod)
-                {
-                    Input input = (Input)mod.GetPairedIO(Con);
-                    if (input.IsConnectedToAnything())
-                    {
-                        input.UpdateValueFromSource();
-                        Con.Value.UpdateFrom(input.Value);
-                    }
-                }
+                ComputeCon();
 
                 //Did connection value change?
-                if (!OldValue.SameValue(Con.Value.GetValue()))
+                if (!OldValue.SameValue(ref Con.GetValue()))
                 {
-                    OldValue.SetBitsAndExtend(Con.Value.GetValue(), false);
+                    OldValue.SetBitsAndExtend(ref Con.GetValue(), false);
                     Con.Value.UpdateValueString();
                     return Con;
                 }
@@ -57,11 +68,44 @@ namespace ChiselDebug.CombGraph
             return null;
         }
 
+        public void ComputeFast()
+        {
+            if (Node != null)
+            {
+                ComputeNode();
+            }
+            else
+            {
+                ComputeCon();
+            }
+        }
+
+        public void InferType()
+        {
+            if (Node != null)
+            {
+                Node.InferType();
+            }
+            else
+            {
+                Con.InferType();
+                Con.SetDefaultvalue();
+                OldValue = new BinaryVarValue(Con.GetValue().Bits.Length, false);
+                OldValue.SetAllUnknown();
+
+                foreach (var input in Con.GetConnectedInputs())
+                {
+                    input.InferType();
+                    input.SetDefaultvalue();
+                }
+            }
+        }
+
         public override string ToString()
         {
             if (Con!= null)
             {
-                return $"Con: {Con.Node}";
+                return $"Con: {Con.Node}, Module: {Con.GetModResideIn().Name}, Name: {Con.GetFullName()}";
             }
             else
             {

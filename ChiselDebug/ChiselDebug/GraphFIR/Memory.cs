@@ -51,7 +51,11 @@ namespace ChiselDebug.GraphFIR
 
         internal int GetAddressWidth()
         {
-            return (int)Math.Round(Math.Log2(Size));
+            if (Size == 1)
+            {
+                return 1;
+            }
+            return (int)Math.Ceiling(Math.Log2(Size));
         }
 
         internal MemoryIO GetIOAsBundle()

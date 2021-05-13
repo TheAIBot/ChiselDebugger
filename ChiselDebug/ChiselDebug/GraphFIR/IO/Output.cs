@@ -37,11 +37,11 @@ namespace ChiselDebug.GraphFIR.IO
             return this;
         }
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, bool isConditional = false)
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Output condition = null)
         {
             if (input is Input ioIn)
             {
-                if (!isConditional && ioIn.IsConnected())
+                if (condition == null && ioIn.IsConnected())
                 {
                     if (ioIn.Con != null)
                     {
@@ -49,12 +49,8 @@ namespace ChiselDebug.GraphFIR.IO
                     }
                 }
 
-                if (To == null)
-                {
-                    To = new HashSet<Input>();
-                }
-                To.Add(ioIn);
-                ioIn.Connect(this, isConditional);
+                ConnectOnlyOutputSide(ioIn);
+                ioIn.Connect(this, condition);
             }
             else
             {
@@ -116,9 +112,9 @@ namespace ChiselDebug.GraphFIR.IO
 
             if (Node is PairedIOFIRRTLNode pairedIO)
             {
-                if (pairedIO is Mux mux)
+                if (pairedIO is Mux || pairedIO is Register)
                 {
-                    SetType(TypeHelper.InferMuxOutputType(this, mux));
+                    SetType(TypeHelper.InferMaxWidthType(this, pairedIO));
                 }
                 else
                 {
@@ -137,8 +133,22 @@ namespace ChiselDebug.GraphFIR.IO
 
         public void DisconnectInput(Input input)
         {
-            To.Remove(input);
+            DisconnectOnlyOutputSide(input);
             input.Disconnect(this);
+        }
+
+        internal void DisconnectOnlyOutputSide(Input input)
+        {
+            To.Remove(input);
+        }
+
+        internal void ConnectOnlyOutputSide(Input input)
+        {
+            if (To == null)
+            {
+                To = new HashSet<Input>();
+            }
+            To.Add(input);
         }
 
         public IEnumerable<Input> GetConnectedInputs()
