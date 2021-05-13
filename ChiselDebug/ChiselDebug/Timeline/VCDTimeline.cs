@@ -13,6 +13,7 @@ namespace ChiselDebug.Timeline
         public readonly TimeScale TimeScale;
         public readonly TimeSpan TimeInterval;
         private readonly List<TimeSegmentChanges> SegmentChanges = new List<TimeSegmentChanges>();
+        public int StateCount { get; private set; } = 0;
 
         public VCDTimeline(VCD vcd)
         {
@@ -44,6 +45,7 @@ namespace ChiselDebug.Timeline
             {
                 if (simCmd.SimCmd is SimTime time)
                 {
+                    StateCount++;
                     TimeStepChanges timeStep = new TimeStepChanges(time.Time, currTimeStepStart, currTimeStepLength);
                     currTimeStepStart += currTimeStepLength;
                     currTimeStepLength = 0;
@@ -123,6 +125,11 @@ namespace ChiselDebug.Timeline
                     yield return time;
                 }
             }
+        }
+
+        public CircuitState GetFirstState()
+        {
+            return GetStateAtTime(TimeInterval.StartInclusive);
         }
     }
 }

@@ -66,5 +66,16 @@ namespace ChiselDebug
         {
             return new CircuitState(this);
         }
+
+        public IEnumerable<VarDef> GetAllVariableDefinitions()
+        {
+            foreach (var binValue in VariableValues.Values)
+            {
+                foreach (var varDef in binValue.Variables)
+                {
+                    yield return varDef;
+                }
+            }
+        }
     }
 }

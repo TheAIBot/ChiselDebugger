@@ -16,8 +16,9 @@ namespace ChiselDebug
         public readonly string Name;
         public readonly Module MainModule;
         public readonly CombComputeGraph ComputeGraph;
-        public readonly Dictionary<VarDef, ScalarIO> VarDefToCon = new Dictionary<VarDef, ScalarIO>();
-        public readonly HashSet<Output> ComputeAllowsUpdate = new HashSet<Output>();
+        private readonly Dictionary<VarDef, ScalarIO> VarDefToCon = new Dictionary<VarDef, ScalarIO>();
+        private readonly HashSet<Output> ComputeAllowsUpdate = new HashSet<Output>();
+        private readonly Dictionary<string, List<Output>> VarDefIDToCon = new Dictionary<string, List<Output>>();
 
         public CircuitGraph(string name, Module mainModule)
         {
@@ -73,11 +74,6 @@ namespace ChiselDebug
 
         private bool TryFindIO(string ioName, IContainerIO container, bool isVerilogVCD, out IContainerIO foundIO)
         {
-            if (ioName == "_T_35_data__T_68_data")
-            {
-
-            }
-
             string remainingName = ioName;
             string searchName = remainingName;
             while (true)
@@ -178,23 +174,6 @@ namespace ChiselDebug
             {
                 VarDefToCon.Add(variable, null);
                 return null;
-                ////Wierd wires are added to memory ports that are not part of the
-                ////firrtl code. Just ignore those wires.
-                //if (moduleIO is MemPort)
-                //{
-                //    VarDefToCon.Add(variable, null);
-                //    return null;
-                //}
-
-                ////FIRRTL lowering creates temporaries that are not part of high
-                ////level FIRRTL code which is why they can't be found
-                //if (variable.Reference.StartsWith("_GEN"))
-                //{
-                //    VarDefToCon.Add(variable, null);
-                //    return null;
-                //}
-
-                //throw new Exception($"Failed to find vcd io in circuit. IO name: {variable.Reference}");
             }
 
             //Because a register is Duplex, its io is contained
@@ -236,31 +215,54 @@ namespace ChiselDebug
 
         public void SetState(CircuitState state, bool isVerilogVCD)
         {
-            foreach (BinaryVarValue varValue in state.VariableValues.Values)
+            if (VarDefToCon.Count == 0)
             {
-                foreach (var variable in varValue.Variables)
+                foreach (BinaryVarValue varValue in state.VariableValues.Values)
                 {
-                    Output con = GetConnection(variable, isVerilogVCD) as Output;
-                    if (con == null)
+                    foreach (var variable in varValue.Variables)
                     {
-                        continue;
-                    }
+                        Output con = GetConnection(variable, isVerilogVCD) as Output;
+                        if (con == null)
+                        {
+                            continue;
+                        }
 
-                    if (!ComputeAllowsUpdate.Contains(con) && con.Node is not IStatePreserving)
-                    {
-                        continue;
-                    }
+                        if (!ComputeAllowsUpdate.Contains(con) && con.Node is not IStatePreserving)
+                        {
+                            VarDefToCon[variable] = null;
+                            continue;
+                        }
 
-                    if (!con.Value.IsInitialized())
-                    {
-                        continue;
-                    }
+                        if (!con.Value.IsInitialized())
+                        {
+                            continue;
+                        }
 
-                    var varCopy = varValue;
-                    con.Value.UpdateValue(ref varCopy);
+                        var varCopy = varValue;
+                        con.Value.UpdateValue(ref varCopy);
+
+                        List<Output> idToScalars;
+                        if (!VarDefIDToCon.TryGetValue(variable.ID, out idToScalars))
+                        {
+                            idToScalars = new List<Output>();
+                            VarDefIDToCon.Add(variable.ID, idToScalars);
+                        }
+
+                        idToScalars.Add(con);
+                    }
                 }
             }
-
+            else
+            {
+                foreach (var idOutputs in VarDefIDToCon)
+                {
+                    BinaryVarValue binValue = state.VariableValues[idOutputs.Key];
+                    foreach (var output in idOutputs.Value)
+                    {
+                        output.Value.UpdateValue(ref binValue);
+                    }
+                }
+            }
         }
 
         public List<Output> ComputeRemainingGraph()
