@@ -444,10 +444,28 @@ namespace ChiselDebug.CombGraph
             return graph;
         }
 
+        private readonly struct SourceSinkCon
+        {
+            private readonly Output Source;
+            private readonly Input Sink;
+
+            public SourceSinkCon(Output source, Input sink)
+            {
+                this.Source = source;
+                this.Sink = sink;
+            }
+
+            public override int GetHashCode()
+            {
+                return HashCode.Combine(Source, Sink);
+            }
+        }
+
         private static (CombComputeNode node, List<Output[]> depTo, HashSet<Output> depOnCons) MakeCombComputeNode(Output[] outputs, HashSet<Output> consFromConsts, bool ignoreConCondBorders, bool skipStatePre = true)
         {
             HashSet<Output> depOnCons = new HashSet<Output>();
             HashSet<Output> seenCons = new HashSet<Output>();
+            HashSet<SourceSinkCon> seenSourceSinkCons = new HashSet<SourceSinkCon>();
             List<Computable> computeOrder = new List<Computable>();
 
             void AddMissingCons(HashSet<Output> missingCons, Input input)
@@ -504,7 +522,11 @@ namespace ChiselDebug.CombGraph
                             computeOrder.Add(new Computable(output));
                         }
 
-                        toTraverse.Enqueue((output, input));
+                        SourceSinkCon con = new SourceSinkCon(output, input);
+                        if (seenSourceSinkCons.Add(con))
+                        {
+                            toTraverse.Enqueue((output, input));
+                        }
                     }
                 }
             }
