@@ -45,29 +45,32 @@ namespace ChiselDebug.Timeline
             {
                 if (simCmd.SimCmd is SimTime time)
                 {
-                    StateCount++;
-                    TimeStepChanges timeStep = new TimeStepChanges(time.Time, currTimeStepStart, currTimeStepLength);
-                    currTimeStepStart += currTimeStepLength;
-                    currTimeStepLength = 0;
-
-                    stepChanges.Add(timeStep);
-
-                    //If segment is full then store the segment and
-                    //prepare for the next segment
-                    if (binChanges.Count > maxChangesPerSegment)
+                    if (StateCount == 0 || currTimeStepLength > 0)
                     {
-                        TimeSpan tSpan = new TimeSpan(startTime, time.Time);
-                        SegmentChanges.Add(new TimeSegmentChanges(tSpan, segmentStartState, binChanges.ToArray(), stepChanges));
-                        currTimeStepStart = 0;
+                        StateCount++;
+                        TimeStepChanges timeStep = new TimeStepChanges(time.Time, currTimeStepStart, currTimeStepLength);
+                        currTimeStepStart += currTimeStepLength;
                         currTimeStepLength = 0;
 
-                        segmentStartState = followState;
-                        followState = segmentStartState.Copy();
+                        stepChanges.Add(timeStep);
 
-                        binChanges.Clear();
-                        stepChanges = new List<TimeStepChanges>();
+                        //If segment is full then store the segment and
+                        //prepare for the next segment
+                        if (binChanges.Count > maxChangesPerSegment)
+                        {
+                            TimeSpan tSpan = new TimeSpan(startTime, time.Time);
+                            SegmentChanges.Add(new TimeSegmentChanges(tSpan, segmentStartState, binChanges.ToArray(), stepChanges));
+                            currTimeStepStart = 0;
+                            currTimeStepLength = 0;
 
-                        startTime = time.Time;
+                            segmentStartState = followState;
+                            followState = segmentStartState.Copy();
+
+                            binChanges.Clear();
+                            stepChanges = new List<TimeStepChanges>();
+
+                            startTime = time.Time;
+                        }
                     }
                 }
                 else if (simCmd.BinValue.HasValue)
