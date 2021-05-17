@@ -19,6 +19,8 @@ namespace ChiselDebug.GraphFIR.IO
             this.DataOut = (FIRIO)GetIO("rdata");
             this.DataIn = (FIRIO)GetIO("wdata");
             this.Mask = (FIRIO)GetIO("wmask");
+
+            InitDataToMask();
         }
 
         private static List<FIRIO> CreateIO(FIRIO inputType, int addressWidth, FIRRTLNode node)

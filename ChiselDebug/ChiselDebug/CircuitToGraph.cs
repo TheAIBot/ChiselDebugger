@@ -380,7 +380,7 @@ namespace ChiselDebug
                 if (port.HasMask())
                 {
                     GraphFIR.IO.FIRIO mask = port.GetMask();
-                    GraphFIR.IO.Output const1 = (GraphFIR.IO.Output)VisitExp(helper, new FIRRTL.UIntLiteral(1, 1), GraphFIR.IO.IOGender.Male);
+                    GraphFIR.IO.Output const1 = (GraphFIR.IO.Output)VisitExp(helper, new FIRRTL.UIntLiteral(0, 1), GraphFIR.IO.IOGender.Male);
                     foreach (var maskInput in mask.Flatten())
                     {
                         ConnectIO(helper, const1, maskInput, false);
@@ -477,14 +477,28 @@ namespace ChiselDebug
             //If going from inside to outside or outside to outside
             //then add condition to that connection if currently in
             //conditional module.
+            GraphFIR.IO.Output condition = null;
             if ((fromMod == helper.Mod && toMod != helper.Mod) ||
                 (fromMod != helper.Mod && toMod != helper.Mod))
             {
-                from.ConnectToInput(to, isPartial, false, helper.Mod.EnableCon);
+                condition = helper.Mod.EnableCon;
             }
-            else
+
+            from.ConnectToInput(to, isPartial, false, condition);
+
+            //If writing to a memory ports data in high level firrtl, then
+            //the mask also has to be set to true for the part of the port data
+            //that was written to.
+            if (GraphFIR.IO.IOHelper.TryGetParentMemPort(to, out var memPort) && 
+                memPort.FromHighLevelFIRRTL &&
+                GraphFIR.IO.IOHelper.IsIOInMaskableMemPortData(to, memPort))
             {
-                from.ConnectToInput(to, isPartial, false, null);
+                var scopeEnableCond = helper.ScopeEnabledCond;
+                foreach (GraphFIR.IO.Input dataInputWrittenTo in to.Flatten())
+                {
+                    var dataInputMask = memPort.GetMaskFromDataInput(dataInputWrittenTo);
+                    scopeEnableCond.ConnectToInput(dataInputMask, false, false, scopeEnableCond);
+                }
             }
         }
 

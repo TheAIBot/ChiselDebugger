@@ -157,5 +157,57 @@ namespace ChiselDebug.GraphFIR.IO
                 }
             }
         }
+
+        public static bool TryGetParentMemPort(FIRIO io, out MemPort port)
+        {
+            FIRIO node = io.Flatten().First();
+            while (node.IsPartOfAggregateIO)
+            {
+                if (node is MemPort foundPort1)
+                {
+                    port = foundPort1;
+                    return true;
+                }
+
+                node = node.ParentIO;
+            }
+
+            if (node is MemPort foundPort2)
+            {
+                port = foundPort2;
+                return true;
+            }
+
+            port = null;
+            return false;
+        }
+
+        public static bool IsIOInMaskableMemPortData(FIRIO io, MemPort port)
+        {
+            if (!port.HasMask())
+            {
+                return false;
+            }
+
+            FIRIO dataInput = port.GetInput();
+
+            FIRIO node = io;
+            while (node.IsPartOfAggregateIO)
+            {
+                if (node == dataInput)
+                {
+                    return true;
+                }
+
+                node = node.ParentIO;
+            }
+
+            if (node == dataInput)
+            {
+                return true;
+            }
+
+            return false;
+        }
     }
 }
