@@ -229,7 +229,6 @@ namespace ChiselDebug
 
                         if (!ComputeAllowsUpdate.Contains(con) && con.Node is not IStatePreserving)
                         {
-                            VarDefToCon[variable] = null;
                             continue;
                         }
 
