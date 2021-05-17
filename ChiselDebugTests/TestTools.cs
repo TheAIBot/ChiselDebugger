@@ -54,7 +54,7 @@ namespace ChiselDebugTests
             using VCD vcd = VCDReader.Parse.FromFile($"{modulePath}/{moduleName}.vcd");
             VCDTimeline timeline = new VCDTimeline(vcd);
 
-            VerifyCircuitState(graph, timeline, false);
+            VerifyCircuitState(graph, timeline, isLoFIRRTL(extension), false);
         }
 
         private static VCDTimeline MakeTimeline(string moduleName, string modulePath)
@@ -115,10 +115,15 @@ namespace ChiselDebugTests
             CircuitGraph graph = VerifyMakeGraph(moduleName, extension, modulePath);
             VCDTimeline timeline = MakeTimeline(moduleName, modulePath);
 
-            VerifyCircuitState(graph, timeline, isVerilogVCD);
+            VerifyCircuitState(graph, timeline, isLoFIRRTL(extension), isVerilogVCD);
         }
 
-        internal static void VerifyCircuitState(CircuitGraph graph, VCDTimeline timeline, bool isVerilogVCD)
+        private static bool isLoFIRRTL(string extension)
+        {
+            return extension == "treadle.lo.fir";
+        }
+
+        internal static void VerifyCircuitState(CircuitGraph graph, VCDTimeline timeline, bool isLoFIRRTL, bool isVerilogVCD)
         {
             int totalWireStates = 0;
             int ignoredBecauseNotExist = 0;
@@ -150,6 +155,17 @@ namespace ChiselDebugTests
                         if (varCon == null)
                         {
                             ignoredBecauseNotExist++;
+                            continue;
+                        }
+
+                        //Input to memory read port is delayed by passing it through registers but this
+                        //step is only done as the last step in the firrtl transformation and therefore
+                        //is only present in loFIRRTL. Inputs to en and addr for read port can therefore
+                        //only be compared hen running loFIRRTL because other wise the delay is not added
+                        //and thus not simulated here.
+                        if (!isLoFIRRTL && varCon.IsPartOfAggregateIO && varCon.ParentIO is MemReadPort && (varCon.Name == "en" || varCon.Name == "addr"))
+                        {
+                            ignoredBecauseMemReadDelay++;
                             continue;
                         }
 
