@@ -126,8 +126,9 @@ namespace ChiselDebugTests
         internal static void VerifyCircuitState(CircuitGraph graph, VCDTimeline timeline, bool isLoFIRRTL, bool isVerilogVCD)
         {
             int totalWireStates = 0;
-            int ignoredBecauseNotExist = 0;
             int ignoredBecauseUnknown = 0;
+            int ignoredBecauseNotExist = 0;
+            int ignoredBecauseMemReadDelay = 0;
             List<string> stateErrors = new List<string>();
             foreach (var state in timeline.GetAllDistinctStates())
             {
@@ -182,7 +183,7 @@ namespace ChiselDebugTests
                             if (expected.Bits[i] != actual.Bits[i])
                             {
                                 //graph.SetStateFast(state, isVerilogVCD);
-                                stateErrors.Add($"\nTime: {state.Time.ToString("N0")}\nName: {expected.Variables[0].Reference}\nExpected: {expected.BitsToString()}\nActual:   {actual.BitsToString()}\n");
+                                stateErrors.Add($"\nTime: {state.Time.ToString("N0")}\nName: {varCon.GetFullName()}\nExpected: {expected.BitsToString()}\nActual:   {actual.BitsToString()}\n");
                                 goto skipCheckRest;
                             }
                         }
@@ -193,14 +194,14 @@ namespace ChiselDebugTests
 
                 if (stateErrors.Count > 0)
                 {
-                    Console.WriteLine($"Wire states: {totalWireStates.ToString("N0")}\nIgnored W: {ignoredBecauseUnknown.ToString("N0")}\nIgnored 404: {ignoredBecauseNotExist.ToString("N0")}");
+                    Console.WriteLine($"Wire states: {totalWireStates.ToString("N0")}\nIgnored W: {ignoredBecauseUnknown.ToString("N0")}\nIgnored Not exist: {ignoredBecauseNotExist.ToString("N0")}\nIgnored Mem read delay: {ignoredBecauseMemReadDelay.ToString("N0")}");
                     Console.WriteLine();
                     Console.WriteLine(graph.StateToString());
                     Assert.Fail(string.Join('\n', stateErrors));
                 }
             }
 
-            Console.WriteLine($"Wire states: {totalWireStates.ToString("N0")}\nIgnored W: {ignoredBecauseUnknown.ToString("N0")}\nIgnored 404: {ignoredBecauseNotExist.ToString("N0")}");
+            Console.WriteLine($"Wire states: {totalWireStates.ToString("N0")}\nIgnored W: {ignoredBecauseUnknown.ToString("N0")}\nIgnored Not exist: {ignoredBecauseNotExist.ToString("N0")}\nIgnored Mem read delay: {ignoredBecauseMemReadDelay.ToString("N0")}");
         }
     }
 }
