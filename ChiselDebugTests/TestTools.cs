@@ -121,7 +121,8 @@ namespace ChiselDebugTests
         internal static void VerifyCircuitState(CircuitGraph graph, VCDTimeline timeline, bool isVerilogVCD)
         {
             int totalWireStates = 0;
-            int ignoredWireStates = 0;
+            int ignoredBecauseNotExist = 0;
+            int ignoredBecauseUnknown = 0;
             List<string> stateErrors = new List<string>();
             foreach (var state in timeline.GetAllDistinctStates())
             {
@@ -138,9 +139,9 @@ namespace ChiselDebugTests
                 graph.ComputeRemainingGraphFast();
                 foreach (BinaryVarValue expected in state.VariableValues.Values)
                 {
-                
                     foreach (var variable in expected.Variables)
                     {
+                        totalWireStates++;
                         ScalarIO varCon = graph.GetConnection(variable, isVerilogVCD);
                         if (varCon is Input input)
                         {
@@ -148,17 +149,17 @@ namespace ChiselDebugTests
                         }
                         if (varCon == null)
                         {
+                            ignoredBecauseNotExist++;
                             continue;
                         }
 
-                        totalWireStates++;
                         ref BinaryVarValue actual = ref varCon.GetValue();
 
                         for (int i = 0; i < Math.Min(expected.Bits.Length, actual.Bits.Length); i++)
                         {
                             if (!actual.Bits[i].IsBinary())
                             {
-                                ignoredWireStates++;
+                                ignoredBecauseUnknown++;
                                 break;
                             }
 
@@ -176,14 +177,14 @@ namespace ChiselDebugTests
 
                 if (stateErrors.Count > 0)
                 {
-                    Console.WriteLine($"Wire states: {totalWireStates.ToString("N0")}\nIgnored: {ignoredWireStates.ToString("N0")}");
+                    Console.WriteLine($"Wire states: {totalWireStates.ToString("N0")}\nIgnored W: {ignoredBecauseUnknown.ToString("N0")}\nIgnored 404: {ignoredBecauseNotExist.ToString("N0")}");
                     Console.WriteLine();
                     Console.WriteLine(graph.StateToString());
                     Assert.Fail(string.Join('\n', stateErrors));
                 }
             }
 
-            Console.WriteLine($"Wire states: {totalWireStates.ToString("N0")}\nIgnored: {ignoredWireStates.ToString("N0")}");
+            Console.WriteLine($"Wire states: {totalWireStates.ToString("N0")}\nIgnored W: {ignoredBecauseUnknown.ToString("N0")}\nIgnored 404: {ignoredBecauseNotExist.ToString("N0")}");
         }
     }
 }
