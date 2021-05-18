@@ -19,37 +19,41 @@
     <div class="moduleContent" style="@(ShowModuleContent() ? string.Empty : "visibility: hidden;");transform: scale(@ContentScale.ToHtmlNumber());">
         @foreach (var posOp in ModuleOpPoses)
         {
-        @if (posOp.Value is Mux)
+            @if (posOp.Value is Mux)
             {
-        <MuxOp @key=posOp.Value PosOp="@(posOp.Cast<Mux>())" ParentLayoutCtrl="CurrModLayout"></MuxOp>
+                <MuxOp @key=posOp.Value PosOp="@(posOp.Cast<Mux>())" ParentLayoutCtrl="CurrModLayout"></MuxOp>
             }
             else if (posOp.Value is MonoArgMonoResPrimOp)
             {
-        <MonoArgPrimOpUI @key=posOp.Value PosOp="@(posOp.Cast<MonoArgMonoResPrimOp>())" ParentLayoutCtrl="CurrModLayout"></MonoArgPrimOpUI>
+                <MonoArgPrimOpUI @key=posOp.Value PosOp="@(posOp.Cast<MonoArgMonoResPrimOp>())" ParentLayoutCtrl="CurrModLayout"></MonoArgPrimOpUI>
             }
             else if (posOp.Value is BiArgMonoResPrimOp)
             {
-        <BiArgMonoResPrimOpUI @key=posOp.Value PosOp="@(posOp.Cast<BiArgMonoResPrimOp>())" ParentLayoutCtrl="CurrModLayout"></BiArgMonoResPrimOpUI>
+                <BiArgMonoResPrimOpUI @key=posOp.Value PosOp="@(posOp.Cast<BiArgMonoResPrimOp>())" ParentLayoutCtrl="CurrModLayout"></BiArgMonoResPrimOpUI>
             }
             else if (posOp.Value is ConstBitRange)
             {
-        <ConstBitRangeUI @key=posOp.Value PosOp="@(posOp.Cast<ConstBitRange>())" ParentLayoutCtrl="CurrModLayout"></ConstBitRangeUI>
+                <ConstBitRangeUI @key=posOp.Value PosOp="@(posOp.Cast<ConstBitRange>())" ParentLayoutCtrl="CurrModLayout"></ConstBitRangeUI>
             }
             else if (posOp.Value is Register)
             {
-        <RegisterUI @key=posOp.Value PosOp="@(posOp.Cast<Register>())" ParentLayoutCtrl="CurrModLayout"></RegisterUI>
+                <RegisterUI @key=posOp.Value PosOp="@(posOp.Cast<Register>())" ParentLayoutCtrl="CurrModLayout"></RegisterUI>
             }
             else if (posOp.Value is Module)
             {
-        <ModuleUI @key=posOp.Value PosOp="@(posOp.Cast<Module>())" ParentLayoutCtrl="CurrModLayout"></ModuleUI>
+                <ModuleUI @key=posOp.Value PosOp="@(posOp.Cast<Module>())" ParentLayoutCtrl="CurrModLayout"></ModuleUI>
             }
             else if (posOp.Value is Memory)
             {
-        <MemoryUI @key=posOp.Value PosOp="@(posOp.Cast<Memory>())" ParentLayoutCtrl="CurrModLayout"></MemoryUI>
+                <MemoryUI @key=posOp.Value PosOp="@(posOp.Cast<Memory>())" ParentLayoutCtrl="CurrModLayout"></MemoryUI>
             }
             else if (posOp.Value is Conditional)
             {
-        <ConditionalUI @key=posOp.Value PosOp="@(posOp.Cast<Conditional>())" ParentLayoutCtrl="CurrModLayout"></ConditionalUI>
+                <ConditionalUI @key=posOp.Value PosOp="@(posOp.Cast<Conditional>())" ParentLayoutCtrl="CurrModLayout"></ConditionalUI>
+            }
+            else if (posOp.Value is VectorAssign)
+            {
+                <VectorAssignUI  @key=posOp.Value PosOp="@(posOp.Cast<VectorAssign>())" ParentLayoutCtrl="CurrModLayout"></VectorAssignUI>
             }
         }
 
