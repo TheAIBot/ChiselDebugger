@@ -124,6 +124,23 @@ namespace ChiselDebug.GraphFIR.IO
             return cons.ToArray();
         }
 
+        internal void TransferConnectionsTo(Input input)
+        {
+            if (Con != null)
+            {
+                Con.ConnectToInput(input);
+                Con.DisconnectInput(this);
+            }
+            if (CondCons != null)
+            {
+                foreach (var condCon in CondCons.ToArray())
+                {
+                    condCon.From.ConnectToInput(input, false, false, condCon.Condition);
+                    condCon.From.DisconnectInput(this);
+                }
+            }
+        }
+
         public void Disconnect(Output toDisconnect)
         {
             if (Con == toDisconnect)

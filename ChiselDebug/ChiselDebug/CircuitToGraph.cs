@@ -783,7 +783,10 @@ namespace ChiselDebug
                 }
                 else
                 {
-                    refContainer = vec.MakeWriteAccess(index, gender);
+                    GraphFIR.VectorAssign vecAssign = new GraphFIR.VectorAssign(vec, index, helper.Mod.EnableCon, null);
+                    helper.AddNodeToModule(vecAssign);
+
+                    refContainer = vecAssign.GetAssignIO();
                 }
             }
             else
