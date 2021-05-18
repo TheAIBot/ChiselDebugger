@@ -101,6 +101,16 @@ namespace ChiselDebug.CombGraph
             }
         }
 
+        public FIRRTLNode GetNode()
+        {
+            return Node;
+        }
+
+        public Output GetConnection()
+        {
+            return Con;
+        }
+
         public override string ToString()
         {
             if (Con!= null)
