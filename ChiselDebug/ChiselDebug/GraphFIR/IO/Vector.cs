@@ -6,53 +6,12 @@ using System.Threading.Tasks;
 
 namespace ChiselDebug.GraphFIR.IO
 {
-    public class VectorAccess : IOBundle
-    {
-        private readonly FIRIO Access;
-        private readonly FIRIO Index;
-
-        public VectorAccess(FIRRTLNode node, FIRIO index, FIRIO access) : base(node, null, new List<FIRIO>() { index, access })
-        {
-            this.Access = access;
-            this.Index = index;
-        }
-
-        public override FIRIO GetInput()
-        {
-            if (!Access.IsPassiveOfType<Input>())
-            {
-                throw new Exception("Vector access is not a passive input type.");
-            }
-
-            return Access;
-        }
-
-        public override FIRIO GetOutput()
-        {
-            if (!Access.IsPassiveOfType<Output>())
-            {
-                throw new Exception("Vector access is not a passive output type.");
-            }
-
-            return Access;
-        }
-
-        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)
-        {
-            return new VectorAccess(node, Index.ToFlow(flow, node), Access.ToFlow(flow, node));
-        }
-    }
-
-    public class Vector : AggregateIO, IPortsIO
+    public class Vector : AggregateIO
     {
         private readonly FIRIO[] IO;
-        private readonly List<VectorAccess> VisiblePorts = new List<VectorAccess>();
         public int Length => IO.Length;
 
-        public Vector(FIRRTLNode node, string name, int length, FIRIO firIO) : this(node, name, length, firIO, new List<VectorAccess>())
-        { }
-
-        private Vector(FIRRTLNode node, string name, int length, FIRIO firIO, List<VectorAccess> visiblePorts) : base(node, name)
+        public Vector(FIRRTLNode node, string name, int length, FIRIO firIO) : base(node, name)
         {
             if (!firIO.IsPassive())
             {
@@ -60,7 +19,6 @@ namespace ChiselDebug.GraphFIR.IO
             }
 
             this.IO = new FIRIO[length];
-            this.VisiblePorts = visiblePorts;
             for (int i = 0; i < IO.Length; i++)
             {
                 IO[i] = firIO.Copy(node);
@@ -70,15 +28,6 @@ namespace ChiselDebug.GraphFIR.IO
         }
 
         public override FIRIO[] GetIOInOrder()
-        {
-            List<FIRIO> allIO = new List<FIRIO>();
-            allIO.AddRange(IO);
-            allIO.AddRange(VisiblePorts);
-
-            return allIO.ToArray();
-        }
-
-        public FIRIO[] GetIndexesInOrder()
         {
             return IO.ToArray();
         }
@@ -110,7 +59,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)
         {
-            return new Vector(node, Name, Length, IO[0].ToFlow(flow, node), VisiblePorts.Select(x => (VectorAccess)x.ToFlow(flow, node)).ToList());
+            return new Vector(node, Name, Length, IO[0].ToFlow(flow, node));
         }
 
         public override IEnumerable<ScalarIO> Flatten()
@@ -122,13 +71,6 @@ namespace ChiselDebug.GraphFIR.IO
                     yield return nested;
                 }
             }
-            for (int i = 0; i < VisiblePorts.Count; i++)
-            {
-                foreach (var nested in VisiblePorts[i].Flatten())
-                {
-                    yield return nested;
-                }
-            }
         }
 
         public override List<ScalarIO> Flatten(List<ScalarIO> list)
@@ -136,10 +78,6 @@ namespace ChiselDebug.GraphFIR.IO
             for (int i = 0; i < IO.Length; i++)
             {
                 IO[i].Flatten(list);
-            }
-            for (int i = 0; i < VisiblePorts.Count; i++)
-            {
-                VisiblePorts[i].Flatten(list);
             }
 
             return list;
@@ -192,10 +130,6 @@ namespace ChiselDebug.GraphFIR.IO
             {
                 io.GetAllIOOfType<T>(list);
             }
-            foreach (var io in VisiblePorts)
-            {
-                io.GetAllIOOfType<T>(list);
-            }
 
             return list;
         }
@@ -234,46 +168,6 @@ namespace ChiselDebug.GraphFIR.IO
         public FIRIO GetIndex(int index)
         {
             return IO[index];
-        }
-
-        internal VectorAccess MakeWriteAccess(Output index, IOGender gender)
-        {
-            FIRIO accessIO = IO[0].Copy();
-            if (gender == IOGender.Male && !accessIO.IsPassiveOfType<Output>() ||
-                gender == IOGender.Female && !accessIO.IsPassiveOfType<Input>())
-            {
-                accessIO = accessIO.Flip();
-            }
-
-            FIRIO accessIndex = index.Flip(Node);
-            accessIndex.SetName("index");
-            index.ConnectToInput(accessIndex);
-
-            VectorAccess access = new VectorAccess(Node, accessIndex, accessIO);
-            access.SetParentIO(this);
-            VisiblePorts.Add(access);
-
-            return access;
-        }
-
-        FIRIO[] IPortsIO.GetAllPorts()
-        {
-            return VisiblePorts.ToArray();
-        }
-
-        FIRIO[] IPortsIO.GetOrMakeFlippedPortsFrom(FIRIO[] otherPorts)
-        {
-            FIRIO[] newPorts = new FIRIO[otherPorts.Length];
-
-            for (int i = 0; i < newPorts.Length; i++)
-            {
-                VectorAccess newPort = (VectorAccess)otherPorts[i].Flip(Node);
-                newPort.SetParentIO(this);
-                VisiblePorts.Add(newPort);
-                newPorts[i] = newPort;
-            }
-
-            return newPorts;
         }
     }
 }

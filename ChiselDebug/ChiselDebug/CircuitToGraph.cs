@@ -331,7 +331,7 @@ namespace ChiselDebug
                     //Low level firrtl addresses the ports through the memory but
                     //high level firrtl directly addreses the ports. Need to
                     //make the ports directly addresseable which is why this is done.
-                    var lowMem = (GraphFIR.IO.IPortsIO)helper.Mod.GetIO(cmem.Name);
+                    var lowMem = (GraphFIR.IO.MemoryIO)helper.Mod.GetIO(cmem.Name);
                     foreach (GraphFIR.IO.MemPort port in lowMem.GetAllPorts())
                     {
                         port.FromHighLevelFIRRTL = true;
@@ -776,7 +776,7 @@ namespace ChiselDebug
 
                 if (gender == GraphFIR.IO.IOGender.Male)
                 {
-                    GraphFIR.Mux node = new GraphFIR.Mux(vec.GetIndexesInOrder().ToList(), index, null, true);
+                    GraphFIR.Mux node = new GraphFIR.Mux(vec.GetIOInOrder().ToList(), index, null, true);
                     helper.AddNodeToModule(node);
 
                     refContainer = node.Result;

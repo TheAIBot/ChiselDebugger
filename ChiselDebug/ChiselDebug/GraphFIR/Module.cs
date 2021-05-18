@@ -238,12 +238,9 @@ namespace ChiselDebug.GraphFIR
                 FIRRTLNode node = Nodes[i];
                 if (node is Wire wire)
                 {
-                    if (wire.CanBypassWire())
-                    {
-                        wire.BypassWireIO();
-                        Nodes.RemoveAt(i);
-                        NameToIO.Remove(wire.Name);
-                    }
+                    wire.BypassWireIO();
+                    Nodes.RemoveAt(i);
+                    NameToIO.Remove(wire.Name);
                 }
             }
         }

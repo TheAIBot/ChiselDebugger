@@ -36,18 +36,6 @@ namespace ChiselDebug.GraphFIR
             Debug.Assert(Result.Flatten().All(x => !x.IsConnectedToAnything()));
         }
 
-        internal bool CanBypassWire()
-        {
-            int portCount = 0;
-            portCount += In.GetAllIOOfType<IPortsIO>().Select(x => x.GetAllPorts().Length).Sum();
-            portCount += Result.GetAllIOOfType<IPortsIO>().Select(x => x.GetAllPorts().Length).Sum();
-
-            //No idea how to visualize a Wire with a vector as input/output and a vectoraccess
-            //on the input that changes an index and a vectoracces on the output that selects
-            //a single index from the vector.
-            return portCount == 0;
-        }
-
         internal DuplexIO GetAsDuplex()
         {
             return new DuplexIO(this, Name, In, Result);
