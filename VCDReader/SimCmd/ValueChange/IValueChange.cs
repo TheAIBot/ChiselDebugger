@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace VCDReader
@@ -243,6 +244,7 @@ namespace VCDReader
             }
         }
 
+        [SkipLocalsInit]
         public BigInteger AsUnsignedBigInteger()
         {
             const int ulongBitCount = 64;
@@ -256,6 +258,37 @@ namespace VCDReader
                 }
 
                 return new BigInteger(value);
+            }
+            else if (Bits.Length <= 1024)
+            {
+                const int bitsPerByte = 8;
+                Span<byte> bytes = stackalloc byte[(Bits.Length + (bitsPerByte - 1)) / bitsPerByte];
+
+                int wholeBytes = Bits.Length / bitsPerByte;
+                for (int i = 0; i < wholeBytes; i++)
+                {
+                    int value = 0;
+                    for (int x = bitsPerByte - 1; x >= 0; x--)
+                    {
+                        value <<= 1;
+                        value |= 1 & (int)Bits[i * bitsPerByte + x];
+                    }
+
+                    bytes[i] = (byte)value;
+                }
+
+                if (Bits.Length % bitsPerByte != 0)
+                {
+                    int lastByte = 0;
+                    for (int i = (Bits.Length % bitsPerByte) - 1; i >= 0; i--)
+                    {
+                        lastByte <<= 1;
+                        lastByte |= 1 & (int)Bits[wholeBytes * bitsPerByte + i];
+                    }
+                    bytes[^1] = (byte)lastByte;
+                }
+
+                return new BigInteger(bytes, true);
             }
             else
             {
