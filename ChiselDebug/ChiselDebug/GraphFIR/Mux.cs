@@ -15,6 +15,10 @@ namespace ChiselDebug.GraphFIR
         public readonly FIRIO Result;
         public readonly bool IsVectorIndexer;
 
+        private readonly Input[] ChoiseInputs;
+        private readonly bool[] ChoiseIsSInt;
+        private readonly Output[] ResultOutputs;
+
         public Mux(List<FIRIO> choises, Output decider, FirrtlNode defNode, bool isVectorIndexer = false) : base(defNode)
         {
             choises = choises.Select(x => x.GetOutput()).ToList();
@@ -41,19 +45,23 @@ namespace ChiselDebug.GraphFIR
             decider.ConnectToInput(Decider);
 
             AddOneToManyPairedIO(Result, Choises.ToList());
+
+            this.ChoiseInputs = Choises.SelectMany(x => x.Flatten().Cast<Input>()).ToArray();
+            this.ResultOutputs = Result.Flatten().Cast<Output>().ToArray();
+            this.ChoiseIsSInt = new bool[ResultOutputs.Length];
         }
 
         public override Input[] GetInputs()
         {
             List<Input> inputs = new List<Input>();
-            inputs.AddRange(Choises.SelectMany(x => x.Flatten()).Cast<Input>());
+            inputs.AddRange(ChoiseInputs);
             inputs.Add(Decider);
             return inputs.ToArray();
         }
 
         public override Output[] GetOutputs()
         {
-            return Result.Flatten().Cast<Output>().ToArray();
+            return ResultOutputs.ToArray();
         }
 
         public override IEnumerable<FIRIO> GetIO()
@@ -69,14 +77,13 @@ namespace ChiselDebug.GraphFIR
 
         public override void Compute()
         {
-            //First pull all results toward the mux
             ref BinaryVarValue deciderValue = ref Decider.UpdateValueFromSourceFast();
 
             //If decidor isn't binary then output can't be chosen
             //so therefore it's set to undecided
             if (!deciderValue.IsValidBinary)
             {
-                foreach (var output in Result.Flatten())
+                foreach (var output in ResultOutputs)
                 {
                     output.GetValue().SetAllUnknown();
                 }
@@ -85,21 +92,21 @@ namespace ChiselDebug.GraphFIR
 
 
 
-            FIRIO ChosenInput;
+            ReadOnlySpan<Input> ChosenInputs;
             if (!IsVectorIndexer)
             {
                 Debug.Assert(Choises.Length <= 2, "Only support multiplexer with two choises");
 
                 if (deciderValue.Bits[0] == BitState.One)
                 {
-                    ChosenInput = Choises.First();
+                    ChosenInputs = ChoiseInputs.AsSpan(0, ResultOutputs.Length);
                 }
                 else
                 {
                     //Conditionally valid
                     if (Choises.Length == 1)
                     {
-                        foreach (Output output in Result.Flatten())
+                        foreach (Output output in ResultOutputs)
                         {
                             output.GetValue().SetAllUnknown();
                         }
@@ -107,27 +114,21 @@ namespace ChiselDebug.GraphFIR
                         return;
                     }
 
-                    ChosenInput = Choises.Last();
+                    ChosenInputs = ChoiseInputs.AsSpan(ResultOutputs.Length);
                 }
             }
             else
             {
-                ChosenInput = Choises[deciderValue.AsInt()];
+                int index = deciderValue.AsInt();
+                ChosenInputs = ChoiseInputs.AsSpan(ResultOutputs.Length * index, ResultOutputs.Length);
             }
 
-            List<ScalarIO> from = new List<ScalarIO>();
-            ChosenInput.Flatten(from);
-
-            List<ScalarIO> to = new List<ScalarIO>();
-            Result.Flatten(to);
-            Debug.Assert(from.Count == to.Count);
-
-            for (int i = 0; i < from.Count; i++)
+            for (int i = 0; i < ResultOutputs.Length; i++)
             {
-                ref BinaryVarValue fromBin = ref ((Input)from[i]).UpdateValueFromSourceFast();
-                ref BinaryVarValue toBin = ref to[i].GetValue();
+                ref BinaryVarValue fromBin = ref ChosenInputs[i].UpdateValueFromSourceFast();
+                ref BinaryVarValue toBin = ref ResultOutputs[i].GetValue();
 
-                toBin.SetBitsAndExtend(ref fromBin, from[i].Type is SIntType);
+                toBin.SetBitsAndExtend(ref fromBin, ChoiseIsSInt[i]);
             }
         }
 
@@ -136,6 +137,12 @@ namespace ChiselDebug.GraphFIR
             foreach (Input input in GetInputs())
             {
                 input.InferType();
+            }
+
+            var firstChoise = Choises.First().Flatten().Cast<Input>().ToArray();
+            for (int i = 0; i < firstChoise.Length; i++)
+            {
+                ChoiseIsSInt[i] = firstChoise[i].Type is SIntType;
             }
         }
     }
