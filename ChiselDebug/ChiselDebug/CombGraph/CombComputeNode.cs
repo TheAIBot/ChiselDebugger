@@ -2,6 +2,7 @@
 using ChiselDebug.GraphFIR.IO;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ChiselDebug.CombGraph
 {
@@ -117,6 +118,21 @@ namespace ChiselDebug.CombGraph
         public ReadOnlySpan<CombComputeNode> GetEdges()
         {
             return OutgoingEdges.AsSpan();
+        }
+
+        internal ReadOnlySpan<Computable> GetComputeOrder()
+        {
+            return ComputeOrder;
+        }
+
+        internal void SetComputeOrder(Computable[] order)
+        {
+            ComputeOrder = order;
+        }
+
+        internal CombComputeNode Copy()
+        {
+            return new CombComputeNode(StartOutputs.ToArray(), StopInputs.ToArray(), ComputeOrder.ToArray(), ConsResponsibleFor.ToArray());
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using ChiselDebug.CombGraph;
+using ChiselDebug.CombGraph.CombGraphOptimizations;
 using ChiselDebug.GraphFIR;
 using ChiselDebug.GraphFIR.IO;
 using System;
@@ -16,6 +17,7 @@ namespace ChiselDebug
         public readonly string Name;
         public readonly Module MainModule;
         public readonly CombComputeGraph ComputeGraph;
+        public readonly CombComputeGraph OptimizedComputegraph;
         private readonly Dictionary<VarDef, ScalarIO> VarDefToCon = new Dictionary<VarDef, ScalarIO>();
         private readonly HashSet<Output> ComputeAllowsUpdate = new HashSet<Output>();
         private readonly Dictionary<string, List<Output>> VarDefIDToCon = new Dictionary<string, List<Output>>();
@@ -26,6 +28,7 @@ namespace ChiselDebug
             this.MainModule = mainModule;
             this.ComputeGraph = CombComputeGraph.MakeMonoGraph(MainModule);
             ComputeGraph.InferTypes();
+            this.OptimizedComputegraph = ComputeOptimizer.Optimize(ComputeGraph);
 
             foreach (var rootStart in ComputeGraph.GetAllRootSources())
             {
@@ -227,7 +230,7 @@ namespace ChiselDebug
                             continue;
                         }
 
-                        if (!ComputeAllowsUpdate.Contains(con) && con.Node is not IStatePreserving)
+                        if (!ComputeAllowsUpdate.Contains(con))
                         {
                             continue;
                         }
@@ -271,7 +274,7 @@ namespace ChiselDebug
 
         public void ComputeRemainingGraphFast()
         {
-            ComputeGraph.ComputeFast();
+            OptimizedComputegraph.ComputeFast();
         }
 
         public string StateToString()

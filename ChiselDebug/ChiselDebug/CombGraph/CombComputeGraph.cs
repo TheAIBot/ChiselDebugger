@@ -183,9 +183,81 @@ namespace ChiselDebug.CombGraph
             return allNodes.ToArray();
         }
 
+        public CombComputeNode[] GetAllNodesInComputeOrder()
+        {
+            Reset();
+
+            int remainingNodes = Nodes.Count + ConstComputeNodes.Count;
+
+            List<CombComputeNode> inOrder = new List<CombComputeNode>();
+            Queue<CombComputeNode> nodesReady = new Queue<CombComputeNode>();
+            foreach (var root in RootNodes)
+            {
+                nodesReady.Enqueue(root);
+            }
+
+            while (nodesReady.Count > 0)
+            {
+                CombComputeNode node = nodesReady.Dequeue();
+                remainingNodes--;
+
+                inOrder.Add(node);
+
+                foreach (var maybeReady in node.GetEdges())
+                {
+                    if (!maybeReady.IsWaitingForDependencies())
+                    {
+                        nodesReady.Enqueue(maybeReady);
+                    }
+                }
+            }
+
+            Debug.Assert(remainingNodes == 0);
+
+            return inOrder.ToArray();
+        }
+
         public Output[] GetAllRootSources()
         {
             return RootSources.ToArray();
+        }
+
+        public CombComputeGraph Copy()
+        {
+            CombComputeGraph graphCopy = new CombComputeGraph(RootSources.ToList());
+            Dictionary<CombComputeNode, CombComputeNode> origToCopy = new Dictionary<CombComputeNode, CombComputeNode>();
+
+            foreach (var origNode in GetConstNodes())
+            {
+                var nodeCopy = origNode.Copy();
+                origToCopy.Add(origNode, nodeCopy);
+
+                graphCopy.AddConstNode(nodeCopy);
+            }
+            foreach (var origNode in GetValueChangingNodes())
+            {
+                var nodeCopy = origNode.Copy();
+                origToCopy.Add(origNode, nodeCopy);
+
+                graphCopy.AddConstNode(nodeCopy);
+            }
+
+            foreach (var origCopy in origToCopy)
+            {
+                var orig = origCopy.Key;
+                var copy = origCopy.Value;
+
+                List<CombComputeNode> edges = new List<CombComputeNode>();
+                foreach (var origEdge in orig.GetEdges())
+                {
+                    edges.Add(origToCopy[origEdge]);
+                }
+
+                copy.AddEdges(edges);
+            }
+
+            graphCopy.ComputeRoots();
+            return graphCopy;
         }
 
         public static CombComputeGraph MakeGraph(Module module)
