@@ -561,7 +561,7 @@ namespace ChiselDebug.CombGraph
                 }
             }
 
-            void AddMaybeBlockedCon(Queue<(Output con, Input input)> toTraverse, Dictionary<Output, HashSet<Output>> blockedOutputs, Output output)
+            void AddMaybeBlockedCon(Stack<(Output con, Input input)> toTraverse, Dictionary<Output, HashSet<Output>> blockedOutputs, Output output)
             {
                 Input[] conInputs = output.GetConnectedInputs().ToArray();
                 if (conInputs.Length == 0)
@@ -597,7 +597,7 @@ namespace ChiselDebug.CombGraph
                         SourceSinkCon con = new SourceSinkCon(output, input);
                         if (seenSourceSinkCons.Add(con))
                         {
-                            toTraverse.Enqueue((output, input));
+                            toTraverse.Push((output, input));
                         }
                     }
                 }
@@ -617,7 +617,7 @@ namespace ChiselDebug.CombGraph
                 computeOrder.Add(new Computable(computeFirst));
             }
 
-            Queue<(Output con, Input input)> toTraverse = new Queue<(Output con, Input input)>();
+            Stack<(Output con, Input input)> toTraverse = new Stack<(Output con, Input input)>();
 
 
             void FoundNodeDep(Output con, FIRRTLNode node, HashSet<Output> missingCons)
@@ -664,7 +664,7 @@ namespace ChiselDebug.CombGraph
 
                 while (toTraverse.Count > 0)
                 {
-                    var conInput = toTraverse.Dequeue();
+                    var conInput = toTraverse.Pop();
                     if (blockedOutputs.TryGetValue(conInput.con, out var blockedOuts))
                     {
                         foreach (var blocked in blockedOuts)
