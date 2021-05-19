@@ -177,10 +177,29 @@ namespace VCDReader
 
             int valueBits = (int)value.GetBitLength();
             int minBits = Math.Min(valueBits, Bits.Length);
-            for (int i = 0; i < minBits; i++)
+
+            //Extract and vonert 32 bits from BigInteger to bits.
+            //32bits are extracted at once instead of one bit at a time
+            //because operations on BigInteger are expensive compared to
+            //he same operations on an int.
+            const int bitsPerInt = 32;
+
+            //How many chunks of 32 bits should be extracted
+            int intCount = (minBits + (bitsPerInt - 1)) / bitsPerInt;
+            int remainingBits = minBits;
+            for (int x = 0; x < intCount; x++)
             {
-                BigInteger bitValue = value >> i;
-                Bits[i] = (BitState)(int)(1 & bitValue);
+                //Shift to get right 32bit chunk
+                BigInteger bitValue = value >> (x * bitsPerInt);
+                uint intValue = (uint)(uint.MaxValue & bitValue);
+
+                //There may be less than 32 bits left to do
+                int doBits = Math.Min(remainingBits, bitsPerInt);
+                remainingBits -= doBits;
+                for (int i = 0; i < doBits; i++)
+                {
+                    Bits[x * bitsPerInt + i] = (BitState)(1 & (intValue >> i));
+                }
             }
 
             if (valueBits < Bits.Length)
