@@ -3,13 +3,8 @@ using ChiselDebug.GraphFIR;
 using ChiselDebug.GraphFIR.IO;
 using ChiselDebug.Routing;
 using ChiselDebuggerWebUI.Pages.FIRRTLUI;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks.Dataflow;
-using static ChiselDebug.SimplePlacer;
 
 namespace ChiselDebuggerWebUI.Code
 {
@@ -19,7 +14,7 @@ namespace ChiselDebuggerWebUI.Code
         private readonly Module Mod;
         private readonly ModuleUI ModUI;
         private readonly SimpleRouter WireRouter;
-        private readonly SimplePlacer NodePlacer;
+        private readonly PlacingBase NodePlacer;
 
         private readonly FIRRTLNode[] ModuleNodes;
         private readonly FIRRTLNode[] ModuleNodesWithModule;
