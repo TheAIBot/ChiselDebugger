@@ -22,9 +22,17 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
                     ref readonly var comp = ref oldOrder[i];
 
                     Output con = comp.GetConnection();
-                    if (con != null && con.Node is not Module)
+                    if (con != null)
                     {
-                        continue;
+                        if (con.Node is not Module)
+                        {
+                            continue;
+                        }
+
+                        if (!((Input)con.GetPaired()).IsConnectedToAnything())
+                        {
+                            continue;
+                        }
                     }
 
                     newOrder.Add(comp);
