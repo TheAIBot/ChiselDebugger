@@ -525,21 +525,22 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
-            //const int bitsInLong = 64;
-            //if (a.Bits.Length <= bitsInLong &&
-            //    b.Bits.Length <= bitsInLong)
-            //{
-            //    ulong aVal = a.AsULong();
-            //    ulong bVal = b.AsULong();
-            //    result.SetBits(aVal & bVal);
-
-            //}
-            //else
-            //{
+            ReadOnlySpan<BitState> aBits = a.Bits;
+            ReadOnlySpan<BitState> bBits = b.Bits;
+            Span<BitState> resBits = result.Bits;
+            if (aBits.Length == bBits.Length)
+            {
+                for (int i = 0; i < a.Bits.Length; i++)
+                {
+                    resBits[i] = aBits[i] & bBits[i];
+                }
+            }
+            else
+            {
                 BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
                 BigInteger bVal = b.AsBigInteger(B.Type is SIntType);
                 result.SetBitsAndExtend(aVal & bVal, false);
-            //}
+            }
         }
     }
 
@@ -549,21 +550,22 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
-            //const int bitsInLong = 64;
-            //if (a.Bits.Length <= bitsInLong &&
-            //    b.Bits.Length <= bitsInLong)
-            //{
-            //    ulong aVal = a.AsULong();
-            //    ulong bVal = b.AsULong();
-            //    result.SetBits(aVal | bVal);
-
-            //}
-            //else
-            //{
+            ReadOnlySpan<BitState> aBits = a.Bits;
+            ReadOnlySpan<BitState> bBits = b.Bits;
+            Span<BitState> resBits = result.Bits;
+            if (aBits.Length == bBits.Length)
+            {
+                for (int i = 0; i < a.Bits.Length; i++)
+                {
+                    resBits[i] = aBits[i] | bBits[i];
+                }
+            }
+            else
+            {
                 BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
                 BigInteger bVal = b.AsBigInteger(B.Type is SIntType);
                 result.SetBitsAndExtend(aVal | bVal, false);
-            //}
+            }
         }
     }
 
@@ -573,21 +575,22 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
-            //const int bitsInLong = 64;
-            //if (a.Bits.Length <= bitsInLong &&
-            //    b.Bits.Length <= bitsInLong)
-            //{
-            //    ulong aVal = a.AsULong();
-            //    ulong bVal = b.AsULong();
-            //    result.SetBits(aVal ^ bVal);
-
-            //}
-            //else
-            //{
+            ReadOnlySpan<BitState> aBits = a.Bits;
+            ReadOnlySpan<BitState> bBits = b.Bits;
+            Span<BitState> resBits = result.Bits;
+            if (aBits.Length == bBits.Length)
+            {
+                for (int i = 0; i < a.Bits.Length; i++)
+                {
+                    resBits[i] = aBits[i] ^ bBits[i];
+                }
+            }
+            else
+            {
                 BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
                 BigInteger bVal = b.AsBigInteger(B.Type is SIntType);
                 result.SetBitsAndExtend(aVal ^ bVal, false);
-            //}
+            }
         }
     }
 
