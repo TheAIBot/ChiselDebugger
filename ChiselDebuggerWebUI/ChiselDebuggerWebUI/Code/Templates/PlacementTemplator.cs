@@ -40,7 +40,7 @@ namespace ChiselDebuggerWebUI.Code.Templates
             }
         }
 
-        public void AddTemplateParameters(string moduleName, SimplePlacer placer, FIRRTLNode[] nodeOrder)
+        public void AddTemplateParameters(string moduleName, PlacingBase placer, FIRRTLNode[] nodeOrder)
         {
             lock (TemplateGenerating)
             {

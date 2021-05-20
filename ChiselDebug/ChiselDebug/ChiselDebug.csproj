@@ -4,6 +4,18 @@
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Rubjerg.Graphviz" Version="1.0.7" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\..\PriorityQueue\PriorityQueue\PriorityQueue.csproj" />
     <ProjectReference Include="..\..\FIRRTL\FIRRTL.csproj" />

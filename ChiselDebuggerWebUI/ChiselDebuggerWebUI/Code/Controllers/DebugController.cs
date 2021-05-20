@@ -129,7 +129,7 @@ namespace ChiselDebuggerWebUI.Code
             RouteTemplates.SubscribeToTemplate(moduleName, modCtrl, modNodesIncludeMod, modIO);
         }
 
-        internal void AddPlaceTemplateParameters(string moduleName, SimplePlacer placer, FIRRTLNode[] nodeOrder)
+        internal void AddPlaceTemplateParameters(string moduleName, PlacingBase placer, FIRRTLNode[] nodeOrder)
         {
             PlacementTemplates.AddTemplateParameters(moduleName, placer, nodeOrder);
         }
