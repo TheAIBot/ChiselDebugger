@@ -146,10 +146,9 @@ namespace ChiselDebug
 
             var xGroups = placement.GroupBy(x => x.Value.X).OrderBy(x => x.Key).ToArray();
             var yGroups = placement.GroupBy(x => x.Value.Y).OrderBy(x => x.Key).ToArray();
-            Point borderPadding = new Point(200, 200);
 
-            int[] xOffsets = MakeXOffsets(xGroups, min, borderPadding, columns, nodeSizes, mod);
-            int[] yOffsets = MakeYOffsets(yGroups, min, borderPadding, rows, nodeSizes);
+            int[] xOffsets = MakeXOffsets(xGroups, min, columns, nodeSizes, mod);
+            int[] yOffsets = MakeYOffsets(yGroups, min, 72, rows, nodeSizes);
 
             for (int x = 0; x < columns; x++)
             {
@@ -167,29 +166,15 @@ namespace ChiselDebug
                 }
             }
 
-
-            placments.AddEndStuff(borderPadding);
+            Point borderPadding = new Point(100, 200);
+            placments.AutoSpacePlacementRanks(mod);
+            placments.AddBorderPadding(borderPadding);
             return placments;
         }
 
-        private int[] MakeXOffsets(IGrouping<int, KeyValuePair<Node<FIRRTLNode>, Point>>[] xGroups, Point minPos, Point borderPadding, int columns, Dictionary<FIRRTLNode, Point> nodeSizes, Module mod)
+        private int[] MakeXOffsets(IGrouping<int, KeyValuePair<Node<FIRRTLNode>, Point>>[] xGroups, Point minPos, int columns, Dictionary<FIRRTLNode, Point> nodeSizes, Module mod)
         {
-            int modOutputCount = mod.GetInternalOutputs().Sum(x => x.IsConnectedToAnything() ? 1 : 0);
-            int modInputCount = mod.GetInternalInputs().Sum(x => x.IsConnectedToAnything() ? 1 : 0);
-
-            int[] xSpacing = new int[xGroups.Length + 1];
-
-            const int spaceForWire = 12;
-            xSpacing[0] += modOutputCount * spaceForWire;
-            xSpacing[^1] += modInputCount * spaceForWire;
-
-            for (int i = 0; i < xGroups.Length; i++)
-            {
-                xSpacing[i] += xGroups[i].Sum(x => x.Key.Incomming.Count) * spaceForWire;
-                xSpacing[i + 1] += xGroups[i].Sum(x => x.Key.Outgoing.Count) * spaceForWire;
-            }
-
-            int xOffset = borderPadding.X + xSpacing[0];
+            int xOffset = 0;
             int[] xOffsets = new int[columns];
             for (int i = 0; i < xGroups.Length; i++)
             {
@@ -198,15 +183,15 @@ namespace ChiselDebug
 
                 xOffsets[xIndex] = xOffset;
 
-                xOffset += widest + xSpacing[i + 1];
+                xOffset += widest + 1;
             }
 
             return xOffsets;
         }
 
-        private int[] MakeYOffsets(IGrouping<int, KeyValuePair<Node<FIRRTLNode>, Point>>[] yGroups, Point minPos, Point borderPadding, int rows, Dictionary<FIRRTLNode, Point> nodeSizes)
+        private int[] MakeYOffsets(IGrouping<int, KeyValuePair<Node<FIRRTLNode>, Point>>[] yGroups, Point minPos, int yCompDist, int rows, Dictionary<FIRRTLNode, Point> nodeSizes)
         {
-            int yOffset = borderPadding.Y;
+            int yOffset = 0;
             int[] yOffsets = new int[rows];
             foreach (var yGroup in yGroups)
             {
@@ -215,7 +200,7 @@ namespace ChiselDebug
 
                 yOffsets[yIndex] = yOffset;
 
-                yOffset += widest + borderPadding.Y;
+                yOffset += widest + yCompDist;
             }
 
             return yOffsets;

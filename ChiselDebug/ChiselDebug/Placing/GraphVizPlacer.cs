@@ -24,7 +24,7 @@ namespace ChiselDebug
             RootGraph graph = RootGraph.CreateNew("some name??", GraphType.Directed);
             graph.SafeSetAttribute("rankdir", "LR", "TB");
             graph.SafeSetAttribute("ranksep", "7", "0.5");
-            graph.SafeSetAttribute("nodesep", "3.0", "0.25");
+            graph.SafeSetAttribute("nodesep", "1.0", "0.25");
             //graph.SafeSetAttribute("ranksep", )
 
             //Add nodes to graph
@@ -119,14 +119,15 @@ namespace ChiselDebug
                 min = Point.Min(min, rect.Pos);
             }
 
-            Point borderPadding = new Point(200, 200);
-            Point offsetBy = min.Abs() + borderPadding;
+            Point offsetBy = min.Abs();
             foreach (var firRect in firNodeRects)
             {
                 placments.AddNodePlacement(firRect.Key, new Rectangle(offsetBy + firRect.Value.Pos, firRect.Value.Size));
             }
 
-            placments.AddEndStuff(borderPadding);
+            Point borderPadding = new Point(100, 200);
+            placments.AutoSpacePlacementRanks(mod);
+            placments.AddBorderPadding(borderPadding);
             return placments;
         }
     }
