@@ -191,6 +191,16 @@ namespace ChiselDebug
 
                 return helper.Mod;
             }
+            else if (moduleDef is FIRRTL.ExtModule extMod)
+            {
+                VisitHelper helper = parentHelper.ForNewModule(extMod.Name, extMod);
+                foreach (var port in extMod.Ports)
+                {
+                    VisitPort(helper, port);
+                }
+
+                return helper.Mod;
+            }
             else
             {
                 throw new NotImplementedException();
