@@ -25,12 +25,13 @@ namespace ChiselDebug
             graph.SafeSetAttribute("rankdir", "LR", "TB");
             graph.SafeSetAttribute("ranksep", "7", "0.5");
             graph.SafeSetAttribute("nodesep", "1.0", "0.25");
-            //graph.SafeSetAttribute("ranksep", )
 
             //Add nodes to graph
             Dictionary<FIRRTLNode, Node> firNodeToNode = new Dictionary<FIRRTLNode, Node>();
             Dictionary<Input, string> inputToPort = new Dictionary<Input, string>();
             Dictionary<Output, string> outputToPort = new Dictionary<Output, string>();
+            Dictionary<Input, Node> inputToNode = new Dictionary<Input, Node>();
+            Dictionary<Output, Node> outputToNode = new Dictionary<Output, Node>();
             int nodeCounter = 0;
             int portName = 0;
             foreach (var firNode in nodeSizes)
@@ -52,37 +53,17 @@ namespace ChiselDebug
                 MakeIntoRecord(node, nodeInputs, nodeOutputs, inputToPort, outputToPort, ref portName);
 
                 firNodeToNode.Add(firNode.Key, node);
-            }
 
-            //Relate io to FIRRTLNode
-            Dictionary<ScalarIO, FIRRTLNode> inputToFirNode = new Dictionary<ScalarIO, FIRRTLNode>();
-            Dictionary<ScalarIO, FIRRTLNode> outputToFirNode = new Dictionary<ScalarIO, FIRRTLNode>();
-            foreach (var firNode in nodeSizes.Keys)
-            {
-                if (firNode == mod)
+                foreach (var input in nodeInputs)
                 {
-                    continue;
+                    inputToNode.Add(input, node);
                 }
-                foreach (var input in firNode.GetInputs())
+                foreach (var output in nodeOutputs)
                 {
-                    inputToFirNode.Add(input, firNode);
-                }
-                foreach (var output in firNode.GetOutputs())
-                {
-                    outputToFirNode.Add(output, firNode);
+                    outputToNode.Add(output, node);
                 }
             }
 
-            Dictionary<ScalarIO, Node> inputToNode = new Dictionary<ScalarIO, Node>();
-            Dictionary<ScalarIO, Node> outputToNode = new Dictionary<ScalarIO, Node>();
-            foreach (var keyValue in inputToFirNode)
-            {
-                inputToNode.Add(keyValue.Key, firNodeToNode[keyValue.Value]);
-            }
-            foreach (var keyValue in outputToFirNode)
-            {
-                outputToNode.Add(keyValue.Key, firNodeToNode[keyValue.Value]);
-            }
             Node modInputNode = graph.GetOrAddNode("modInput");
             MakeIntoRecord(modInputNode, mod.GetInputs(), Array.Empty<Output>(), inputToPort, outputToPort, ref portName);
             modInputNode.SafeSetAttribute("rank", "sink", "sink");
