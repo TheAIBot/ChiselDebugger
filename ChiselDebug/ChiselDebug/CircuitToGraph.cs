@@ -48,12 +48,12 @@ namespace ChiselDebug
 
         public VisitHelper ForNewModule(string moduleName, FIRRTL.DefModule moduleDef)
         {
-            return new VisitHelper(new GraphFIR.Module(moduleName, null, moduleDef), LowFirGraph, ModuleRoots, this, false, RootHelper ?? this);
+            return new VisitHelper(new GraphFIR.Module(moduleName, Mod, moduleDef), LowFirGraph, ModuleRoots, this, false, RootHelper ?? this);
         }
 
         public VisitHelper ForNewCondModule(string moduleName, FIRRTL.DefModule moduleDef)
         {
-            return new VisitHelper(new GraphFIR.Module(moduleName, this.Mod, moduleDef), LowFirGraph, ModuleRoots, this, true, RootHelper ?? this);
+            return new VisitHelper(new GraphFIR.Module(moduleName, Mod, moduleDef), LowFirGraph, ModuleRoots, this, true, RootHelper ?? this);
         }
 
         public void AddNodeToModule(GraphFIR.FIRRTLNode node)

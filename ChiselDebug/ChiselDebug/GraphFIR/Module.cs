@@ -11,20 +11,18 @@ namespace ChiselDebug.GraphFIR
     public class Module : FIRRTLContainer
     {
         public readonly string Name;
-        public List<FIRRTLNode> Nodes = new List<FIRRTLNode>();
+        private readonly List<FIRRTLNode> Nodes = new List<FIRRTLNode>();
         private readonly Dictionary<string, FIRIO> NameToIO = new Dictionary<string, FIRIO>();
         private readonly Dictionary<IOBundle, Module> BundleToModule = new Dictionary<IOBundle, Module>();
         private readonly Dictionary<Input, Wire> DuplexOutputWires = new Dictionary<Input, Wire>();
-        private readonly Module ParentScopeView;
         public Output EnableCon { get; private set; }
         public bool IsConditional => EnableCon != null;
         
 
-        public Module(string name, Module parentScope, FirrtlNode defNode) : base(defNode)
+        public Module(string name, Module parentMod, FirrtlNode defNode) : base(defNode)
         {
             this.Name = name;
-            this.ParentScopeView = parentScope;
-            SetModResideIn(this);
+            SetModResideIn(parentMod);
         }
 
         public void SetEnableCond(Output enable)
@@ -90,11 +88,14 @@ namespace ChiselDebug.GraphFIR
 
         public void AddMemoryPort(MemPort port)
         {
-            if (ParentScopeView != null)
+            if (IsConditional)
             {
-                ParentScopeView.AddMemoryPort(port);
+                ResideIn.AddMemoryPort(port);
             }
-            NameToIO.Add(port.Name, port);
+            else
+            {
+                NameToIO.Add(port.Name, port);
+            }
         }
 
         public void AddConditional(Conditional cond)
@@ -171,7 +172,7 @@ namespace ChiselDebug.GraphFIR
                 }
             }
 
-            if (ParentScopeView != null && ParentScopeView.TryGetIOInternal(ioName, modulesOnly, false, out container))
+            if (IsConditional && ResideIn.TryGetIOInternal(ioName, modulesOnly, false, out container))
             {
                 return true;
             }
