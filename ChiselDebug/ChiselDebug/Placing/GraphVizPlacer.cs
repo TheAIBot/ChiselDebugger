@@ -29,17 +29,28 @@ namespace ChiselDebug
 
             //Add nodes to graph
             Dictionary<FIRRTLNode, Node> firNodeToNode = new Dictionary<FIRRTLNode, Node>();
+            Dictionary<Input, string> inputToPort = new Dictionary<Input, string>();
+            Dictionary<Output, string> outputToPort = new Dictionary<Output, string>();
             int nodeCounter = 0;
+            int portName = 0;
             foreach (var firNode in nodeSizes)
             {
                 if (firNode.Key == mod)
                 {
                     continue;
                 }
-                Node node = graph.GetOrAddNode((nodeCounter++).ToString());
-                node.SafeSetAttribute("shape", "rect", "ellipse");
+
+                string nodeName = $"n{nodeCounter++}";
+                Node node = graph.GetOrAddNode(nodeName);
+                node.SafeSetAttribute("shape", "record", "ellipse");
                 node.SafeSetAttribute("width", ((double)firNode.Value.X / dpi).ToString(), "0.75");
                 node.SafeSetAttribute("height", ((double)firNode.Value.Y / dpi).ToString(), "0.5");
+
+                Input[] nodeInputs = firNode.Key.GetInputs();
+                Output[] nodeOutputs = firNode.Key.GetOutputs();
+
+                MakeIntoRecord(node, nodeInputs, nodeOutputs, inputToPort, outputToPort, ref portName);
+
                 firNodeToNode.Add(firNode.Key, node);
             }
 
@@ -72,6 +83,13 @@ namespace ChiselDebug
             {
                 outputToNode.Add(keyValue.Key, firNodeToNode[keyValue.Value]);
             }
+            Node modInputNode = graph.GetOrAddNode("modInput");
+            MakeIntoRecord(modInputNode, mod.GetInputs(), Array.Empty<Output>(), inputToPort, outputToPort, ref portName);
+            modInputNode.SafeSetAttribute("rank", "sink", "sink");
+
+            Node modOutputNode = graph.GetOrAddNode("modOutput");
+            MakeIntoRecord(modInputNode, Array.Empty<Input>(), mod.GetOutputs(), inputToPort, outputToPort, ref portName);
+            modOutputNode.SafeSetAttribute("rank", "source", "source");
 
             //Make edges
             int edgeCounter = 0;
@@ -94,7 +112,9 @@ namespace ChiselDebug
                         continue;
                     }
                     var to = inputToNode[input];
-                    graph.GetOrAddEdge(from, to, (edgeCounter++).ToString());
+                    var edge = graph.GetOrAddEdge(from, to, (edgeCounter++).ToString());
+                    edge.SafeSetAttribute("tailport", outputToPort[output], " ");
+                    edge.SafeSetAttribute("headport", inputToPort[input], " ");
                 }
             }
 
@@ -129,6 +149,30 @@ namespace ChiselDebug
             placments.AutoSpacePlacementRanks(mod);
             placments.AddBorderPadding(borderPadding);
             return placments;
+        }
+
+        private void MakeIntoRecord(Node node, Input[] inputs, Output[] outputs, Dictionary<Input, string> inputToPort, Dictionary<Output, string> outputToPort, ref int portName)
+        {
+            int length = Math.Max(inputs.Length, outputs.Length);
+            List<string> ports = new List<string>();
+            for (int i = 0; i < length; i++)
+            {
+                string inputName = $"e{portName + i}";
+                string outputName = $"e{portName + i + length}";
+                ports.Add($"{{<{inputName}> | <{outputName}>}}");
+            }
+            for (int i = 0; i < inputs.Length; i++)
+            {
+                string inputName = $"e{portName + i}";
+                inputToPort.Add(inputs[i], inputName);
+            }
+            for (int i = 0; i < outputs.Length; i++)
+            {
+                string outputName = $"e{portName + i + length}";
+                outputToPort.Add(outputs[i], outputName);
+            }
+            node.SafeSetAttribute("label", string.Join(" | ", ports), " ");
+            portName += length * 2;
         }
     }
 }
