@@ -213,8 +213,8 @@ namespace ChiselDebugTests
         [TestMethod] public void TileTester_0_fir() => TestTools.VerifyComputeGraph("TileTester_0", "fir", true, TestDir);
         [TestMethod] public void TileTester_0_lo_fir() => TestTools.VerifyComputeGraph("TileTester_0", "lo.fir", true, TestDir);
 
-        [TestMethod] public void TileTester_1_fir() => TestTools.VerifyComputeGraph("TileTester_1", "fir", true, TestDir);
-        [TestMethod] public void TileTester_1_lo_fir() => TestTools.VerifyComputeGraph("TileTester_1", "lo.fir", true, TestDir);
+        //[TestMethod] public void TileTester_1_fir() => TestTools.VerifyComputeGraph("TileTester_1", "fir", true, TestDir);
+        //[TestMethod] public void TileTester_1_lo_fir() => TestTools.VerifyComputeGraph("TileTester_1", "lo.fir", true, TestDir);
 
         [TestMethod] public void TileTester_2_fir() => TestTools.VerifyComputeGraph("TileTester_2", "fir", true, TestDir);
         [TestMethod] public void TileTester_2_lo_fir() => TestTools.VerifyComputeGraph("TileTester_2", "lo.fir", true, TestDir);
@@ -222,20 +222,20 @@ namespace ChiselDebugTests
         [TestMethod] public void TileTester_3_fir() => TestTools.VerifyComputeGraph("TileTester_3", "fir", true, TestDir);
         [TestMethod] public void TileTester_3_lo_fir() => TestTools.VerifyComputeGraph("TileTester_3", "lo.fir", true, TestDir);
 
-        [TestMethod] public void TileTester_4_fir() => TestTools.VerifyComputeGraph("TileTester_4", "fir", true, TestDir);
-        [TestMethod] public void TileTester_4_lo_fir() => TestTools.VerifyComputeGraph("TileTester_4", "lo.fir", true, TestDir);
+        //[TestMethod] public void TileTester_4_fir() => TestTools.VerifyComputeGraph("TileTester_4", "fir", true, TestDir);
+        //[TestMethod] public void TileTester_4_lo_fir() => TestTools.VerifyComputeGraph("TileTester_4", "lo.fir", true, TestDir);
 
-        [TestMethod] public void TileTester_5_fir() => TestTools.VerifyComputeGraph("TileTester_5", "fir", true, TestDir);
-        [TestMethod] public void TileTester_5_lo_fir() => TestTools.VerifyComputeGraph("TileTester_5", "lo.fir", true, TestDir);
+        //[TestMethod] public void TileTester_5_fir() => TestTools.VerifyComputeGraph("TileTester_5", "fir", true, TestDir);
+        //[TestMethod] public void TileTester_5_lo_fir() => TestTools.VerifyComputeGraph("TileTester_5", "lo.fir", true, TestDir);
 
-        [TestMethod] public void TileTester_6_fir() => TestTools.VerifyComputeGraph("TileTester_6", "fir", true, TestDir);
-        [TestMethod] public void TileTester_6_lo_fir() => TestTools.VerifyComputeGraph("TileTester_6", "lo.fir", true, TestDir);
+        //[TestMethod] public void TileTester_6_fir() => TestTools.VerifyComputeGraph("TileTester_6", "fir", true, TestDir);
+        //[TestMethod] public void TileTester_6_lo_fir() => TestTools.VerifyComputeGraph("TileTester_6", "lo.fir", true, TestDir);
 
-        [TestMethod] public void TileTester_7_fir() => TestTools.VerifyComputeGraph("TileTester_7", "fir", true, TestDir);
-        [TestMethod] public void TileTester_7_lo_fir() => TestTools.VerifyComputeGraph("TileTester_7", "lo.fir", true, TestDir);
+        //[TestMethod] public void TileTester_7_fir() => TestTools.VerifyComputeGraph("TileTester_7", "fir", true, TestDir);
+        //[TestMethod] public void TileTester_7_lo_fir() => TestTools.VerifyComputeGraph("TileTester_7", "lo.fir", true, TestDir);
 
-        [TestMethod] public void TileTester_8_fir() => TestTools.VerifyComputeGraph("TileTester_8", "fir", true, TestDir);
-        [TestMethod] public void TileTester_8_lo_fir() => TestTools.VerifyComputeGraph("TileTester_8", "lo.fir", true, TestDir);
+        //[TestMethod] public void TileTester_8_fir() => TestTools.VerifyComputeGraph("TileTester_8", "fir", true, TestDir);
+        //[TestMethod] public void TileTester_8_lo_fir() => TestTools.VerifyComputeGraph("TileTester_8", "lo.fir", true, TestDir);
 
         [TestMethod] public void TileTester_9_fir() => TestTools.VerifyComputeGraph("TileTester_9", "fir", true, TestDir);
         [TestMethod] public void TileTester_9_lo_fir() => TestTools.VerifyComputeGraph("TileTester_9", "lo.fir", true, TestDir);
