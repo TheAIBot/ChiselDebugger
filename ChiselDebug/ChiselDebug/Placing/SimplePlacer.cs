@@ -21,42 +21,21 @@ namespace ChiselDebug
             Graph<FIRRTLNode> graph = new Graph<FIRRTLNode>();
 
             //Add nodes to graph
-            Dictionary<FIRRTLNode, Node<FIRRTLNode>> firNodeToNode = new Dictionary<FIRRTLNode, Node<FIRRTLNode>>();
+            Dictionary<Input, Node<FIRRTLNode>> inputToNode = new Dictionary<Input, Node<FIRRTLNode>>();
+            Dictionary<Output, Node<FIRRTLNode>> outputToNode = new Dictionary<Output, Node<FIRRTLNode>>();
             foreach (var firNode in nodeSizes.Keys)
             {
                 var node = new Node<FIRRTLNode>(firNode);
                 graph.AddNode(node);
-                firNodeToNode.Add(firNode, node);
-            }
 
-            //Relate io to FIRRTLNode
-            Dictionary<ScalarIO, FIRRTLNode> inputToFirNode = new Dictionary<ScalarIO, FIRRTLNode>();
-            Dictionary<ScalarIO, FIRRTLNode> outputToFirNode = new Dictionary<ScalarIO, FIRRTLNode>();
-            foreach (var firNode in nodeSizes.Keys)
-            {
-                if (firNode == mod)
-                {
-                    continue;
-                }
                 foreach (var input in firNode.GetInputs())
                 {
-                    inputToFirNode.Add(input, firNode);
+                    inputToNode.Add(input, node);
                 }
                 foreach (var output in firNode.GetOutputs())
                 {
-                    outputToFirNode.Add(output, firNode);
+                    outputToNode.Add(output, node);
                 }
-            }
-
-            Dictionary<ScalarIO, Node<FIRRTLNode>> inputToNode = new Dictionary<ScalarIO, Node<FIRRTLNode>>();
-            Dictionary<ScalarIO, Node<FIRRTLNode>> outputToNode = new Dictionary<ScalarIO, Node<FIRRTLNode>>();
-            foreach (var keyValue in inputToFirNode)
-            {
-                inputToNode.Add(keyValue.Key, firNodeToNode[keyValue.Value]);
-            }
-            foreach (var keyValue in outputToFirNode)
-            {
-                outputToNode.Add(keyValue.Key, firNodeToNode[keyValue.Value]);
             }
 
             List<Node<FIRRTLNode>> modInputNodes = new List<Node<FIRRTLNode>>();
