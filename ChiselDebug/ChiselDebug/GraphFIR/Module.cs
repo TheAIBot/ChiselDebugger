@@ -125,13 +125,6 @@ namespace ChiselDebug.GraphFIR
             return input.GetFullName() + "/out";
         }
 
-        public bool HasDunplexInput(Input input)
-        {
-            string duplexInputName = GetDuplexOutputName(input);
-            return NameToIO.ContainsKey(duplexInputName) || 
-                InternalIO.ContainsKey(duplexInputName);
-        }
-
         public bool TryGetIOInternal(string ioName, bool lookUp, out IContainerIO container)
         {
             if (NameToIO.TryGetValue(ioName, out FIRIO innerIO))
@@ -249,10 +242,6 @@ namespace ChiselDebug.GraphFIR
                     //Everything connected to duplex input is now being connected to the
                     //wires input
                     Input wireIn = (Input)keyValue.Value.In;
-                    if (keyValue.Key.Con != null)
-                    {
-                        keyValue.Key.Con.ConnectToInput(wireIn);
-                    }
                     foreach (var con in keyValue.Key.GetConnections())
                     {
                         con.From.ConnectToInput(wireIn, false, false, con.Condition);
