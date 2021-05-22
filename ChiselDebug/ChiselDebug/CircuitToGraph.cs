@@ -358,7 +358,7 @@ namespace ChiselDebug
                 //Port may already have been created if the memory used the low firrtl
                 //memory definition which contain all ports that will be used
                 GraphFIR.IO.MemPort port;
-                if (memory.TryGetIO(memPort.Name, false, out var existingPort))
+                if (memory.TryGetIO(memPort.Name, out var existingPort))
                 {
                     port = (GraphFIR.IO.MemPort)existingPort;
                 }
@@ -832,7 +832,7 @@ namespace ChiselDebug
                 string duplexOutputName = helper.Mod.GetDuplexOutputName(input);
 
                 //Try see if it was already created
-                if (input.GetModResideIn().TryGetIO(duplexOutputName, false, out var wireOut))
+                if (input.GetModResideIn().TryGetIO(duplexOutputName, out var wireOut))
                 {
                     return (GraphFIR.IO.Output)wireOut;
                 }

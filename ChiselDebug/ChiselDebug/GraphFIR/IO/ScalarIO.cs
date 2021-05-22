@@ -41,7 +41,7 @@ namespace ChiselDebug.GraphFIR.IO
             yield return this;
         }
 
-        public override bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container)
+        public override bool TryGetIO(string ioName, out IContainerIO container)
         {
             container = null;
             return false;

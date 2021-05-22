@@ -57,11 +57,11 @@ namespace ChiselDebug.GraphFIR
             }
         }
 
-        public bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container)
+        public bool TryGetIO(string ioName, out IContainerIO container)
         {
             foreach (var condMod in ConditionalModules)
             {
-                if (condMod.Mod.TryGetIO(ioName, modulesOnly, out container))
+                if (condMod.Mod.TryGetIO(ioName, out container))
                 {
                     return true;
                 }
@@ -71,9 +71,9 @@ namespace ChiselDebug.GraphFIR
             return false;
         }
 
-        public IContainerIO GetIO(string ioName, bool modulesOnly = false)
+        public IContainerIO GetIO(string ioName)
         {
-            if (TryGetIO(ioName, modulesOnly, out var container))
+            if (TryGetIO(ioName, out var container))
             {
                 return container;
             }

@@ -208,7 +208,7 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public override bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container)
+        public override bool TryGetIO(string ioName, out IContainerIO container)
         {
             if (IO.TryGetValue(ioName, out FIRIO innerIO))
             {

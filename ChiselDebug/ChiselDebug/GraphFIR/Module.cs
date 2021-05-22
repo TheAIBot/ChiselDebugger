@@ -13,7 +13,6 @@ namespace ChiselDebug.GraphFIR
         public readonly string Name;
         private readonly List<FIRRTLNode> Nodes = new List<FIRRTLNode>();
         private readonly Dictionary<string, FIRIO> NameToIO = new Dictionary<string, FIRIO>();
-        private readonly Dictionary<IOBundle, Module> BundleToModule = new Dictionary<IOBundle, Module>();
         private readonly Dictionary<Input, Wire> DuplexOutputWires = new Dictionary<Input, Wire>();
         public Output EnableCon { get; private set; }
         public bool IsConditional => EnableCon != null;
@@ -67,9 +66,8 @@ namespace ChiselDebug.GraphFIR
             mod.SetModResideIn(this);
             Nodes.Add(mod);
 
-            IOBundle bundle = new IOBundle(mod, bundleName, mod.ExternalIO.Values.ToList(), false);
+            ModuleIO bundle = new ModuleIO(mod, bundleName, mod.ExternalIO.Values.ToList());
             NameToIO.Add(bundleName, bundle);
-            BundleToModule.Add(bundle, mod);
         }
 
         public void AddMemory(Memory mem)
@@ -134,22 +132,12 @@ namespace ChiselDebug.GraphFIR
                 InternalIO.ContainsKey(duplexInputName);
         }
 
-        public bool TryGetIOInternal(string ioName, bool modulesOnly, bool lookUp, out IContainerIO container)
+        public bool TryGetIOInternal(string ioName, bool lookUp, out IContainerIO container)
         {
             if (NameToIO.TryGetValue(ioName, out FIRIO innerIO))
             {
-                if (modulesOnly &&
-                    innerIO is IOBundle bundle &&
-                    BundleToModule.TryGetValue(bundle, out var mod))
-                {
-                    container = mod;
-                    return true;
-                }
-                else
-                {
-                    container = innerIO;
-                    return true;
-                }
+                container = innerIO;
+                return true;
             }
 
             if (InternalIO.TryGetValue(ioName, out FIRIO io))
@@ -164,7 +152,7 @@ namespace ChiselDebug.GraphFIR
                 {
                     foreach (var condMod in condNode.CondMods)
                     {
-                        if (condMod.Mod.TryGetIO(ioName, modulesOnly, out container))
+                        if (condMod.Mod.TryGetIO(ioName, out container))
                         {
                             return true;
                         }
@@ -172,7 +160,7 @@ namespace ChiselDebug.GraphFIR
                 }
             }
 
-            if (IsConditional && ResideIn.TryGetIOInternal(ioName, modulesOnly, false, out container))
+            if (IsConditional && ResideIn.TryGetIOInternal(ioName, false, out container))
             {
                 return true;
             }
@@ -181,9 +169,9 @@ namespace ChiselDebug.GraphFIR
             return false;
         }
 
-        public override bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container)
+        public override bool TryGetIO(string ioName, out IContainerIO container)
         {
-            return TryGetIOInternal(ioName, modulesOnly, true, out container);
+            return TryGetIOInternal(ioName, true, out container);
         }
 
         public List<Output> GetAllModuleConnections()

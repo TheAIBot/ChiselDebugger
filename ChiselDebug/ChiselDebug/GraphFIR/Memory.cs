@@ -95,9 +95,9 @@ namespace ChiselDebug.GraphFIR
             }
         }
 
-        public bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container)
+        public bool TryGetIO(string ioName, out IContainerIO container)
         {
-            if (MemIO.TryGetIO(ioName, modulesOnly, out IContainerIO innerIO))
+            if (MemIO.TryGetIO(ioName, out IContainerIO innerIO))
             {
                 container = innerIO;
                 return true;
@@ -107,9 +107,9 @@ namespace ChiselDebug.GraphFIR
             return false;
         }
 
-        public IContainerIO GetIO(string ioName, bool modulesOnly = false)
+        public IContainerIO GetIO(string ioName)
         {
-            if (TryGetIO(ioName, modulesOnly, out var container))
+            if (TryGetIO(ioName, out var container))
             {
                 return container;
             }

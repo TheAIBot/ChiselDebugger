@@ -81,7 +81,7 @@ namespace ChiselDebug
             string searchName = remainingName;
             while (true)
             {
-                if (container.TryGetIO(searchName, true, out foundIO))
+                if (container.TryGetIO(searchName, out foundIO))
                 {
                     container = foundIO;
 
@@ -168,7 +168,7 @@ namespace ChiselDebug
             //should always be skipped as it's the root module that is being searched from.
             int modulesSkipped = isVerilogVCD ? 2 : 1;
             string[] modulePath = variable.Scopes.Skip(modulesSkipped).Select(x => x.Name).ToArray();
-            IContainerIO moduleIO = ((IContainerIO)MainModule).GetIO(modulePath, true);
+            IContainerIO moduleIO = ((IContainerIO)MainModule).GetIO(modulePath);
 
             IContainerIO ioLink = null;
             bool foundIO = TryFindIO(variable.Reference, moduleIO, isVerilogVCD, out ioLink);
@@ -189,9 +189,9 @@ namespace ChiselDebug
 
             //Apparently if a module contains an instance of another module
             //then it will also have a wire with the instance name in the vcd
-            //file. Ends up with a bundle when this happens so just ignore the
-            //change.
-            if (ioLink is Module)
+            //file. Ends up with the moduleIO when this happens so just ignore
+            //the change.
+            if (ioLink is ModuleIO)
             {
                 VarDefToCon.Add(variable, null);
                 return null;

@@ -113,11 +113,11 @@ namespace ChiselDebug.GraphFIR.IO
         public abstract IEnumerable<T> GetAllIOOfType<T>();
         public abstract List<T> GetAllIOOfType<T>(List<T> list);
         public abstract IEnumerable<FIRIO> WalkIOTree();
-        public abstract bool TryGetIO(string ioName, bool modulesOnly, out IContainerIO container);
+        public abstract bool TryGetIO(string ioName, out IContainerIO container);
 
-        public IContainerIO GetIO(string ioName, bool modulesOnly = false)
+        public IContainerIO GetIO(string ioName)
         {
-            if (TryGetIO(ioName, modulesOnly, out var container))
+            if (TryGetIO(ioName, out var container))
             {
                 return container;
             }
