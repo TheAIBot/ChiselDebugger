@@ -8,7 +8,7 @@ namespace ChiselDebug.GraphFIR.IO
 {
     public class Input : ScalarIO
     {
-        internal Output Con;
+        private Output Con;
         private List<Connection> CondCons = null;
 
         public Input(FIRRTLNode node, IFIRType type) : this(node, null, type)
@@ -16,11 +16,6 @@ namespace ChiselDebug.GraphFIR.IO
 
         public Input(FIRRTLNode node, string name, IFIRType type) : base(node, name, type)
         { }
-
-        public bool HasConnectionCondition(Output connectedTo)
-        {
-            return GetConnectionCondition(connectedTo) != null;
-        }
 
         public Output GetConnectionCondition(Output connectedTo)
         {
@@ -108,37 +103,21 @@ namespace ChiselDebug.GraphFIR.IO
             return this;
         }
 
-        internal Output[] GetConditionalConnections()
-        {
-            if (CondCons == null)
-            {
-                return Array.Empty<Output>();
-            }
-
-            List<Output> cons = new List<Output>();
-            for (int i = 0; i < CondCons.Count; i++)
-            {
-                cons.Add(CondCons[i].From);
-            }
-
-            return cons.ToArray();
-        }
-
         internal void TransferConnectionsTo(Input input)
         {
             if (Con != null)
             {
                 Con.ConnectToInput(input);
-                Con.DisconnectInput(this);
             }
             if (CondCons != null)
             {
                 foreach (var condCon in CondCons.ToArray())
                 {
                     condCon.From.ConnectToInput(input, false, false, condCon.Condition);
-                    condCon.From.DisconnectInput(this);
                 }
             }
+
+            DisconnectAll();
         }
 
         public void Disconnect(Output toDisconnect)
@@ -179,10 +158,11 @@ namespace ChiselDebug.GraphFIR.IO
 
             if (CondCons != null)
             {
-                foreach (var con in CondCons.ToArray())
+                foreach (var condCon in CondCons)
                 {
-                    con.From.DisconnectInput(this);
+                    condCon.From.DisconnectOnlyOutputSide(this);
                 }
+                CondCons.Clear();
             }
         }
 
@@ -220,14 +200,7 @@ namespace ChiselDebug.GraphFIR.IO
             }
             else
             {
-                if (CondCons != null)
-                {
-                    foreach (var condCon in CondCons)
-                    {
-                        condCon.From.DisconnectOnlyOutputSide(this);
-                    }
-                    CondCons.Clear();
-                }
+                DisconnectAll();
                 Con = con;
             }
         }

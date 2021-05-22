@@ -41,14 +41,6 @@ namespace ChiselDebug.GraphFIR.IO
         {
             if (input is Input ioIn)
             {
-                if (condition == null && ioIn.IsConnected())
-                {
-                    if (ioIn.Con != null)
-                    {
-                        ioIn.Con.DisconnectInput(ioIn);
-                    }
-                }
-
                 ConnectOnlyOutputSide(ioIn);
                 ioIn.Connect(this, condition);
             }
