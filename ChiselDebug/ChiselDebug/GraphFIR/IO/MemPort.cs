@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace ChiselDebug.GraphFIR.IO
 {
-    public abstract class MemPort : IOBundle, IPreserveDuplex
+    public abstract class MemPort : IOBundle
     {
         internal readonly FIRIO Address;
         internal readonly FIRIO Enabled;
