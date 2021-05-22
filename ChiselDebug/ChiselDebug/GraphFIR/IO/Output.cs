@@ -75,30 +75,6 @@ namespace ChiselDebug.GraphFIR.IO
             return this is T;
         }
 
-        public override bool SameIO(FIRIO other)
-        {
-            return other is Output otherOut &&
-                   Type.Equals(otherOut.Type);
-        }
-
-        public override IEnumerable<T> GetAllIOOfType<T>()
-        {
-            if (this is T thisIsT)
-            {
-                yield return thisIsT;
-            }
-        }
-
-        public override List<T> GetAllIOOfType<T>(List<T> list)
-        {
-            if (this is T tVal)
-            {
-                list.Add(tVal);
-            }
-
-            return list;
-        }
-
         public override void InferGroundType()
         {
             if (Node == null)

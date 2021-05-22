@@ -61,17 +61,6 @@ namespace ChiselDebug.GraphFIR.IO
             return string.Join('.', pathToRoot);
         }
 
-        public FIRIO GetRootIO()
-        {
-            FIRIO io = this;
-            while (io.ParentIO != null)
-            {
-                io = io.ParentIO;
-            }
-
-            return io;
-        }
-
         public virtual FIRIO GetInput()
         {
             throw new Exception("Can't get input from this IO.");
@@ -109,9 +98,6 @@ namespace ChiselDebug.GraphFIR.IO
         {
             return IsPassiveOfType<Input>() || IsPassiveOfType<Output>();
         }
-        public abstract bool SameIO(FIRIO other);
-        public abstract IEnumerable<T> GetAllIOOfType<T>();
-        public abstract List<T> GetAllIOOfType<T>(List<T> list);
         public abstract IEnumerable<FIRIO> WalkIOTree();
         public abstract bool TryGetIO(string ioName, out IContainerIO container);
 

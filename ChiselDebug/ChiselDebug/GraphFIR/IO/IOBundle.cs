@@ -134,60 +134,6 @@ namespace ChiselDebug.GraphFIR.IO
             return true;
         }
 
-        public override bool SameIO(FIRIO other)
-        {
-            if (other is IOBundle bundle)
-            {
-                if (OrderedIO.Count != bundle.OrderedIO.Count)
-                {
-                    return false;
-                }
-
-                for (int i = 0; i < OrderedIO.Count; i++)
-                {
-                    if (!OrderedIO[i].SameIO(bundle.OrderedIO[i]))
-                    {
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-
-            return false;
-        }
-
-        public override IEnumerable<T> GetAllIOOfType<T>()
-        {
-            if (this is T thisIsT)
-            {
-                yield return thisIsT;
-            }
-
-            foreach (var io in OrderedIO)
-            {
-                foreach (var nested in io.GetAllIOOfType<T>())
-                {
-                    yield return nested;
-                }
-            }
-        }
-
-        public override List<T> GetAllIOOfType<T>(List<T> list)
-        {
-            if (this is T tVal)
-            {
-                list.Add(tVal);
-            }
-
-            foreach (var io in OrderedIO)
-            {
-                io.GetAllIOOfType<T>(list);
-            }
-
-            return list;
-        }
-
         public override IEnumerable<FIRIO> WalkIOTree()
         {
             yield return this;

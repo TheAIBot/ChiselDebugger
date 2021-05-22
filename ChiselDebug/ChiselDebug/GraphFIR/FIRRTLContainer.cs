@@ -66,27 +66,6 @@ namespace ChiselDebug.GraphFIR
             return io.Name.StartsWith("~$");
         }
 
-        public bool IsExternalModIO(FIRIO io)
-        {
-            FIRIO rootIO = io.GetRootIO();
-            Debug.Assert(rootIO.Node == this && (ExternalIO.ContainsKey(rootIO.Name) || InternalIO.ContainsKey(rootIO.Name)));
-            return ExternalIO.ContainsKey(rootIO.Name);
-        }
-
-        public bool IsInternalModIO(FIRIO io)
-        {
-            FIRIO rootIO = io.GetRootIO();
-            Debug.Assert(rootIO.Node == this && (ExternalIO.ContainsKey(rootIO.Name) || InternalIO.ContainsKey(rootIO.Name)));
-            return InternalIO.ContainsKey(rootIO.Name);
-        }
-
-        internal void ReserveMemory(int extIntSize)
-        {
-            ExternalIO.EnsureCapacity(extIntSize);
-            InternalIO.EnsureCapacity(extIntSize);
-            AllIOInOrder.Capacity = extIntSize;
-        }
-
         public override Input[] GetInputs()
         {
             return FlattenAndFilterIO<Input>(ExternalIO);

@@ -88,52 +88,6 @@ namespace ChiselDebug.GraphFIR.IO
             return IO[0].IsPassiveOfType<T>();
         }
 
-        public override bool SameIO(FIRIO other)
-        {
-            if (other is Vector vec)
-            {
-                if (Length != vec.Length)
-                {
-                    return false;
-                }
-
-                return IO[0].SameIO(vec.IO[0]);
-            }
-
-            return false;
-        }
-
-        public override IEnumerable<T> GetAllIOOfType<T>()
-        {
-            if (this is T thisIsT)
-            {
-                yield return thisIsT;
-            }
-
-            foreach (var io in GetIOInOrder())
-            {
-                foreach (var nested in io.GetAllIOOfType<T>())
-                {
-                    yield return nested;
-                }
-            }
-        }
-
-        public override List<T> GetAllIOOfType<T>(List<T> list)
-        {
-            if (this is T tVal)
-            {
-                list.Add(tVal);
-            }
-
-            foreach (var io in IO)
-            {
-                io.GetAllIOOfType<T>(list);
-            }
-
-            return list;
-        }
-
         public override IEnumerable<FIRIO> WalkIOTree()
         {
             yield return this;

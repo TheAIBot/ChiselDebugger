@@ -64,16 +64,6 @@ namespace ChiselDebug.GraphFIR.IO
             return false;
         }
 
-        public override bool SameIO(FIRIO other)
-        {
-            if (other is DuplexIO dup)
-            {
-                return InIO.SameIO(dup.InIO) && OutIO.SameIO(dup.OutIO);
-            }
-
-            return false;
-        }
-
         public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)
         {
             return flow switch
@@ -84,36 +74,6 @@ namespace ChiselDebug.GraphFIR.IO
                 FlowChange.Preserve => new DuplexIO(node, Name, InIO.ToFlow(flow, node), OutIO.ToFlow(flow, node)),
                 var error => throw new Exception($"Unknown flow. Flow: {flow}")
             };
-        }
-
-        public override IEnumerable<T> GetAllIOOfType<T>()
-        {
-            if (this is T thisIsT)
-            {
-                yield return thisIsT;
-            }
-
-            foreach (var inOfT in InIO.GetAllIOOfType<T>())
-            {
-                yield return inOfT;
-            }
-            foreach (var outOfT in OutIO.GetAllIOOfType<T>())
-            {
-                yield return outOfT;
-            }
-        }
-
-        public override List<T> GetAllIOOfType<T>(List<T> list)
-        {
-            if (this is T tVal)
-            {
-                list.Add(tVal);
-            }
-
-            InIO.GetAllIOOfType<T>(list);
-            OutIO.GetAllIOOfType<T>(list);
-
-            return list;
         }
 
         public override IEnumerable<FIRIO> WalkIOTree()
