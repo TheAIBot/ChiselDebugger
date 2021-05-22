@@ -70,11 +70,6 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public override bool IsConnected()
-        {
-            return Con != null || (CondCons != null && CondCons.Count > 0);
-        }
-
         public override bool IsConnectedToAnything()
         {
             return Con != null || (CondCons != null && CondCons.Count > 0);
@@ -149,7 +144,7 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public override void DisconnectAll()
+        public void DisconnectAll()
         {
             if (Con != null)
             {

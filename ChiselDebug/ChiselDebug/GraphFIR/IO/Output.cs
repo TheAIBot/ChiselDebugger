@@ -13,23 +13,9 @@ namespace ChiselDebug.GraphFIR.IO
         public Output(FIRRTLNode node, string name, IFIRType type) : base(node, name, type)
         { }
 
-        public override bool IsConnected()
-        {
-            return true;
-        }
-
         public override bool IsConnectedToAnything()
         {
             return To != null && To.Count > 0;
-        }
-
-        public override void DisconnectAll()
-        {
-            Input[] inputs = GetConnectedInputs().ToArray();
-            foreach (var input in inputs)
-            {
-                DisconnectInput(input);
-            }
         }
 
         public override FIRIO GetOutput()

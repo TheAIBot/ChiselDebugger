@@ -7,55 +7,22 @@ namespace ChiselDebug.GraphFIR.IO
 {
     public static class IOHelper
     {
-        public static void BypassIO(Output from, Output to)
+        public static void BypassWire(Input[] bypassFrom, Output[] bypassTo)
         {
-            Input[] inputs = from.GetConnectedInputs().ToArray();
-            foreach (var input in inputs)
+            if (bypassFrom.Length != bypassTo.Length)
             {
-                from.DisconnectInput(input);
-                to.ConnectToInput(input);
-            }
-        }
-
-        public static void BypassIO(FIRIO bypassFrom, FIRIO bypassTo)
-        {
-            ScalarIO[] bypassFromIO = bypassFrom.Flatten().ToArray();
-            ScalarIO[] bypassToIO = bypassTo.Flatten().ToArray();
-
-            if (bypassFromIO.Length != bypassToIO.Length)
-            {
-                throw new Exception($"Can't bypass io when they are not of the same size. From: {bypassFromIO.Length}, To: {bypassToIO.Length}");
+                throw new Exception($"Can't bypass io when they are not of the same size. From: {bypassFrom.Length}, To: {bypassTo.Length}");
             }
 
-            for (int i = 0; i < bypassFromIO.Length; i++)
+            for (int i = 0; i < bypassFrom.Length; i++)
             {
-                Connection[] connectFromCons;
-                Input[] connectTo;
+                Input from = bypassFrom[i];
+                Output to = bypassTo[i];
 
-                //They must both either be connected or not.
-                //Can't bypass when only input or output is connected.
-                if (bypassFromIO[i].IsConnected() ^ bypassToIO[i].IsConnected())
-                {
-                    throw new Exception("Bypass IO must either both be connected or disconnected.");
-                }
+                Connection[] connectFromCons = from.GetConnections();
+                Input[]  connectTo = to.GetConnectedInputs().ToArray();
+                from.DisconnectAll();
 
-                if (bypassFromIO[i] is Input fromIn && bypassToIO[i] is Output toOut)
-                {
-                    connectFromCons = fromIn.GetConnections();
-                    connectTo = toOut.GetConnectedInputs().ToArray();
-                    fromIn.DisconnectAll();
-                }
-                else if (bypassFromIO[i] is Output fromOut && bypassToIO[i] is Input toIn)
-                {
-                    connectFromCons = toIn.GetConnections();
-                    connectTo = fromOut.GetConnectedInputs().ToArray();
-                    toIn.DisconnectAll();
-                }
-                else 
-                {
-                    throw new Exception($"Bypass must go from Output to Input. IO is {bypassFromIO[i]} and {bypassToIO[i]}");
-                }
-                
                 foreach (var input in connectTo)
                 {
                     input.DisconnectAll();
@@ -67,8 +34,8 @@ namespace ChiselDebug.GraphFIR.IO
             }
             
             //After bypassing, the io shouldn't be connected to anything
-            Debug.Assert(bypassFromIO.All(x => !x.IsConnectedToAnything()));
-            Debug.Assert(bypassToIO.All(x => !x.IsConnectedToAnything()));
+            Debug.Assert(bypassFrom.All(x => !x.IsConnectedToAnything()));
+            Debug.Assert(bypassTo.All(x => !x.IsConnectedToAnything()));
         }
 
         public static void BypassCondConnectionsThroughCondModules(Module mod)

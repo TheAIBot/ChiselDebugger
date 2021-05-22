@@ -20,8 +20,6 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public abstract bool IsConnected();
-
         public abstract bool IsConnectedToAnything();
 
         public override IEnumerable<ScalarIO> Flatten()
@@ -59,8 +57,6 @@ namespace ChiselDebug.GraphFIR.IO
         {
             Type = null;
         }
-
-        public abstract void DisconnectAll();
 
         public void InferType()
         {

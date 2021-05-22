@@ -31,7 +31,7 @@ namespace ChiselDebug.GraphFIR
 
         internal void BypassWireIO()
         {
-            IOHelper.BypassIO(In, Result);
+            IOHelper.BypassWire(GetInputs(), GetOutputs());
             Debug.Assert(In.Flatten().All(x => !x.IsConnectedToAnything()));
             Debug.Assert(Result.Flatten().All(x => !x.IsConnectedToAnything()));
         }
@@ -43,18 +43,12 @@ namespace ChiselDebug.GraphFIR
 
         public override Input[] GetInputs()
         {
-            List<Input> inputs = new List<Input>();
-            inputs.AddRange(In.Flatten().OfType<Input>());
-            inputs.AddRange(Result.Flatten().OfType<Input>());
-            return inputs.ToArray();
+            return In.Flatten().Cast<Input>().ToArray();
         }
 
         public override Output[] GetOutputs()
         {
-            List<Output> outputs = new List<Output>();
-            outputs.AddRange(In.Flatten().OfType<Output>());
-            outputs.AddRange(Result.Flatten().OfType<Output>());
-            return outputs.ToArray();
+            return Result.Flatten().Cast<Output>().ToArray();
         }
 
         public override IEnumerable<FIRIO> GetIO()
