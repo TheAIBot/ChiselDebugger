@@ -3,19 +3,27 @@
 <svg class="wiresContainer">
     @foreach (var wireGroup in WirePaths.GroupBy(x => x.GetEndIO()))
     {
-        <g class="wireGroup">
-            @foreach (var wire in wireGroup)
-            {
-                <path class="wireHoverArea" d="@wire.ToSVGPathString()" fill="none" />
-                <path class="wireElement wire" d="@wire.ToSVGPathString()" fill="none" />
+    <g class="wireGroup">
+        @foreach (var wire in wireGroup)
+        {
+            <path class="wireHoverArea" d="@wire.ToSVGPathString()" fill="none" />
 
-                @if (wire.StartsFromWire)
-                {
-                    <line class="wireElement wireConnection" x1="@wire.GetEndPos().X" y1="@wire.GetEndPos().Y" x2="@wire.GetEndPos().X" y2="@wire.GetEndPos().Y" />
-                }
+            @if (wire.IsEnabled())
+            {
+                <path class="wireElement wire" d="@wire.ToSVGPathString()" fill="none" />
+            }
+            else
+            {
+                <path class="wireElement wire" style="stroke: gray;" d="@wire.ToSVGPathString()" fill="none" />
             }
 
-        </g>
+            @if (wire.StartsFromWire)
+            {
+                <line class="wireElement wireConnection" x1="@wire.GetEndPos().X" y1="@wire.GetEndPos().Y" x2="@wire.GetEndPos().X" y2="@wire.GetEndPos().Y" />
+            }
+        }
+
+    </g>
     }
 </svg>
 
@@ -28,6 +36,7 @@
 
     protected override void OnFirstParametersSetAsync()
     {
+        ModLayout.SetWireUI(this);
         ModLayout.SubscribeToRouteTemplate(x => InvokeAsync(() => UpdateWires(x)));
     }
 
@@ -36,5 +45,10 @@
         WirePaths = wirePaths;
 
         StateHasChanged();
+    }
+
+    public void PrepareForRender()
+    {
+        HasToRender = true;
     }
 }

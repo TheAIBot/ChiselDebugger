@@ -2,6 +2,7 @@
 using ChiselDebug.GraphFIR.IO;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace ChiselDebug.Routing
@@ -14,6 +15,7 @@ namespace ChiselDebug.Routing
         private readonly List<Point> BoardPositions = new List<Point>();
         private readonly List<Point> BoardPosTurns = new List<Point>();
         public readonly bool StartsFromWire;
+        private readonly Output ConnectionCondition;
 
         internal WirePath(IOInfo startIO, IOInfo endIO, List<Point> path, List<Point> boardPositions, List<Point> boardPosTurns, bool startsFromWire)
         {
@@ -23,6 +25,7 @@ namespace ChiselDebug.Routing
             this.BoardPositions = boardPositions;
             this.BoardPosTurns = boardPosTurns;
             this.StartsFromWire = startsFromWire;
+            this.ConnectionCondition = GetConCondition();
         }
 
         internal void PlaceOnBoard(RouterBoard board, MoveDirs move)
@@ -150,6 +153,27 @@ namespace ChiselDebug.Routing
             }
 
             return outputCons.ToArray();
+        }
+
+        private Output GetConCondition()
+        {
+            ScalarIO startScalar = StartIO.DirIO.IO.Flatten().First();
+            ScalarIO endScalar = EndIO.DirIO.IO.Flatten().First();
+            if (startScalar is Output startOut && endScalar is Input endInput)
+            {
+                return endInput.GetConnectionCondition(startOut);
+            }
+            else if (startScalar is Input startInput && endScalar is Output endOutput)
+            {
+                return startInput.GetConnectionCondition(endOutput);
+            }
+
+            return null;
+        }
+
+        public bool IsEnabled()
+        {
+            return ConnectionCondition == null || ConnectionCondition.Value.IsTrue();
         }
 
         public string ToSVGPathString()

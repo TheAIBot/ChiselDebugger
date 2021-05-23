@@ -15,6 +15,7 @@ namespace ChiselDebuggerWebUI.Code
         private readonly ModuleUI ModUI;
         private readonly SimpleRouter WireRouter;
         private readonly PlacingBase NodePlacer;
+        private WiresUI WireUI;
 
         private readonly FIRRTLNode[] ModuleNodes;
         private readonly FIRRTLNode[] ModuleNodesWithModule;
@@ -33,6 +34,7 @@ namespace ChiselDebuggerWebUI.Code
             this.ModUI = modUI;
             this.WireRouter = new SimpleRouter(Mod);
             this.NodePlacer = new SimplePlacer(Mod);
+            //this.NodePlacer = new GraphVizPlacer(Mod);
             this.ModuleNodes = Mod.GetAllNodes();
             this.ModuleNodesWithModule = Mod.GetAllNodesIncludeModule();
             this.ModuleIO = Mod.GetAllIOOrdered();
@@ -47,6 +49,7 @@ namespace ChiselDebuggerWebUI.Code
                 uiNode.PrepareForRender();
             }
 
+            WireUI?.PrepareForRender();
             ModUI.InvokestateHasChanged();
         }
 
@@ -134,6 +137,11 @@ namespace ChiselDebuggerWebUI.Code
             {
                 childLayout.UpdateLayoutDisplay(childScaling);
             }
+        }
+
+        public void SetWireUI(WiresUI wireUI)
+        {
+            WireUI = wireUI;
         }
     }
 }
