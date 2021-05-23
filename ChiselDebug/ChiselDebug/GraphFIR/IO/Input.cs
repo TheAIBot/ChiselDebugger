@@ -222,6 +222,28 @@ namespace ChiselDebug.GraphFIR.IO
             return this is T;
         }
 
+        public Output GetEnabledSource()
+        {
+            if (CondCons != null)
+            {
+                for (int i = CondCons.Count - 1; i >= 0; i--)
+                {
+                    var condCon = CondCons[i];
+                    if (condCon.IsEnabled())
+                    {
+                        return condCon.From;
+                    }
+                }
+            }
+
+            if (Con != null)
+            {
+                return Con;
+            }
+
+            return null;
+        }
+
         public void UpdateValueFromSource()
         {
             if (CondCons != null)
