@@ -7,7 +7,8 @@
     height: @GetCurrentSize().Y.ToPixels();
     min-width: @MinContentSize.X.ToPixels();
     min-height: @MinContentSize.Y.ToPixels();
-    background-image: @(ShowModuleContent() ? "linear-gradient(#b4aaff, #dcf3ff)" : "linear-gradient(#9487fb, #7ec8ec)");
+    background-image: @GetBackgroundGradient();
+    outline-color: @(IsModuleEnabled() ? "blue" : "gray");
 ">
 
     <div class="moduleHeader" style="@(ShowMdwaoduleName() ? string.Empty : "visibility: hidden;"); width:@GetCurrentSize().X.ToPixels();height:@GetCurrentSize().Y.ToPixels();">
@@ -293,5 +294,55 @@
     public Point GetModuleSize()
     {
         return GetCurrentSize();
+    }
+
+    private string GetBackgroundGradient()
+    {
+        if (ShowModuleContent())
+        {
+            if (Operation.IsConditional)
+            {
+                if (Operation.EnableCon.Value.IsTrue())
+                {
+                    return "linear-gradient(#9487b7aa, #7ec8a8aa)";
+                }
+                else
+                {
+                    return "linear-gradient(#9487b7aa, #9fa6a8aa)";
+                }
+            }
+            else
+            {
+                return "linear-gradient(#b4aaff, #dcf3ff)";
+            }
+        }
+        else
+        {
+            if (Operation.IsConditional)
+            {
+                if (Operation.EnableCon.Value.IsTrue())
+                {
+                    return "linear-gradient(#9487b7ff, #7ec8a8ff)";
+                }
+                else
+                {
+                    return "linear-gradient(#9487b7ff, #9fa6a8ff)";
+                }
+            }
+            else
+            {
+                return "linear-gradient(#9487fb, #7ec8ec)";
+            }
+        }
+    }
+
+    private bool IsModuleEnabled()
+    {
+        if (!Operation.IsConditional)
+        {
+            return true;
+        }
+
+        return Operation.EnableCon.Value.IsTrue();
     }
 }
