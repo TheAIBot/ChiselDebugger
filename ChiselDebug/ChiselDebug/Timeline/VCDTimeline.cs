@@ -45,10 +45,10 @@ namespace ChiselDebug.Timeline
             {
                 if (simCmd.SimCmd is SimTime time)
                 {
-                    if (StateCount == 0 || currTimeStepLength > 0)
+                    if (currTimeStepLength > 0)
                     {
                         StateCount++;
-                        TimeStepChanges timeStep = new TimeStepChanges(time.Time, currTimeStepStart, currTimeStepLength);
+                        TimeStepChanges timeStep = new TimeStepChanges(startTime, currTimeStepStart, currTimeStepLength);
                         currTimeStepStart += currTimeStepLength;
                         currTimeStepLength = 0;
 
@@ -68,10 +68,11 @@ namespace ChiselDebug.Timeline
 
                             binChanges.Clear();
                             stepChanges = new List<TimeStepChanges>();
-
-                            startTime = time.Time;
                         }
+
+
                     }
+                    startTime = time.Time;
                 }
                 else if (simCmd.BinValue.HasValue)
                 {
@@ -90,7 +91,7 @@ namespace ChiselDebug.Timeline
             }
             if (stepChanges.Count > 0)
             {
-                TimeSpan tSpan = new TimeSpan(startTime, stepChanges.Last().Time + 1);
+                TimeSpan tSpan = new TimeSpan(stepChanges.First().Time, stepChanges.Last().Time + 1);
                 SegmentChanges.Add(new TimeSegmentChanges(tSpan, segmentStartState, binChanges.ToArray(), stepChanges));
             }
 
