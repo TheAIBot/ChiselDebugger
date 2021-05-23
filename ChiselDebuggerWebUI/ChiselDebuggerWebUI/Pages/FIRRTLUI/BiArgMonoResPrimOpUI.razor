@@ -5,10 +5,10 @@
         <table>
             <tr>
                 <td class="primOpSymbol" rowspan="2" colspan="2">@Operation.OpName</td>
-                <td>@Operation.A.Value.ToBinaryString()</td>
+                <td>@Operation.A.UpdateValueFromSourceFast().BitsToString()</td>
             </tr>
             <tr>
-                <td>@Operation.B.Value.ToBinaryString()</td>
+                <td>@Operation.B.UpdateValueFromSourceFast().BitsToString()</td>
             </tr>
             <tr>
                 <td colspan="3">@Operation.Result.Value.ToBinaryString()</td>
