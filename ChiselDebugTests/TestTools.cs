@@ -12,7 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using VCDReader;
 
-//[assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+[assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
 
 namespace ChiselDebugTests
 {
@@ -125,10 +125,7 @@ namespace ChiselDebugTests
 
         internal static void VerifyCircuitState(CircuitGraph graph, VCDTimeline timeline, bool isLoFIRRTL, bool isVerilogVCD)
         {
-            int totalWireStates = 0;
-            int ignoredBecauseUnknown = 0;
-            int ignoredBecauseNotExist = 0;
-            int ignoredBecauseMemReadDelay = 0;
+            WireIgnoreTracker ignoreTracker = new WireIgnoreTracker();
             List<string> stateErrors = new List<string>();
             foreach (var state in timeline.GetAllDistinctStates())
             {
@@ -147,7 +144,7 @@ namespace ChiselDebugTests
                 {
                     foreach (var variable in expected.Variables)
                     {
-                        totalWireStates++;
+                        ignoreTracker.AddWireState();
                         ScalarIO varCon = graph.GetConnection(variable, isVerilogVCD);
                         if (varCon is Input input)
                         {
@@ -155,7 +152,7 @@ namespace ChiselDebugTests
                         }
                         if (varCon == null)
                         {
-                            ignoredBecauseNotExist++;
+                            ignoreTracker.IgnoreBecauseNotExist(variable);
                             continue;
                         }
 
@@ -164,9 +161,11 @@ namespace ChiselDebugTests
                         //is only present in loFIRRTL. Inputs to en and addr for read port can therefore
                         //only be compared hen running loFIRRTL because other wise the delay is not added
                         //and thus not simulated here.
-                        if (!isLoFIRRTL && varCon.IsPartOfAggregateIO && varCon.ParentIO is MemReadPort && (varCon.Name == "en" || varCon.Name == "addr"))
+                        if (!isLoFIRRTL && varCon.IsPartOfAggregateIO && 
+                            ((varCon.ParentIO is MemReadPort && (varCon.Name == "en" || varCon.Name == "addr")) ||
+                             (varCon.ParentIO is MemRWPort && (varCon.Name == "en" || varCon.Name == "addr" || varCon.Name == "wmode"))))
                         {
-                            ignoredBecauseMemReadDelay++;
+                            ignoreTracker.IgnorebecauseMemReadDelay(variable);
                             continue;
                         }
 
@@ -176,7 +175,7 @@ namespace ChiselDebugTests
                         {
                             if (!actual.Bits[i].IsBinary())
                             {
-                                ignoredBecauseUnknown++;
+                                ignoreTracker.IgnoreBecauseUnknown(variable);
                                 break;
                             }
 
@@ -194,14 +193,14 @@ namespace ChiselDebugTests
 
                 if (stateErrors.Count > 0)
                 {
-                    Console.WriteLine($"Wire states: {totalWireStates.ToString("N0")}\nIgnored W: {ignoredBecauseUnknown.ToString("N0")}\nIgnored Not exist: {ignoredBecauseNotExist.ToString("N0")}\nIgnored Mem read delay: {ignoredBecauseMemReadDelay.ToString("N0")}");
+                    ignoreTracker.WriteToConsole();
                     Console.WriteLine();
                     Console.WriteLine(graph.StateToString());
                     Assert.Fail(string.Join('\n', stateErrors));
                 }
             }
 
-            Console.WriteLine($"Wire states: {totalWireStates.ToString("N0")}\nIgnored W: {ignoredBecauseUnknown.ToString("N0")}\nIgnored Not exist: {ignoredBecauseNotExist.ToString("N0")}\nIgnored Mem read delay: {ignoredBecauseMemReadDelay.ToString("N0")}");
+            ignoreTracker.WriteToConsole();
         }
     }
 }

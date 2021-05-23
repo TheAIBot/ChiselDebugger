@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 
 namespace VCDReader
 {
@@ -28,6 +29,19 @@ namespace VCDReader
             this.ID = id;
             this.Reference = reference;
             this.Scopes = scopes;
+        }
+
+        public string RefNameWithScopes()
+        {
+            StringBuilder sBuilder = new StringBuilder();
+            for (int i = 0; i < Scopes.Length; i++)
+            {
+                sBuilder.Append(Scopes[i].Name);
+                sBuilder.Append('.');
+            }
+
+            sBuilder.Append(Reference);
+            return sBuilder.ToString();
         }
 
         public override string ToString()
