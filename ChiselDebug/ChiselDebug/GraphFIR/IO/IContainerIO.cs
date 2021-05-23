@@ -7,7 +7,29 @@ namespace ChiselDebug.GraphFIR.IO
         public bool TryGetIO(string ioName, out IContainerIO container);
         public IContainerIO GetIO(string ioName);
 
-        public IContainerIO GetIO(Span<string> names)
+
+        public bool TryGetIO(ReadOnlySpan<string> names, out IContainerIO container)
+        {
+            if (names.Length == 0)
+            {
+                container = this;
+                return true;
+            }
+
+            if (TryGetIO(names[0], out var innerContainer))
+            {
+                if (innerContainer is ModuleIO modIO)
+                {
+                    innerContainer = modIO.Mod;
+                }
+
+                return innerContainer.TryGetIO(names.Slice(1), out container);
+            }
+
+            container = null;
+            return false;
+        }
+        public IContainerIO GetIO(ReadOnlySpan<string> names)
         {
             if (names.Length == 0)
             {

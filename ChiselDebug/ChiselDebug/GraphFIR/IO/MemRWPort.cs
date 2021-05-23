@@ -10,6 +10,7 @@ namespace ChiselDebug.GraphFIR.IO
         internal readonly FIRIO DataOut;
         internal readonly FIRIO DataIn;
         internal readonly FIRIO Mask;
+        internal readonly FIRIO WriteMode;
 
         public MemRWPort(FIRRTLNode node, FIRIO inputType, int addressWidth, string name) : this(node, name, CreateIO(inputType, addressWidth, node))
         { }
@@ -19,6 +20,7 @@ namespace ChiselDebug.GraphFIR.IO
             this.DataOut = (FIRIO)GetIO("rdata");
             this.DataIn = (FIRIO)GetIO("wdata");
             this.Mask = (FIRIO)GetIO("wmask");
+            this.WriteMode = (FIRIO)GetIO("wmode");
 
             InitDataToMask();
         }
@@ -84,6 +86,44 @@ namespace ChiselDebug.GraphFIR.IO
         internal override FIRIO GetMask()
         {
             return Mask;
+        }
+
+        internal IOBundle GetAsReadPortBundle()
+        {
+            List<FIRIO> io = new List<FIRIO>();
+            io.Add(DataOut);
+            io.Add(Address);
+            io.Add(Enabled);
+            io.Add(Clock);
+
+            List<string> names = new List<string>();
+            names.Add("data");
+            names.Add("addr");
+            names.Add("en");
+            names.Add("clk");
+
+            return new IOBundle(Node, Name, io, names, false);
+        }
+
+        internal IOBundle GetAWritePortBundle()
+        {
+            List<FIRIO> io = new List<FIRIO>();
+            io.Add(DataIn);
+            io.Add(Address);
+            io.Add(Enabled);
+            io.Add(Clock);
+            io.Add(Mask);
+            io.Add(WriteMode);
+
+            List<string> names = new List<string>();
+            names.Add("data");
+            names.Add("addr");
+            names.Add("en");
+            names.Add("clk");
+            names.Add("mask");
+            names.Add("valid");
+
+            return new IOBundle(Node, Name, io, names, false);
         }
     }
 }

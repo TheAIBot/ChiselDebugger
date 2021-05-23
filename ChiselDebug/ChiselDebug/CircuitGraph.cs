@@ -147,6 +147,45 @@ namespace ChiselDebug
             }
         }
 
+        private IContainerIO GetModuleContainer(Span<string> modulePath, bool isVerilogVCD)
+        {
+            IContainerIO rootContainer = MainModule;
+
+            IContainerIO moduleIO = null;
+            if (rootContainer.TryGetIO(modulePath, out moduleIO))
+            {
+                return moduleIO;
+            }
+
+
+            if (!(!isVerilogVCD && (modulePath[^1].EndsWith("_w") || modulePath[^1].EndsWith("_r"))))
+            {
+                throw new Exception("Failed to find io.");
+            }
+
+            //Preserve vcd name and strip last two chracters from port name
+            //and search again
+            string portName = modulePath[^1];
+            modulePath[^1] = modulePath[^1].Substring(0, modulePath[^1].Length - 2);
+            if (!rootContainer.TryGetIO(modulePath, out moduleIO))
+            {
+                throw new Exception("Failed to find io.");
+            }
+
+            MemRWPort rwPort = (MemRWPort)moduleIO;
+            IOBundle portBundle;
+            if (portName.EndsWith("_w"))
+            {
+                portBundle = rwPort.GetAWritePortBundle();
+            }
+            else
+            {
+                portBundle = rwPort.GetAsReadPortBundle();
+            }
+
+            return moduleIO;
+        }
+
         public ScalarIO GetConnection(VarDef variable, bool isVerilogVCD)
         {
             if (VarDefToCon.TryGetValue(variable, out ScalarIO con))
@@ -168,7 +207,8 @@ namespace ChiselDebug
             //should always be skipped as it's the root module that is being searched from.
             int modulesSkipped = isVerilogVCD ? 2 : 1;
             string[] modulePath = variable.Scopes.Skip(modulesSkipped).Select(x => x.Name).ToArray();
-            IContainerIO moduleIO = ((IContainerIO)MainModule).GetIO(modulePath);
+            IContainerIO rootContainer = MainModule;
+            IContainerIO moduleIO = GetModuleContainer(modulePath, isVerilogVCD);
 
             IContainerIO ioLink = null;
             bool foundIO = TryFindIO(variable.Reference, moduleIO, isVerilogVCD, out ioLink);
@@ -287,10 +327,6 @@ namespace ChiselDebug
 
         private void ModuleStateToString(StringBuilder builder, Module mod, string indentation)
         {
-            if (mod.Name == "Queue_5")
-            {
-
-            }
             builder.Append(indentation);
             builder.Append(' ');
             builder.AppendLine(mod.Name);

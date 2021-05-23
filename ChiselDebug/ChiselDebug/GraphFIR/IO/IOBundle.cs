@@ -27,6 +27,24 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
+        public IOBundle(FIRRTLNode node, string name, List<FIRIO> io, List<string> ioNames, bool twoWayRelationship = true) : base(node, name)
+        {
+            this.OrderedIO = io.ToList();
+
+            foreach (var (firIO, ioName) in io.Zip(ioNames))
+            {
+                IO.Add(ioName, firIO);
+            }
+
+            if (twoWayRelationship)
+            {
+                foreach (var firIO in IO.Values)
+                {
+                    firIO.SetParentIO(this);
+                }
+            }
+        }
+
         public override FIRIO[] GetIOInOrder()
         {
             return OrderedIO.ToArray();
