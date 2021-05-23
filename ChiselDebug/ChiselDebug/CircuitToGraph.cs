@@ -527,7 +527,6 @@ namespace ChiselDebug
 
                 //Fill out module
                 VisitStatement(helper, body);
-                CleanupModule(helper.Mod);
 
                 cond.AddConditionalModule(internalEnaDummy.InIO, helper.Mod);
 
