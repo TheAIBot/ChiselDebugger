@@ -211,20 +211,9 @@ namespace ChiselDebug.GraphFIR
             return allOrdered.ToArray();
         }
 
-        internal void RemoveAllWires()
+        internal void RemoveAllDuplexWires()
         {
             FixDuplexOutputWires();
-
-            for (int i = Nodes.Count - 1; i >= 0; i--)
-            {
-                FIRRTLNode node = Nodes[i];
-                if (node is Wire wire)
-                {
-                    wire.BypassWireIO();
-                    Nodes.RemoveAt(i);
-                    NameToIO.Remove(wire.Name);
-                }
-            }
         }
 
         private void FixDuplexOutputWires()

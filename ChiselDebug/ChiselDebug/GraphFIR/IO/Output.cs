@@ -27,8 +27,8 @@ namespace ChiselDebug.GraphFIR.IO
         {
             if (input is Input ioIn)
             {
-                ConnectOnlyOutputSide(ioIn);
                 ioIn.Connect(this, condition);
+                ConnectOnlyOutputSide(ioIn);
             }
             else
             {

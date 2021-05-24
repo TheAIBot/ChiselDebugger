@@ -481,6 +481,17 @@ namespace ChiselDebug.CombGraph
                     }
                 }
             }
+            foreach (var wire in module.GetAllNestedNodesOfType<Wire>())
+            {
+                foreach (var output in wire.GetOutputs())
+                {
+                    Input paired = (Input)output.GetPaired();
+                    if (!paired.IsConnectedToAnything())
+                    {
+                        startingPoints.Add(output);
+                    }
+                }
+            }
             foreach (var output in module.GetInternalOutputs())
             {
                 if (!startingPoints.Contains(output))
@@ -606,7 +617,7 @@ namespace ChiselDebug.CombGraph
 
 
             Dictionary<FIRRTLNode, HashSet<Output>> seenButMissingFirNodeInputs = new Dictionary<FIRRTLNode, HashSet<Output>>();
-            Dictionary<Input, HashSet<Output>> seenButMissingModInputCons = new Dictionary<Input, HashSet<Output>>();
+            Dictionary<Input, HashSet<Output>> seenButMissingBorderInputCons = new Dictionary<Input, HashSet<Output>>();
             HashSet<FIRRTLNode> finishedNodes = new HashSet<FIRRTLNode>();
             Dictionary<Output, HashSet<Output>> blockedOutputs = new Dictionary<Output, HashSet<Output>>();
             Dictionary<Output, List<FIRRTLNode>> nodeInputBlocker = new Dictionary<Output, List<FIRRTLNode>>();
@@ -644,7 +655,7 @@ namespace ChiselDebug.CombGraph
                 }
             }
 
-            void FoundModInputDep(Output con, Input modInput, HashSet<Output> missingCons)
+            void FoundBorderInputDep(Output con, Input modInput, HashSet<Output> missingCons)
             {
                 missingCons.Remove(con);
 
@@ -653,7 +664,7 @@ namespace ChiselDebug.CombGraph
                     Output inPairedOut = (Output)modInput.GetPaired();
                     AddMaybeBlockedCon(toTraverse, blockedOutputs, inPairedOut);
 
-                    seenButMissingModInputCons.Remove(modInput);
+                    seenButMissingBorderInputCons.Remove(modInput);
                 }
             }
 
@@ -685,19 +696,19 @@ namespace ChiselDebug.CombGraph
                     {
                         foreach (var blockedInput in blockedModInputs)
                         {
-                            FoundModInputDep(conInput.con, blockedInput, seenButMissingModInputCons[blockedInput]);
+                            FoundBorderInputDep(conInput.con, blockedInput, seenButMissingBorderInputCons[blockedInput]);
                         }
                         modInputBlocker.Remove(conInput.con);
                     }
 
                     //Punch through module border to continue search on the other side
-                    if (conInput.input.Node is Module mod)
+                    if (conInput.input.Node is Module || conInput.input.Node is Wire)
                     {
                         HashSet<Output> missingCons;
-                        if (!seenButMissingModInputCons.TryGetValue(conInput.input, out missingCons))
+                        if (!seenButMissingBorderInputCons.TryGetValue(conInput.input, out missingCons))
                         {
                             missingCons = new HashSet<Output>();
-                            seenButMissingModInputCons.Add(conInput.input, missingCons);
+                            seenButMissingBorderInputCons.Add(conInput.input, missingCons);
 
                             AddMissingCons(missingCons, conInput.input);
 
@@ -712,7 +723,7 @@ namespace ChiselDebug.CombGraph
                             }
                         }
 
-                        FoundModInputDep(conInput.con, conInput.input, missingCons);
+                        FoundBorderInputDep(conInput.con, conInput.input, missingCons);
                     }
                     //Ignore state preserving components as a combinatorial graph
                     //shouldn't cross those
@@ -782,7 +793,7 @@ namespace ChiselDebug.CombGraph
             {
                 depForOutputs.Add(node.Key.GetOutputs());
             }
-            foreach (var input in seenButMissingModInputCons)
+            foreach (var input in seenButMissingBorderInputCons)
             {
                 Module mod = (Module)input.Key.Node;
                 depForOutputs.Add(new Output[] { (Output)mod.GetPairedIO(input.Key) });
@@ -810,7 +821,7 @@ namespace ChiselDebug.CombGraph
             }
 
             List<Input> endInputs = new List<Input>();
-            endInputs.AddRange(seenButMissingModInputCons.Keys);
+            endInputs.AddRange(seenButMissingBorderInputCons.Keys);
             endInputs.AddRange(seenButMissingFirNodeInputs.Keys.SelectMany(x => x.GetInputs()));
 
             foreach (var seenCon in seenCons)

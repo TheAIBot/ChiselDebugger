@@ -24,7 +24,7 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
                     Output con = comp.GetConnection();
                     if (con != null)
                     {
-                        if (con.Node is not Module)
+                        if (!comp.IsBorderIO)
                         {
                             continue;
                         }
