@@ -19,7 +19,7 @@ namespace ChiselDebuggerWebUI.Code
             ChildLayouts.Add(layout);
         }
 
-        public void PrepareToRerenderLayout()
+        public virtual void PrepareToRerenderLayout()
         {
             foreach (var uiNode in UINodes)
             {

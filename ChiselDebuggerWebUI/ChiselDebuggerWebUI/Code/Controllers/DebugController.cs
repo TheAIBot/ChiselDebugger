@@ -25,6 +25,7 @@ namespace ChiselDebuggerWebUI.Code
         private readonly RouteTemplator RouteTemplates = new RouteTemplator();
         private readonly Dictionary<Output, string> ConToColor = new Dictionary<Output, string>();
         private readonly HashSet<Output> ConstCons = new HashSet<Output>();
+        private ModuleLayout RootModCtrl = null;
         private readonly bool IsVerilogVCD;
         public Point CircuitSize { get; private set; } = Point.Zero;
 
@@ -119,10 +120,13 @@ namespace ChiselDebuggerWebUI.Code
 
         public void AddModCtrl(string moduleName, ModuleLayout modCtrl, FIRRTLNode[] modNodes, FIRRTLNode[] modNodesIncludeMod, FIRIO[] modIO)
         {
-            ModControllers.Add(modCtrl);
-            foreach (var node in modNodes)
+            lock (FIRNodeToModCtrl)
             {
-                FIRNodeToModCtrl.Add(node, modCtrl);
+                ModControllers.Add(modCtrl);
+                foreach (var node in modNodes)
+                {
+                    FIRNodeToModCtrl.Add(node, modCtrl);
+                }
             }
 
             PlacementTemplates.SubscribeToTemplate(moduleName, modCtrl, modNodes);
@@ -149,9 +153,10 @@ namespace ChiselDebuggerWebUI.Code
             return RouteTemplates.TryGetTemplate(moduleName, modLayout, out wires);
         }
 
-        public void SetCircuitSize(Point size)
+        public void SetCircuitSize(Point size, ModuleLayout rootModCtrl)
         {
             CircuitSize = size;
+            RootModCtrl = rootModCtrl;
         }
 
         public void SetCircuitState(ulong time)
@@ -159,33 +164,16 @@ namespace ChiselDebuggerWebUI.Code
             TimeChanger.Post(() =>
             {
                 Graph.SetState(Timeline.GetStateAtTime(time), IsVerilogVCD);
-                List<Output> changedConnections = Graph.ComputeRemainingGraph();
+                Graph.ComputeRemainingGraphFast();
 
-                HashSet<ModuleLayout> modulesToReRender = new HashSet<ModuleLayout>();
-
-                //Only rerender the uiNodes that are connected to a connection
-                //that changed value. UiNodes are not rerendered here, but they
-                //are being allowed to rerender here.
-                foreach (var connection in changedConnections)
+                if (RootModCtrl != null)
                 {
-                    foreach (var node in connection.GetConnectedInputs())
+                    foreach (var modUI in ModControllers)
                     {
-                        if (node.Node != null &&
-                            FIRNodeToModCtrl.TryGetValue(node.Node, out var modCtrl1))
-                        {
-                            modulesToReRender.Add(modCtrl1);
-                        }
+                        modUI.PrepareToRerenderLayout();
                     }
-                    if (connection.Node != null &&
-                        FIRNodeToModCtrl.TryGetValue(connection.Node, out var modCtrl2))
-                    {
-                        modulesToReRender.Add(modCtrl2);
-                    }
-                }
 
-                foreach (var moduleUI in modulesToReRender)
-                {
-                    moduleUI.RerenderWithoutPreparation();
+                    RootModCtrl.Render();
                 }
             });
         }

@@ -82,16 +82,7 @@ namespace ChiselDebug.GraphFIR.IO
                                     mod.AddAnonymousInternalIO(flipped);
                                     Output extOutput = (Output)flipped.GetPaired();
 
-
-                                    if (mod.IsAnonymousExtIntIO(output))
-                                    {
-                                        output.ConnectToInput(flipped, false, false, condition);
-                                    }
-                                    else
-                                    {
-                                        output.ConnectToInput(flipped);
-                                    }
-
+                                    output.ConnectToInput(flipped, false, false, condition);
                                     input.ReplaceConnection(output, extOutput, condition);
                                 }
                             }

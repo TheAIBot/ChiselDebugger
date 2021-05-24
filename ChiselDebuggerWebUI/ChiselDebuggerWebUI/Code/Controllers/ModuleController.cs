@@ -33,8 +33,8 @@ namespace ChiselDebuggerWebUI.Code
             this.Mod = mod;
             this.ModUI = modUI;
             this.WireRouter = new SimpleRouter(Mod);
-            this.NodePlacer = new SimplePlacer(Mod);
-            //this.NodePlacer = new GraphVizPlacer(Mod);
+            //this.NodePlacer = new SimplePlacer(Mod);
+            this.NodePlacer = new GraphVizPlacer(Mod);
             this.ModuleNodes = Mod.GetAllNodes();
             this.ModuleNodesWithModule = Mod.GetAllNodesIncludeModule();
             this.ModuleIO = Mod.GetAllIOOrdered();
@@ -42,14 +42,16 @@ namespace ChiselDebuggerWebUI.Code
             DebugCtrl.AddModCtrl(Mod.Name, this, ModuleNodes, ModuleNodesWithModule, ModuleIO);
         }
 
-        public void RerenderWithoutPreparation()
+        public override void PrepareToRerenderLayout()
         {
-            foreach (var uiNode in UINodes)
-            {
-                uiNode.PrepareForRender();
-            }
+            base.PrepareToRerenderLayout();
 
+            ModUI.PrepareForRender();
             WireUI?.PrepareForRender();
+        }
+
+        public void Render()
+        {
             ModUI.InvokestateHasChanged();
         }
 
