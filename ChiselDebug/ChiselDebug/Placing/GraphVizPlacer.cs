@@ -134,6 +134,9 @@ namespace ChiselDebug
 
         private void MakeIntoRecord(Node node, Input[] inputs, Output[] outputs, Dictionary<Input, string> inputToPort, Dictionary<Output, string> outputToPort, ref int portName)
         {
+            Array.Reverse(inputs);
+            Array.Reverse(outputs);
+
             int length = Math.Max(inputs.Length, outputs.Length);
             List<string> ports = new List<string>();
             for (int i = 0; i < length; i++)
