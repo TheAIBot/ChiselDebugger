@@ -54,7 +54,11 @@
             }
             else if (posOp.Value is VectorAssign)
             {
-                <VectorAssignUI  @key=posOp.Value PosOp="@(posOp.Cast<VectorAssign>())" ParentLayoutCtrl="CurrModLayout"></VectorAssignUI>
+                <VectorAssignUI @key=posOp.Value PosOp="@(posOp.Cast<VectorAssign>())" ParentLayoutCtrl="CurrModLayout"></VectorAssignUI>
+            }
+            else if (posOp.Value is Wire)
+            {
+                <WireUI @key=posOp.Value PosOp="@(posOp.Cast<Wire>())" ParentLayoutCtrl="CurrModLayout"></WireUI>
             }
         }
 

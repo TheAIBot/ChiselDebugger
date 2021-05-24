@@ -1,0 +1,29 @@
+﻿@inherits FIRBase<Wire>
+
+<div id="@SizeWatcherID" class="wire" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();min-width:@GetCurrentSize().X.ToPixels();min-height:@GetCurrentSize().Y.ToPixels();">
+    <ScopedIOUI NodeIO="@NodeIO" AlwaysShowName="true"></ScopedIOUI>
+</div>
+
+@code {
+    private ScopedNodeIO NodeIO = null;
+
+    protected override void OnFirstParametersSetAsync()
+    {
+        SetCurrentSize(new Point(100, 10));
+
+        base.OnFirstParametersSetAsync();
+    }
+
+    protected override List<DirectedIO> OnMakeInputs(int width, int height)
+    {
+        NodeIO = IOPositionCalc.VerticalScopedIO(Operation.GetIO().ToArray(), GetCurrentSize().X, 10, 10);
+        SetCurrentSize(new Point(GetCurrentSize().X, NodeIO.HeightNeeded));
+
+        return NodeIO.GetInputDirIO();
+    }
+
+    protected override List<DirectedIO> OnMakeOutputs(int width, int height)
+    {
+        return NodeIO.GetOutputDirIO();
+    }
+}
