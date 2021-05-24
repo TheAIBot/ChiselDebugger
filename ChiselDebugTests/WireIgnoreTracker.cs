@@ -1,9 +1,8 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using VCDReader;
-
-[assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
 
 namespace ChiselDebugTests
 {
