@@ -58,7 +58,7 @@ namespace ChiselDebug.Timeline
                         //prepare for the next segment
                         if (binChanges.Count > maxChangesPerSegment)
                         {
-                            TimeSpan tSpan = new TimeSpan(startTime, time.Time);
+                            TimeSpan tSpan = new TimeSpan(stepChanges.First().Time, time.Time);
                             SegmentChanges.Add(new TimeSegmentChanges(tSpan, segmentStartState, binChanges.ToArray(), stepChanges));
                             currTimeStepStart = 0;
                             currTimeStepLength = 0;
