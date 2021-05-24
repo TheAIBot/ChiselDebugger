@@ -16,7 +16,6 @@
         base.OnFirstParametersSetAsync();
 
         CondModules = Operation.CondMods.Select(x => new Positioned<Module>(Point.Zero, x.Mod)).ToList();
-        Debug.WriteLine("Made: " + CondModules.Count);
 
         CurrLayout = new CondLayout(Operation);
         CurrLayout.OnLayoutUpdate += (x, y) => InvokeAsync(() => UpdateLayout(x, y));
@@ -27,8 +26,6 @@
     private void UpdateLayout(List<Positioned<Module>> positions, FIRComponentUpdate componentInfo)
     {
         CondModules = positions;
-
-        Debug.WriteLine("Updated: " + CondModules.Count);
 
         SetCurrentSize(componentInfo.Size);
         ParentLayoutCtrl?.UpdateComponentInfo(componentInfo);

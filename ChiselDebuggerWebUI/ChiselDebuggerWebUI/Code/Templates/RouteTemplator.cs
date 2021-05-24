@@ -65,7 +65,6 @@ namespace ChiselDebuggerWebUI.Code.Templates
             lock (Templates)
             {
                 Templates.Add(moduleName, template);
-                Debug.WriteLine($"Added wire template for {moduleName}");
             }
 
             lock (Converters)
