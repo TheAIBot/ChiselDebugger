@@ -378,7 +378,7 @@ namespace ChiselDebug
                 }
 
                 ConnectIO(helper, VisitExp(helper, memPort.Exps[0], GraphFIR.IO.IOGender.Male), port.Address, false);
-                ConnectIO(helper, VisitExp(helper, memPort.Exps[1], GraphFIR.IO.IOGender.Male), port.Clock, false);
+                ConnectIO(helper, VisitExp(helper, memPort.Exps[1], GraphFIR.IO.IOGender.Male), port.Clock, false, false);
                 ConnectIO(helper, helper.ScopeEnabledCond, port.Enabled, false);
 
                 //if port has mask then by default set whole mask to true
@@ -474,7 +474,7 @@ namespace ChiselDebug
             ConnectIO(helper, from, to, isPartial);
         }
 
-        private static void ConnectIO(VisitHelper helper, GraphFIR.IO.FIRIO from, GraphFIR.IO.FIRIO to, bool isPartial)
+        private static void ConnectIO(VisitHelper helper, GraphFIR.IO.FIRIO from, GraphFIR.IO.FIRIO to, bool isPartial, bool canBeConditional = true)
         {
             GraphFIR.Module fromMod = from.GetModResideIn();
             GraphFIR.Module toMod = to.GetModResideIn();
@@ -483,8 +483,9 @@ namespace ChiselDebug
             //then add condition to that connection if currently in
             //conditional module.
             GraphFIR.IO.Output condition = null;
-            if ((fromMod == helper.Mod && toMod != helper.Mod) ||
-                (fromMod != helper.Mod && toMod != helper.Mod))
+            if (canBeConditional &&
+                ((fromMod == helper.Mod && toMod != helper.Mod) ||
+                 (fromMod != helper.Mod && toMod != helper.Mod)))
             {
                 condition = helper.Mod.EnableCon;
             }
