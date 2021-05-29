@@ -164,7 +164,7 @@ namespace ChiselDebuggerWebUI.Code
             TimeChanger.Post(() =>
             {
                 Graph.SetState(Timeline.GetStateAtTime(time), IsVerilogVCD);
-                Graph.ComputeRemainingGraphFast();
+                Graph.ComputeRemainingGraph();
 
                 if (RootModCtrl != null)
                 {
