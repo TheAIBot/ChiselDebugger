@@ -11,12 +11,18 @@ namespace ChiselDebuggerWebUI.Code
 
         public void AddUINode(IFIRUINode uiNode)
         {
-            UINodes.Add(uiNode);
+            lock (UINodes)
+            {
+                UINodes.Add(uiNode);
+            }
         }
 
         public void AddChildLayout(FIRLayout layout)
         {
-            ChildLayouts.Add(layout);
+            lock (ChildLayouts)
+            {
+                ChildLayouts.Add(layout);
+            }
         }
 
         public virtual void PrepareToRerenderLayout()
