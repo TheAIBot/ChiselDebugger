@@ -54,8 +54,8 @@ namespace ChiselDebug.GraphFIR
         public override Input[] GetInputs()
         {
             List<Input> inputs = new List<Input>();
-            inputs.AddRange(ChoiseInputs);
             inputs.Add(Decider);
+            inputs.AddRange(ChoiseInputs);
             return inputs.ToArray();
         }
 
