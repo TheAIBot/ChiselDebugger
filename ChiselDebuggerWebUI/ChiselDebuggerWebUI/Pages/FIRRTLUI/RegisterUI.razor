@@ -1,7 +1,7 @@
-﻿@inherits FIRBase<Register>
+﻿@inherits FIRTitleBase<Register>
 
 <div id="@SizeWatcherID" class="register" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();min-width:@GetCurrentSize().X.ToPixels();min-height:@GetCurrentSize().Y.ToPixels();">
-    <div style="padding:5px;">@Operation.Name</div>
+    <div id="@TitleID" style="padding:5px;">@Operation.Name</div>
 
     <ScopedIOUI NodeIO="@NodeIO" AlwaysShowName="true"></ScopedIOUI>
 </div>
@@ -18,7 +18,7 @@
 
     protected override List<DirectedIO> OnMakeInputs(int width, int height)
     {
-        NodeIO = IOPositionCalc.VerticalScopedIO(Operation.GetIO().ToArray(), GetCurrentSize().X, 40, 10);
+        NodeIO = IOPositionCalc.VerticalScopedIO(Operation.GetIO().ToArray(), GetCurrentSize().X, GetPaddedTitleHeight(), 10);
         SetCurrentSize(new Point(GetCurrentSize().X, NodeIO.HeightNeeded));
 
         return NodeIO.GetInputDirIO();
