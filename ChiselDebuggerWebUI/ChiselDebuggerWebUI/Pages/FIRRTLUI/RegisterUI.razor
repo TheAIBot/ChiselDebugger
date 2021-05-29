@@ -11,14 +11,14 @@
 
     protected override void OnFirstParametersSetAsync()
     {
-        SetCurrentSize(new Point(100, 10));
+        SetCurrentSize(new Point(120, 10));
 
         base.OnFirstParametersSetAsync();
     }
 
     protected override List<DirectedIO> OnMakeInputs(int width, int height)
     {
-        NodeIO = IOPositionCalc.VerticalScopedIO(Operation.GetIO().ToArray(), GetCurrentSize().X, 10, 10);
+        NodeIO = IOPositionCalc.VerticalScopedIO(Operation.GetIO().ToArray(), GetCurrentSize().X, 40, 10);
         SetCurrentSize(new Point(GetCurrentSize().X, NodeIO.HeightNeeded));
 
         return NodeIO.GetInputDirIO();
