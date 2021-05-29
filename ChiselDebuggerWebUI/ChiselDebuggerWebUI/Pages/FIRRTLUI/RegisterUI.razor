@@ -1,7 +1,10 @@
 ﻿@inherits FIRTitleBase<Register>
 
 <div id="@SizeWatcherID" class="register" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();min-width:@GetCurrentSize().X.ToPixels();min-height:@GetCurrentSize().Y.ToPixels();">
-    <div id="@TitleID" style="padding:5px;">@Operation.Name</div>
+    <div id="@TitleID" class="registerName">
+        <div>Register</div>
+        <div>@Operation.Name</div>
+    </div>
 
     <ScopedIOUI NodeIO="@NodeIO" AlwaysShowName="true"></ScopedIOUI>
 </div>

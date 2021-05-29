@@ -5,3 +5,9 @@
     outline-offset: -1px;
     text-align: center;
 }
+
+.registerName {
+    padding: 5px;
+    line-height: 1;
+    font-weight: bold;
+}
