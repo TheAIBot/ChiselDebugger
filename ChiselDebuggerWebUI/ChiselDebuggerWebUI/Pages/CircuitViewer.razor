@@ -48,6 +48,7 @@
     private readonly string DragEventID = UniqueID.UniqueHTMLID();
 
     private Point CircuitTopLeftParent = Point.Zero;
+    private Point CircuitContainerSize = Point.Zero;
     private readonly string CircuitContainerID = UniqueID.UniqueHTMLID();
 
     protected override async Task OnInitializedAsync()
@@ -78,6 +79,7 @@
 
         ModulePosition = new Positioned<ChiselDebug.GraphFIR.Module>(Point.Zero, graph.MainModule);
         DebugCtrl = new DebugController(graph);
+        DebugCtrl.OnCircuitSizeChanged += CircuitSizeChanged;
 
         JustLoadedCircuit = true;
         InvokestateHasChanged();
@@ -98,6 +100,7 @@
             JustLoadedCircuit = false;
             await JSEvents.AddDragListener(JS, DragEventID, x => InvokeAsync(() => HandleDrag(x)));
             JSEvents.AddResizeListener(JS, CircuitContainerID, PageResized);
+            JSEvents.AddResizeListener(JS, DragEventID, CircuitContainerResized);
         }
 
         await base.OnAfterRenderAsync(firstRender);
@@ -106,6 +109,47 @@
     private async void PageResized(ElemWH size)
     {
         CircuitTopLeftParent = (await JS.InvokeAsync<ElemWH>("JSUtils.getElementPosition", CircuitContainer)).ToPoint();
+        StateHasChanged();
+    }
+
+    private void CircuitContainerResized(ElemWH size)
+    {
+        CircuitContainerSize = size.ToPoint();
+        CircuitSizeChanged(Point.Zero);
+    }
+
+    private void CircuitSizeChanged(Point _)
+    {
+        Point circuitSize = DebugCtrl.CircuitSize;
+        if (circuitSize == Point.Zero ||
+            CircuitContainerSize == Point.Zero)
+        {
+            return;
+        }
+
+        //Figure out how much to scale with so circuit fills whole screen
+        float widthRatio = (float)circuitSize.X / CircuitContainerSize.X;
+        float heightRatio = (float)circuitSize.Y / CircuitContainerSize.Y;
+        float ratio = Math.Max(widthRatio, heightRatio);
+
+        //Scale to slightly smaller than whole screen as it looks better
+
+        const float borderSpace = 1.2f;
+        float borderedRatio = ratio * borderSpace;
+        float scale = 1.0f / borderedRatio;
+
+        float scaledCircuitSizeX = circuitSize.X * scale;
+        float scaledCircuitSizeY = circuitSize.Y * scale;
+        float unusedWidth = CircuitContainerSize.X - scaledCircuitSizeX;
+        float unusedHeight = CircuitContainerSize.Y - scaledCircuitSizeY;
+        float offsetToCenterX = unusedWidth / 2.0f;
+        float offsetToCenterY = unusedHeight / 2.0f;
+
+        CircuitOffset.X = (int)offsetToCenterX;
+        CircuitOffset.Y = (int)offsetToCenterY;
+
+        UpdateCircuitScale(scale);
+        InvokestateHasChanged();
     }
 
     /// <summary>
@@ -156,12 +200,17 @@
         float xOffset = moveX * DebugCtrl.CircuitSize.X * scaleDelta;
         float yOffset = moveY * DebugCtrl.CircuitSize.Y * scaleDelta;
 
-        CircuitScale = newScale;
         CircuitOffset.X += (int)xOffset;
         CircuitOffset.Y += (int)yOffset;
 
-        RootModLayout.UpdateLayoutDisplay(CircuitScale);
+        UpdateCircuitScale(newScale);
         StateHasChanged();
+    }
+
+    private void UpdateCircuitScale(float scale)
+    {
+        CircuitScale = scale;
+        RootModLayout.UpdateLayoutDisplay(CircuitScale);
     }
 
     private void HandleDrag(Point dragged)

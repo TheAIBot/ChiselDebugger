@@ -28,6 +28,9 @@ namespace ChiselDebuggerWebUI.Code
 
         public Point CircuitSize { get; private set; } = Point.Zero;
 
+        public delegate void CircuitSizeChangedHandler(Point circuitSize);
+        public event CircuitSizeChangedHandler OnCircuitSizeChanged;
+
         public DebugController(CircuitGraph graph)
         {
             this.Graph = graph;
@@ -83,6 +86,7 @@ namespace ChiselDebuggerWebUI.Code
         {
             CircuitSize = size;
             RootModCtrl = rootModCtrl;
+            OnCircuitSizeChanged?.Invoke(CircuitSize);
         }
 
         public void SetCircuitState(ulong time)
