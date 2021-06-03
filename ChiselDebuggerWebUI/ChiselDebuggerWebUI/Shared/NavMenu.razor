@@ -1,4 +1,6 @@
-﻿@inject NavigationManager Navigator;
+﻿@using System.IO;
+@inject NavigationManager Navigator;
+
 
 <div class="top-row pl-4 navbar navbar-dark">
     <a class="navbar-brand" href="">ChiselDebuggerWebUI</a>
@@ -12,9 +14,9 @@
         <li class="nav-item px-3">
             @foreach (var firrtlFilename in FIRRTLFilenames)
             {
-            <a class="nav-link" @onclick="_ => ShowCircuit(firrtlFilename)">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> @firrtlFilename
-            </a>
+                <a class="nav-link" @onclick="_ => ShowCircuit(firrtlFilename)">
+                    <span class="oi oi-list-rich" aria-hidden="true"></span> @firrtlFilename
+                </a>
             }
         </li>
     </ul>
@@ -24,19 +26,17 @@
     private bool collapseNavMenu = true;
 
     private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-    private readonly string[] FIRRTLFilenames = new string[]
+    private string[] FIRRTLFilenames = new string[0];
+
+    protected override Task OnInitializedAsync()
     {
-        "Alu.lo.fir",
-        "FSMDatapath.lo.fir",
-        "MovingAveragePow2.fir",
-        "MovingAveragePow2.lo.fir",
-        "NeuromorphicProcessor.lo.fir",
-        "RegFileMem.fir",
-        "RegFileMem.lo.fir",
-        "RegFileVec.fir",
-        "RegFileVec.lo.fir",
-        "Tile.fir"
-    };
+        if (Directory.Exists("Examples"))
+        {
+            FIRRTLFilenames = Directory.GetFiles("Examples").Select(x => Path.GetFileName(x)).ToArray();
+        }
+
+        return base.OnInitializedAsync();
+    }
 
     private void ToggleNavMenu()
     {

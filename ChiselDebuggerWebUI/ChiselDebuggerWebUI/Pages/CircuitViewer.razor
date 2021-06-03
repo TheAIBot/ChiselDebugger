@@ -55,8 +55,9 @@
     {
         if (Filename != null)
         {
+            Filename = Filename.Replace('-', '.');
             string loFirPath = System.IO.Path.Combine("Examples", Filename.Replace(".fir", ".lo.fir"));
-            string hiFirPath = System.IO.Path.Combine("Examples", Filename.Replace('-', '.'));
+            string hiFirPath = System.IO.Path.Combine("Examples", Filename);
             string vcdPath = System.IO.Path.Combine("Examples", Path.GetFileNameWithoutExtension(Filename) + ".vcd");
 
             await Task.Factory.StartNew(() => LoadFirData(loFirPath, hiFirPath, vcdPath, true));
