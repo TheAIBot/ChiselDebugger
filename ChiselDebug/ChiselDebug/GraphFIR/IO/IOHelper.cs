@@ -58,6 +58,14 @@ namespace ChiselDebug.GraphFIR.IO
                 return;
             }
 
+
+
+            Dictionary<Input, Input> intDstSinkToModPass = new Dictionary<Input, Input>();
+            Dictionary<Output, Input> intSrcSourceToModPass = new Dictionary<Output, Input>();
+
+            Dictionary<Input, Input> extDstSinkToModPass = new Dictionary<Input, Input>();
+            Dictionary<Output, Input> extSrcSourceToModPass = new Dictionary<Output, Input>();
+
             List<ScalarIO> scalars = new List<ScalarIO>();
             foreach (var node in mod.GetAllNodes())
             {
@@ -78,12 +86,30 @@ namespace ChiselDebug.GraphFIR.IO
                                 Output condition = input.GetConnectionCondition(output);
                                 if (condition != null)
                                 {
-                                    Input flipped = (Input)output.Flip(mod);
-                                    mod.AddAnonymousInternalIO(flipped);
-                                    Output extOutput = (Output)flipped.GetPaired();
+                                    Input flipped;
+                                    if (intDstSinkToModPass.TryGetValue(input, out flipped))
+                                    {
+                                        output.DisconnectInput(input);
+                                        output.ConnectToInput(flipped, false, false, condition);
+                                    }
+                                    else if (intSrcSourceToModPass.TryGetValue(output, out flipped))
+                                    {
+                                        Output extOutput = (Output)flipped.GetPaired();
+                                        input.ReplaceConnection(output, extOutput, mod.EnableCon);
+                                    }
+                                    else
+                                    {
+                                        flipped = (Input)output.Flip(mod);
+                                        mod.AddAnonymousInternalIO(flipped);
+                                        Output extOutput = (Output)flipped.GetPaired();
 
-                                    output.ConnectToInput(flipped, false, false, condition);
-                                    input.ReplaceConnection(output, extOutput, condition);
+                                        input.ReplaceConnection(output, extOutput, mod.EnableCon);
+                                        //input.ReplaceConnection(output, extOutput, condition);
+                                        output.ConnectToInput(flipped, false, false, condition);
+
+                                        intDstSinkToModPass.Add(input, flipped);
+                                        intSrcSourceToModPass.Add(output, flipped);
+                                    }
                                 }
                             }
                         }
@@ -98,12 +124,29 @@ namespace ChiselDebug.GraphFIR.IO
 
                                 if (cons.From.GetModResideIn() != mod)
                                 {
-                                    Input flipped = (Input)cons.From.Flip(mod);
-                                    mod.AddAnonymousExternalIO(flipped);
-                                    Output intOutput = (Output)flipped.GetPaired();
+                                    Input flipped;
+                                    if (extSrcSourceToModPass.TryGetValue(cons.From, out flipped))
+                                    {
+                                        Output intOutput = (Output)flipped.GetPaired();
+                                        input.ReplaceConnection(cons.From, intOutput, cons.Condition);
+                                    }
+                                    else if (extDstSinkToModPass.TryGetValue(input, out flipped))
+                                    {
+                                        cons.From.DisconnectInput(input);
+                                        cons.From.ConnectToInput(flipped, false, false, cons.Condition);
+                                    }
+                                    else
+                                    {
+                                        flipped = (Input)cons.From.Flip(mod);
+                                        mod.AddAnonymousExternalIO(flipped);
+                                        Output intOutput = (Output)flipped.GetPaired();
 
-                                    cons.From.ConnectToInput(flipped, false, false, cons.Condition);
-                                    input.ReplaceConnection(cons.From, intOutput, cons.Condition);
+                                        input.ReplaceConnection(cons.From, intOutput, cons.Condition);
+                                        cons.From.ConnectToInput(flipped, false, false, cons.Condition);
+
+                                        extDstSinkToModPass.Add(input, flipped);
+                                        extSrcSourceToModPass.Add(cons.From, flipped);
+                                    }
                                 }
                             }
                         }
