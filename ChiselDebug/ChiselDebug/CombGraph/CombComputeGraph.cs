@@ -795,8 +795,7 @@ namespace ChiselDebug.CombGraph
             }
             foreach (var input in seenButMissingBorderInputCons)
             {
-                Module mod = (Module)input.Key.Node;
-                depForOutputs.Add(new Output[] { (Output)mod.GetPairedIO(input.Key) });
+                depForOutputs.Add(new Output[] { (Output)input.Key.GetPaired() });
             }
             foreach (var blocked in blockedOutputs)
             {
