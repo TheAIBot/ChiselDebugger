@@ -80,11 +80,17 @@ namespace ChiselDebuggerWebUI.Code
         {
             while (true)
             {
-                AddedResize.WaitOne();
+                if (ToAddResizeIDs.Count == 0)
+                {
+                    AddedResize.WaitOne();
+                }                
                 await Task.Delay(50);
 
-                int count = ToAddResizeIDs.Count;
-                var workItems = ToAddResizeIDs.Take(count);
+                List<(IJSRuntime js, string id)> workItems = new List<(IJSRuntime js, string id)>();
+                while (ToAddResizeIDs.TryTake(out var workItem))
+                {
+                    workItems.Add(workItem);
+                }
 
                 //Work can lie in different js runtimes. Make sure that
                 //the work is executed in the correct runtime by grouping

@@ -52,11 +52,15 @@
 
     protected override async Task OnInitializedAsync()
     {
-        string loFirPath = System.IO.Path.Combine("Examples", Filename.Replace(".fir", ".lo.fir"));
-        string hiFirPath = System.IO.Path.Combine("Examples", Filename.Replace('-', '.'));
-        string vcdPath = System.IO.Path.Combine("Examples", Path.GetFileNameWithoutExtension(Filename) + ".vcd");
+        if (Filename != null)
+        {
+            string loFirPath = System.IO.Path.Combine("Examples", Filename.Replace(".fir", ".lo.fir"));
+            string hiFirPath = System.IO.Path.Combine("Examples", Filename.Replace('-', '.'));
+            string vcdPath = System.IO.Path.Combine("Examples", Path.GetFileNameWithoutExtension(Filename) + ".vcd");
 
-        await Task.Factory.StartNew(() => LoadFirData(loFirPath, hiFirPath, vcdPath, true));
+            await Task.Factory.StartNew(() => LoadFirData(loFirPath, hiFirPath, vcdPath, true));
+        }
+
         await base.OnInitializedAsync();
     }
 
