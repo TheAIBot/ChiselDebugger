@@ -65,8 +65,13 @@ const reObserver = new ResizeObserver(async entries => {
 
 JSUtils.addResizeListeners = function (elementIDs) {
     for (let elementID of elementIDs) {
+        let element = document.getElementById(elementID);
+        if (element == null) {
+            continue;
+        }
+
         oldSizes[elementID] = new ElemWH(0, 0);
-        reObserver.observe(document.getElementById(elementID));
+        reObserver.observe(element);
     }
 }
 
@@ -79,6 +84,10 @@ JSUtils.addDragListener = function (elementID) {
     var isDragQueued = false;
 
     let element = document.getElementById(elementID);
+    if (element == null) {
+        return;
+    }
+
     element.addEventListener("mousedown", function (e) {
         isMouseDown = true;
         oldMouseX = e.clientX;
