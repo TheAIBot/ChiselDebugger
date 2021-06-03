@@ -3,41 +3,46 @@
 @using FIRRTL
 @using VCDReader
 @using ChiselDebug.Timeline;
+@using System.IO;
 
 @inject IJSRuntime JS
 @inherits ManualRenderBase
 @implements IDisposable
 
-<CascadingValue Value="@DebugCtrl" Name="DebugCtrl" IsFixed="true">
-    <div id="@CircuitContainerID">
-        @if (DebugCtrl.Timeline != null)
-        {
-            <TimelineUI />
-        }
+@if (DebugCtrl != null)
+{
+    <CascadingValue Value="@DebugCtrl" Name="DebugCtrl" IsFixed="true">
+        <div id="@CircuitContainerID">
+            @if (DebugCtrl.Timeline != null)
+            {
+                <TimelineUI />
+            }
 
-        <div style="height:20px;" />
-        <div id="@DragEventID" @ref="CircuitContainer" style="
+            <div style="height:20px;" />
+            <div id="@DragEventID" @ref="CircuitContainer" style="
         width: calc(100vw - @CircuitTopLeftParent.X.ToPixels());
         height: calc(100vh - @CircuitTopLeftParent.Y.ToPixels());
         overflow: hidden;
         user-select: none;">
-            <div class="Circuit" style="transform: translate( @CircuitOffset.X.ToPixels(), @CircuitOffset.Y.ToPixels() ) scale( @CircuitScale.ToHtmlNumber() );" @onwheel="HandleScroll">
-                <ModuleUI PosOp="@ModulePosition" ParentLayoutCtrl="RootModLayout"/>
+                <div class="Circuit" style="transform: translate( @CircuitOffset.X.ToPixels(), @CircuitOffset.Y.ToPixels() ) scale( @CircuitScale.ToHtmlNumber() );" @onwheel="HandleScroll">
+                    <ModuleUI PosOp="@ModulePosition" ParentLayoutCtrl="RootModLayout" />
+                </div>
             </div>
         </div>
-    </div>
-</CascadingValue>
+    </CascadingValue>
+}
 
 @code
 {
     [Parameter]
     public string Filename { get; set; }
 
-    private DebugController DebugCtrl;
+    private DebugController DebugCtrl = null;
     private Positioned<ChiselDebug.GraphFIR.Module> ModulePosition;
     private CircuitLayout RootModLayout = new CircuitLayout();
     private float CircuitScale = 1.0f;
     private Point CircuitOffset = Point.Zero;
+    private bool JustLoadedCircuit = false;
 
     private ElementReference CircuitContainer;
     private readonly string DragEventID = UniqueID.UniqueHTMLID();
@@ -45,60 +50,48 @@
     private Point CircuitTopLeftParent = Point.Zero;
     private readonly string CircuitContainerID = UniqueID.UniqueHTMLID();
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-        string firrtl = @"
-circuit ModL :
-    module ModL :
-        input clock : Clock
-        input reset : UInt<1>
-        output io : {flip en1 : UInt<1>, flip en2 : UInt<1>, flip din1 : UInt<8>, dout1 : UInt<8>, flip en3 : UInt<1>, flip en4 : UInt<1>, flip din2 : UInt<8>, dout2 : UInt<8>}
+        string loFirPath = System.IO.Path.Combine("Examples", Filename.Replace(".fir", ".lo.fir"));
+        string hiFirPath = System.IO.Path.Combine("Examples", Filename.Replace('-', '.'));
+        string vcdPath = System.IO.Path.Combine("Examples", Path.GetFileNameWithoutExtension(Filename) + ".vcd");
 
-        wire wir : UInt<8> @[SimpleModules.scala 170:19]
-        wir <= UInt<1>(""h00"") @[SimpleModules.scala 171:9]
-        when io.en1: @[SimpleModules.scala 173:18]
-            wir <= io.din1 @[SimpleModules.scala 174:13]
-            skip @[SimpleModules.scala 173:18]
-        when io.en2: @[SimpleModules.scala 177:18]
-            io.dout1 <= wir @[SimpleModules.scala 178:18]
-            skip @[SimpleModules.scala 177:18]
-        else : @[SimpleModules.scala 179:17]
-            io.dout1 <= UInt<2>(""h03"") @[SimpleModules.scala 180:18]
-            skip @[SimpleModules.scala 179:17]
-        when io.en3 : @[SimpleModules.scala 183:18]
-            wir <= io.din2 @[SimpleModules.scala 184:13]
-            skip @[SimpleModules.scala 183:18]
-        when io.en4 : @[SimpleModules.scala 187:18]
-            io.dout2 <= wir @[SimpleModules.scala 188:18]
-            skip @[SimpleModules.scala 187:18]
-        else : @[SimpleModules.scala 189:17]
-            io.dout2 <= UInt<3>(""h07"") @[SimpleModules.scala 190:18]
-            skip @[SimpleModules.scala 189:17]";
+        await Task.Factory.StartNew(() => LoadFirData(loFirPath, hiFirPath, vcdPath, true));
+        await base.OnInitializedAsync();
+    }
 
-        Circuit circuit;
-        if (Filename == null)
+    private void LoadFirData(string loFirPath, string hiFirPath, string vcdPath, bool isVerilogVCD)
+    {
+        CircuitGraph loGraph = null;
+        if (File.Exists(loFirPath))
         {
-            circuit = FIRRTL.Parse.FromString(firrtl);
+            Circuit locircuit = FIRRTL.Parse.FromFile(loFirPath);
+            loGraph = CircuitToGraph.GetAsGraph(locircuit);
         }
-        else
-        {
-            circuit = FIRRTL.Parse.FromFile(System.IO.Path.Combine("Examples", Filename.Replace('-', '.')));
-        }
-        using VCD vcd = null;// VCDReader.Parse.FromFile("Examples/FSMDatapath.vcd");
-        CircuitGraph graph = CircuitToGraph.GetAsGraph(circuit);
-        graph.InferTypes();
 
-        DebugCtrl = new DebugController(graph, vcd, false);
+        Circuit circuit = FIRRTL.Parse.FromFile(hiFirPath);
+        CircuitGraph graph = CircuitToGraph.GetAsGraph(circuit, loGraph);
 
         ModulePosition = new Positioned<ChiselDebug.GraphFIR.Module>(Point.Zero, graph.MainModule);
+        DebugCtrl = new DebugController(graph);
 
-        return base.OnInitializedAsync();
+        JustLoadedCircuit = true;
+        InvokestateHasChanged();
+
+        if (File.Exists(vcdPath))
+        {
+            using VCD vcd = VCDReader.Parse.FromFile(vcdPath);
+            DebugCtrl.AddVCD(vcd, isVerilogVCD);
+
+            InvokestateHasChanged();
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (JustLoadedCircuit)
         {
+            JustLoadedCircuit = false;
             await JSEvents.AddDragListener(JS, DragEventID, x => InvokeAsync(() => HandleDrag(x)));
             JSEvents.AddResizeListener(JS, CircuitContainerID, PageResized);
         }
@@ -175,6 +168,6 @@ circuit ModL :
 
     public void Dispose()
     {
-        DebugCtrl.Dispose();
+        DebugCtrl?.Dispose();
     }
 }

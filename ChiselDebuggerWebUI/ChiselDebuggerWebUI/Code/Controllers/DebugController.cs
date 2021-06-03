@@ -17,29 +17,31 @@ namespace ChiselDebuggerWebUI.Code
     public class DebugController : IDisposable
     {
         private readonly CircuitGraph Graph;
-        public VCDTimeline Timeline { get; init; } = null;
+        public VCDTimeline Timeline { get; set; } = null;
+        private BroadcastBlock<Action> TimeChanger = null;
+        private bool IsVerilogVCD;
         private readonly Dictionary<FIRRTLNode, ModuleLayout> FIRNodeToModCtrl = new Dictionary<FIRRTLNode, ModuleLayout>();
         private readonly List<ModuleLayout> ModControllers = new List<ModuleLayout>();
-        private readonly BroadcastBlock<Action> TimeChanger = null;
         private readonly PlacementTemplator PlacementTemplates = new PlacementTemplator();
         private readonly RouteTemplator RouteTemplates = new RouteTemplator();
         private ModuleLayout RootModCtrl = null;
-        private readonly bool IsVerilogVCD;
+
         public Point CircuitSize { get; private set; } = Point.Zero;
 
-        public DebugController(CircuitGraph graph, VCD vcd, bool isVerilogVCD)
+        public DebugController(CircuitGraph graph)
         {
             this.Graph = graph;
+        }
 
-            if (vcd != null)
-            {
-                this.Timeline = new VCDTimeline(vcd);
-                this.TimeChanger = new BroadcastBlock<Action>(x => x);
-                WorkLimiter.LinkSource(TimeChanger);
+        public void AddVCD(VCD vcd, bool isVerilogVCD)
+        {
+            Timeline = new VCDTimeline(vcd);
+            TimeChanger = new BroadcastBlock<Action>(x => x);
+            WorkLimiter.LinkSource(TimeChanger);
 
-                SetCircuitState(Timeline.TimeInterval.StartInclusive);
-            }
-            this.IsVerilogVCD = isVerilogVCD;
+            IsVerilogVCD = isVerilogVCD;
+
+            SetCircuitState(Timeline.TimeInterval.StartInclusive);
         }
 
         public void AddModCtrl(string moduleName, ModuleLayout modCtrl, FIRRTLNode[] modNodes, FIRRTLNode[] modNodesIncludeMod, FIRIO[] modIO)
