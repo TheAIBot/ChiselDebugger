@@ -19,7 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VCDReaderTests", "..\VCDRea
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChiselDebugTests", "..\ChiselDebugTests\ChiselDebugTests.csproj", "{2C456D35-1DBD-4EC2-99F8-AFA9132FC44A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmarker", "..\Benchmarker\Benchmarker.csproj", "{81F12E82-7746-48D3-BEF1-0BADADF12A6C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmarker", "..\Benchmarker\Benchmarker.csproj", "{81F12E82-7746-48D3-BEF1-0BADADF12A6C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

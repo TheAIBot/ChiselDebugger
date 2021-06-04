@@ -58,7 +58,9 @@
             Filename = Filename.Replace('-', '.');
             string loFirPath = System.IO.Path.Combine("Examples", Filename.Replace(".fir", ".lo.fir"));
             string hiFirPath = System.IO.Path.Combine("Examples", Filename);
-            string vcdPath = System.IO.Path.Combine("Examples", Path.GetFileNameWithoutExtension(Filename) + ".vcd");
+
+            string filenameNoExtension = Filename.Split('.').First();
+            string vcdPath = System.IO.Path.Combine("Examples", $"{filenameNoExtension}.vcd");
 
             await Task.Factory.StartNew(() => LoadFirData(loFirPath, hiFirPath, vcdPath, true));
         }
@@ -68,14 +70,23 @@
 
     private void LoadFirData(string loFirPath, string hiFirPath, string vcdPath, bool isVerilogVCD)
     {
+        using Stream loFirStream = File.Exists(loFirPath) ? File.OpenRead(loFirPath) : null;
+        using Stream hiFirStream = File.OpenRead(hiFirPath);
+        using Stream vcdStream = File.Exists(vcdPath) ? File.OpenRead(vcdPath) : null;
+
+        LoadFirData(loFirStream, hiFirStream, vcdStream, isVerilogVCD);
+    }
+
+    private void LoadFirData(Stream loFirStream, Stream hiFirStream, Stream vcdStream, bool isVerilogVCD)
+    {
         CircuitGraph loGraph = null;
-        if (File.Exists(loFirPath))
+        if (loFirStream != null)
         {
-            Circuit locircuit = FIRRTL.Parse.FromFile(loFirPath);
+            Circuit locircuit = FIRRTL.Parse.FromStream(loFirStream);
             loGraph = CircuitToGraph.GetAsGraph(locircuit);
         }
 
-        Circuit circuit = FIRRTL.Parse.FromFile(hiFirPath);
+        Circuit circuit = FIRRTL.Parse.FromStream(hiFirStream);
         CircuitGraph graph = CircuitToGraph.GetAsGraph(circuit, loGraph);
 
         ModulePosition = new Positioned<ChiselDebug.GraphFIR.Module>(Point.Zero, graph.MainModule);
@@ -85,9 +96,9 @@
         JustLoadedCircuit = true;
         InvokestateHasChanged();
 
-        if (File.Exists(vcdPath))
+        if (vcdStream != null)
         {
-            using VCD vcd = VCDReader.Parse.FromFile(vcdPath);
+            using VCD vcd = VCDReader.Parse.FromStream(vcdStream);
             DebugCtrl.AddVCD(vcd, isVerilogVCD);
 
             InvokestateHasChanged();

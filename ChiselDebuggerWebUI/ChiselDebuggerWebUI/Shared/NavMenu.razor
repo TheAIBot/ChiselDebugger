@@ -32,7 +32,10 @@
     {
         if (Directory.Exists("Examples"))
         {
-            FIRRTLFilenames = Directory.GetFiles("Examples").Select(x => Path.GetFileName(x)).ToArray();
+            FIRRTLFilenames = Directory.GetFiles("Examples")
+                .Select(x => Path.GetFileName(x))
+                .Where(x => x.EndsWith(".fir"))
+                .ToArray();
         }
 
         return base.OnInitializedAsync();
