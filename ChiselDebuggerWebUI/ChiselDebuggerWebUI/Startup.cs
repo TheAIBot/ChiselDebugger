@@ -1,3 +1,4 @@
+using ChiselDebuggerWebUI.Code;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Hosting;
@@ -26,6 +27,7 @@ namespace ChiselDebuggerWebUI
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
+            services.AddSingleton<CircuitFiles>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

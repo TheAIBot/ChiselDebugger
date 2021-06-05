@@ -1,4 +1,4 @@
-﻿@page "/circuitviewer/{filename?}"
+﻿@page "/circuitviewer"
 @page "/"
 @using FIRRTL
 @using VCDReader
@@ -6,6 +6,7 @@
 @using System.IO;
 
 @inject IJSRuntime JS
+@inject CircuitFiles Files 
 @inherits ManualRenderBase
 @implements IDisposable
 
@@ -34,9 +35,6 @@
 
 @code
 {
-    [Parameter]
-    public string Filename { get; set; }
-
     private DebugController DebugCtrl = null;
     private Positioned<ChiselDebug.GraphFIR.Module> ModulePosition;
     private CircuitLayout RootModLayout = new CircuitLayout();
@@ -53,28 +51,19 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (Filename != null)
+        if (Files.IsReady)
         {
-            Filename = Filename.Replace('-', '.');
-            string loFirPath = System.IO.Path.Combine("Examples", Filename.Replace(".fir", ".lo.fir"));
-            string hiFirPath = System.IO.Path.Combine("Examples", Filename);
+            await Task.Run(() =>
+            {
+                using var loFir = Files.GetLoFirrtlStream();
+                using var hiFir = Files.GetHiFirrtlStream();
+                using var vcd = Files.GetVCDStream();
 
-            string filenameNoExtension = Filename.Split('.').First();
-            string vcdPath = System.IO.Path.Combine("Examples", $"{filenameNoExtension}.vcd");
-
-            await Task.Factory.StartNew(() => LoadFirData(loFirPath, hiFirPath, vcdPath, true));
+                LoadFirData(loFir, hiFir, vcd, Files.IsVerilogVCD);
+            });
         }
 
         await base.OnInitializedAsync();
-    }
-
-    private void LoadFirData(string loFirPath, string hiFirPath, string vcdPath, bool isVerilogVCD)
-    {
-        using Stream loFirStream = File.Exists(loFirPath) ? File.OpenRead(loFirPath) : null;
-        using Stream hiFirStream = File.OpenRead(hiFirPath);
-        using Stream vcdStream = File.Exists(vcdPath) ? File.OpenRead(vcdPath) : null;
-
-        LoadFirData(loFirStream, hiFirStream, vcdStream, isVerilogVCD);
     }
 
     private void LoadFirData(Stream loFirStream, Stream hiFirStream, Stream vcdStream, bool isVerilogVCD)

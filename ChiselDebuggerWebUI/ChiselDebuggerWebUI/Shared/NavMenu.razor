@@ -1,6 +1,6 @@
 ﻿@using System.IO;
-@inject NavigationManager Navigator;
-
+@inject NavigationManager Navigator
+@inject CircuitFiles Files
 
 <div class="top-row pl-4 navbar navbar-dark">
     <a class="navbar-brand" href="">ChiselDebuggerWebUI</a>
@@ -12,9 +12,17 @@
 <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
     <ul class="nav flex-column">
         <li class="nav-item px-3">
+            <InputFile id="fileInput" accept=".fir,.vcd" style="visibility: hidden; display: none;" OnChange="@LoadFiles" multiple></InputFile>
+            <label for="fileInput">
+                <a class="nav-link">
+                    <span class="oi oi-list-rich" aria-hidden="true"></span> Load circuit
+                </a>
+            </label>
+        </li>
+        <li class="nav-item px-3">
             @foreach (var firrtlFilename in FIRRTLFilenames)
             {
-                <a class="nav-link" @onclick="_ => ShowCircuit(firrtlFilename)">
+                <a class="nav-link" @onclick="_ => ShowExampleCircuit(firrtlFilename)">
                     <span class="oi oi-list-rich" aria-hidden="true"></span> @firrtlFilename
                 </a>
             }
@@ -27,12 +35,13 @@
 
     private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
     private string[] FIRRTLFilenames = new string[0];
+    private const string ExamplesFolder = "Examples";
 
     protected override Task OnInitializedAsync()
     {
-        if (Directory.Exists("Examples"))
+        if (Directory.Exists(ExamplesFolder))
         {
-            FIRRTLFilenames = Directory.GetFiles("Examples")
+            FIRRTLFilenames = Directory.GetFiles(ExamplesFolder)
                 .Select(x => Path.GetFileName(x))
                 .Where(x => x.EndsWith(".fir"))
                 .ToArray();
@@ -46,8 +55,30 @@
         collapseNavMenu = !collapseNavMenu;
     }
 
-    private void ShowCircuit(string firrtlFilename)
+    private void ShowExampleCircuit(string firrtlFilename)
     {
-        Navigator.NavigateTo($"circuitviewer/{firrtlFilename.Replace('.', '-')}", true);
+        string loFirPath = System.IO.Path.Combine(ExamplesFolder, firrtlFilename.Replace(".fir", ".lo.fir"));
+        string hiFirPath = System.IO.Path.Combine(ExamplesFolder, firrtlFilename);
+
+        string filenameNoExtension = firrtlFilename.Split('.').First();
+        string vcdPath = System.IO.Path.Combine(ExamplesFolder, $"{filenameNoExtension}.vcd");
+
+        Files.UpdateFromPath(hiFirPath, loFirPath, vcdPath, true);
+        ShowCircuit();
+    }
+
+    private void ShowCircuit()
+    {
+        Navigator.NavigateTo("circuitviewer", true);
+    }
+
+    private async void LoadFiles(InputFileChangeEventArgs e)
+    {
+        var files = e.GetMultipleFiles();
+
+        if (await Files.UpdateFromFiles(e.GetMultipleFiles(), true))
+        {
+            ShowCircuit();
+        }
     }
 }
