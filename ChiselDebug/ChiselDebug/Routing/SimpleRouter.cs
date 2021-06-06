@@ -158,8 +158,8 @@ namespace ChiselDebug.Routing
         {
             board.ReloadCheckpoint();
 
-            Point relativeStart = board.GetRelativeBoardPos(end.DirIO.Position);
-            Point relativeEnd = board.GetRelativeBoardPos(start.DirIO.Position);
+            Point relativeStart = board.GetRelativeBoardPos(start.DirIO.Position);
+            Point relativeEnd = board.GetRelativeBoardPos(end.DirIO.Position);
 
             //Start position may lie inside the component rectangle
             //and therefore the is no way to reach it.
@@ -168,7 +168,7 @@ namespace ChiselDebug.Routing
             if (endRect.HasValue)
             {
                 Rectangle endRectRelative = board.GetRelativeBoard(endRect.Value);
-                Point endGo = relativeStart;
+                Point endGo = relativeEnd;
                 MoveDirs allowedDir = end.DirIO.InitialDir.Reverse();
                 do
                 {
@@ -178,19 +178,19 @@ namespace ChiselDebug.Routing
             }
             else
             {
-                board.SetCellAllowedMoves(relativeStart, end.DirIO.InitialDir.Reverse());
+                board.SetCellAllowedMoves(relativeEnd, end.DirIO.InitialDir.Reverse());
             }
 
             if (startRect.HasValue)
             {
-                Rectangle endRectRelative = board.GetRelativeBoard(startRect.Value).ResizeCentered(1);
-                Point endGo = relativeEnd;
+                Rectangle startRectRelative = board.GetRelativeBoard(startRect.Value).ResizeCentered(1);
+                Point startGo = relativeStart;
                 MoveDirs allowedDir = start.DirIO.InitialDir.Reverse();
                 do
                 {
-                    board.SetCellAllowedMoves(endGo, allowedDir);
-                    endGo = allowedDir.Reverse().MovePoint(endGo);
-                } while (endRectRelative.Within(endGo));
+                    board.SetCellAllowedMoves(startGo, allowedDir);
+                    startGo = allowedDir.Reverse().MovePoint(startGo);
+                } while (startRectRelative.Within(startGo));
             }
 
             foreach (var keyValue in allPaths)
@@ -216,11 +216,11 @@ namespace ChiselDebug.Routing
                 }
             }
 
-            ref ScorePath startScore = ref board.GetCellScorePath(relativeStart);
+            ref ScorePath startScore = ref board.GetCellScorePath(relativeEnd);
             startScore = new ScorePath(0, 0, MoveDirs.None);
 
             PriorityQueue<Point> toSee = new PriorityQueue<Point>();
-            toSee.Enqueue(relativeStart, 0);
+            toSee.Enqueue(relativeEnd, 0);
 
             MoveData[] moves = new MoveData[] 
             { 
@@ -234,9 +234,9 @@ namespace ChiselDebug.Routing
             {
                 Point current = toSee.Dequeue();
 
-                if (current == relativeEnd)
+                if (current == relativeStart)
                 {
-                    return board.GetPath(relativeStart, relativeEnd, end, start, false);
+                    return board.GetPath(relativeEnd, relativeStart, end, start, false);
                 }
 
                 ScorePath currentScorePath = board.GetCellScorePath(current);
@@ -244,7 +244,7 @@ namespace ChiselDebug.Routing
 
                 if (allowedMoves.HasFlag(MoveDirs.FriendWire))
                 {
-                    return board.GetPath(relativeStart, current, end, start, true);
+                    return board.GetPath(relativeEnd, current, end, start, true);
                 }
 
                 bool onEnemyWire = allowedMoves.HasFlag(MoveDirs.EnemyWire);
@@ -267,7 +267,7 @@ namespace ChiselDebug.Routing
                         ScorePath neighborScoreFromCurrent = currentScorePath.Move(moves[i].RevDir, onEnemyWire, onWireCorner, isTurningOnEnemyWire);
                         if (neighborScoreFromCurrent.IsBetterScoreThan(neighborScore))
                         {
-                            Point diff = (current - relativeEnd).Abs();
+                            Point diff = (current - relativeStart).Abs();
                             int dist = 0;// diff.X + diff.Y;
 
                             toSee.Enqueue(neighborPos, neighborScoreFromCurrent.GetTotalScore() + dist / 2);
@@ -277,8 +277,8 @@ namespace ChiselDebug.Routing
                 }
             }
 
-            Debug.WriteLine(board.BoardAllowedMovesToString(relativeStart, relativeEnd));
-            Debug.WriteLine(board.BoardStateToString(relativeStart, relativeEnd));
+            Debug.WriteLine(board.BoardAllowedMovesToString(relativeEnd, relativeStart));
+            Debug.WriteLine(board.BoardStateToString(relativeEnd, relativeStart));
             throw new Exception("Failed to find a path.");
         }
 
