@@ -192,6 +192,31 @@ namespace ChiselDebug.GraphFIR
             return connestions;
         }
 
+        public List<Input> GetAllModuleInputs()
+        {
+            List<Input> connestions = new List<Input>();
+            foreach (Input input in GetInternalInputs())
+            {
+                if (input.IsConnectedToAnything())
+                {
+                    connestions.Add(input);
+                }
+            }
+
+            foreach (var node in Nodes)
+            {
+                foreach (Input input in node.GetInputs())
+                {
+                    if (input.IsConnectedToAnything())
+                    {
+                        connestions.Add(input);
+                    }
+                }
+            }
+
+            return connestions;
+        }
+
         public FIRRTLNode[] GetAllNodes()
         {
             return Nodes.ToArray();

@@ -40,6 +40,53 @@ namespace ChiselDebug.GraphFIR.IO
 
         public static void BypassCondConnectionsThroughCondModules(Module mod)
         {
+            //Some conditional connections do not originate from a conditional
+            //module because both the source and sink didn't reside in a conditional
+            //module. Fix this by rerouting the connection so it goes through the
+            //conditional module.
+            Dictionary<(Output, Output), Output> sourceToCondSource = new Dictionary<(Output, Output), Output>();
+            foreach (var input in mod.GetAllModuleInputs())
+            {
+                foreach (var connection in input.GetConnections())
+                {
+                    if (connection.From.GetModResideIn() != mod)
+                    {
+                        continue;
+                    }
+
+                    if (connection.Condition == null)
+                    {
+                        continue;
+                    }
+
+                    if (sourceToCondSource.TryGetValue((connection.From, connection.Condition), out var extCondOut))
+                    {
+                        input.ReplaceConnection(connection.From, extCondOut, connection.Condition);
+                    }
+                    else
+                    {
+                        Module condMod = connection.Condition.GetModResideIn();
+                        Input extIn = (Input)input.Copy(condMod);
+                        Input intIn = (Input)input.Copy(condMod);
+                        condMod.AddAnonymousExternalIO(extIn);
+                        condMod.AddAnonymousInternalIO(intIn);
+                        Output extOut = (Output)intIn.GetPaired();
+                        Output intOut = (Output)extIn.GetPaired();
+
+                        connection.From.ConnectToInput(extIn);
+                        intOut.ConnectToInput(intIn);
+                        input.ReplaceConnection(connection.From, extOut, connection.Condition);
+
+                        sourceToCondSource.Add((connection.From, connection.Condition), extOut);
+                    }
+                }
+            }
+
+            BypassThroughCondModules(mod);
+        }
+
+        public static void BypassThroughCondModules(Module mod)
+        {
             HashSet<Module> containedCondMods = new HashSet<Module>();
             foreach (var node in mod.GetAllNodes())
             {
@@ -48,7 +95,7 @@ namespace ChiselDebug.GraphFIR.IO
                     foreach (var condMod in condNode.CondMods)
                     {
                         containedCondMods.Add(condMod.Mod);
-                        BypassCondConnectionsThroughCondModules(condMod.Mod);
+                        BypassThroughCondModules(condMod.Mod);
                     }
                 }
             }
