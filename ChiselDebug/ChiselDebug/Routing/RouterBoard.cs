@@ -48,6 +48,13 @@ namespace ChiselDebug.Routing
             return CellIndex(pos.X, pos.Y);
         }
 
+        public Point CellFromIndex(int index)
+        {
+            int x;
+            int y = Math.DivRem(index, CellsWide, out x);
+            return new Point(x, y);
+        }
+
         internal MoveDirs GetCellMoves(Point pos)
         {
             return CellAllowedDirs[CellIndex(pos)];

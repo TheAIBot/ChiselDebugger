@@ -199,8 +199,8 @@ namespace ChiselDebug.Routing
             ref ScorePath startScore = ref board.GetCellScorePath(relativeEnd);
             startScore = new ScorePath(0, 0, MoveDirs.None);
 
-            PriorityQueue<Point> toSee = new PriorityQueue<Point>();
-            toSee.Enqueue(relativeEnd, 0);
+            PriorityQueue<int> toSee = new PriorityQueue<int>();
+            toSee.Enqueue(board.CellIndex(relativeEnd), 0);
 
             MoveData[] moves = new MoveData[] 
             { 
@@ -213,7 +213,8 @@ namespace ChiselDebug.Routing
             bool canEndEarly = ((Input)end.DirIO.IO).GetConnections().Length == 1;
             while (toSee.Count > 0)
             {
-                Point current = toSee.Dequeue();
+                int currentIndex = toSee.Dequeue();
+                Point current = board.CellFromIndex(currentIndex);
 
                 if (current == relativeStart)
                 {
@@ -252,7 +253,7 @@ namespace ChiselDebug.Routing
                             Point diff = (current - relativeStart).Abs();
                             int dist = 0;// diff.X + diff.Y;
 
-                            toSee.Enqueue(neighborPos, neighborScoreFromCurrent.GetTotalScore() + dist / 2);
+                            toSee.Enqueue(board.CellIndex(neighborPos), neighborScoreFromCurrent.GetTotalScore() + dist / 2);
                             neighborScore = neighborScoreFromCurrent;
                         }
                     }
