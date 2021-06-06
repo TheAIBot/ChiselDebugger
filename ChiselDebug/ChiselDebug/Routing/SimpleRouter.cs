@@ -197,7 +197,7 @@ namespace ChiselDebug.Routing
             }
 
             ref ScorePath startScore = ref board.GetCellScorePath(relativeEnd);
-            startScore = new ScorePath(0, 0, MoveDirs.None);
+            startScore = new ScorePath(0, MoveDirs.None);
 
             PriorityQueue<int> toSee = new PriorityQueue<int>();
             toSee.Enqueue(board.CellIndex(relativeEnd), 0);
