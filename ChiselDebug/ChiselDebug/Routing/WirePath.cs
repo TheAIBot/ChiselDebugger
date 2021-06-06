@@ -74,9 +74,22 @@ namespace ChiselDebug.Routing
         internal bool CanCoexist(WirePath other)
         {
             HashSet<Point> ownCorners = new HashSet<Point>(BoardPositions);
-            if (ownCorners.Overlaps(other.BoardPosTurns))
+            bool prevCollided = false;
+            foreach (var pos in other.BoardPositions)
             {
-                return false;
+                if (ownCorners.Contains(pos))
+                {
+                    if (prevCollided)
+                    {
+                        return false;
+                    }
+
+                    prevCollided = true;
+                }
+                else
+                {
+                    prevCollided = false;
+                }
             }
 
             return true;

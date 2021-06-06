@@ -13,7 +13,7 @@
             this.DirFrom = fromDir;
         }
 
-        public ScorePath Move(MoveDirs revDir, bool onEnemyWire, bool onWireCorner, bool isTurningOnEnemyWire)
+        public ScorePath Move(MoveDirs revDir, bool onEnemyWire, bool onFriendWire, bool onWireCorner, bool isTurningOnEnemyWire)
         {
             //If the direction we are moving in is not the
             //opposite of the direction we came from,
@@ -28,7 +28,7 @@
             turns += onWireCorner ? 500 : 0;
             turns += isTurningOnEnemyWire ? 50 : 0;
 
-            return new ScorePath(TraveledDist + 1, turns, revDir);
+            return new ScorePath(TraveledDist + (onFriendWire ? 0 : 1), turns, revDir);
         }
 
         public bool IsBetterScoreThan(ScorePath score)
