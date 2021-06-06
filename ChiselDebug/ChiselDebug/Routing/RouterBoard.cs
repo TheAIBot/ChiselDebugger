@@ -231,7 +231,10 @@ namespace ChiselDebug.Routing
                 if (path.DirFrom != prevDir)
                 {
                     pathAsTurns.Add(actualPos);
-                    boardPosTurns.Add(boardPos);
+                    if (prevDir != MoveDirs.None)
+                    {
+                        boardPosTurns.Add(boardPos);
+                    }
                 }
                 prevDir = path.DirFrom;
                 boardPos = path.DirFrom.MovePoint(boardPos);
@@ -239,7 +242,6 @@ namespace ChiselDebug.Routing
             }
 
             allBoardPoses.Add(start);
-            boardPosTurns.Add(start);
             pathAsTurns.Add(actualPos);
             pathAsTurns.Reverse();
 

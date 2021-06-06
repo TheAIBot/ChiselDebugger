@@ -208,11 +208,6 @@ namespace ChiselDebug.Routing
                 foreach (var wirePath in keyValue.Value)
                 {
                     wirePath.PlaceOnBoard(board, wireType);
-
-                    if (wireType == MoveDirs.EnemyWire)
-                    {
-                        wirePath.RemoveCornersFromBoard(board);
-                    }
                 }
             }
 

@@ -31,34 +31,17 @@ namespace ChiselDebug.Routing
 
         internal void PlaceOnBoard(RouterBoard board, MoveDirs move)
         {
-            Point wireStart = board.GetRelativeBoardPos(Path[0]);
-            for (int i = 1; i < Path.Count; i++)
+            foreach (var pos in BoardPositions)
             {
-                Point wireEnd = board.GetRelativeBoardPos(Path[i]);
-                int wireStartX = Math.Min(wireStart.X, wireEnd.X);
-                int wireStartY = Math.Min(wireStart.Y, wireEnd.Y);
-
-                int wireEndX = Math.Max(wireStart.X, wireEnd.X);
-                int wireEndY = Math.Max(wireStart.Y, wireEnd.Y);
-                for (int y = wireStartY; y <= wireEndY; y++)
-                {
-                    for (int x = wireStartX; x <= wireEndX; x++)
-                    {
-                        board.AddCellAllowedMoves(new Point(x, y), move);
-                    }
-                }
-
-                wireStart = wireEnd;
+                board.AddCellAllowedMoves(pos, move);
             }
-        }
 
-        internal void RemoveCornersFromBoard(RouterBoard board)
-        {
-            foreach (var pathPos in Path)
+            if (move == MoveDirs.EnemyWire)
             {
-                Point pathPosRel = board.GetRelativeBoardPos(pathPos);
-                //board.RemoveAllIncommingMoves(pathPosRel);
-                board.AddCellAllowedMoves(pathPosRel, MoveDirs.WireCorner);
+                foreach (var pos in BoardPosTurns)
+                {
+                    board.AddCellAllowedMoves(pos, MoveDirs.WireCorner);
+                }
             }
         }
 
