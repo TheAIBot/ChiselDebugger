@@ -45,4 +45,7 @@ class ConnectOrderTester extends FlatSpec with ChiselScalatestTester with Matche
     it should "Test WhenWireConnectOrder2To1Mix7" in {
         autoTester.testRandomWithTreadle(this, _ => new WhenWireConnectOrder2To1Mix7(), 2000)
     }
+    it should "Test WhenWireConnectMultiSameSource" in {
+        autoTester.testRandomWithTreadle(this, _ => new WhenWireConnectMultiSameSource(), 2000)
+    }
 }
