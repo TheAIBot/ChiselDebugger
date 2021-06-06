@@ -61,7 +61,7 @@ namespace ChiselDebug.GraphFIR.IO
 
                     if (sourceToCondSource.TryGetValue((connection.From, connection.Condition), out var extCondOut))
                     {
-                        input.ReplaceConnection(connection.From, extCondOut, connection.Condition);
+                        input.ReplaceConnection(connection, extCondOut);
                     }
                     else
                     {
@@ -75,7 +75,7 @@ namespace ChiselDebug.GraphFIR.IO
 
                         connection.From.ConnectToInput(extIn);
                         intOut.ConnectToInput(intIn);
-                        input.ReplaceConnection(connection.From, extOut, connection.Condition);
+                        input.ReplaceConnection(connection, extOut);
 
                         sourceToCondSource.Add((connection.From, connection.Condition), extOut);
                     }
@@ -117,20 +117,26 @@ namespace ChiselDebug.GraphFIR.IO
                         {
                             foreach (var input in output.GetConnectedInputs().ToArray())
                             {
-                                if (input.GetModResideIn() == mod || containedCondMods.Contains(input.GetModResideIn()))
+                                foreach (var connection in input.GetConnections())
                                 {
-                                    continue;
-                                }
+                                    if (connection.From != output)
+                                    {
+                                        continue;
+                                    }
+                                    if (input.GetModResideIn() == mod || containedCondMods.Contains(input.GetModResideIn()))
+                                    {
+                                        continue;
+                                    }
 
-                                Output condition = input.GetConnectionCondition(output);
-                                if (condition != null)
-                                {
-                                    Input flipped = (Input)output.Flip(mod);
-                                    mod.AddAnonymousInternalIO(flipped);
-                                    Output extOutput = (Output)flipped.GetPaired();
+                                    if (connection.Condition != null)
+                                    {
+                                        Input flipped = (Input)connection.From.Flip(mod);
+                                        mod.AddAnonymousInternalIO(flipped);
+                                        Output extOutput = (Output)flipped.GetPaired();
 
-                                    output.ConnectToInput(flipped, false, false, condition);
-                                    input.ReplaceConnection(output, extOutput, condition);
+                                        connection.From.ConnectToInput(flipped, false, false, connection.Condition);
+                                        input.ReplaceConnection(connection, extOutput);
+                                    }
                                 }
                             }
                         }
@@ -150,7 +156,7 @@ namespace ChiselDebug.GraphFIR.IO
                                     Output intOutput = (Output)flipped.GetPaired();
 
                                     cons.From.ConnectToInput(flipped, false, false, cons.Condition);
-                                    input.ReplaceConnection(cons.From, intOutput, cons.Condition);
+                                    input.ReplaceConnection(cons, intOutput);
                                 }
                             }
                         }

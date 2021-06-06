@@ -85,12 +85,6 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public void DisconnectInput(Input input)
-        {
-            DisconnectOnlyOutputSide(input);
-            input.Disconnect(this);
-        }
-
         internal void DisconnectOnlyOutputSide(Input input)
         {
             To.Remove(input);

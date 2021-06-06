@@ -17,36 +17,16 @@ namespace ChiselDebug.GraphFIR.IO
         public Input(FIRRTLNode node, string name, IFIRType type) : base(node, name, type)
         { }
 
-        public Output GetConnectionCondition(Output connectedTo)
+        public void ReplaceConnection(Connection replace, Output replaceWith)
         {
-            if (Con == connectedTo)
+            if (replace.Condition == null)
             {
-                return null;
-            }
-            if (CondCons != null)
-            {
-                for (int i = 0; i < CondCons.Count; i++)
-                {
-                    if (CondCons[i].From == connectedTo)
-                    {
-                        return CondCons[i].Condition;
-                    }
-                }
-            }
-
-            throw new Exception("Input is not connected to the given output.");
-        }
-
-        public void ReplaceConnection(Output connectedTo, Output replaceWith, Output condition)
-        {
-            if (condition == null)
-            {
-                if (Con != connectedTo)
+                if (Con != replace.From)
                 {
                     throw new Exception("Input is not connected to the given output.");
                 }
 
-                connectedTo.DisconnectOnlyOutputSide(this);
+                replace.From.DisconnectOnlyOutputSide(this);
                 replaceWith.ConnectOnlyOutputSide(this);
                 Con = replaceWith;
             }
@@ -56,11 +36,11 @@ namespace ChiselDebug.GraphFIR.IO
                 {
                     for (int i = 0; i < CondCons.Count; i++)
                     {
-                        if (CondCons[i].From == connectedTo)
+                        if (CondCons[i] == replace)
                         {
-                            connectedTo.DisconnectOnlyOutputSide(this);
+                            replace.From.DisconnectOnlyOutputSide(this);
                             replaceWith.ConnectOnlyOutputSide(this);
-                            CondCons[i] = new Connection(replaceWith, condition);
+                            CondCons[i] = new Connection(replaceWith, replace.Condition);
                             return;
                         }
                     }
@@ -115,10 +95,11 @@ namespace ChiselDebug.GraphFIR.IO
             DisconnectAll();
         }
 
-        public void Disconnect(Output toDisconnect)
+        public void Disconnect(Connection toDisconnect)
         {
-            if (Con == toDisconnect)
+            if (new Connection(Con) == toDisconnect)
             {
+                Con.DisconnectOnlyOutputSide(this);
                 Con = null;
             }
             else
@@ -128,8 +109,9 @@ namespace ChiselDebug.GraphFIR.IO
                 {
                     for (int i = 0; i < CondCons.Count; i++)
                     {
-                        if (CondCons[i].From == toDisconnect)
+                        if (CondCons[i] == toDisconnect)
                         {
+                            CondCons[i].From.DisconnectOnlyOutputSide(this);
                             CondCons.RemoveAt(i);
                             didDisconnect = true;
                             break;
@@ -148,7 +130,7 @@ namespace ChiselDebug.GraphFIR.IO
         {
             if (Con != null)
             {
-                Con.DisconnectInput(this);
+                Disconnect(new Connection(Con));
             }
 
             if (CondCons != null)
@@ -186,7 +168,7 @@ namespace ChiselDebug.GraphFIR.IO
                     var condCon = CondCons[i];
                     if (condCon.Condition == condition)
                     {
-                        condCon.From.DisconnectInput(this);
+                        Disconnect(condCon);
                         break;
                     }
                 }
