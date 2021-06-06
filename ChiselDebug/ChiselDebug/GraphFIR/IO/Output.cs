@@ -7,7 +7,7 @@ namespace ChiselDebug.GraphFIR.IO
 {
     public class Output : ScalarIO
     {
-        private HashSet<Input> To = null;
+        private List<Input> To = null;
 
 
         public Output(FIRRTLNode node, string name, IFIRType type) : base(node, name, type)
@@ -94,14 +94,14 @@ namespace ChiselDebug.GraphFIR.IO
         {
             if (To == null)
             {
-                To = new HashSet<Input>();
+                To = new List<Input>();
             }
             To.Add(input);
         }
 
         public IEnumerable<Input> GetConnectedInputs()
         {
-            return To ?? Enumerable.Empty<Input>();
+            return To?.Distinct() ?? Enumerable.Empty<Input>();
         }
     }
 }
