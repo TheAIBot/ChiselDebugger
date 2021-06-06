@@ -40,6 +40,53 @@ namespace ChiselDebug.GraphFIR.IO
 
         public static void BypassCondConnectionsThroughCondModules(Module mod)
         {
+            //Some conditional connections do not originate from a conditional
+            //module because both the source and sink didn't reside in a conditional
+            //module. Fix this by rerouting the connection so it goes through the
+            //conditional module.
+            Dictionary<(Output, Output), Output> sourceToCondSource = new Dictionary<(Output, Output), Output>();
+            foreach (var input in mod.GetAllModuleInputs())
+            {
+                foreach (var connection in input.GetConnections())
+                {
+                    if (connection.From.GetModResideIn() != mod)
+                    {
+                        continue;
+                    }
+
+                    if (connection.Condition == null)
+                    {
+                        continue;
+                    }
+
+                    if (sourceToCondSource.TryGetValue((connection.From, connection.Condition), out var extCondOut))
+                    {
+                        input.ReplaceConnection(connection, extCondOut);
+                    }
+                    else
+                    {
+                        Module condMod = connection.Condition.GetModResideIn();
+                        Input extIn = (Input)input.Copy(condMod);
+                        Input intIn = (Input)input.Copy(condMod);
+                        condMod.AddAnonymousExternalIO(extIn);
+                        condMod.AddAnonymousInternalIO(intIn);
+                        Output extOut = (Output)intIn.GetPaired();
+                        Output intOut = (Output)extIn.GetPaired();
+
+                        connection.From.ConnectToInput(extIn);
+                        intOut.ConnectToInput(intIn);
+                        input.ReplaceConnection(connection, extOut);
+
+                        sourceToCondSource.Add((connection.From, connection.Condition), extOut);
+                    }
+                }
+            }
+
+            BypassThroughCondModules(mod);
+        }
+
+        public static void BypassThroughCondModules(Module mod)
+        {
             HashSet<Module> containedCondMods = new HashSet<Module>();
             foreach (var node in mod.GetAllNodes())
             {
@@ -48,7 +95,7 @@ namespace ChiselDebug.GraphFIR.IO
                     foreach (var condMod in condNode.CondMods)
                     {
                         containedCondMods.Add(condMod.Mod);
-                        BypassCondConnectionsThroughCondModules(condMod.Mod);
+                        BypassThroughCondModules(condMod.Mod);
                     }
                 }
             }
@@ -70,20 +117,26 @@ namespace ChiselDebug.GraphFIR.IO
                         {
                             foreach (var input in output.GetConnectedInputs().ToArray())
                             {
-                                if (input.GetModResideIn() == mod || containedCondMods.Contains(input.GetModResideIn()))
+                                foreach (var connection in input.GetConnections())
                                 {
-                                    continue;
-                                }
+                                    if (connection.From != output)
+                                    {
+                                        continue;
+                                    }
+                                    if (input.GetModResideIn() == mod || containedCondMods.Contains(input.GetModResideIn()))
+                                    {
+                                        continue;
+                                    }
 
-                                Output condition = input.GetConnectionCondition(output);
-                                if (condition != null)
-                                {
-                                    Input flipped = (Input)output.Flip(mod);
-                                    mod.AddAnonymousInternalIO(flipped);
-                                    Output extOutput = (Output)flipped.GetPaired();
+                                    if (connection.Condition != null)
+                                    {
+                                        Input flipped = (Input)connection.From.Flip(mod);
+                                        mod.AddAnonymousInternalIO(flipped);
+                                        Output extOutput = (Output)flipped.GetPaired();
 
-                                    output.ConnectToInput(flipped, false, false, condition);
-                                    input.ReplaceConnection(output, extOutput, condition);
+                                        connection.From.ConnectToInput(flipped, false, false, connection.Condition);
+                                        input.ReplaceConnection(connection, extOutput);
+                                    }
                                 }
                             }
                         }
@@ -103,7 +156,7 @@ namespace ChiselDebug.GraphFIR.IO
                                     Output intOutput = (Output)flipped.GetPaired();
 
                                     cons.From.ConnectToInput(flipped, false, false, cons.Condition);
-                                    input.ReplaceConnection(cons.From, intOutput, cons.Condition);
+                                    input.ReplaceConnection(cons, intOutput);
                                 }
                             }
                         }

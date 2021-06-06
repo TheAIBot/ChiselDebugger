@@ -65,5 +65,9 @@ namespace ChiselDebugTests
         [TestMethod] public void WhenWireConnectOrder2To1Mix7_fir() => TestTools.VerifyChiselTest("WhenWireConnectOrder2To1Mix7", "fir");
         [TestMethod] public void WhenWireConnectOrder2To1Mix7_lo_fir() => TestTools.VerifyChiselTest("WhenWireConnectOrder2To1Mix7", "lo.fir");
         [TestMethod] public void WhenWireConnectOrder2To1Mix7_treadle_lo_fir() => TestTools.VerifyChiselTest("WhenWireConnectOrder2To1Mix7", "treadle.lo.fir");
+
+        [TestMethod] public void WhenWireConnectMultiSameSource_fir() => TestTools.VerifyChiselTest("WhenWireConnectMultiSameSource", "fir");
+        [TestMethod] public void WhenWireConnectMultiSameSource_lo_fir() => TestTools.VerifyChiselTest("WhenWireConnectMultiSameSource", "lo.fir");
+        [TestMethod] public void WhenWireConnectMultiSameSource_treadle_lo_fir() => TestTools.VerifyChiselTest("WhenWireConnectMultiSameSource", "treadle.lo.fir");
     }
 }
