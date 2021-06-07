@@ -172,7 +172,12 @@ namespace ChiselDebug.Routing
 
         internal void AddCellAllowedMoves(Point pos, MoveDirs moves)
         {
-            CellAllowedDirs[CellIndex(pos)] |= moves;
+            AddCellAllowedMoves(CellIndex(pos), moves);
+        }
+
+        internal void AddCellAllowedMoves(int posIndex, MoveDirs moves)
+        {
+            CellAllowedDirs[posIndex] |= moves;
         }
 
         internal void SetAllIncommingMoves(Point pos)
@@ -224,15 +229,15 @@ namespace ChiselDebug.Routing
         internal WirePath GetPath(Point start, Point end, IOInfo startIO, IOInfo endIO, bool pathToWire)
         {
             List<Point> pathAsTurns = new List<Point>();
-            List<Point> allBoardPoses = new List<Point>();
-            List<Point> boardPosTurns = new List<Point>();
+            List<int> allBoardPoses = new List<int>();
+            List<int> boardPosTurns = new List<int>();
 
             MoveDirs prevDir = MoveDirs.None;
             Point boardPos = end;
             Point actualPos = end * CellSize + TopLeft;
             while (boardPos != start)
             {
-                allBoardPoses.Add(boardPos);
+                allBoardPoses.Add(CellIndex(boardPos));
 
                 ScorePath path = GetCellScorePath(boardPos);
                 if (path.DirFrom != prevDir)
@@ -240,7 +245,7 @@ namespace ChiselDebug.Routing
                     pathAsTurns.Add(actualPos);
                     if (prevDir != MoveDirs.None)
                     {
-                        boardPosTurns.Add(boardPos);
+                        boardPosTurns.Add(CellIndex(boardPos));
                     }
                 }
                 prevDir = path.DirFrom;
@@ -248,7 +253,7 @@ namespace ChiselDebug.Routing
                 actualPos = actualPos + path.DirFrom.MovePoint(Point.Zero) * CellSize;
             }
 
-            allBoardPoses.Add(start);
+            allBoardPoses.Add(CellIndex(start));
             pathAsTurns.Add(actualPos);
             pathAsTurns.Reverse();
 
