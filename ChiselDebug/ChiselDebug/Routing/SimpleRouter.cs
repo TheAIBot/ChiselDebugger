@@ -202,7 +202,7 @@ namespace ChiselDebug.Routing
             PriorityQueue<int> toSee = new PriorityQueue<int>();
             toSee.Enqueue(board.CellIndex(relativeEnd), 0);
 
-            MoveData[] moves = new MoveData[] 
+            ReadOnlySpan<MoveData> moves = new MoveData[] 
             { 
                 new MoveData(MoveDirs.Up),
                 new MoveData(MoveDirs.Down),
@@ -251,9 +251,9 @@ namespace ChiselDebug.Routing
                         if (neighborScoreFromCurrent.IsBetterScoreThan(neighborScore))
                         {
                             Point diff = (current - relativeStart).Abs();
-                            int dist = 0;// diff.X + diff.Y;
+                            int dist = diff.X + diff.Y;
 
-                            toSee.Enqueue(board.CellIndex(neighborPos), neighborScoreFromCurrent.GetTotalScore() + dist / 2);
+                            toSee.Enqueue(board.CellIndex(neighborPos), neighborScoreFromCurrent.GetTotalScore() + dist);
                             neighborScore = neighborScoreFromCurrent;
                         }
                     }
