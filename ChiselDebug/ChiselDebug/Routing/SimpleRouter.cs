@@ -1,4 +1,5 @@
 ﻿using ChiselDebug.GraphFIR;
+using ChiselDebug.GraphFIR.IO;
 using PriorityQueue;
 using System;
 using System.Collections.Generic;
@@ -62,7 +63,6 @@ namespace ChiselDebug.Routing
                 board.PrepareBoard(placements.UsedSpace.Values.ToList());
                 board.CreateCheckpoint();
 
-                Dictionary<Point, List<WirePath>> startPosPaths = new Dictionary<Point, List<WirePath>>();
                 List<WirePath> paths = new List<WirePath>();
                 while (linesPriority.Count > 0)
                 {
@@ -80,9 +80,8 @@ namespace ChiselDebug.Routing
                         endRect = placements.UsedSpace[end.Node];
                     }
 
-
-
-                    WirePath path = PathLine(board, start, end, startRect, endRect, startPosPaths);
+                    WirePath path = PathLine(board, start, end, startRect, endRect, paths);
+                    Debug.Assert(path.StartIO == start && path.EndIO == end);
 
                     List<WirePath> needsRepathing = new List<WirePath>();
                     foreach (var oldPath in paths)
@@ -99,29 +98,17 @@ namespace ChiselDebug.Routing
                     }
                     foreach (var repath in needsRepathing)
                     {
-                        LineInfo line = new LineInfo(repath.EndIO, repath.StartIO);
+                        LineInfo line = new LineInfo(repath.StartIO, repath.EndIO);
                         if (repathCounter[line.GetLine()]++ >= 20)
                         {
                             continue;
                         }
 
                         paths.Remove(repath);
-                        startPosPaths[repath.EndIO.DirIO.Position].Remove(repath);
 
                         linesPriority.Enqueue(line, line.GetScore());
                     }
                     paths.Add(path);
-
-                    if (startPosPaths.TryGetValue(start.DirIO.Position, out List<WirePath> startPaths))
-                    {
-                        startPaths.Add(path);
-                    }
-                    else
-                    {
-                        List<WirePath> startPdwaaths = new List<WirePath>();
-                        startPdwaaths.Add(path);
-                        startPosPaths.Add(start.DirIO.Position, startPdwaaths);
-                    }
                 }
 
                 foreach (var path in paths)
@@ -154,7 +141,7 @@ namespace ChiselDebug.Routing
             }
         }
 
-        private WirePath PathLine(RouterBoard board, IOInfo start, IOInfo end, Rectangle? startRect, Rectangle? endRect, Dictionary<Point, List<WirePath>> allPaths)
+        private WirePath PathLine(RouterBoard board, IOInfo start, IOInfo end, Rectangle? startRect, Rectangle? endRect, List<WirePath> allPaths)
         {
             board.ReloadCheckpoint();
 
@@ -193,10 +180,11 @@ namespace ChiselDebug.Routing
                 } while (startRectRelative.Within(startGo));
             }
 
-            foreach (var keyValue in allPaths)
+            foreach (var path in allPaths)
             {
                 MoveDirs wireType;
-                if (keyValue.Key == start.DirIO.Position || keyValue.Key == end.DirIO.Position)
+                if (path.StartIO.DirIO.Position == start.DirIO.Position || 
+                    path.EndIO.DirIO.Position == end.DirIO.Position)
                 {
                     wireType = MoveDirs.FriendWire;
                 }
@@ -205,22 +193,14 @@ namespace ChiselDebug.Routing
                     wireType = MoveDirs.EnemyWire;
                 }
 
-                foreach (var wirePath in keyValue.Value)
-                {
-                    wirePath.PlaceOnBoard(board, wireType);
-
-                    if (wireType == MoveDirs.EnemyWire)
-                    {
-                        wirePath.RemoveCornersFromBoard(board);
-                    }
-                }
+                path.PlaceOnBoard(board, wireType);
             }
 
             ref ScorePath startScore = ref board.GetCellScorePath(relativeEnd);
-            startScore = new ScorePath(0, 0, MoveDirs.None);
+            startScore = new ScorePath(0, MoveDirs.None);
 
-            PriorityQueue<Point> toSee = new PriorityQueue<Point>();
-            toSee.Enqueue(relativeEnd, 0);
+            PriorityQueue<int> toSee = new PriorityQueue<int>();
+            toSee.Enqueue(board.CellIndex(relativeEnd), 0);
 
             MoveData[] moves = new MoveData[] 
             { 
@@ -230,24 +210,27 @@ namespace ChiselDebug.Routing
                 new MoveData(MoveDirs.Right)
             };
 
+            bool canEndEarly = ((Input)end.DirIO.IO).GetConnections().Length == 1;
             while (toSee.Count > 0)
             {
-                Point current = toSee.Dequeue();
+                int currentIndex = toSee.Dequeue();
+                Point current = board.CellFromIndex(currentIndex);
 
                 if (current == relativeStart)
                 {
-                    return board.GetPath(relativeEnd, relativeStart, end, start, false);
+                    return board.GetPath(relativeEnd, relativeStart, start, end, false);
                 }
 
                 ScorePath currentScorePath = board.GetCellScorePath(current);
                 MoveDirs allowedMoves = board.GetCellMoves(current);
 
-                if (allowedMoves.HasFlag(MoveDirs.FriendWire))
+                if (allowedMoves.HasFlag(MoveDirs.FriendWire) && canEndEarly)
                 {
-                    return board.GetPath(relativeEnd, current, end, start, true);
+                    return board.GetPath(relativeEnd, current, start, end, true);
                 }
 
                 bool onEnemyWire = allowedMoves.HasFlag(MoveDirs.EnemyWire);
+                bool onFriendWire = allowedMoves.HasFlag(MoveDirs.FriendWire);
                 bool onWireCorner = allowedMoves.HasFlag(MoveDirs.WireCorner);
                 for (int i = 0; i < moves.Length; i++)
                 {
@@ -264,13 +247,13 @@ namespace ChiselDebug.Routing
                         //Penalty for turning while on another wire
                         bool isTurningOnEnemyWire = onEnemyWire && currentScorePath.DirFrom != MoveDirs.None && moves[i].Dir != currentScorePath.DirFrom.Reverse();
 
-                        ScorePath neighborScoreFromCurrent = currentScorePath.Move(moves[i].RevDir, onEnemyWire, onWireCorner, isTurningOnEnemyWire);
+                        ScorePath neighborScoreFromCurrent = currentScorePath.Move(moves[i].RevDir, onEnemyWire, onFriendWire, onWireCorner, isTurningOnEnemyWire);
                         if (neighborScoreFromCurrent.IsBetterScoreThan(neighborScore))
                         {
                             Point diff = (current - relativeStart).Abs();
                             int dist = 0;// diff.X + diff.Y;
 
-                            toSee.Enqueue(neighborPos, neighborScoreFromCurrent.GetTotalScore() + dist / 2);
+                            toSee.Enqueue(board.CellIndex(neighborPos), neighborScoreFromCurrent.GetTotalScore() + dist / 2);
                             neighborScore = neighborScoreFromCurrent;
                         }
                     }

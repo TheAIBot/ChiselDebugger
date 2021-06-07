@@ -48,6 +48,13 @@ namespace ChiselDebug.Routing
             return CellIndex(pos.X, pos.Y);
         }
 
+        public Point CellFromIndex(int index)
+        {
+            int x;
+            int y = Math.DivRem(index, CellsWide, out x);
+            return new Point(x, y);
+        }
+
         internal MoveDirs GetCellMoves(Point pos)
         {
             return CellAllowedDirs[CellIndex(pos)];
@@ -231,7 +238,10 @@ namespace ChiselDebug.Routing
                 if (path.DirFrom != prevDir)
                 {
                     pathAsTurns.Add(actualPos);
-                    boardPosTurns.Add(boardPos);
+                    if (prevDir != MoveDirs.None)
+                    {
+                        boardPosTurns.Add(boardPos);
+                    }
                 }
                 prevDir = path.DirFrom;
                 boardPos = path.DirFrom.MovePoint(boardPos);
@@ -239,7 +249,6 @@ namespace ChiselDebug.Routing
             }
 
             allBoardPoses.Add(start);
-            boardPosTurns.Add(start);
             pathAsTurns.Add(actualPos);
             pathAsTurns.Reverse();
 
