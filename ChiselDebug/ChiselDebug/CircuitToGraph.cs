@@ -290,10 +290,13 @@ namespace ChiselDebug
             {
                 VisitConditional(helper, conditional);
             }
-            else if (statement is FIRRTL.Stop)
+            else if (statement is FIRRTL.Stop stop)
             {
-                return;
-                throw new NotImplementedException();
+                var clock = (GraphFIR.IO.Output)VisitExp(helper, stop.Clk, GraphFIR.IO.IOGender.Male);
+                var enable = (GraphFIR.IO.Output)VisitExp(helper, stop.Enabled, GraphFIR.IO.IOGender.Male);
+
+                var firStop = new GraphFIR.FirStop(clock, enable, stop.Ret, stop);
+                helper.AddNodeToModule(firStop);
             }
             else if (statement is FIRRTL.Attach)
             {

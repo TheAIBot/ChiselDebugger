@@ -60,6 +60,10 @@
             {
                 <WireUI @key=posOp.Value PosOp="@(posOp.Cast<Wire>())" ParentLayoutCtrl="CurrModLayout"></WireUI>
             }
+            else if (posOp.Value is FirStop)
+            {
+                <StopUI @key=posOp.Value PosOp="@(posOp.Cast<FirStop>())" ParentLayoutCtrl="CurrModLayout"></StopUI>
+            }
         }
 
         <WiresUI ModLayout="CurrModLayout"></WiresUI>
