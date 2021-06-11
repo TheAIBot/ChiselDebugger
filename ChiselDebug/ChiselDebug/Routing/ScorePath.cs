@@ -21,8 +21,8 @@
             //the path from here.
             bool isTurning = DirFrom != revDir && DirFrom != MoveDirs.None;
             int turns = TravelDist;
-            turns += isTurning ? 1 : 0;
-            turns += onEnemyWire ? 1 : 0;
+            turns += isTurning ? 5 : 0;
+            turns += onEnemyWire ? 5 : 0;
             turns += onWireCorner ? 500 : 0;
             turns += isTurningOnEnemyWire ? 50 : 0;
 
