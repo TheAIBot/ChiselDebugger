@@ -8,7 +8,6 @@
 @inject IJSRuntime JS
 @inject CircuitFiles Files 
 @inherits ManualRenderBase
-@implements IDisposable
 
 @if (DebugCtrl != null)
 {
@@ -218,10 +217,5 @@
     {
         CircuitOffset += dragged;
         StateHasChanged();
-    }
-
-    public void Dispose()
-    {
-        DebugCtrl?.Dispose();
     }
 }

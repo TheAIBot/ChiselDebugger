@@ -7,23 +7,23 @@ using ChiselDebug.Timeline;
 using ChiselDebuggerWebUI.Code.Templates;
 using ChiselDebuggerWebUI.Components;
 using ChiselDebuggerWebUI.Pages.FIRRTLUI;
-using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks.Dataflow;
 using VCDReader;
 
 namespace ChiselDebuggerWebUI.Code
 {
-    public class DebugController : IDisposable
+    public class DebugController
     {
         private readonly CircuitGraph Graph;
         public VCDTimeline Timeline { get; set; } = null;
-        private BroadcastBlock<Action> TimeChanger = null;
         private bool IsVerilogVCD;
         private readonly Dictionary<FIRRTLNode, ModuleLayout> FIRNodeToModCtrl = new Dictionary<FIRRTLNode, ModuleLayout>();
         private readonly List<ModuleLayout> ModControllers = new List<ModuleLayout>();
         private readonly PlacementTemplator PlacementTemplates = new PlacementTemplator();
         private readonly RouteTemplator RouteTemplates = new RouteTemplator();
+        private readonly SeqWorkOverrideOld<ulong> StateLimiter = new SeqWorkOverrideOld<ulong>();
         private ModuleLayout RootModCtrl = null;
 
         public Point CircuitSize { get; private set; } = Point.Zero;
@@ -39,9 +39,6 @@ namespace ChiselDebuggerWebUI.Code
         public void AddVCD(VCD vcd, bool isVerilogVCD)
         {
             Timeline = new VCDTimeline(vcd);
-            TimeChanger = new BroadcastBlock<Action>(x => x);
-            WorkLimiter.LinkSource(TimeChanger);
-
             IsVerilogVCD = isVerilogVCD;
 
             SetCircuitState(Timeline.TimeInterval.StartInclusive);
@@ -91,9 +88,9 @@ namespace ChiselDebuggerWebUI.Code
 
         public void SetCircuitState(ulong time)
         {
-            TimeChanger.Post(() =>
+            StateLimiter.AddWork(time, stateTime =>
             {
-                Graph.SetState(Timeline.GetStateAtTime(time), IsVerilogVCD);
+                Graph.SetState(Timeline.GetStateAtTime(stateTime), IsVerilogVCD);
                 Graph.ComputeRemainingGraph();
 
                 if (RootModCtrl != null)
@@ -106,14 +103,6 @@ namespace ChiselDebuggerWebUI.Code
                     RootModCtrl.Render();
                 }
             });
-        }
-
-        public void Dispose()
-        {
-            if (TimeChanger != null)
-            {
-                WorkLimiter.UnlinkSource(TimeChanger);
-            }
         }
     }
 }
