@@ -3,6 +3,7 @@ using ChiselDebug.GraphFIR;
 using ChiselDebug.GraphFIR.IO;
 using ChiselDebug.Routing;
 using ChiselDebuggerWebUI.Pages.FIRRTLUI;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -33,8 +34,14 @@ namespace ChiselDebuggerWebUI.Code
             this.Mod = mod;
             this.ModUI = modUI;
             this.WireRouter = new SimpleRouter(Mod);
-            //this.NodePlacer = new SimplePlacer(Mod);
-            this.NodePlacer = new GraphVizPlacer(Mod);
+            if (OperatingSystem.IsWindows())
+            {
+                this.NodePlacer = new GraphVizPlacer(Mod);
+            }
+            else
+            {
+                this.NodePlacer = new SimplePlacer(Mod);
+            }
             this.ModuleNodes = Mod.GetAllNodes();
             this.ModuleNodesWithModule = Mod.GetAllNodesIncludeModule();
             this.ModuleIO = Mod.GetAllIOOrdered();
