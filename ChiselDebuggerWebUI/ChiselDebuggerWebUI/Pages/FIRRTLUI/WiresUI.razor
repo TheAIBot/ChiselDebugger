@@ -1,7 +1,7 @@
 ﻿@inherits ManualRenderBase
 
 <svg class="wiresContainer">
-    @foreach (var wireGroup in WirePaths.GroupBy(x => x.GetEndIO()))
+    @foreach (var wireGroup in WirePaths.GroupBy(x => x.GetStartIO()))
     {
     <g class="wireGroup">
         @foreach (var wire in wireGroup)
