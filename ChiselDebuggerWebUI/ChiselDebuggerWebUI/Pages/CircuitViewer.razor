@@ -6,7 +6,7 @@
 @using System.IO;
 
 @inject IJSRuntime JS
-@inject CircuitFiles Files 
+@inject CircuitFiles Files
 @inherits ManualRenderBase
 
 @if (DebugCtrl != null)
@@ -31,6 +31,21 @@
         </div>
     </CascadingValue>
 }
+@if (ThrownException is ChiselDebugException)
+{
+    <div class="chisel-error-ui">An error occurred while loading.
+        @ThrownException.Message
+        <a class="dismiss" @onclick="CloseErrorBox">🗙</a>
+    </div>
+}
+else if (ThrownException is Exception)
+{
+    <div class="unknown-error-ui">An unexpected error occurred while loading.
+        @ThrownException.Message
+        @ThrownException.StackTrace
+        <a class="dismiss" @onclick="CloseErrorBox">🗙</a>
+    </div>
+}
 
 @code
 {
@@ -47,23 +62,7 @@
     private Point CircuitTopLeftParent = Point.Zero;
     private Point CircuitContainerSize = Point.Zero;
     private readonly string CircuitContainerID = UniqueID.UniqueHTMLID();
-
-    protected override async Task OnInitializedAsync()
-    {
-        if (Files.IsReady)
-        {
-            await Task.Run(() =>
-            {
-                using var loFir = Files.GetLoFirrtlStream();
-                using var hiFir = Files.GetHiFirrtlStream();
-                using var vcd = Files.GetVCDStream();
-
-                LoadFirData(loFir, hiFir, vcd, Files.IsVerilogVCD);
-            });
-        }
-
-        await base.OnInitializedAsync();
-    }
+    private Exception ThrownException = null;
 
     private void LoadFirData(Stream loFirStream, Stream hiFirStream, Stream vcdStream, bool isVerilogVCD)
     {
@@ -95,6 +94,28 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender)
+        {
+            if (Files.IsReady)
+            {
+                await Task.Run(() =>
+                {
+                    try
+                    {
+                        using var loFir = Files.GetLoFirrtlStream();
+                        using var hiFir = Files.GetHiFirrtlStream();
+                        using var vcd = Files.GetVCDStream();
+
+                        LoadFirData(loFir, hiFir, vcd, Files.IsVerilogVCD);
+                    }
+                    catch (Exception e)
+                    {
+                        ThrownException = e;
+                        InvokestateHasChanged();
+                    }
+                });
+            }
+        }
         if (JustLoadedCircuit)
         {
             JustLoadedCircuit = false;
@@ -104,6 +125,12 @@
         }
 
         await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private void CloseErrorBox()
+    {
+        ThrownException = null;
+        StateHasChanged();
     }
 
     private async void PageResized(ElemWH size)
