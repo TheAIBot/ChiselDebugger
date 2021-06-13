@@ -31,6 +31,6 @@ object autoTester {
 
     def testRandomWithTreadle(tester: ChiselScalatestTester, mod: Unit => ModuleWithIO, count: Int) {
         tester.test(mod()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
-        { dut=> { autoTester.testWithRandomInputs(dut.io, dut.clock, 200) } }
+        { dut=> { autoTester.testWithRandomInputs(dut.io, dut.clock, count) } }
     }
 }
