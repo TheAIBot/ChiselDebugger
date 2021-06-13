@@ -166,7 +166,11 @@ namespace ChiselDebug
                 helper.ModuleRoots.Add(moduleDef.Name, moduleDef);
             }
 
-            FIRRTL.DefModule mainModDef = circuit.Modules.Single(x => x.Name == circuit.Main);
+            FIRRTL.DefModule mainModDef = circuit.Modules.SingleOrDefault(x => x.Name == circuit.Main);
+            if (mainModDef == null)
+            {
+                throw new Exception("Circuit does not contain a module with the circuits name.");
+            }
             GraphFIR.Module mainModule = VisitModule(helper, mainModDef);
             foreach (var mod in mainModule.GetAllNestedNodesOfType<GraphFIR.Module>())
             {
