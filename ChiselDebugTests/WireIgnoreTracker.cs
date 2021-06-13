@@ -13,8 +13,8 @@ namespace ChiselDebugTests
         private int IgnoredBecauseNotExist = 0;
         private int IgnoredBecauseMemReadDelay = 0;
 
-        private readonly Dictionary<string, int> IgnoreNotExistNames = new Dictionary<string, int>();
-        private readonly Dictionary<string, int> IgnoreMemReadDelayNames = new Dictionary<string, int>();
+        private readonly Dictionary<VarDef, int> IgnoreNotExistNames = new Dictionary<VarDef, int>();
+        private readonly Dictionary<VarDef, int> IgnoreMemReadDelayNames = new Dictionary<VarDef, int>();
 
         public void AddWireState()
         {
@@ -30,10 +30,9 @@ namespace ChiselDebugTests
         {
             IgnoredBecauseNotExist++;
 
-            string scopedName = variable.RefNameWithScopes();
-            if (!IgnoreNotExistNames.TryAdd(scopedName, 1))
+            if (!IgnoreNotExistNames.TryAdd(variable, 1))
             {
-                IgnoreNotExistNames[scopedName] += 1;
+                IgnoreNotExistNames[variable] += 1;
             }
         }
 
@@ -41,10 +40,9 @@ namespace ChiselDebugTests
         {
             IgnoredBecauseMemReadDelay++;
 
-            string scopedName = variable.RefNameWithScopes();
-            if (!IgnoreMemReadDelayNames.TryAdd(scopedName, 1))
+            if (!IgnoreMemReadDelayNames.TryAdd(variable, 1))
             {
-                IgnoreMemReadDelayNames[scopedName] += 1;
+                IgnoreMemReadDelayNames[variable] += 1;
             }
         }
 
@@ -56,13 +54,13 @@ namespace ChiselDebugTests
             Console.WriteLine($"Ignored Not exist: {IgnoredBecauseNotExist.ToString("N0")}");
             foreach (var nameCount in IgnoreNotExistNames.OrderByDescending(x => x.Value))
             {
-                Console.WriteLine($"\t{nameCount.Value.ToString("N0").PadLeft(10)} : {nameCount.Key}");
+                Console.WriteLine($"\t{nameCount.Value.ToString("N0").PadLeft(10)} : {nameCount.Key.RefNameWithScopes()}");
             }
 
             Console.WriteLine($"Ignored Mem read delay: {IgnoredBecauseMemReadDelay.ToString("N0")}");
             foreach (var nameCount in IgnoreMemReadDelayNames.OrderByDescending(x => x.Value))
             {
-                Console.WriteLine($"\t{nameCount.Value.ToString("N0").PadLeft(10)} : {nameCount.Key}");
+                Console.WriteLine($"\t{nameCount.Value.ToString("N0").PadLeft(10)} : {nameCount.Key.RefNameWithScopes()}");
             }
         }
     }
