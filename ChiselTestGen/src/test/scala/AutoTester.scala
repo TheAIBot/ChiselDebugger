@@ -3,6 +3,7 @@ import chiseltest._
 import chisel3.tester.experimental.TestOptionBuilder._
 import chisel3.experimental._
 import firrtl.AnnotationSeq
+import firrtl.options.TargetDirAnnotation
 import scala.util.Random
 
 object autoTester {
@@ -37,7 +38,20 @@ object autoTester {
     }
 
     def testRandomWithTreadle(tester: ChiselScalatestTester, mod: Unit => ModuleWithIO, count: Int) {
-        tester.test(mod()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
+        testRandomWithTreadle(tester, mod, count, None)
+    }
+
+    def testRandomWithTreadle(tester: ChiselScalatestTester, mod: Unit => ModuleWithIO, count: Int, testDir: String) {
+        testRandomWithTreadle(tester, mod, count, Some(testDir))
+    }
+
+    private def testRandomWithTreadle(tester: ChiselScalatestTester, mod: Unit => ModuleWithIO, count: Int, testDir: Option[String]) {
+        var test : ChiselScalatestTester#TestBuilder[ModuleWithIO] = tester.test(mod())
+        if (testDir.isDefined) {
+            test = test.withAnnotations(Seq(TargetDirAnnotation(testDir.get)))
+        }
+        
+        test.withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
         { dut=> { autoTester.testWithRandomInputs(dut.io, dut.clock, count) } }
     }
 }
