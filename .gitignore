@@ -345,6 +345,7 @@ ChiselTestGen/test_run_dir/
 ChiselTestGen/test_comp_dir/
 ChiselTestGen/test_multi_comp_dir/
 ChiselTestGen/test_when_dir/
+ChiselTestGen/test_con_order_dir/
 
 #Ignore test files as they are too large for github
 TestGenerator/TestFolders/
