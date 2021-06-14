@@ -351,3 +351,4 @@ ChiselTestGen/test_con_order_dir/
 TestGenerator/TestFolders/
 TestGenerator/OthersFIRRTL/
 TestGenerator/TestTexts/
+TestGenerator/TestFiles/

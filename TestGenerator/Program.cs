@@ -7,41 +7,50 @@ using System.Text;
 namespace TestGenerator
 {
     public record TestInfo(string firPath, string loFirPath, string vcdPath, bool isVerilatorVCD);
+    public record TestCategory(string testPath, string categoryName);
 
     class Program
     {
         static void Main(string[] args)
         {
-            const string baseDir = @"...";
-            string[] testDirs = new string[] 
+            TestCategory[] categories = new TestCategory[]
             {
-                Path.Combine(baseDir, @"neuromorphic-test_run_dir"),
-                Path.Combine(baseDir, @"riscv-mini-test_run_dir")
+                new TestCategory("TestFolders", "OthersFIRRTL"),
+                new TestCategory("../ChiselTestGen/test_run_dir", "SimpleFIRRTL"),
+                new TestCategory("../ChiselTestGen/test_comp_dir", "SingleOp"),
+                new TestCategory("../ChiselTestGen/test_multi_comp_dir", "MultiOp"),
+                new TestCategory("../ChiselTestGen/test_when_dir", "When"),
+                new TestCategory("../ChiselTestGen/test_con_order_dir", "ConnectOrder")
             };
 
-            List<TestInfo> foundTests = FindTests(testDirs);
-
-            string newTestDir = Path.Combine(Directory.GetCurrentDirectory(), "OthersFIRRTL");
-            Directory.CreateDirectory(newTestDir);
-
-            List<TestInfo> movedTests = CopyTestsIntoFolder(foundTests, newTestDir);
-
-            const string testFilesDir = "TestTexts";
-            string testFilesPath = Path.Combine(Directory.GetCurrentDirectory(), testFilesDir);
-            Directory.CreateDirectory(testFilesPath);
-
-            MakeTestCode(movedTests, newTestDir, testFilesPath);
+            const string testFilesDir = "TestFiles";
+            foreach (var category in categories)
+            {
+                MakeTestCategory(category, testFilesDir);
+            }
         }
 
-        private static List<TestInfo> FindTests(string[] testDirs)
+        private static void MakeTestCategory(TestCategory category, string baseTestFilesDir)
+        {
+            //Create folderto put test files into
+            string testFilesDir = Path.Combine(baseTestFilesDir, category.categoryName);
+            Directory.CreateDirectory(testFilesDir);
+
+            //Create folder to put tests into
+            string testFilesPath = Path.Combine(Directory.GetCurrentDirectory(), "TestTexts");
+            Directory.CreateDirectory(testFilesPath);
+
+            List<TestInfo> foundTests = FindTests(category.testPath);
+            List<TestInfo> movedTests = CopyTestsIntoFolder(foundTests, testFilesDir);
+            MakeTestCode(movedTests, category, testFilesDir, testFilesPath);
+        }
+
+        private static List<TestInfo> FindTests(string testDir)
         {
             List<TestInfo> foundTests = new List<TestInfo>();
 
             Queue<string> dirsToLookInto = new Queue<string>();
-            foreach (var testDir in testDirs)
-            {
-                dirsToLookInto.Enqueue(testDir);
-            }
+            dirsToLookInto.Enqueue(testDir);
 
             while (dirsToLookInto.Count > 0)
             {
@@ -111,43 +120,64 @@ namespace TestGenerator
             return testsWithNewNames;
         }
 
-        private static void MakeTestCode(List<TestInfo> tests, string testDir, string testFilesPath)
+        private static void MakeTestCode(List<TestInfo> tests, TestCategory category, string testDir, string testFilesPath)
         {
             StringBuilder loadGraphTests = new StringBuilder();
             StringBuilder inferTypeTests = new StringBuilder();
             StringBuilder computeGraphTests = new StringBuilder();
 
-            loadGraphTests.AppendLine($"const string TestDir = @\"{testDir}\";");
-            loadGraphTests.AppendLine();
+            string loadClassName = category.categoryName + "LoadTests";
+            string inferClassName = category.categoryName + "InferTests";
+            string computeClassName = category.categoryName + "CompTests";
 
-            inferTypeTests.AppendLine($"const string TestDir = @\"{testDir}\";");
-            inferTypeTests.AppendLine();
-
-            computeGraphTests.AppendLine($"const string TestDir = @\"{testDir}\";");
-            computeGraphTests.AppendLine();
+            AddHeader(loadGraphTests, loadClassName, testDir);
+            AddHeader(inferTypeTests, inferClassName, testDir);
+            AddHeader(computeGraphTests, computeClassName, testDir);
 
             foreach (var test in tests)
             {
                 string moduleName = Path.GetFileNameWithoutExtension(test.firPath);
                 string isVerilatorVCD = test.isVerilatorVCD.ToString().ToLower();
 
-                loadGraphTests.AppendLine($"[TestMethod] public void {moduleName}_fir() => TestTools.VerifyMakeGraph(\"{moduleName}\", \"fir\", TestDir);");
-                loadGraphTests.AppendLine($"[TestMethod] public void {moduleName}_lo_fir() => TestTools.VerifyMakeGraph(\"{moduleName}\", \"lo.fir\", TestDir);");
+                loadGraphTests.AppendLine($"\t\t[TestMethod] public void {moduleName}_fir() => TestTools.VerifyMakeGraph(\"{moduleName}\", \"fir\", TestDir);");
+                loadGraphTests.AppendLine($"\t\t[TestMethod] public void {moduleName}_lo_fir() => TestTools.VerifyMakeGraph(\"{moduleName}\", \"lo.fir\", TestDir);");
                 loadGraphTests.AppendLine();
 
 
-                inferTypeTests.AppendLine($"[TestMethod] public void {moduleName}_fir() => TestTools.VerifyInferTypes(\"{moduleName}\", \"fir\", {isVerilatorVCD}, TestDir);");
-                inferTypeTests.AppendLine($"[TestMethod] public void {moduleName}_lo_fir() => TestTools.VerifyInferTypes(\"{moduleName}\", \"lo.fir\", {isVerilatorVCD}, TestDir);");
+                inferTypeTests.AppendLine($"\t\t[TestMethod] public void {moduleName}_fir() => TestTools.VerifyInferTypes(\"{moduleName}\", \"fir\", {isVerilatorVCD}, TestDir);");
+                inferTypeTests.AppendLine($"\t\t[TestMethod] public void {moduleName}_lo_fir() => TestTools.VerifyInferTypes(\"{moduleName}\", \"lo.fir\", {isVerilatorVCD}, TestDir);");
                 inferTypeTests.AppendLine();
 
-                computeGraphTests.AppendLine($"[TestMethod] public void {moduleName}_fir() => TestTools.VerifyComputeGraph(\"{moduleName}\", \"fir\", {isVerilatorVCD}, TestDir);");
-                computeGraphTests.AppendLine($"[TestMethod] public void {moduleName}_lo_fir() => TestTools.VerifyComputeGraph(\"{moduleName}\", \"lo.fir\", {isVerilatorVCD}, TestDir);");
+                computeGraphTests.AppendLine($"\t\t[TestMethod] public void {moduleName}_fir() => TestTools.VerifyComputeGraph(\"{moduleName}\", \"fir\", {isVerilatorVCD}, TestDir);");
+                computeGraphTests.AppendLine($"\t\t[TestMethod] public void {moduleName}_lo_fir() => TestTools.VerifyComputeGraph(\"{moduleName}\", \"lo.fir\", {isVerilatorVCD}, TestDir);");
                 computeGraphTests.AppendLine();
             }
 
-            File.WriteAllText(Path.Combine(testFilesPath, "TestLoadGraph.txt"), loadGraphTests.ToString());
-            File.WriteAllText(Path.Combine(testFilesPath, "TestTypeInferGraph.txt"), inferTypeTests.ToString());
-            File.WriteAllText(Path.Combine(testFilesPath, "TestComputeGraph.txt"), computeGraphTests.ToString());
+            loadGraphTests.AppendLine("\t}");
+            loadGraphTests.AppendLine("}");
+
+            inferTypeTests.AppendLine("\t}");
+            inferTypeTests.AppendLine("}");
+
+            computeGraphTests.AppendLine("\t}");
+            computeGraphTests.AppendLine("}");
+
+            File.WriteAllText(Path.Combine(testFilesPath, loadClassName + ".cs"), loadGraphTests.ToString());
+            File.WriteAllText(Path.Combine(testFilesPath, inferClassName + ".cs"), inferTypeTests.ToString());
+            File.WriteAllText(Path.Combine(testFilesPath, computeClassName + ".cs"), computeGraphTests.ToString());
+        }
+
+        private static void AddHeader(StringBuilder sBuilder, string className, string testDir)
+        {
+            sBuilder.AppendLine("using Microsoft.VisualStudio.TestTools.UnitTesting;");
+            sBuilder.AppendLine();
+            sBuilder.AppendLine("namespace ChiselDebugTests");
+            sBuilder.AppendLine("{");
+            sBuilder.AppendLine("\t[TestClass]");
+            sBuilder.AppendLine($"\tpublic class {className}");
+            sBuilder.AppendLine("\t{");
+            sBuilder.AppendLine($"\t\tconst string TestDir = @\"{testDir}\";");
+            sBuilder.AppendLine();
         }
     }
 }
