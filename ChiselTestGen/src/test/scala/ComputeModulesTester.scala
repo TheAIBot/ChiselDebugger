@@ -40,7 +40,7 @@ class BenchTester extends FlatSpec with ChiselScalatestTester with Matchers {
     }
 }
 
-class ComputeTester extends FlatSpec with ChiselScalatestTester with Matchers with Eventually with ParallelTestExecution {
+class ComputeTester extends FlatSpec with ChiselScalatestTester with Matchers with Eventually {
     val widths = List(1, 2, 5, 6)
     def testModuleUInt(io: ComputeIO[UInt], clock: Clock) {
         for (a <- 0 to 63) {
@@ -110,8 +110,8 @@ class ComputeTester extends FlatSpec with ChiselScalatestTester with Matchers wi
             })
         })
     })
+    
     val opsCounts = List(5, 10, 20, 50)
-
     val rng = new Random(37)
     for (opCountIdx <- 0 until opsCounts.length) {
         val opCount = opsCounts(opCountIdx)
