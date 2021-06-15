@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
@@ -23,11 +23,8 @@
     <ProjectReference Include="..\VCDReader\VCDReader.csproj" />
   </ItemGroup>
 
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <ItemGroup>
-      <FIRRTLFiles Include="../ChiselTestGen/test_run_dir/**" />
-    </ItemGroup>
-    <Copy SourceFiles="@(FIRRTLFiles)" DestinationFolder="$(TargetDir)/ChiselTests/" />
-  </Target>
+  <ItemGroup>
+    <Compile Include="../TestGenerator/TestTexts/*" />
+  </ItemGroup>
 
 </Project>

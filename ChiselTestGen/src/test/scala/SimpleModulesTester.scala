@@ -7,64 +7,49 @@ import firrtl.ExecutionOptionsManager
 import firrtl.AnnotationSeq
 
 class RandomTester extends FlatSpec with ChiselScalatestTester with Matchers {
-    it should "Test A" in {
-        test(new ModA()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
-            {_=> {}}
+    it should "SimpleIO" in {
+        autoTester.testRandomWithTreadle(this, _ => new SimpleIO(), 2000)
     }
-    it should "Test B" in {
-        test(new ModB()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
-            {_=> {}}
+    it should "Nested1Module" in {
+        autoTester.testRandomWithTreadle(this, _ => new Nested1Module(), 2000)
     }
-    it should "Test C" in {
-        test(new ModC()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
-            {_=> {}}
+    it should "Nested1Module2x" in {
+        autoTester.testRandomWithTreadle(this, _ => new Nested1Module2x(), 2000)
     }
-    it should "Test D" in {
-        test(new ModD()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
-            {_=> {}}
+    it should "MuxOnBundles" in {
+        autoTester.testRandomWithTreadle(this, _ => new MuxOnBundles(), 2000)
     }
-    it should "Test E" in {
-        test(new ModE()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
-            {_=> {}}
+    it should "SimpleVector" in {
+        autoTester.testRandomWithTreadle(this, _ => new SimpleVector(), 2000)
     }
-    it should "Test F" in {
-        test(new ModF()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
-            {_=> {}}
+    it should "MuxOnBundlesWithVector" in {
+        autoTester.testRandomWithTreadle(this, _ => new MuxOnBundlesWithVector(), 2000)
     }
-    it should "Test G" in {
-        test(new ModG()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
-            {_=> {}}
+    it should "SimpleBundleWithVector" in {
+        autoTester.testRandomWithTreadle(this, _ => new SimpleBundleWithVector(), 2000)
     }
-    it should "Test H" in {
-        test(new ModH()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
-            {_=> {}}
+    it should "Nested1ModuleBundleWithVector" in {
+        autoTester.testRandomWithTreadle(this, _ => new Nested1ModuleBundleWithVector(), 2000)
     }
-    it should "Test I" in {
-        test(new ModI()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
-            {_=> {}}
+    it should "InOutWireVecBundle" in {
+        autoTester.testRandomWithTreadle(this, _ => new InOutWireVecBundle(), 2000)
     }
-    it should "Test J" in {
-        test(new ModJ()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
-            {_=> {}}
+    it should "WireConnectInBeforeOut" in {
+        autoTester.testRandomWithTreadle(this, _ => new WireConnectInBeforeOut(), 2000)
     }
-    it should "Test K" in {
-        test(new ModK()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
-            {_=> {}}
+    it should "WireConnectOutBeforeIn" in {
+        autoTester.testRandomWithTreadle(this, _ => new WireConnectOutBeforeIn(), 2000)
     }
-    it should "Test L" in {
-        test(new ModL()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
-            {_=> {}}
+    it should "WireConnectConditionalOrder" in {
+        autoTester.testRandomWithTreadle(this, _ => new WireConnectConditionalOrder(), 2000)
     }
-    it should "Test M" in {
-        test(new ModM()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
-            {_=> {}}
+    it should "RegConnectVecBundleVec" in {
+        autoTester.testRandomWithTreadle(this, _ => new RegConnectVecBundleVec(), 2000)
     }
-    it should "Test N" in {
-        test(new ModN()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
-            {_=> {}}
+    it should "RegConnectBundleVec" in {
+        autoTester.testRandomWithTreadle(this, _ => new RegConnectBundleVec(), 2000)
     }
-    it should "Test ModOutputAsInput" in {
-        test(new ModOutputAsInput()).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
-            {_=> {}}
+    it should "ModOutputAsInput" in {
+        autoTester.testRandomWithTreadle(this, _ => new ModOutputAsInput(), 2000)
     }
 }
