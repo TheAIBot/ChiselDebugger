@@ -72,6 +72,14 @@ namespace TestGenerator
                     string vcdFile = files.Single(x => x.EndsWith(".vcd"));
                     bool isVerilatorVCD = files.Any(x => x.EndsWith(".v"));
 
+                    FileInfo vcdInfo = new FileInfo(vcdFile);
+
+                    const long maxVCDSize = 1024L * 1024L * 1024L * 4L; // 4GB
+                    if (vcdInfo.Length > maxVCDSize)
+                    {
+                        continue;
+                    }
+
                     foundTests.Add(new TestInfo(firFile, loFirFile, vcdFile, isVerilatorVCD));
                 }
                 else
@@ -176,7 +184,7 @@ namespace TestGenerator
             sBuilder.AppendLine("\t[TestClass]");
             sBuilder.AppendLine($"\tpublic class {className}");
             sBuilder.AppendLine("\t{");
-            sBuilder.AppendLine($"\t\tconst string TestDir = @\"{testDir}\";");
+            sBuilder.AppendLine($"\t\tconst string TestDir = @\"..\\..\\..\\..\\TestGenerator\\{testDir}\";");
             sBuilder.AppendLine();
         }
     }
