@@ -66,18 +66,7 @@ namespace ChiselDebug.GraphFIR.IO
 
             if (Node is PairedIOFIRRTLNode pairedIO)
             {
-                if (pairedIO is Mux || pairedIO is Register)
-                {
-                    SetType(TypeHelper.InferMaxWidthType(this, pairedIO));
-                }
-                else
-                {
-                    foreach (Input paired in pairedIO.GetAllPairedIO(this).OfType<Input>())
-                    {
-                        paired.InferType();
-                        SetType(paired.Type);
-                    }
-                }
+                SetType(TypeHelper.InferMaxWidthType(this, pairedIO));
             }
             else
             {

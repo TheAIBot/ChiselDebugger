@@ -291,19 +291,18 @@ namespace ChiselDebug.GraphFIR.IO
             {
                 return;
             }
+
+            List<Output> endPoints = new List<Output>();
             if (Con != null)
             {
-                Con.InferType();
-                SetType(Con.Type);
+                endPoints.Add(Con);
             }
             if (CondCons != null)
             {
-                foreach (var condCon in CondCons)
-                {
-                    condCon.From.InferType();
-                    SetType(condCon.From.Type);
-                }
+                endPoints.AddRange(CondCons.Select(x => x.From));
             }
+
+            SetType(TypeHelper.InferMaxWidthType(endPoints.ToArray()));
         }
     }
 }
