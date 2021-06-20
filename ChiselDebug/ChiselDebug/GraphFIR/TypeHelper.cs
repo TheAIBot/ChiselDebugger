@@ -50,6 +50,18 @@ namespace ChiselDebug.GraphFIR
             {
                 return new ClockType();
             }
+            else if (inputTypes.All(x => x is AsyncResetType))
+            {
+                return new AsyncResetType();
+            }
+            else if (inputTypes.All(x => x is ResetType))
+            {
+                return new ResetType();
+            }
+            else if (inputTypes.All(x => x is AnalogType))
+            {
+                return new AnalogType(maxWidth);
+            }
             else
             {
                 throw new Exception("All input types for mux output must be of the same ground type.");
