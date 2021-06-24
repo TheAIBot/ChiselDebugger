@@ -7,6 +7,8 @@ using ChiselDebug.Timeline;
 using ChiselDebuggerWebUI.Code.Templates;
 using ChiselDebuggerWebUI.Components;
 using ChiselDebuggerWebUI.Pages.FIRRTLUI;
+using ChiselDebuggerWebUI.Pages.FIRRTLUI.IOUI;
+using Microsoft.AspNetCore.Components.Web;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks.Dataflow;
@@ -25,6 +27,7 @@ namespace ChiselDebuggerWebUI.Code
         private readonly RouteTemplator RouteTemplates = new RouteTemplator();
         private readonly SeqWorkOverrideOld<ulong> StateLimiter = new SeqWorkOverrideOld<ulong>();
         private ModuleLayout RootModCtrl = null;
+        private IOWindowUI IOWindow = null;
 
         public Point CircuitSize { get; private set; } = Point.Zero;
 
@@ -103,6 +106,21 @@ namespace ChiselDebuggerWebUI.Code
                     RootModCtrl.Render();
                 }
             });
+        }
+
+        public void SetIOWindow(IOWindowUI window)
+        {
+            IOWindow = window;
+        }
+
+        public void MouseEntersIO(FIRIO io, MouseEventArgs args)
+        {
+            IOWindow?.MouseEnter(io, args);
+        }
+
+        public void MouseExitIO(FIRIO io, MouseEventArgs args)
+        {
+            IOWindow?.MouseExit(io, args);
         }
     }
 }

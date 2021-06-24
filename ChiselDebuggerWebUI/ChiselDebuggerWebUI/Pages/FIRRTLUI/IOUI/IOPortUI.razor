@@ -1,8 +1,14 @@
-﻿<div class="ioDot" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();"></div>
+﻿<div class="ioDot" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();" @onmouseover="x => DebugCtrl.MouseEntersIO(IO, x)" @onmouseout="x => DebugCtrl.MouseExitIO(IO, x)"></div>
 
 @code {
     [Parameter]
     public Point Position { get; set; }
+
+    [Parameter]
+    public FIRIO IO { get; set; }
+
+    [CascadingParameter(Name = "DebugCtrl")]
+    protected DebugController DebugCtrl { get; set; }
 
     private const int DOT_RADIUS = 3;
 

@@ -1,0 +1,47 @@
+﻿@inherits ManualRenderBase
+
+@if (IO != null)
+{
+    <div class="ioDescription" style="left:@Pos.X.ToPixels();top:@Pos.Y.ToPixels();">
+        <table>
+            @foreach (var scalar in IO.Flatten())
+            {
+                <tr>
+                    <td style="color: #2B91AF;">@scalar.GetGroundTypeName()</td>
+                    <td>@(!scalar.IsAnonymous && !scalar.Name.StartsWith("~") ? scalar.Name : string.Empty)</td>
+                    <td>@(scalar.HasValue() ? scalar.FetchValue().BitsToString() : "Unused")</td>
+                </tr>
+            }
+        </table>
+    </div>
+}
+
+@code {
+    [CascadingParameter(Name = "DebugCtrl")]
+    protected DebugController DebugCtrl { get; set; }
+
+    private FIRIO IO = null;
+    private Point Pos = Point.Zero;
+
+    protected override Task OnInitializedAsync()
+    {
+        DebugCtrl.SetIOWindow(this);
+
+        return base.OnInitializedAsync();
+    }
+
+    public void MouseEnter(FIRIO io, MouseEventArgs args)
+    {
+        IO = io;
+        Pos = new Point((int)args.ClientX, (int)args.ClientY);
+
+        StateHasChanged();
+    }
+
+    public void MouseExit(FIRIO io, MouseEventArgs args)
+    {
+        IO = null;
+
+        StateHasChanged();
+    }
+}

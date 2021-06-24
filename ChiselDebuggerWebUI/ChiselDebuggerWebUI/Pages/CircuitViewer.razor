@@ -20,15 +20,16 @@
 
             <div style="height:20px;" />
             <div id="@DragEventID" @ref="CircuitContainer" style="
-        width: calc(100vw - @CircuitTopLeftParent.X.ToPixels());
-        height: calc(100vh - @CircuitTopLeftParent.Y.ToPixels());
-        overflow: hidden;
-        user-select: none;">
+            width: calc(100vw - @CircuitTopLeftParent.X.ToPixels());
+            height: calc(100vh - @CircuitTopLeftParent.Y.ToPixels());
+            overflow: hidden;
+            user-select: none;">
                 <div class="Circuit" style="transform: translate( @CircuitOffset.X.ToPixels(), @CircuitOffset.Y.ToPixels() ) scale( @CircuitScale.ToHtmlNumber() );" @onwheel="HandleScroll">
                     <ModuleUI PosOp="@ModulePosition" ParentLayoutCtrl="RootModLayout" />
                 </div>
             </div>
         </div>
+        <IOWindowUI></IOWindowUI>
     </CascadingValue>
 }
 @if (ThrownException is ChiselDebugException)

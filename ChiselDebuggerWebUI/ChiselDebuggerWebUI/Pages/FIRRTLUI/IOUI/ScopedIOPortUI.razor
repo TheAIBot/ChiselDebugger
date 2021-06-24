@@ -1,8 +1,11 @@
-﻿<div class="ioDot" style="left:@DotPosition.X.ToPixels();top:@DotPosition.Y.ToPixels();"></div>
-@if (AlwaysShowName)
-{
-    <div class="@IONameClass" style="left:@NamePosition.X.ToPixels();top:@NamePosition.Y.ToPixels();">@ScopedIO.DirIO.IO.Name</div>
-}
+﻿<div class="ioDot" style="left:@DotPosition.X.ToPixels();top:@DotPosition.Y.ToPixels();" @onmouseover="x => DebugCtrl.MouseEntersIO(ScopedIO.DirIO.IO, x)" @onmouseout="x => DebugCtrl.MouseExitIO(ScopedIO.DirIO.IO, x)">
+    @if (AlwaysShowName)
+    {
+        <div class="@IONameClass" style="left:@NamePosition.X.ToPixels();top:@NamePosition.Y.ToPixels();">@ScopedIO.DirIO.IO.Name</div>
+    }
+</div>
+
+
 
 @code {
     [Parameter]
@@ -10,6 +13,9 @@
 
     [Parameter]
     public bool AlwaysShowName { get; set; } = false;
+
+    [CascadingParameter(Name = "DebugCtrl")]
+    protected DebugController DebugCtrl { get; set; }
 
     private Point DotPosition = Point.Zero;
     private Point NamePosition = Point.Zero;
@@ -30,7 +36,7 @@
         //the upper left corner of the dot. In order to center it
         //the radius is subtracted from the position.
         DotPosition = ScopedIO.DirIO.Position - new Point(DOT_RADIUS, DOT_RADIUS);
-        NamePosition = ScopedIO.DirIO.Position + new Point(ScopedIO.ScopeXOffset, 0);
+        NamePosition = new Point(ScopedIO.ScopeXOffset, 0);
 
         RightToLeft = ScopedIO.DirIO.IO is Output;
 

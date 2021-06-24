@@ -1,0 +1,19 @@
+﻿.ioDescription {
+    position: fixed;
+    transform: translateX(6px);
+    white-space: nowrap;
+    font-family: monospace;
+    background-color: white;
+    border: 2px solid black;
+    padding: 5px;
+    z-index: 100;
+}
+
+td {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+tr td:last-child {
+    border-left: 1px solid gray;
+}

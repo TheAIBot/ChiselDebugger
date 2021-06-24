@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using VCDReader;
 
 namespace ChiselDebug.GraphFIR.IO
 {
@@ -91,6 +92,11 @@ namespace ChiselDebug.GraphFIR.IO
         public IEnumerable<Input> GetConnectedInputs()
         {
             return To?.Distinct() ?? Enumerable.Empty<Input>();
+        }
+
+        public override ref BinaryVarValue FetchValue()
+        {
+            return ref Value.Value;
         }
     }
 }

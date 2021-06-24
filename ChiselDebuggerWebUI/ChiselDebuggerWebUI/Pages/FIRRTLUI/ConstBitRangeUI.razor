@@ -5,12 +5,12 @@
 
     @foreach (var input in InputOffsets)
     {
-        <IOPortUI Position="@input.Position"></IOPortUI>
+        <IOPortUI Position="@input.Position" IO="@input.IO"></IOPortUI>
     }
 
     @foreach (var output in OutputOffsets)
     {
-        <IOPortUI Position="@output.Position"></IOPortUI>
+        <IOPortUI Position="@output.Position" IO="@output.IO"></IOPortUI>
     }
 </div>
 

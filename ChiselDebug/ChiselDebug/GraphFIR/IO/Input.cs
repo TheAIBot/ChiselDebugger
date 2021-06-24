@@ -304,5 +304,10 @@ namespace ChiselDebug.GraphFIR.IO
 
             SetType(TypeHelper.InferMaxWidthType(endPoints.ToArray()));
         }
+
+        public override ref BinaryVarValue FetchValue()
+        {
+            return ref UpdateValueFromSourceFast();
+        }
     }
 }
