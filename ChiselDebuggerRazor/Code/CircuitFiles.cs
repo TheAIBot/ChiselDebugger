@@ -11,67 +11,62 @@ namespace ChiselDebuggerRazor.Code
     {
         private bool Ready = false;
 
-        private string HiFirrtlPath;
-        private string LoFirrtlPath;
-        private string VCDPath;
+        private Stream HiFirrtlStream;
+        private Stream LoFirrtlStream;
+        private Stream VCDStream;
         public bool IsVerilogVCD;
+        public bool IsReady => Ready;
+
+        public delegate void CircuitData();
+        public event CircuitData OnViewCircuit;
 
         public Stream GetHiFirrtlStream()
         { 
-            if (HiFirrtlPath != null && File.Exists(HiFirrtlPath))
-            {
-                return File.OpenRead(HiFirrtlPath);
-            }
-
-            return null;
+            return HiFirrtlStream;
         }
         public Stream GetLoFirrtlStream()
         {
-            if (LoFirrtlPath != null && File.Exists(LoFirrtlPath))
-            {
-                return File.OpenRead(LoFirrtlPath);
-            }
-
-            return null;
+            return LoFirrtlStream;
         }
         public Stream GetVCDStream()
         {
-            if (VCDPath != null && File.Exists(VCDPath))
-            {
-                return File.OpenRead(VCDPath);
-            }
-
-            return null;
+            return VCDStream;
         }
-
-        public bool IsReady => Ready;
 
         public void UpdateFromPath(string hiFirrtlPath, string loFirrtlPath, string vcdPath, bool isVerilogVCD)
         {
             Clear();
 
-            HiFirrtlPath = hiFirrtlPath;
-            LoFirrtlPath = loFirrtlPath;
-            VCDPath = vcdPath;
-            IsVerilogVCD = isVerilogVCD;
+            if (File.Exists(hiFirrtlPath))
+            {
+                HiFirrtlStream = File.OpenRead(hiFirrtlPath);
+            }
+            if (File.Exists(loFirrtlPath))
+            {
+                LoFirrtlStream = File.OpenRead(loFirrtlPath);
+            }
+            if (File.Exists(vcdPath))
+            {
+                VCDStream = File.OpenRead(vcdPath);
+            }
 
+            IsVerilogVCD = isVerilogVCD;
             Ready = true;
         }
 
-        private async Task<string> TransferFileToTempFile(IBrowserFile file)
+        private async Task<Stream> CopyBrowserFileToMemory(IBrowserFile file)
         {
             if (file == null)
             {
                 return null;
             }
 
-            string tmpFileName = Path.GetTempFileName();
-            using (FileStream tmpFile = File.OpenWrite(tmpFileName))
-            {
-                await file.OpenReadStream(long.MaxValue).CopyToAsync(tmpFile);
-            }
+            MemoryStream memStream = new MemoryStream();
+            using Stream fileStream = file.OpenReadStream(100_000_000_000L);
+            await fileStream.CopyToAsync(memStream);
+            memStream.Position = 0;
 
-            return tmpFileName;
+            return memStream;
         }
 
         public async Task<bool> UpdateFromFiles(IReadOnlyList<IBrowserFile> files, bool isVerilogVCD)
@@ -103,12 +98,18 @@ namespace ChiselDebuggerRazor.Code
 
             vcdFile = files.FirstOrDefault(x => x.Name.EndsWith(".vcd"));
 
-            var hiFirrtlPath = TransferFileToTempFile(hiFirrtlFile);
-            var loFirrtlPath = TransferFileToTempFile(loFirrtlFile);
-            var vcdPath = TransferFileToTempFile(vcdFile);
+            var hiFirrtlPath = CopyBrowserFileToMemory(hiFirrtlFile);
+            var loFirrtlPath = CopyBrowserFileToMemory(loFirrtlFile);
+            var vcdPath = CopyBrowserFileToMemory(vcdFile);
             await Task.WhenAll(hiFirrtlPath, loFirrtlPath, vcdPath);
 
-            UpdateFromPath(hiFirrtlPath.Result, loFirrtlPath.Result, vcdPath.Result, isVerilogVCD);
+            HiFirrtlStream = hiFirrtlPath.Result;
+            LoFirrtlStream = loFirrtlPath.Result;
+            VCDStream = vcdPath.Result;
+
+            IsVerilogVCD = isVerilogVCD;
+            Ready = true;
+            OnViewCircuit?.Invoke();
             return true;
         }
 
@@ -116,9 +117,13 @@ namespace ChiselDebuggerRazor.Code
         {
             Ready = false;
 
-            HiFirrtlPath = null;
-            LoFirrtlPath = null;
-            VCDPath = null;
+            HiFirrtlStream?.Dispose();
+            LoFirrtlStream?.Dispose();
+            VCDStream?.Dispose();
+
+            HiFirrtlStream = null;
+            LoFirrtlStream = null;
+            VCDStream = null;
         }
     }
 }
