@@ -1,7 +1,6 @@
 ﻿using ChiselDebug.GraphFIR;
 using ChiselDebug.GraphFIR.IO;
 using ChiselDebug.Routing;
-using PriorityQueue;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

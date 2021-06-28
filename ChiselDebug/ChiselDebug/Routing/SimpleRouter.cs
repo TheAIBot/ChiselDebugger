@@ -1,6 +1,5 @@
 ﻿using ChiselDebug.GraphFIR;
 using ChiselDebug.GraphFIR.IO;
-using PriorityQueue;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -51,6 +50,7 @@ namespace ChiselDebug.Routing
             {
                 int rerouteCount = 0;
                 Dictionary<Line, int> repathCounter = new Dictionary<Line, int>();
+
                 PriorityQueue<LineInfo, int> linesPriority = new PriorityQueue<LineInfo, int>();
                 foreach ((IOInfo start, IOInfo end) in Connections.GetAllConnectionLines(placements))
                 {
@@ -199,7 +199,7 @@ namespace ChiselDebug.Routing
             ref ScorePath startScore = ref board.GetCellScorePath(relativeEnd);
             startScore = new ScorePath(0, MoveDirs.None);
 
-            PriorityQueue<int> toSee = new PriorityQueue<int>();
+            PriorityQueue<int, int> toSee = new PriorityQueue<int, int>();
             toSee.Enqueue(board.CellIndex(relativeEnd), 0);
 
             ReadOnlySpan<MoveData> moves = new MoveData[] 

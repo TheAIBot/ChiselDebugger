@@ -1,0 +1,359 @@
+﻿@inherits FIRBase<Module>
+
+<div id="@SizeWatcherID" class="module" style="
+    left: @Position.X.ToPixels();
+    top: @Position.Y.ToPixels();
+    width: @GetCurrentSize().X.ToPixels();
+    height: @GetCurrentSize().Y.ToPixels();
+    min-width: @MinContentSize.X.ToPixels();
+    min-height: @MinContentSize.Y.ToPixels();
+    background-image: @GetBackgroundGradient();
+    outline-color: @(IsModuleEnabled() ? "blue" : "gray");
+">
+
+    <div class="moduleHeader" style="@(ShowMdwaoduleName() ? string.Empty : "visibility: hidden;"); width:@GetCurrentSize().X.ToPixels();height:@GetCurrentSize().Y.ToPixels();">
+        <div id="@ModNameID" style="display: inline-block; height:@GetCurrentSize().Y.ToPixels();line-height:@GetCurrentSize().Y.ToPixels(); transform: scale( @ModNameScale.ToHtmlNumber() );">
+            @Operation.Name
+        </div>
+    </div>
+
+    <div class="moduleContent" style="@(ShowModuleContent() ? string.Empty : "visibility: hidden;");transform: scale(@ContentScale.ToHtmlNumber());">
+        @foreach (var posOp in ModuleOpPoses)
+        {
+            @if (posOp.Value is Mux)
+            {
+                <MuxOp @key=posOp.Value PosOp="@(posOp.Cast<Mux>())" ParentLayoutCtrl="CurrModLayout"></MuxOp>
+            }
+            else if (posOp.Value is MonoArgMonoResPrimOp)
+            {
+                <MonoArgPrimOpUI @key=posOp.Value PosOp="@(posOp.Cast<MonoArgMonoResPrimOp>())" ParentLayoutCtrl="CurrModLayout"></MonoArgPrimOpUI>
+            }
+            else if (posOp.Value is BiArgMonoResPrimOp)
+            {
+                <BiArgMonoResPrimOpUI @key=posOp.Value PosOp="@(posOp.Cast<BiArgMonoResPrimOp>())" ParentLayoutCtrl="CurrModLayout"></BiArgMonoResPrimOpUI>
+            }
+            else if (posOp.Value is ConstBitRange)
+            {
+                <ConstBitRangeUI @key=posOp.Value PosOp="@(posOp.Cast<ConstBitRange>())" ParentLayoutCtrl="CurrModLayout"></ConstBitRangeUI>
+            }
+            else if (posOp.Value is Register)
+            {
+                <RegisterUI @key=posOp.Value PosOp="@(posOp.Cast<Register>())" ParentLayoutCtrl="CurrModLayout"></RegisterUI>
+            }
+            else if (posOp.Value is Module)
+            {
+                <ModuleUI @key=posOp.Value PosOp="@(posOp.Cast<Module>())" ParentLayoutCtrl="CurrModLayout"></ModuleUI>
+            }
+            else if (posOp.Value is Memory)
+            {
+                <MemoryUI @key=posOp.Value PosOp="@(posOp.Cast<Memory>())" ParentLayoutCtrl="CurrModLayout"></MemoryUI>
+            }
+            else if (posOp.Value is Conditional)
+            {
+                <ConditionalUI @key=posOp.Value PosOp="@(posOp.Cast<Conditional>())" ParentLayoutCtrl="CurrModLayout"></ConditionalUI>
+            }
+            else if (posOp.Value is VectorAssign)
+            {
+                <VectorAssignUI @key=posOp.Value PosOp="@(posOp.Cast<VectorAssign>())" ParentLayoutCtrl="CurrModLayout"></VectorAssignUI>
+            }
+            else if (posOp.Value is Wire)
+            {
+                <WireUI @key=posOp.Value PosOp="@(posOp.Cast<Wire>())" ParentLayoutCtrl="CurrModLayout"></WireUI>
+            }
+            else if (posOp.Value is FirStop)
+            {
+                <StopUI @key=posOp.Value PosOp="@(posOp.Cast<FirStop>())" ParentLayoutCtrl="CurrModLayout"></StopUI>
+            }
+        }
+
+        <WiresUI ModLayout="CurrModLayout"></WiresUI>
+    </div>
+
+    <ScopedIOUI NodeIO="@ExternalIO"></ScopedIOUI>
+</div>
+
+@code
+{
+    private const int ContentPadding = 0;
+    private const int MarginForIO = 20;
+    private const int MinSpaceBetweenIO = 15;
+    private const float MaxContentScaling = 6.0f;
+
+    private Point MinContentSize;
+    private List<Positioned<FIRRTLNode>> ModuleOpPoses = new List<Positioned<FIRRTLNode>>();
+    private ModuleLayout CurrModLayout;
+    private ScopedNodeIO ExternalIO = null;
+    private float ContentScale = 1.0f;
+    private bool ShowModuleName = true;
+    private string ModNameID = UniqueID.UniqueHTMLID();
+    private float ModNameScale = 1.0f;
+    private Point ModNameSize = Point.Zero;
+    private bool HasLayout = false;
+
+    [Parameter]
+    public bool IgnoreUnusedIO { get; set; } = false;
+
+    protected override void OnFirstParametersSetAsync()
+    {
+        base.OnFirstParametersSetAsync();
+
+        MinContentSize = GetMinSizeForIO();
+
+        ModuleOpPoses = Operation.GetAllNodes().Select(x => new Positioned<FIRRTLNode>(Point.Zero, x)).ToList();
+        CurrModLayout = new ModuleLayout(DebugCtrl, Operation, this);
+        CurrModLayout.SubscribeToPlaceTemplate(x => InvokeAsync(() => UpdatePlacement(x)));
+        ParentLayoutCtrl?.AddChildLayout(CurrModLayout);
+
+        //If the module contain no nodes then the module will never
+        //be rendered as it's waiting for at least one thing to
+        //update before it can do so. If it contains no nodes then
+        //it's ready to render immediately so just check if it
+        //doesn't contain any nodes.
+        if (CurrModLayout.IsEmpty())
+        {
+            UpdatePlacement(new PlacementInfo());
+        }
+    }
+
+    private float ComputeMaxScaling(int width, int height)
+    {
+        float maxScalingX = Math.Min(MaxContentScaling, width / MinContentSize.X);
+        float maxScalingY = Math.Min(MaxContentScaling, height / MinContentSize.Y);
+        return Math.Min(maxScalingX, maxScalingY);
+    }
+
+    protected override void OnResize(int width, int height)
+    {
+        //Update this module with its internal io positions
+        ScopedNodeIO internalIO = IOPositionCalc.VerticalScopedIO(Operation.GetInternalIO(), width, MarginForIO, MarginForIO, IgnoreUnusedIO);
+
+        //X position for internal is flipped i.e. input has output x
+        //and the other way around. This switches the x values around.
+        internalIO.UpdateIOX(width, 0);
+
+        //Scale io the the height of the entire module
+        internalIO.ScaleFillY(height, ComputeMaxScaling(width, height));
+
+        internalIO.VerticalRecenter(height);
+
+        CurrModLayout.UpdateIOFromNode(Operation, internalIO.GetInputDirIO(), internalIO.GetOutputDirIO());
+    }
+
+    private Point UpdateParentAboutExteriorIO(Point moduleSize)
+    {
+        ExternalIO = IOPositionCalc.VerticalScopedIO(Operation.GetIO().ToArray(), moduleSize.X, MarginForIO, MarginForIO, IgnoreUnusedIO);
+
+        if (moduleSize.Y > ExternalIO.HeightNeeded)
+        {
+            float maxScaling = ComputeMaxScaling(moduleSize.X, moduleSize.Y);
+
+            //Top level module will actuall scale its io.
+            //Nested modules will instead Scale the module content
+            //to a size better matching the size of the io.
+            if (ParentLayoutCtrl is CircuitLayout)
+            {
+                ExternalIO.ScaleFillY(moduleSize.Y, maxScaling);
+            }
+            else
+            {
+                ContentScale = 1 / maxScaling;
+                moduleSize /= maxScaling;
+            }
+
+            ExternalIO.UpdateOutputX(moduleSize.X);
+        }
+
+        ExternalIO.VerticalRecenter(moduleSize.Y);
+
+        //Circuit size is the same as the size of the top level
+        //module. Only the top level module doesn't have a
+        //parent controller.
+        if (ParentLayoutCtrl is CircuitLayout)
+        {
+            DebugCtrl.SetCircuitSize(moduleSize, CurrModLayout);
+        }
+        else
+        {
+            ParentLayoutCtrl.UpdateComponentInfo(new FIRComponentUpdate(Operation, moduleSize, ExternalIO.GetInputDirIO(), ExternalIO.GetOutputDirIO()));
+        }
+
+        return moduleSize;
+    }
+
+    private Point GetMinSizeForIO()
+    {
+        int requiredWidth = 50;
+        int requiredHeight = IOPositionCalc.VerticalScopedIO(Operation.GetInternalIO(), 0, MarginForIO, MarginForIO, IgnoreUnusedIO).HeightNeeded;
+
+        return new Point(requiredWidth, requiredHeight);
+    }
+
+    private void UpdatePlacement(PlacementInfo placements)
+    {
+        ModuleOpPoses = placements.NodePositions;
+
+        //Must use at least the minimum required that the module needs
+        Point moduleSize = Point.Max(MinContentSize, placements.SpaceNeeded);
+        placements.SetSpaceNeeded(moduleSize);
+
+        //With new module size, the io positions need to be updated
+        OnResize(moduleSize.X, moduleSize.Y);
+        moduleSize = UpdateParentAboutExteriorIO(moduleSize);
+
+        CurrModLayout.RouteWires(placements);
+
+        CurrModLayout.PrepareToRerenderLayout();
+        SetCurrentSize(moduleSize);
+        UpdateModNameScale();
+        HasLayout = true;
+        StateHasChanged();
+    }
+
+    protected override List<DirectedIO> OnMakeInputs(int width, int height)
+    {
+        return IOPositionCalc.EvenVertical(height, Operation.GetInternalInputs().ToArray(), width + ContentPadding, MarginForIO);
+    }
+
+    protected override List<DirectedIO> OnMakeOutputs(int width, int height)
+    {
+        return IOPositionCalc.EvenVertical(height, Operation.GetInternalOutputs().ToArray(), -ContentPadding, MarginForIO);
+    }
+
+    private List<DirectedIO> MakeExternalInputs(int width, int height)
+    {
+        return IOPositionCalc.EvenVertical(height, Operation.GetInputs(), -ContentPadding, MarginForIO);
+    }
+
+    private List<DirectedIO> MakeExternalOutputs(int width, int height)
+    {
+        return IOPositionCalc.EvenVertical(height, Operation.GetOutputs(), width + ContentPadding, MarginForIO);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender)
+        {
+            AddSizeWatcher(ModNameID, x => ModNameSize = x.ToPoint());
+            await JSEvents.DoBatchedResizeJS();
+        }
+
+
+    }
+
+    private void UpdateModNameScale()
+    {
+        if (ModNameSize == Point.Zero)
+        {
+            ModNameScale = 1.0f;
+        }
+
+        Point modSize = GetCurrentSize();
+
+        float relWidth = (float)modSize.X / ModNameSize.X;
+        float relHeight = (float)modSize.Y / ModNameSize.Y;
+
+        //Scale so it doesn't go outside the module bounds.
+        //Then make the text slightly smaller again so it
+        //doesn't go right to the modules borders.
+        ModNameScale = Math.Min(relWidth, relHeight) * 0.9f;
+    }
+
+    public void SetShowModuleName(bool showName)
+    {
+        if (ShowModuleName != showName)
+        {
+            ShowModuleName = showName;
+            StateHasChanged();
+        }
+    }
+
+    private bool ShowModuleContent()
+    {
+        if (!HasLayout)
+        {
+            return true;
+        }
+        else
+        {
+            return !ShowModuleName;
+        }
+    }
+
+    private bool ShowMdwaoduleName()
+    {
+        if (IgnoreUnusedIO)
+        {
+            return false;
+        }
+        else if (!HasLayout)
+        {
+            return true;
+        }
+        else
+        {
+            return ShowModuleName;
+        }
+    }
+
+    public float GetContentScaling()
+    {
+        return ContentScale;
+    }
+
+    public Point GetModuleSize()
+    {
+        return GetCurrentSize();
+    }
+
+    private string GetBackgroundGradient()
+    {
+        if (ShowModuleContent())
+        {
+            if (Operation.IsConditional)
+            {
+                if (Operation.EnableCon.Value.IsTrue())
+                {
+                    return "linear-gradient(#9487b7aa, #7ec8a8aa)";
+                }
+                else
+                {
+                    return "linear-gradient(#9487b7aa, #9fa6a8aa)";
+                }
+            }
+            else
+            {
+                return "linear-gradient(#b4aaff, #dcf3ff)";
+            }
+        }
+        else
+        {
+            if (Operation.IsConditional)
+            {
+                if (Operation.EnableCon.Value.IsTrue())
+                {
+                    return "linear-gradient(#9487b7ff, #7ec8a8ff)";
+                }
+                else
+                {
+                    return "linear-gradient(#9487b7ff, #9fa6a8ff)";
+                }
+            }
+            else
+            {
+                return "linear-gradient(#9487fb, #7ec8ec)";
+            }
+        }
+    }
+
+    private bool IsModuleEnabled()
+    {
+        if (!Operation.IsConditional)
+        {
+            return true;
+        }
+
+        return Operation.EnableCon.Value.IsTrue();
+    }
+}

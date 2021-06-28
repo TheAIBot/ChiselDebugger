@@ -1,4 +1,4 @@
-using ChiselDebuggerWebUI.Code;
+using ChiselDebuggerRazor.Code;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Hosting;

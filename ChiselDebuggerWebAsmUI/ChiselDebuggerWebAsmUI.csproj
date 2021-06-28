@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+	<RunAOTCompilation>true</RunAOTCompilation>
+	<PublishTrimmed>true</PublishTrimmed>
+	<TrimMode>link</TrimMode>
+	<BlazorEnableCompression>false</BlazorEnableCompression>
+	<BlazorCacheBootResources>false</BlazorCacheBootResources>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.0-preview.5.21301.17" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.0-preview.5.21301.17" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ChiselDebuggerRazor\ChiselDebuggerRazor.csproj" />
+    <ProjectReference Include="..\ChiselDebug\ChiselDebug\ChiselDebug.csproj" />
+    <ProjectReference Include="..\FIRRTL\FIRRTL.csproj" />
+    <ProjectReference Include="..\VCDReader\VCDReader.csproj" />
+  </ItemGroup>
+
+</Project>
