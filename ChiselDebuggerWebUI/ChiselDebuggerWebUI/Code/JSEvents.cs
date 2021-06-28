@@ -19,8 +19,7 @@ namespace ChiselDebuggerWebUI.Code
         public delegate void ResizeHandler(ElemWH size);
         private static readonly ConcurrentDictionary<string, ResizeHandler> ResizeListeners = new ConcurrentDictionary<string, ResizeHandler>();
 
-        private static readonly ConcurrentBag<(IJSRuntime js, string id)> ToAddResizeIDs = new ConcurrentBag<(IJSRuntime js, string id)>();
-        private static readonly AutoResetEvent AddedResize = new AutoResetEvent(false);
+        private static readonly BlockingCollection<(IJSRuntime js, string id)> ToAddResizeIDs = new BlockingCollection<(IJSRuntime js, string id)>();
 
         static JSEvents()
         {
@@ -73,23 +72,22 @@ namespace ChiselDebuggerWebUI.Code
             }
             
             ToAddResizeIDs.Add((js, elementID));
-            AddedResize.Set();
         }
 
         private static async void DoBatchedResizeJS()
         {
             while (true)
             {
+                List<(IJSRuntime js, string id)> workItems = new List<(IJSRuntime js, string id)>();
                 if (ToAddResizeIDs.Count == 0)
                 {
-                    AddedResize.WaitOne();
-                }                
-                await Task.Delay(50);
+                    workItems.Add(ToAddResizeIDs.Take());
+                    await Task.Delay(50);
+                }
 
-                List<(IJSRuntime js, string id)> workItems = new List<(IJSRuntime js, string id)>();
-                while (ToAddResizeIDs.TryTake(out var workItem))
+                while (ToAddResizeIDs.Count > 0)
                 {
-                    workItems.Add(workItem);
+                    workItems.Add(ToAddResizeIDs.Take());
                 }
 
                 //Work can lie in different js runtimes. Make sure that
