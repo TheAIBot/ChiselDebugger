@@ -77,7 +77,7 @@ namespace ChiselDebuggerRazor.Code
             if (OperatingSystem.IsBrowser())
             {
                 string[] slice = { elementID };
-                js.InvokeVoidAsync("JSUtils.addResizeListeners", new string[][] { slice });
+                ((IJSInProcessRuntime)js).InvokeVoid("JSUtils.addResizeListeners", new string[][] { slice });
             }
             else
             {
