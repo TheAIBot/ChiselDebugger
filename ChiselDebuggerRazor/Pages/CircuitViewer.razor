@@ -137,8 +137,8 @@ else if (ThrownException is Exception)
         {
             JustLoadedCircuit = false;
             await JSEvents.AddDragListener(JS, DragEventID, x => InvokeAsync(() => HandleDrag(x)));
-            JSEvents.AddResizeListener(JS, CircuitContainerID, PageResized);
-            JSEvents.AddResizeListener(JS, DragEventID, CircuitContainerResized);
+            await JSEvents.AddResizeListener(JS, CircuitContainerID, PageResized);
+            await JSEvents.AddResizeListener(JS, DragEventID, CircuitContainerResized);
         }
 
         await base.OnAfterRenderAsync(firstRender);

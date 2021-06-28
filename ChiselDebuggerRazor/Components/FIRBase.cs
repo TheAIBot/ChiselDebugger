@@ -73,7 +73,7 @@ namespace ChiselDebuggerRazor.Components
 
         protected void AddSizeWatcher(string componentID, JSEvents.ResizeHandler onResize)
         {
-            JSEvents.AddResizeListener(JS, componentID, onResize);
+            JSEvents.BatchAddResizeListener(JS, componentID, onResize);
             SizeWatchIDs.Add(componentID);
         }
 

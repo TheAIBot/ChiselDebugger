@@ -90,14 +90,14 @@
         MakeTimeTicks();
     }
 
-    protected override Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            JSEvents.AddResizeListener(JS, RangeDivID, RangeResized);
+            await JSEvents.AddResizeListener(JS, RangeDivID, RangeResized);
         }
 
-        return base.OnAfterRenderAsync(firstRender);
+        await base.OnAfterRenderAsync(firstRender);
     }
 
     private async void RangeResized(ElemWH size)

@@ -19,15 +19,7 @@ namespace ChiselDebuggerRazor.Code
         public delegate void ResizeHandler(ElemWH size);
         private static readonly ConcurrentDictionary<string, ResizeHandler> ResizeListeners = new ConcurrentDictionary<string, ResizeHandler>();
 
-        private static readonly BlockingCollection<(IJSRuntime js, string id)> ToAddResizeIDs = new BlockingCollection<(IJSRuntime js, string id)>();
-
-        static JSEvents()
-        {
-            if (!OperatingSystem.IsBrowser())
-            {
-                Task.Run(DoBatchedResizeJS);
-            }
-        }
+        private static readonly ConcurrentQueue<(IJSRuntime js, string id)> ToAddResizeIDs = new ConcurrentQueue<(IJSRuntime js, string id)>();
 
         [JSInvokable]
         public static void DragEventAsync(string elementID, int draggedX, int draggedY)
@@ -67,56 +59,50 @@ namespace ChiselDebuggerRazor.Code
             }
         }
 
-        public static void AddResizeListener(IJSRuntime js, string elementID, ResizeHandler resizeHandler)
+        public static void BatchAddResizeListener(IJSRuntime js, string elementID, ResizeHandler resizeHandler)
         {
             if (!ResizeListeners.TryAdd(elementID, resizeHandler))
             {
                 throw new Exception("Failed to add resize event listener.");
             }
 
-            if (OperatingSystem.IsBrowser())
-            {
-                string[] slice = { elementID };
-                ((IJSInProcessRuntime)js).InvokeVoid("JSUtils.addResizeListeners", new string[][] { slice });
-            }
-            else
-            {
-                ToAddResizeIDs.Add((js, elementID));
-            }
+            ToAddResizeIDs.Enqueue((js, elementID));
         }
 
-        private static async void DoBatchedResizeJS()
+        public static async ValueTask AddResizeListener(IJSRuntime js, string elementID, ResizeHandler resizeHandler)
         {
-            while (true)
+            if (!ResizeListeners.TryAdd(elementID, resizeHandler))
             {
-                List<(IJSRuntime js, string id)> workItems = new List<(IJSRuntime js, string id)>();
-                if (ToAddResizeIDs.Count == 0)
+                throw new Exception("Failed to add resize event listener.");
+            }
+
+            ToAddResizeIDs.Enqueue((js, elementID));
+            await DoBatchedResizeJS();
+        }
+
+        public static async ValueTask DoBatchedResizeJS()
+        {
+            List<(IJSRuntime js, string id)> workItems = new List<(IJSRuntime js, string id)>();
+            while (ToAddResizeIDs.TryDequeue(out var workItem))
+            {
+                workItems.Add(workItem);
+            }
+
+            //Work can lie in different js runtimes. Make sure that
+            //the work is executed in the correct runtime by grouping
+            //the work by runtime.
+            foreach (var jsGroup in workItems.GroupBy(x => x.js))
+            {
+                string[] ids = jsGroup.Select(x => x.id).ToArray();
+
+                //Only so much data can be sent to/from js at a time
+                //which is why the work is split up here
+                for (int i = 0; i < ids.Length; i += 500)
                 {
-                    workItems.Add(ToAddResizeIDs.Take());
-                    await Task.Delay(50);
-                }
+                    string[] slice = new string[ids.Length - i];
+                    Array.Copy(ids, i, slice, 0, slice.Length);
 
-                while (ToAddResizeIDs.Count > 0)
-                {
-                    workItems.Add(ToAddResizeIDs.Take());
-                }
-
-                //Work can lie in different js runtimes. Make sure that
-                //the work is executed in the correct runtime by grouping
-                //the work by runtime.
-                foreach (var jsGroup in workItems.GroupBy(x => x.js))
-                {
-                    string[] ids = jsGroup.Select(x => x.id).ToArray();
-
-                    //Only so much data can be sent to/from js at a time
-                    //which is why the work is split up here
-                    for (int i = 0; i < ids.Length; i += 500)
-                    {
-                        string[] slice = new string[ids.Length - i];
-                        Array.Copy(ids, i, slice, 0, slice.Length);
-
-                        await jsGroup.Key.InvokeVoidAsync("JSUtils.addResizeListeners", new string[][] { slice });
-                    }
+                    await jsGroup.Key.InvokeVoidAsync("JSUtils.addResizeListeners", new string[][] { slice });
                 }
             }
         }

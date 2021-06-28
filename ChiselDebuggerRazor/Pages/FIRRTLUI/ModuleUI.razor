@@ -229,14 +229,17 @@
         return IOPositionCalc.EvenVertical(height, Operation.GetOutputs(), width + ContentPadding, MarginForIO);
     }
 
-    protected override Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        await base.OnAfterRenderAsync(firstRender);
+
         if (firstRender)
         {
             AddSizeWatcher(ModNameID, x => ModNameSize = x.ToPoint());
+            await JSEvents.DoBatchedResizeJS();
         }
 
-        return base.OnAfterRenderAsync(firstRender);
+
     }
 
     private void UpdateModNameScale()
