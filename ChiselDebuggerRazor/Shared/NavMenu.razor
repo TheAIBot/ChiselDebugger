@@ -39,7 +39,7 @@
 
     protected override Task OnInitializedAsync()
     {
-        if (Directory.Exists(ExamplesFolder))
+        if (!OperatingSystem.IsBrowser() && Directory.Exists(ExamplesFolder))
         {
             FIRRTLFilenames = Directory.GetFiles(ExamplesFolder)
                 .Select(x => Path.GetFileName(x))
