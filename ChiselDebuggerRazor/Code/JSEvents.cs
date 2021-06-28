@@ -23,7 +23,10 @@ namespace ChiselDebuggerRazor.Code
 
         static JSEvents()
         {
-            Task.Run(DoBatchedResizeJS);
+            if (!OperatingSystem.IsBrowser())
+            {
+                Task.Run(DoBatchedResizeJS);
+            }
         }
 
         [JSInvokable]
@@ -70,8 +73,16 @@ namespace ChiselDebuggerRazor.Code
             {
                 throw new Exception("Failed to add resize event listener.");
             }
-            
-            ToAddResizeIDs.Add((js, elementID));
+
+            if (OperatingSystem.IsBrowser())
+            {
+                string[] slice = { elementID };
+                js.InvokeVoidAsync("JSUtils.addResizeListeners", new string[][] { slice });
+            }
+            else
+            {
+                ToAddResizeIDs.Add((js, elementID));
+            }
         }
 
         private static async void DoBatchedResizeJS()
