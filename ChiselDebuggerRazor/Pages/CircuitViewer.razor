@@ -65,6 +65,40 @@ else if (ThrownException is Exception)
     private readonly string CircuitContainerID = UniqueID.UniqueHTMLID();
     private Exception ThrownException = null;
 
+    //protected override Task OnParametersSetAsync()
+    //{
+    //    return base.OnParametersSetAsync();
+    //}
+    protected override async Task OnParametersSetAsync()
+    {
+        Files.OnViewCircuit += afefuwjofw;
+
+        await base.OnParametersSetAsync();
+    }
+
+    private async void afefuwjofw()
+    {
+        if (Files.IsReady)
+        {
+            await Task.Run(() =>
+            {
+                try
+                {
+                    using var loFir = Files.GetLoFirrtlStream();
+                    using var hiFir = Files.GetHiFirrtlStream();
+                    using var vcd = Files.GetVCDStream();
+
+                    LoadFirData(loFir, hiFir, vcd, Files.IsVerilogVCD);
+                }
+                catch (Exception e)
+                {
+                    ThrownException = e;
+                    InvokestateHasChanged();
+                }
+            });
+        }
+    }
+
     private void LoadFirData(Stream loFirStream, Stream hiFirStream, Stream vcdStream, bool isVerilogVCD)
     {
         CircuitGraph loGraph = null;
@@ -97,25 +131,7 @@ else if (ThrownException is Exception)
     {
         if (firstRender)
         {
-            if (Files.IsReady)
-            {
-                await Task.Run(() =>
-                {
-                    try
-                    {
-                        using var loFir = Files.GetLoFirrtlStream();
-                        using var hiFir = Files.GetHiFirrtlStream();
-                        using var vcd = Files.GetVCDStream();
 
-                        LoadFirData(loFir, hiFir, vcd, Files.IsVerilogVCD);
-                    }
-                    catch (Exception e)
-                    {
-                        ThrownException = e;
-                        InvokestateHasChanged();
-                    }
-                });
-            }
         }
         if (JustLoadedCircuit)
         {
