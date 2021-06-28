@@ -57,7 +57,7 @@ const reObserver = new ResizeObserver(async entries => {
             sizesPart.push(sizes.pop())
         }
 
-        toWait.push(DotNet.invokeMethodAsync("ChiselDebuggerWebUI", "ResizeEventsAsync", new ElemResizes(elemIDsPart, sizesPart)));
+        toWait.push(DotNet.invokeMethodAsync("ChiselDebuggerRazor", "ResizeEventsAsync", new ElemResizes(elemIDsPart, sizesPart)));
     }
 
     await Promise.all(toWait);
@@ -118,7 +118,7 @@ JSUtils.addDragListener = function (elementID) {
                     draggedX = 0;
                     draggedY = 0;
 
-                    DotNet.invokeMethodAsync("ChiselDebuggerWebUI", "DragEventAsync", elementID, movedX, movedY);
+                    DotNet.invokeMethodAsync("ChiselDebuggerRazor", "DragEventAsync", elementID, movedX, movedY);
                 });
             }
         }
