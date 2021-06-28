@@ -102,10 +102,14 @@
 
     private async void RangeResized(ElemWH size)
     {
-        RangeParentStartX = (await JS.InvokeAsync<ElemWH>("JSUtils.getElementPosition", RangeDiv)).Width;
-        RangeParentWidth = size.Width;
+        try
+        {
+            RangeParentStartX = (await JS.InvokeAsync<ElemWH>("JSUtils.getElementPosition", RangeDiv)).Width;
+            RangeParentWidth = size.Width;
 
-        StateHasChanged();
+            StateHasChanged();
+        }
+        catch(Exception) { }
     }
 
     private void MakeTimeTicks()

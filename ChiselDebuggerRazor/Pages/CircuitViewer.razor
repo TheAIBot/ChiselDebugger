@@ -11,11 +11,11 @@
 
 @if (DebugCtrl != null)
 {
-    <CascadingValue Value="@DebugCtrl" Name="DebugCtrl" IsFixed="true">
+    <CascadingValue @key="DebugCtrl" Value="@DebugCtrl" Name="DebugCtrl" IsFixed="true">
         <div id="@CircuitContainerID">
             @if (DebugCtrl.Timeline != null)
             {
-                <TimelineUI />
+                <TimelineUI @key="DebugCtrl.Timeline" />
             }
 
             <div style="height:20px;" />
@@ -25,7 +25,7 @@
             overflow: hidden;
             user-select: none;">
                 <div class="Circuit" style="transform: translate( @CircuitOffset.X.ToPixels(), @CircuitOffset.Y.ToPixels() ) scale( @CircuitScale.ToHtmlNumber() );" @onwheel="HandleScroll">
-                    <ModuleUI PosOp="@ModulePosition" ParentLayoutCtrl="RootModLayout" />
+                    <ModuleUI @key="ModulePosition.Value" PosOp="@ModulePosition" ParentLayoutCtrl="RootModLayout" />
                 </div>
             </div>
         </div>
@@ -52,51 +52,46 @@ else if (ThrownException is Exception)
 {
     private DebugController DebugCtrl = null;
     private Positioned<ChiselDebug.GraphFIR.Module> ModulePosition;
-    private CircuitLayout RootModLayout = new CircuitLayout();
+    private CircuitLayout RootModLayout = null;
     private float CircuitScale = 1.0f;
     private Point CircuitOffset = Point.Zero;
     private bool JustLoadedCircuit = false;
 
     private ElementReference CircuitContainer;
-    private readonly string DragEventID = UniqueID.UniqueHTMLID();
+    private string DragEventID = UniqueID.UniqueHTMLID();
 
     private Point CircuitTopLeftParent = Point.Zero;
     private Point CircuitContainerSize = Point.Zero;
-    private readonly string CircuitContainerID = UniqueID.UniqueHTMLID();
+    private string CircuitContainerID = UniqueID.UniqueHTMLID();
     private Exception ThrownException = null;
 
-    //protected override Task OnParametersSetAsync()
-    //{
-    //    return base.OnParametersSetAsync();
-    //}
-    protected override async Task OnParametersSetAsync()
+    protected override Task OnInitializedAsync()
     {
-        Files.OnViewCircuit += afefuwjofw;
-
-        await base.OnParametersSetAsync();
+        Files.OnViewCircuit += CircuitChanged;
+        return base.OnInitializedAsync();
     }
 
-    private async void afefuwjofw()
+    private async void CircuitChanged()
     {
-        if (Files.IsReady)
+        await Task.Run(() =>
         {
-            await Task.Run(() =>
+            try
             {
-                try
-                {
-                    using var loFir = Files.GetLoFirrtlStream();
-                    using var hiFir = Files.GetHiFirrtlStream();
-                    using var vcd = Files.GetVCDStream();
+                DragEventID = UniqueID.UniqueHTMLID();
+                CircuitContainerID = UniqueID.UniqueHTMLID();
 
-                    LoadFirData(loFir, hiFir, vcd, Files.IsVerilogVCD);
-                }
-                catch (Exception e)
-                {
-                    ThrownException = e;
-                    InvokestateHasChanged();
-                }
-            });
-        }
+                using var loFir = Files.GetLoFirrtlStream();
+                using var hiFir = Files.GetHiFirrtlStream();
+                using var vcd = Files.GetVCDStream();
+
+                LoadFirData(loFir, hiFir, vcd, Files.IsVerilogVCD);
+            }
+            catch (Exception e)
+            {
+                ThrownException = e;
+                InvokestateHasChanged();
+            }
+        });
     }
 
     private void LoadFirData(Stream loFirStream, Stream hiFirStream, Stream vcdStream, bool isVerilogVCD)
@@ -112,6 +107,7 @@ else if (ThrownException is Exception)
         CircuitGraph graph = CircuitToGraph.GetAsGraph(circuit, loGraph);
 
         ModulePosition = new Positioned<ChiselDebug.GraphFIR.Module>(Point.Zero, graph.MainModule);
+        RootModLayout = new CircuitLayout();
         DebugCtrl = new DebugController(graph);
         DebugCtrl.OnCircuitSizeChanged += CircuitSizeChanged;
 

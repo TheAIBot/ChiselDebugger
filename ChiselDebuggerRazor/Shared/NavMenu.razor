@@ -37,6 +37,11 @@
     private string[] FIRRTLFilenames = new string[0];
     private const string ExamplesFolder = "Examples";
 
+    protected override bool ShouldRender()
+    {
+        return false;
+    }
+
     protected override Task OnInitializedAsync()
     {
         if (!OperatingSystem.IsBrowser() && Directory.Exists(ExamplesFolder))
@@ -64,21 +69,12 @@
         string vcdPath = System.IO.Path.Combine(ExamplesFolder, $"{filenameNoExtension}.vcd");
 
         Files.UpdateFromPath(hiFirPath, loFirPath, vcdPath, true);
-        ShowCircuit();
-    }
-
-    private void ShowCircuit()
-    {
-        Navigator.NavigateTo("circuitviewer", true);
     }
 
     private async void LoadFiles(InputFileChangeEventArgs e)
     {
         var files = e.GetMultipleFiles();
 
-        if (await Files.UpdateFromFiles(e.GetMultipleFiles(), false))
-        {
-            //ShowCircuit();
-        }
+        await Files.UpdateFromFiles(e.GetMultipleFiles(), false);
     }
 }
