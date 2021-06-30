@@ -1,10 +1,10 @@
 ﻿@inherits ManualRenderBase
 
-@if (IO != null)
+@foreach (var window in Windows.Values)
 {
-    <div class="ioDescription" style="left:@Pos.X.ToPixels();top:@Pos.Y.ToPixels();">
-        <table>
-            @foreach (var scalar in IO.Flatten())
+    <div class="ioDescription" style="left:@window.Pos.X.ToPixels();top:@window.Pos.Y.ToPixels();" @onmouseover="x => MouseEnter(window.IO, x, false)" @onmouseout="x => MouseExit(window.IO, x, false)">
+        <table style="pointer-events: none;">
+            @foreach (var scalar in window.IO.Flatten())
             {
                 <tr>
                     <td style="color: #2B91AF;">@scalar.GetGroundTypeName()</td>
@@ -20,8 +20,7 @@
     [CascadingParameter(Name = "DebugCtrl")]
     protected DebugController DebugCtrl { get; set; }
 
-    private FIRIO IO = null;
-    private Point Pos = Point.Zero;
+    private readonly Dictionary<FIRIO, IOwindowData> Windows = new Dictionary<FIRIO, IOwindowData>();
 
     protected override Task OnInitializedAsync()
     {
@@ -30,18 +29,83 @@
         return base.OnInitializedAsync();
     }
 
-    public void MouseEnter(FIRIO io, MouseEventArgs args)
+    public void MouseEnter(FIRIO io, MouseEventArgs args, bool externalFocus = true)
     {
-        IO = io;
-        Pos = new Point((int)args.ClientX, (int)args.ClientY);
+        if (Windows.TryGetValue(io, out var window))
+        {
+            window.AddFocus(externalFocus);
+            return;
+        }
+
+        Point pos = new Point((int)args.ClientX, (int)args.ClientY);
+        IOwindowData ioWindow = new IOwindowData(io, pos);
+        ioWindow.AddFocus(externalFocus);
+        Windows.Add(io, ioWindow);
 
         StateHasChanged();
     }
 
-    public void MouseExit(FIRIO io, MouseEventArgs args)
+    public async void MouseExit(FIRIO io, MouseEventArgs args, bool externalFocus = true)
     {
-        IO = null;
+        IOwindowData window;
+        if (!Windows.TryGetValue(io, out window))
+        {
+            return;
+        }
+        await Task.Delay(200);
 
-        StateHasChanged();
+        window.RemoveFocus(externalFocus);
+        if (!window.IsFocused())
+        {
+            if (Windows.Remove(window.IO))
+            {
+                StateHasChanged();
+            }
+        }        
+    }
+
+    public class IOwindowData
+    {
+        public readonly FIRIO IO;
+        public readonly Point Pos;
+        public bool ExternalFocus;
+        public bool WindowFocus;
+
+        public IOwindowData(FIRIO io, Point pos)
+        {
+            this.IO = io;
+            this.Pos = pos;
+            this.ExternalFocus = false;
+            this.WindowFocus = false;
+        }
+
+        public void AddFocus(bool externalFocus)
+        {
+            if (externalFocus)
+            {
+                ExternalFocus = true;
+            }
+            else
+            {
+                WindowFocus = true;
+            }
+        }
+
+        public void RemoveFocus(bool externalFocus)
+        {
+            if (externalFocus)
+            {
+                ExternalFocus = false;
+            }
+            else
+            {
+                WindowFocus = false;
+            }
+        }
+
+        public bool IsFocused()
+        {
+            return ExternalFocus || WindowFocus;
+        }
     }
 }

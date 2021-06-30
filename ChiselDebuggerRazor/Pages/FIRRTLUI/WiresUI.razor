@@ -6,8 +6,6 @@
         <g class="wireGroup"  @onmouseover="x => DebugCtrl.MouseEntersIO(wireGroup.Key, x)" @onmouseout="x => DebugCtrl.MouseExitIO(wireGroup.Key, x)">
             @foreach (var wire in wireGroup)
             {
-                <path class="wireHoverArea" d="@wire.ToSVGPathString()" fill="none"/>
-
                 @if (wire.IsEnabled())
                 {
                     <path class="wireElement wire" d="@wire.ToSVGPathString()" fill="none" />
@@ -16,6 +14,8 @@
                 {
                     <path class="wireElement wire" style="stroke: gray;" stroke-dasharray="10,2" d="@wire.ToSVGPathString()" fill="none" />
                 }
+
+                <path class="wireHoverArea" d="@wire.ToSVGPathString()" fill="none"/>
 
                 @if (wire.StartsFromWire)
                 {
