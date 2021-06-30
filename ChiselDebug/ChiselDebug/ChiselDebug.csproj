@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\PriorityQueue\PriorityQueue\PriorityQueue.csproj" />
     <ProjectReference Include="..\..\FIRRTL\FIRRTL.csproj" />
     <ProjectReference Include="..\..\VCDReader\VCDReader.csproj" />
   </ItemGroup>

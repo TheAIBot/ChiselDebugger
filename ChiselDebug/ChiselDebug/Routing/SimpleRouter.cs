@@ -1,5 +1,6 @@
 ﻿using ChiselDebug.GraphFIR;
 using ChiselDebug.GraphFIR.IO;
+using PriorityQueue;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -199,7 +200,7 @@ namespace ChiselDebug.Routing
             ref ScorePath startScore = ref board.GetCellScorePath(relativeEnd);
             startScore = new ScorePath(0, MoveDirs.None);
 
-            PriorityQueue<int, int> toSee = new PriorityQueue<int, int>();
+            PriorityQueue<int> toSee = new PriorityQueue<int>();
             toSee.Enqueue(board.CellIndex(relativeEnd), 0);
 
             ReadOnlySpan<MoveData> moves = new MoveData[] 
