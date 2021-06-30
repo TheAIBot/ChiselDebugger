@@ -52,6 +52,7 @@ namespace ChiselDebuggerRazor.Code
 
             IsVerilogVCD = isVerilogVCD;
             Ready = true;
+            OnViewCircuit?.Invoke();
         }
 
         private async Task<Stream> CopyBrowserFileToMemory(IBrowserFile file)
