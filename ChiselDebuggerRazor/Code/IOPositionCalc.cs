@@ -55,7 +55,7 @@ namespace ChiselDebuggerRazor.Code
             int inputY = startYPadding;
             int outputY = inputY;
 
-            MakeScopedIO(inputIO, outputIO, io, fixedX, ref inputY, ref outputY, -1, ignoreDisconnectedIO);
+            MakeScopedIO(inputIO, outputIO, io, fixedX, ref inputY, ref outputY, 0, ignoreDisconnectedIO);
 
             int heightNeeded = Math.Max(inputY, outputY) + endYPadding;
             return new ScopedNodeIO(inputIO, outputIO, heightNeeded, startYPadding, endYPadding);
@@ -112,7 +112,7 @@ namespace ChiselDebuggerRazor.Code
             scopeDepth = Math.Max(0, scopeDepth);
             if (io is Input)
             {
-                int scopeOffset = (scopeDepth + 2) * ScopeWidth;
+                int scopeOffset = (scopeDepth + 1) * ScopeWidth;
                 Point inputPos = new Point(0, inputYOffset);
                 DirectedIO dirIO = new DirectedIO(io, inputPos, MoveDirs.Right);
                 inputIO.Add(new ScopedDirIO(dirIO, scopeOffset));
@@ -122,7 +122,7 @@ namespace ChiselDebuggerRazor.Code
             }
             else if (io is Output)
             {
-                int scopeOffset = -(scopeDepth + 2) * ScopeWidth;
+                int scopeOffset = -(scopeDepth + 1) * ScopeWidth;
                 Point outputPos = new Point(fixedX, outputYOffset);
                 DirectedIO dirIO = new DirectedIO(io, outputPos, MoveDirs.Right);
                 outputIO.Add(new ScopedDirIO(dirIO, scopeOffset));
