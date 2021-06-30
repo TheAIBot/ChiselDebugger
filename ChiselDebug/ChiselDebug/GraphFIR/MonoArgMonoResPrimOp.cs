@@ -153,34 +153,8 @@ namespace ChiselDebug.GraphFIR
 
         protected override void MonoArgCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
-            const int bitsInLong = 64;
-            if (A.Type is UIntType)
-            {
-                //if (a.Bits.Length <= bitsInLong && result.Bits.Length <= 64)
-                //{
-                //    long aVal = (long)a.AsULong();
-                //    result.SetBits(-aVal);
-                //}
-                //else
-                //{
-                    BigInteger aVal = a.AsUnsignedBigInteger();
-                    result.SetBitsAndExtend(-aVal, Result.Type is SIntType);
-                //}
-            }
-            else
-            {
-                //Debug.Assert(A.Type is SIntType);
-                //if (a.Bits.Length <= bitsInLong && result.Bits.Length <= 64)
-                //{
-                //    long aVal = a.AsLong();
-                //    result.SetBits(-aVal);
-                //}
-                //else
-                //{
-                    BigInteger aVal = a.AsSignedBigInteger();
-                    result.SetBitsAndExtend(-aVal, Result.Type is SIntType);
-                //}
-            }
+            BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
+            result.SetBitsAndExtend(-aVal, Result.Type is SIntType);
         }
 
         protected override IFIRType MonoArgInferType() => A.Type switch
