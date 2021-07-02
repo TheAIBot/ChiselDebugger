@@ -15,6 +15,7 @@ namespace ChiselDebug.Routing
 
         public const int CellSize = 10;
         public const int MinSeparation = 4;
+        private const int RectPadding = 2;
 
         public RouterBoard(Point neededBoardSize)
         {
@@ -113,11 +114,11 @@ namespace ChiselDebug.Routing
             Point spaceTopLeft = rect.Pos;
             return new Rectangle(
                 new Point(
-                    spaceTopLeft.X / CellSize,
-                    spaceTopLeft.Y / CellSize),
+                    (spaceTopLeft.X / CellSize) - RectPadding,
+                    (spaceTopLeft.Y / CellSize) - RectPadding),
                 new Point(
-                    CeilDiv(rect.Size.X, CellSize),
-                    CeilDiv(rect.Size.Y, CellSize)));
+                    CeilDiv(rect.Size.X, CellSize) + RectPadding * 2,
+                    CeilDiv(rect.Size.Y, CellSize) + RectPadding * 2));
         }
 
         internal void CreateCheckpoint()
