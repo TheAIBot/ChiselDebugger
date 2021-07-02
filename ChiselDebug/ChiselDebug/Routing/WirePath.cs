@@ -11,9 +11,9 @@ namespace ChiselDebug.Routing
     {
         internal readonly IOInfo StartIO;
         internal readonly IOInfo EndIO;
-        private readonly List<Point> Path;
+        internal readonly List<Point> Path;
         private readonly List<int> BoardPositions;
-        private readonly List<int> BoardPosTurns;
+        internal readonly List<int> BoardPosTurns;
         public readonly bool StartsFromWire;
         private readonly Output FromIO;
         private readonly Input ToIO;
@@ -47,25 +47,29 @@ namespace ChiselDebug.Routing
 
         internal void RefineWireStartAndEnd()
         {
-            if (Path[0].Y == Path[1].Y)
+            Point RefineEndPoint(Point pathBeforeEnd, Point pathEnd, Point pathEndGoal)
             {
-                Path[1] = new Point(Path[1].X, EndIO.DirIO.Position.Y);
+                if (pathEnd.Y == pathBeforeEnd.Y)
+                {
+                    return new Point(pathBeforeEnd.X, pathEndGoal.Y);
+                }
+                else
+                {
+                    return new Point(pathEndGoal.X, pathBeforeEnd.Y);
+                }
             }
-            else
+
+            if (Path.Count > 2)
             {
-                Path[1] = new Point(EndIO.DirIO.Position.X, Path[1].Y);
+                Path[1] = RefineEndPoint(Path[1], Path[0], EndIO.DirIO.Position);
             }
             Path[0] = EndIO.DirIO.Position;
 
             if (!StartsFromWire)
             {
-                if (Path[^1].Y == Path[^2].Y)
+                if (Path.Count > 2)
                 {
-                    Path[^2] = new Point(Path[^2].X, StartIO.DirIO.Position.Y);
-                }
-                else
-                {
-                    Path[^2] = new Point(StartIO.DirIO.Position.X, Path[^2].Y);
+                    Path[^2] = RefineEndPoint(Path[^2], Path[^1], StartIO.DirIO.Position);
                 }
                 Path[^1] = StartIO.DirIO.Position;
             }
@@ -219,9 +223,13 @@ namespace ChiselDebug.Routing
                 {
                     sBuilder.AppendFormat("V {0}", Path[i].Y);
                 }
-                else
+                else if (start.Y == Path[i].Y)
                 {
                     sBuilder.AppendFormat("H {0}", Path[i].X);
+                }
+                else
+                {
+                    sBuilder.AppendFormat("L {0} {1}", Path[i].X, Path[i].Y);
                 }
                 start = Path[i];
             }

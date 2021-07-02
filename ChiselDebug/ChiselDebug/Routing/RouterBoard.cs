@@ -6,14 +6,15 @@ namespace ChiselDebug.Routing
 {
     internal class RouterBoard
     {
-        private readonly int CellsWide;
-        private readonly int CellsHigh;
+        public readonly int CellsWide;
+        public readonly int CellsHigh;
         private readonly MoveDirs[] CellAllowedDirs;
         private readonly ScorePath[] CellScoreAndPath;
         private readonly MoveDirs[] CheckpointAllowedDirs;
         private readonly ScorePath[] CheckpointScoreAndPath;
 
-        private const int CellSize = 10;
+        public const int CellSize = 10;
+        public const int MinSeparation = 4;
 
         public RouterBoard(Point neededBoardSize)
         {
@@ -250,6 +251,7 @@ namespace ChiselDebug.Routing
             allBoardPoses.Add(CellIndex(start));
             pathAsTurns.Add(actualPos);
             pathAsTurns.Reverse();
+            boardPosTurns.Reverse();
 
             return new WirePath(startIO, endIO, pathAsTurns, allBoardPoses, boardPosTurns, pathToWire);
         }
