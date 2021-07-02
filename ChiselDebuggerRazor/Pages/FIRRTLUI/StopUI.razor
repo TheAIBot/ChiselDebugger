@@ -1,0 +1,52 @@
+﻿@inherits FIRTitleBase<FirStop>
+
+<div id="@SizeWatcherID" class="stop" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();min-width:@GetCurrentSize().X.ToPixels();min-height:@GetCurrentSize().Y.ToPixels();">
+    <div id="@TitleID" class="stopName">
+        <div>Stop</div>
+    </div>
+    
+    @if (Operation.SignalStop)
+    {
+        <div>Exit code: None</div>
+    }
+    else
+    {
+        <div>Exit code: @Operation.ExitCode</div>
+    }
+
+
+    @foreach (var input in InputOffsets)
+    {
+        <IOPortUI Position="@input.Position" IO="@input.IO"></IOPortUI>
+    }
+</div>
+
+@code {
+    private ScopedNodeIO NodeIO = null;
+
+    protected override void OnFirstParametersSetAsync()
+    {
+        SetCurrentSize(new Point(120, 30));
+
+        base.OnFirstParametersSetAsync();
+    }
+
+    protected override List<DirectedIO> OnMakeInputs(int width, int height)
+    {
+        List<DirectedIO> io = new List<DirectedIO>();
+        int spacing = height / 3;
+        int y = spacing;
+        foreach (var input in Operation.GetInputs())
+        {
+            io.Add(new DirectedIO(input, new Point(0, y), MoveDirs.Right));
+            y += spacing;
+        }
+
+        return io;
+    }
+
+    protected override List<DirectedIO> OnMakeOutputs(int width, int height)
+    {
+        return new List<DirectedIO>();
+    }
+}

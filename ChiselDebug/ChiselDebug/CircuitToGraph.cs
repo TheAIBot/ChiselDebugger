@@ -166,7 +166,11 @@ namespace ChiselDebug
                 helper.ModuleRoots.Add(moduleDef.Name, moduleDef);
             }
 
-            FIRRTL.DefModule mainModDef = circuit.Modules.Single(x => x.Name == circuit.Main);
+            FIRRTL.DefModule mainModDef = circuit.Modules.SingleOrDefault(x => x.Name == circuit.Main);
+            if (mainModDef == null)
+            {
+                throw new ChiselDebugException("Circuit does not contain a module with the circuits name.");
+            }
             GraphFIR.Module mainModule = VisitModule(helper, mainModDef);
             foreach (var mod in mainModule.GetAllNestedNodesOfType<GraphFIR.Module>())
             {
@@ -290,10 +294,13 @@ namespace ChiselDebug
             {
                 VisitConditional(helper, conditional);
             }
-            else if (statement is FIRRTL.Stop)
+            else if (statement is FIRRTL.Stop stop)
             {
-                return;
-                throw new NotImplementedException();
+                var clock = (GraphFIR.IO.Output)VisitExp(helper, stop.Clk, GraphFIR.IO.IOGender.Male);
+                var enable = (GraphFIR.IO.Output)VisitExp(helper, stop.Enabled, GraphFIR.IO.IOGender.Male);
+
+                var firStop = new GraphFIR.FirStop(clock, enable, stop.Ret, stop);
+                helper.AddNodeToModule(firStop);
             }
             else if (statement is FIRRTL.Attach)
             {

@@ -420,3 +420,21 @@ class WhenWireConnectOrder2To1Mix7 extends ModuleWithIO {
 
     io.dout1 := wire3
 }
+
+class WhenWireConnectMultiSameSource extends ModuleWithIO {
+    val io = IO(new Bundle{
+        val en1 = Input(Bool())
+        val en2 = Input(Bool())
+        val en3 = Input(Bool())
+        val din = Input(UInt(8.W))
+        val dout1 = Output(UInt(8.W))
+    })
+
+    var wire = Wire(UInt(8.W))
+    wire := io.din
+    when(io.en1) { wire := io.din }
+    when(io.en2) { wire := io.din }
+    when(io.en3) { wire := io.din }
+
+    io.dout1 := wire
+}

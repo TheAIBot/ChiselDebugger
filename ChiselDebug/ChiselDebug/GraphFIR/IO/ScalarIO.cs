@@ -81,5 +81,44 @@ namespace ChiselDebug.GraphFIR.IO
         {
             return ref Value.Value;
         }
+
+        public string GetGroundTypeName()
+        {
+            if (Type is UIntType)
+            {
+                return $"UInt<{Type.Width}>";
+            }
+            else if (Type is SIntType)
+            {
+                return $"SInt<{Type.Width}>";
+            }
+            else if (Type is ClockType)
+            {
+                return $"Clock";
+            }
+            else if (Type is AsyncResetType)
+            {
+                return $"AsyncReset";
+            }
+            else if (Type is ResetType)
+            {
+                return $"Reset";
+            }
+            else if (Type is AnalogType)
+            {
+                return $"Analog<{Type.Width}>";
+            }
+            else
+            {
+                throw new Exception("Unknown type.");
+            }
+        }
+
+        public abstract ref BinaryVarValue FetchValue();
+
+        public bool HasValue()
+        {
+            return Value.IsInitialized();
+        }
     }
 }

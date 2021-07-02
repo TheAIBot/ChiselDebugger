@@ -2,12 +2,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using VCDReader;
 
 namespace ChiselDebug.GraphFIR.IO
 {
     public class Output : ScalarIO
     {
-        private HashSet<Input> To = null;
+        private List<Input> To = null;
 
 
         public Output(FIRRTLNode node, string name, IFIRType type) : base(node, name, type)
@@ -66,29 +67,12 @@ namespace ChiselDebug.GraphFIR.IO
 
             if (Node is PairedIOFIRRTLNode pairedIO)
             {
-                if (pairedIO is Mux || pairedIO is Register)
-                {
-                    SetType(TypeHelper.InferMaxWidthType(this, pairedIO));
-                }
-                else
-                {
-                    foreach (Input paired in pairedIO.GetAllPairedIO(this).OfType<Input>())
-                    {
-                        paired.InferType();
-                        SetType(paired.Type);
-                    }
-                }
+                SetType(TypeHelper.InferMaxWidthType(this, pairedIO));
             }
             else
             {
                 Node.InferType();
             }
-        }
-
-        public void DisconnectInput(Input input)
-        {
-            DisconnectOnlyOutputSide(input);
-            input.Disconnect(this);
         }
 
         internal void DisconnectOnlyOutputSide(Input input)
@@ -100,14 +84,19 @@ namespace ChiselDebug.GraphFIR.IO
         {
             if (To == null)
             {
-                To = new HashSet<Input>();
+                To = new List<Input>();
             }
             To.Add(input);
         }
 
         public IEnumerable<Input> GetConnectedInputs()
         {
-            return To ?? Enumerable.Empty<Input>();
+            return To?.Distinct() ?? Enumerable.Empty<Input>();
+        }
+
+        public override ref BinaryVarValue FetchValue()
+        {
+            return ref Value.Value;
         }
     }
 }

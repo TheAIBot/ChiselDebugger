@@ -1,13 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30907.101
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31423.177
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChiselDebuggerWebUI", "ChiselDebuggerWebUI\ChiselDebuggerWebUI.csproj", "{B4252B16-F845-4922-8427-874EA681C981}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChiselDebug", "..\ChiselDebug\ChiselDebug\ChiselDebug.csproj", "{E94DC697-6A9C-4B03-B499-54E1328CF11C}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PriorityQueue", "..\..\PriorityQueue\PriorityQueue\PriorityQueue.csproj", "{62CC3E52-D9E6-4EBE-8E20-D3F391CA11F4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FIRRTL", "..\FIRRTL\FIRRTL.csproj", "{90122FC7-4E5E-4D5C-80CB-795AEDC2823A}"
 EndProject
@@ -19,7 +17,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VCDReaderTests", "..\VCDRea
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChiselDebugTests", "..\ChiselDebugTests\ChiselDebugTests.csproj", "{2C456D35-1DBD-4EC2-99F8-AFA9132FC44A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmarker", "..\Benchmarker\Benchmarker.csproj", "{81F12E82-7746-48D3-BEF1-0BADADF12A6C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmarker", "..\Benchmarker\Benchmarker.csproj", "{81F12E82-7746-48D3-BEF1-0BADADF12A6C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChiselDebuggerRazor", "..\ChiselDebuggerRazor\ChiselDebuggerRazor.csproj", "{663D5537-8286-4B6C-ADEE-A0714AF43E42}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChiselDebuggerWebAsmUI", "..\ChiselDebuggerWebAsmUI\ChiselDebuggerWebAsmUI.csproj", "{575ACDBC-D1BA-4B79-884D-B80B121C12D7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PriorityQueue", "..\..\PriorityQueue\PriorityQueue\PriorityQueue.csproj", "{CF3EEAB0-FEA6-4A13-892B-15858048A793}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,10 +39,6 @@ Global
 		{E94DC697-6A9C-4B03-B499-54E1328CF11C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E94DC697-6A9C-4B03-B499-54E1328CF11C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E94DC697-6A9C-4B03-B499-54E1328CF11C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{62CC3E52-D9E6-4EBE-8E20-D3F391CA11F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{62CC3E52-D9E6-4EBE-8E20-D3F391CA11F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{62CC3E52-D9E6-4EBE-8E20-D3F391CA11F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{62CC3E52-D9E6-4EBE-8E20-D3F391CA11F4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{90122FC7-4E5E-4D5C-80CB-795AEDC2823A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{90122FC7-4E5E-4D5C-80CB-795AEDC2823A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90122FC7-4E5E-4D5C-80CB-795AEDC2823A}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -63,6 +63,18 @@ Global
 		{81F12E82-7746-48D3-BEF1-0BADADF12A6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{81F12E82-7746-48D3-BEF1-0BADADF12A6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{81F12E82-7746-48D3-BEF1-0BADADF12A6C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{663D5537-8286-4B6C-ADEE-A0714AF43E42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{663D5537-8286-4B6C-ADEE-A0714AF43E42}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{663D5537-8286-4B6C-ADEE-A0714AF43E42}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{663D5537-8286-4B6C-ADEE-A0714AF43E42}.Release|Any CPU.Build.0 = Release|Any CPU
+		{575ACDBC-D1BA-4B79-884D-B80B121C12D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{575ACDBC-D1BA-4B79-884D-B80B121C12D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{575ACDBC-D1BA-4B79-884D-B80B121C12D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{575ACDBC-D1BA-4B79-884D-B80B121C12D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF3EEAB0-FEA6-4A13-892B-15858048A793}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF3EEAB0-FEA6-4A13-892B-15858048A793}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF3EEAB0-FEA6-4A13-892B-15858048A793}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF3EEAB0-FEA6-4A13-892B-15858048A793}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

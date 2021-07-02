@@ -40,6 +40,53 @@ namespace ChiselDebug.GraphFIR.IO
 
         public static void BypassCondConnectionsThroughCondModules(Module mod)
         {
+            //Some conditional connections do not originate from a conditional
+            //module because both the source and sink didn't reside in a conditional
+            //module. Fix this by rerouting the connection so it goes through the
+            //conditional module.
+            Dictionary<(Output, Output), Output> sourceToCondSource = new Dictionary<(Output, Output), Output>();
+            foreach (var input in mod.GetAllModuleInputs())
+            {
+                foreach (var connection in input.GetConnections())
+                {
+                    if (connection.From.GetModResideIn() != mod)
+                    {
+                        continue;
+                    }
+
+                    if (connection.Condition == null)
+                    {
+                        continue;
+                    }
+
+                    if (sourceToCondSource.TryGetValue((connection.From, connection.Condition), out var extCondOut))
+                    {
+                        input.ReplaceConnection(connection, extCondOut);
+                    }
+                    else
+                    {
+                        Module condMod = connection.Condition.GetModResideIn();
+                        Input extIn = (Input)input.Copy(condMod);
+                        Input intIn = (Input)input.Copy(condMod);
+                        condMod.AddAnonymousExternalIO(extIn);
+                        condMod.AddAnonymousInternalIO(intIn);
+                        Output extOut = (Output)intIn.GetPaired();
+                        Output intOut = (Output)extIn.GetPaired();
+
+                        connection.From.ConnectToInput(extIn);
+                        intOut.ConnectToInput(intIn);
+                        input.ReplaceConnection(connection, extOut);
+
+                        sourceToCondSource.Add((connection.From, connection.Condition), extOut);
+                    }
+                }
+            }
+
+            BypassThroughCondModules(mod);
+        }
+
+        public static void BypassThroughCondModules(Module mod)
+        {
             HashSet<Module> containedCondMods = new HashSet<Module>();
             foreach (var node in mod.GetAllNodes())
             {
@@ -48,7 +95,7 @@ namespace ChiselDebug.GraphFIR.IO
                     foreach (var condMod in condNode.CondMods)
                     {
                         containedCondMods.Add(condMod.Mod);
-                        BypassCondConnectionsThroughCondModules(condMod.Mod);
+                        BypassThroughCondModules(condMod.Mod);
                     }
                 }
             }
@@ -78,37 +125,44 @@ namespace ChiselDebug.GraphFIR.IO
                         {
                             foreach (var input in output.GetConnectedInputs().ToArray())
                             {
-                                if (input.GetModResideIn() == mod || containedCondMods.Contains(input.GetModResideIn()))
+                                foreach (var connection in input.GetConnections())
                                 {
-                                    continue;
-                                }
-
-                                Output condition = input.GetConnectionCondition(output);
-                                if (condition != null)
-                                {
-                                    Input flipped;
-                                    if (intDstSinkToModPass.TryGetValue(input, out flipped))
+                                    if (connection.From != output)
                                     {
-                                        output.DisconnectInput(input);
-                                        output.ConnectToInput(flipped, false, false, condition);
+                                        continue;
                                     }
-                                    else if (intSrcSourceToModPass.TryGetValue(output, out flipped))
+                                    if (input.GetModResideIn() == mod || containedCondMods.Contains(input.GetModResideIn()))
                                     {
-                                        Output extOutput = (Output)flipped.GetPaired();
-                                        input.ReplaceConnection(output, extOutput, mod.EnableCon);
+                                        continue;
                                     }
-                                    else
+
+                                    if (connection.Condition != null)
                                     {
-                                        flipped = (Input)output.Flip(mod);
-                                        mod.AddAnonymousInternalIO(flipped);
-                                        Output extOutput = (Output)flipped.GetPaired();
+                                        Input flipped;
+                                        if (intDstSinkToModPass.TryGetValue(input, out flipped))
+                                        {
+                                            input.Disconnect(connection);
+                                            output.ConnectToInput(flipped, false, false, connection.Condition);
+                                        }
+                                        else if (intSrcSourceToModPass.TryGetValue(output, out flipped))
+                                        {
+                                            Output extOutput = (Output)flipped.GetPaired();
+                                            input.ReplaceConnection(connection, extOutput);
+                                            //input.ReplaceConnection(output, extOutput, mod.EnableCon);
+                                        }
+                                        else
+                                        {
+                                            flipped = (Input)output.Flip(mod);
+                                            mod.AddAnonymousInternalIO(flipped);
+                                            Output extOutput = (Output)flipped.GetPaired();
 
-                                        input.ReplaceConnection(output, extOutput, mod.EnableCon);
-                                        //input.ReplaceConnection(output, extOutput, condition);
-                                        output.ConnectToInput(flipped, false, false, condition);
+                                            input.ReplaceConnection(connection, extOutput);
+                                            //input.ReplaceConnection(output, extOutput, condition);
+                                            output.ConnectToInput(flipped, false, false, connection.Condition);
 
-                                        intDstSinkToModPass.Add(input, flipped);
-                                        intSrcSourceToModPass.Add(output, flipped);
+                                            intDstSinkToModPass.Add(input, flipped);
+                                            intSrcSourceToModPass.Add(output, flipped);
+                                        }
                                     }
                                 }
                             }
@@ -121,32 +175,28 @@ namespace ChiselDebug.GraphFIR.IO
                                 {
                                     continue;
                                 }
-
-                                if (cons.From.GetModResideIn() != mod)
+                                Input flipped;
+                                if (extSrcSourceToModPass.TryGetValue(cons.From, out flipped))
                                 {
-                                    Input flipped;
-                                    if (extSrcSourceToModPass.TryGetValue(cons.From, out flipped))
-                                    {
-                                        Output intOutput = (Output)flipped.GetPaired();
-                                        input.ReplaceConnection(cons.From, intOutput, cons.Condition);
-                                    }
-                                    else if (extDstSinkToModPass.TryGetValue(input, out flipped))
-                                    {
-                                        cons.From.DisconnectInput(input);
-                                        cons.From.ConnectToInput(flipped, false, false, cons.Condition);
-                                    }
-                                    else
-                                    {
-                                        flipped = (Input)cons.From.Flip(mod);
-                                        mod.AddAnonymousExternalIO(flipped);
-                                        Output intOutput = (Output)flipped.GetPaired();
+                                    Output intOutput = (Output)flipped.GetPaired();
+                                    input.ReplaceConnection(cons, intOutput);
+                                }
+                                else if (extDstSinkToModPass.TryGetValue(input, out flipped))
+                                {
+                                    input.Disconnect(cons);
+                                    cons.From.ConnectToInput(flipped, false, false, cons.Condition);
+                                }
+                                else
+                                {
+                                    flipped = (Input)cons.From.Flip(mod);
+                                    mod.AddAnonymousExternalIO(flipped);
+                                    Output intOutput = (Output)flipped.GetPaired();
 
-                                        input.ReplaceConnection(cons.From, intOutput, cons.Condition);
-                                        cons.From.ConnectToInput(flipped, false, false, cons.Condition);
+                                    input.ReplaceConnection(cons, intOutput);
+                                    cons.From.ConnectToInput(flipped, false, false, cons.Condition);
 
-                                        extDstSinkToModPass.Add(input, flipped);
-                                        extSrcSourceToModPass.Add(cons.From, flipped);
-                                    }
+                                    extDstSinkToModPass.Add(input, flipped);
+                                    extSrcSourceToModPass.Add(cons.From, flipped);
                                 }
                             }
                         }

@@ -36,9 +36,8 @@ namespace Benchmarker
                 timer.Stop();
             }
 
-            //Console.WriteLine((timer.ElapsedMilliseconds / 1000.0f).ToString("N2"));
-
-
+            Console.WriteLine((timer.ElapsedMilliseconds / 1000.0f).ToString("N2"));
+            Console.ReadLine();
         }
 
         internal static void VerifyComputeGraph(string moduleName, string extension, bool isVerilogVCD, string modulePath)
@@ -76,9 +75,8 @@ namespace Benchmarker
         private static CircuitGraph VerifyCanCreateGraphFromFile(string firrtlPath, CircuitGraph lowFirGraph = null)
         {
             using FileStream fileStream = new FileStream(firrtlPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            using TextReader textStream = new StreamReader(fileStream);
 
-            Circuit circuit = FIRRTL.Parse.FromStream(textStream);
+            Circuit circuit = FIRRTL.Parse.FromStream(fileStream);
             CircuitGraph graph = CircuitToGraph.GetAsGraph(circuit, lowFirGraph);
 
             return graph;
@@ -88,6 +86,9 @@ namespace Benchmarker
         {
             graph.SetState(timeline.GetStateAtTime(timeline.TimeInterval.StartInclusive), isVerilogVCD);
 
+            Stopwatch timer = new Stopwatch();
+            timer.Start();
+            int i = 0;
             foreach (var state in timeline.GetAllDistinctStates())
             {
                 if (state.Time == timeline.TimeInterval.InclusiveEnd())
@@ -96,7 +97,22 @@ namespace Benchmarker
                 }
                 graph.SetState(state, isVerilogVCD);
                 graph.ComputeRemainingGraphFast();
+
+
+                const int reportEveryXTimeStates = 20_000;
+                if (i++ % reportEveryXTimeStates == 0)
+                {
+                    timer.Stop();
+                    float msPerState = (float)timer.ElapsedMilliseconds / reportEveryXTimeStates;
+                    float totalRemainingMs = msPerState * (timeline.StateCount - i);
+
+                    const int msPerSec = 1_000;
+                    float remainingSeconds = totalRemainingMs / msPerSec;
+                    Console.WriteLine($"{i}/{timeline.StateCount} Remaining: {remainingSeconds.ToString("N0")}");
+                    timer.Restart();
+                }
             }
+            timer.Stop();
         }
     }
 }

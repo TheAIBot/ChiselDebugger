@@ -11,14 +11,14 @@ namespace ChiselDebug.Routing
     {
         internal readonly IOInfo StartIO;
         internal readonly IOInfo EndIO;
-        private readonly List<Point> Path = new List<Point>();
-        private readonly List<Point> BoardPositions = new List<Point>();
-        private readonly List<Point> BoardPosTurns = new List<Point>();
+        internal readonly List<Point> Path;
+        private readonly List<int> BoardPositions;
+        internal readonly List<int> BoardPosTurns;
         public readonly bool StartsFromWire;
         private readonly Output FromIO;
         private readonly Input ToIO;
 
-        internal WirePath(IOInfo startIO, IOInfo endIO, List<Point> path, List<Point> boardPositions, List<Point> boardPosTurns, bool startsFromWire)
+        internal WirePath(IOInfo startIO, IOInfo endIO, List<Point> path, List<int> boardPositions, List<int> boardPosTurns, bool startsFromWire)
         {
             this.StartIO = startIO;
             this.EndIO = endIO;
@@ -31,69 +31,104 @@ namespace ChiselDebug.Routing
 
         internal void PlaceOnBoard(RouterBoard board, MoveDirs move)
         {
-            Point wireStart = board.GetRelativeBoardPos(Path[0]);
-            for (int i = 1; i < Path.Count; i++)
+            foreach (var pos in BoardPositions)
             {
-                Point wireEnd = board.GetRelativeBoardPos(Path[i]);
-                int wireStartX = Math.Min(wireStart.X, wireEnd.X);
-                int wireStartY = Math.Min(wireStart.Y, wireEnd.Y);
-
-                int wireEndX = Math.Max(wireStart.X, wireEnd.X);
-                int wireEndY = Math.Max(wireStart.Y, wireEnd.Y);
-                for (int y = wireStartY; y <= wireEndY; y++)
-                {
-                    for (int x = wireStartX; x <= wireEndX; x++)
-                    {
-                        board.AddCellAllowedMoves(new Point(x, y), move);
-                    }
-                }
-
-                wireStart = wireEnd;
+                board.AddCellAllowedMoves(pos, move);
             }
-        }
 
-        internal void RemoveCornersFromBoard(RouterBoard board)
-        {
-            foreach (var pathPos in Path)
+            if (move == MoveDirs.EnemyWire)
             {
-                Point pathPosRel = board.GetRelativeBoardPos(pathPos);
-                //board.RemoveAllIncommingMoves(pathPosRel);
-                board.AddCellAllowedMoves(pathPosRel, MoveDirs.WireCorner);
+                foreach (var pos in BoardPosTurns)
+                {
+                    board.AddCellAllowedMoves(pos, MoveDirs.WireCorner);
+                }
             }
         }
 
         internal void RefineWireStartAndEnd()
         {
-            if (Path[0].Y == Path[1].Y)
+            Point RefineEndPoint(Point pathBeforeEnd, Point pathEnd, Point pathEndGoal)
             {
-                Path[1] = new Point(Path[1].X, StartIO.DirIO.Position.Y);
-            }
-            else
-            {
-                Path[1] = new Point(StartIO.DirIO.Position.X, Path[1].Y);
-            }
-            Path[0] = StartIO.DirIO.Position;
-
-            if (!StartsFromWire)
-            {
-                if (Path[^1].Y == Path[^2].Y)
+                if (pathEnd.Y == pathBeforeEnd.Y)
                 {
-                    Path[^2] = new Point(Path[^2].X, EndIO.DirIO.Position.Y);
+                    return new Point(pathBeforeEnd.X, pathEndGoal.Y);
                 }
                 else
                 {
-                    Path[^2] = new Point(EndIO.DirIO.Position.X, Path[^2].Y);
+                    return new Point(pathEndGoal.X, pathBeforeEnd.Y);
                 }
-                Path[^1] = EndIO.DirIO.Position;
+            }
+
+            if (Path.Count > 2)
+            {
+                Path[1] = RefineEndPoint(Path[1], Path[0], EndIO.DirIO.Position);
+            }
+            Path[0] = EndIO.DirIO.Position;
+
+            if (!StartsFromWire)
+            {
+                if (Path.Count > 2)
+                {
+                    Path[^2] = RefineEndPoint(Path[^2], Path[^1], StartIO.DirIO.Position);
+                }
+                Path[^1] = StartIO.DirIO.Position;
             }
         }
 
         internal bool CanCoexist(WirePath other)
         {
-            HashSet<Point> ownCorners = new HashSet<Point>(BoardPositions);
-            if (ownCorners.Overlaps(other.BoardPosTurns))
+            if (EndIO.DirIO.Position == other.EndIO.DirIO.Position ||
+                StartIO.DirIO.Position == other.StartIO.DirIO.Position)
             {
-                return false;
+                return true;
+            }
+
+            HashSet<int> ownPoses = new HashSet<int>(BoardPositions);
+
+            //Test if part of path follow each other
+            bool prevCollided = false;
+            bool anyCollision = false;
+            foreach (var pos in other.BoardPositions)
+            {
+                if (ownPoses.Contains(pos))
+                {
+                    if (prevCollided)
+                    {
+                        return false;
+                    }
+
+                    prevCollided = true;
+                    anyCollision = true;
+                }
+                else
+                {
+                    prevCollided = false;
+                }
+            }
+
+            //If paths do not cross each other once then there can be no problem
+            if (!anyCollision)
+            {
+                return true;
+            }
+
+            //Test if other path turns on this path
+            foreach (var turn in other.BoardPosTurns)
+            {
+                if (ownPoses.Contains(turn))
+                {
+                    return false;
+                }
+            }
+
+            //Test if this path has turns on the others path
+            HashSet<int> otherPoses = new HashSet<int>(other.BoardPositions);
+            foreach (var turn in BoardPosTurns)
+            {
+                if (otherPoses.Contains(turn))
+                {
+                    return false;
+                }
             }
 
             return true;
@@ -107,7 +142,7 @@ namespace ChiselDebug.Routing
             IOInfo startInfo = new IOInfo(start, startDir);
             IOInfo endInfo = new IOInfo(end, endDir);
 
-            return new WirePath(startInfo, endInfo, new List<Point>(Path), new List<Point>(BoardPositions), new List<Point>(BoardPosTurns), StartsFromWire);
+            return new WirePath(startInfo, endInfo, new List<Point>(Path), new List<int>(BoardPositions), new List<int>(BoardPosTurns), StartsFromWire);
         }
 
         public Point GetEndPos()
@@ -194,9 +229,13 @@ namespace ChiselDebug.Routing
                 {
                     sBuilder.AppendFormat("V {0}", Path[i].Y);
                 }
-                else
+                else if (start.Y == Path[i].Y)
                 {
                     sBuilder.AppendFormat("H {0}", Path[i].X);
+                }
+                else
+                {
+                    sBuilder.AppendFormat("L {0} {1}", Path[i].X, Path[i].Y);
                 }
                 start = Path[i];
             }

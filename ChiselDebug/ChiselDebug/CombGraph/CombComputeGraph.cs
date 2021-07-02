@@ -586,31 +586,39 @@ namespace ChiselDebug.CombGraph
 
                 foreach (var input in conInputs)
                 {
-                    Output condition = input.GetConnectionCondition(output);
-                    if (condition != null && !seenCons.Contains(condition) && condition != output)
+                    foreach (var connection in input.GetConnections())
                     {
-                        HashSet<Output> blocked;
-                        if (!blockedOutputs.TryGetValue(condition, out blocked))
+                        if (connection.From !=  output)
                         {
-                            blocked = new HashSet<Output>();
-                            blockedOutputs.Add(condition, blocked);
+                            continue;
                         }
 
-                        blocked.Add(output);
-                    }
-                    else
-                    {
-                        if (seenCons.Add(output))
+                        if (connection.Condition != null && !seenCons.Contains(connection.Condition) && connection.Condition != output)
                         {
-                            computeOrder.Add(new Computable(output));
-                        }
+                            HashSet<Output> blocked;
+                            if (!blockedOutputs.TryGetValue(connection.Condition, out blocked))
+                            {
+                                blocked = new HashSet<Output>();
+                                blockedOutputs.Add(connection.Condition, blocked);
+                            }
 
-                        SourceSinkCon con = new SourceSinkCon(output, input);
-                        if (seenSourceSinkCons.Add(con))
+                            blocked.Add(output);
+                        }
+                        else
                         {
-                            toTraverse.Push((output, input));
+                            if (seenCons.Add(output))
+                            {
+                                computeOrder.Add(new Computable(output));
+                            }
+
+                            SourceSinkCon con = new SourceSinkCon(output, input);
+                            if (seenSourceSinkCons.Add(con))
+                            {
+                                toTraverse.Push((output, input));
+                            }
                         }
                     }
+
                 }
             }
 
@@ -795,8 +803,7 @@ namespace ChiselDebug.CombGraph
             }
             foreach (var input in seenButMissingBorderInputCons)
             {
-                Module mod = (Module)input.Key.Node;
-                depForOutputs.Add(new Output[] { (Output)mod.GetPairedIO(input.Key) });
+                depForOutputs.Add(new Output[] { (Output)input.Key.GetPaired() });
             }
             foreach (var blocked in blockedOutputs)
             {

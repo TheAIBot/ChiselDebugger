@@ -1,0 +1,51 @@
+﻿@inherits FIRBase<Mux>
+
+<div id="@SizeWatcherID" class="muxContainer" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();">
+    <div class="muxShape" style="height:@GetCurrentSize().Y.ToPixels();"></div>
+
+    @foreach (var input in InputOffsets)
+    {
+        <IOPortUI Position="@input.Position" IO="@input.IO"></IOPortUI>
+    }
+
+    <ScopedIOUI NodeIO="@ChoiseIO"></ScopedIOUI>
+    <ScopedIOUI NodeIO="@ResultIO"></ScopedIOUI>
+</div>
+
+
+
+
+@code
+{
+    private const int HEIGHT = 50;
+    private const int WIDTH = 25;
+    private const int INDENT = 12;
+    private const int USABLE_CHOISE_HEIGHT = 25;
+    private ScopedNodeIO ChoiseIO = null;
+    private ScopedNodeIO ResultIO = null;
+
+    protected override List<DirectedIO> OnMakeInputs(int width, int height)
+    {
+        List<DirectedIO> inputs = new List<DirectedIO>();
+
+        //Add chose input
+        Point deciderOffset = new Point(WIDTH / 2, INDENT / 2);
+        inputs.Add(new DirectedIO(Operation.Decider, deciderOffset, MoveDirs.Down));
+
+        ChoiseIO = IOPositionCalc.VerticalScopedIO(Operation.Choises.ToArray(), 0, INDENT, INDENT);
+        SetCurrentSize(new Point(GetCurrentSize().X, ChoiseIO.HeightNeeded));
+
+        inputs.AddRange(ChoiseIO.GetInputDirIO());
+
+        return inputs;
+    }
+
+    protected override List<DirectedIO> OnMakeOutputs(int width, int height)
+    {
+        ResultIO = IOPositionCalc.VerticalScopedIO(new FIRIO[] { Operation.Result }, WIDTH, INDENT, INDENT);
+        ResultIO.VerticalRecenter(GetCurrentSize().Y);
+
+        return ResultIO.GetOutputDirIO();
+    }
+
+}

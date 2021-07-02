@@ -13,13 +13,18 @@ namespace VCDReader
         public static VCD FromFile(string filepath)
         {
             var fileStream = File.OpenRead(filepath);
-            return FromStream(new BinaryReader(fileStream, System.Text.ASCIIEncoding.ASCII));
+            return FromStream(fileStream);
         }
 
         public static VCD FromString(string vcdString)
         {
             MemoryStream stream = new MemoryStream(vcdString.Select(x => (byte)x).ToArray());
             return FromStream(new BinaryReader(stream));
+        }
+
+        public static VCD FromStream(Stream stream)
+        {
+            return FromStream(new BinaryReader(stream, System.Text.ASCIIEncoding.ASCII));
         }
 
         public static VCD FromStream(BinaryReader stream)

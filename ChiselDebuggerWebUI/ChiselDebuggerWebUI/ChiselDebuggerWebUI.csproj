@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <Nullable>disable</Nullable>
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>link</TrimMode>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -14,13 +16,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\ChiselDebuggerRazor\ChiselDebuggerRazor.csproj" />
     <ProjectReference Include="..\..\ChiselDebug\ChiselDebug\ChiselDebug.csproj" />
     <ProjectReference Include="..\..\FIRRTL\FIRRTL.csproj" />
     <ProjectReference Include="..\..\VCDReader\VCDReader.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Data\" />
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">

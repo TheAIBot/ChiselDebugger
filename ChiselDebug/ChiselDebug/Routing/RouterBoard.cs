@@ -6,25 +6,20 @@ namespace ChiselDebug.Routing
 {
     internal class RouterBoard
     {
-        private readonly Point TopLeft;
-        private readonly Point BottomRight;
-        private readonly int CellsWide;
-        private readonly int CellsHigh;
+        public readonly int CellsWide;
+        public readonly int CellsHigh;
         private readonly MoveDirs[] CellAllowedDirs;
         private readonly ScorePath[] CellScoreAndPath;
         private readonly MoveDirs[] CheckpointAllowedDirs;
         private readonly ScorePath[] CheckpointScoreAndPath;
 
-        private const int CellSize = 10;
+        public const int CellSize = 10;
+        public const int MinSeparation = 4;
 
         public RouterBoard(Point neededBoardSize)
         {
-            this.TopLeft = Point.Zero;
-            this.BottomRight = neededBoardSize;
-
-            Point boardSize = BottomRight - TopLeft;
-            this.CellsWide = CeilDiv(boardSize.X, CellSize) + 1;
-            this.CellsHigh = CeilDiv(boardSize.Y, CellSize) + 1;
+            this.CellsWide = CeilDiv(neededBoardSize.X, CellSize) + 1;
+            this.CellsHigh = CeilDiv(neededBoardSize.Y, CellSize) + 1;
 
             this.CellAllowedDirs = new MoveDirs[CellsWide * CellsHigh];
             this.CellScoreAndPath = new ScorePath[CellAllowedDirs.Length];
@@ -48,6 +43,13 @@ namespace ChiselDebug.Routing
             return CellIndex(pos.X, pos.Y);
         }
 
+        public Point CellFromIndex(int index)
+        {
+            int x;
+            int y = Math.DivRem(index, CellsWide, out x);
+            return new Point(x, y);
+        }
+
         internal MoveDirs GetCellMoves(Point pos)
         {
             return CellAllowedDirs[CellIndex(pos)];
@@ -60,7 +62,7 @@ namespace ChiselDebug.Routing
 
         internal Point GetRelativeBoardPos(Point pos)
         {
-            return new Point((pos.X - TopLeft.X) / CellSize, (pos.Y - TopLeft.Y) / CellSize);
+            return new Point(pos.X / CellSize, pos.Y / CellSize);
         }
 
         internal void PrepareBoard(List<Rectangle> usedSpace)
@@ -108,7 +110,7 @@ namespace ChiselDebug.Routing
 
         internal Rectangle GetRelativeBoard(Rectangle rect)
         {
-            Point spaceTopLeft = rect.Pos - TopLeft;
+            Point spaceTopLeft = rect.Pos;
             return new Rectangle(
                 new Point(
                     spaceTopLeft.X / CellSize,
@@ -165,7 +167,12 @@ namespace ChiselDebug.Routing
 
         internal void AddCellAllowedMoves(Point pos, MoveDirs moves)
         {
-            CellAllowedDirs[CellIndex(pos)] |= moves;
+            AddCellAllowedMoves(CellIndex(pos), moves);
+        }
+
+        internal void AddCellAllowedMoves(int posIndex, MoveDirs moves)
+        {
+            CellAllowedDirs[posIndex] |= moves;
         }
 
         internal void SetAllIncommingMoves(Point pos)
@@ -217,31 +224,34 @@ namespace ChiselDebug.Routing
         internal WirePath GetPath(Point start, Point end, IOInfo startIO, IOInfo endIO, bool pathToWire)
         {
             List<Point> pathAsTurns = new List<Point>();
-            List<Point> allBoardPoses = new List<Point>();
-            List<Point> boardPosTurns = new List<Point>();
+            List<int> allBoardPoses = new List<int>();
+            List<int> boardPosTurns = new List<int>();
 
             MoveDirs prevDir = MoveDirs.None;
             Point boardPos = end;
-            Point actualPos = end * CellSize + TopLeft;
+            Point actualPos = end * CellSize;
             while (boardPos != start)
             {
-                allBoardPoses.Add(boardPos);
+                allBoardPoses.Add(CellIndex(boardPos));
 
                 ScorePath path = GetCellScorePath(boardPos);
                 if (path.DirFrom != prevDir)
                 {
                     pathAsTurns.Add(actualPos);
-                    boardPosTurns.Add(boardPos);
+                    if (prevDir != MoveDirs.None)
+                    {
+                        boardPosTurns.Add(CellIndex(boardPos));
+                    }
                 }
                 prevDir = path.DirFrom;
                 boardPos = path.DirFrom.MovePoint(boardPos);
                 actualPos = actualPos + path.DirFrom.MovePoint(Point.Zero) * CellSize;
             }
 
-            allBoardPoses.Add(start);
-            boardPosTurns.Add(start);
+            allBoardPoses.Add(CellIndex(start));
             pathAsTurns.Add(actualPos);
             pathAsTurns.Reverse();
+            boardPosTurns.Reverse();
 
             return new WirePath(startIO, endIO, pathAsTurns, allBoardPoses, boardPosTurns, pathToWire);
         }

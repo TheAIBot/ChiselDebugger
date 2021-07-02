@@ -10,7 +10,37 @@ import scala.util.Random
 import org.scalatest.{FunSuite, ParallelTestExecution}
 import org.scalatest.concurrent.Eventually
 
-class ComputeTester extends FlatSpec with ChiselScalatestTester with Matchers with Eventually with ParallelTestExecution {
+class BenchTester extends FlatSpec with ChiselScalatestTester with Matchers {
+    def testModuleUInt(io: ComputeIO[UInt], clock: Clock) {
+        for (a <- 0 to 512) {
+            for (b <- 0 to 512) {
+                io.a.poke(a.U)
+                io.b.poke(b.U)
+                io.c.poke(true.B)
+                clock.step()
+
+                io.a.poke(a.U)
+                io.b.poke(b.U)
+                io.c.poke(false.B)
+                clock.step()
+            }
+        }
+    }
+
+    it should "Benchmark long sequential module" in {
+        val rng = new Random(37)
+        test(new ComputeSeq(1000, new ComputeIO[UInt](UInt(10.W), UInt(10.W), UInt(6.W), 1, 3), rng)).withFlags(Array("--tr-save-firrtl-at-load"))
+            {dut=> {
+                val startTime = System.nanoTime()
+                testModuleUInt(dut.io, dut.clock)
+                val endTime = System.nanoTime()
+                print(endTime - startTime)
+            }
+        }
+    }
+}
+
+class ComputeTester extends FlatSpec with ChiselScalatestTester with Matchers with Eventually {
     val widths = List(1, 2, 5, 6)
     def testModuleUInt(io: ComputeIO[UInt], clock: Clock) {
         for (a <- 0 to 63) {
@@ -80,15 +110,15 @@ class ComputeTester extends FlatSpec with ChiselScalatestTester with Matchers wi
             })
         })
     })
+    
     val opsCounts = List(5, 10, 20, 50)
-
     val rng = new Random(37)
     for (opCountIdx <- 0 until opsCounts.length) {
         val opCount = opsCounts(opCountIdx)
         for (i <- 0 until 50) {
             it should "Test multi uint ops: " + opCount + " test: " + i in {
                 val testDir = "test_multi_comp_dir/UInt/ops_" + opCount + "/test_" + i
-                test(new ComputeSeq(5, new ComputeIO[UInt](UInt(6.W), UInt(6.W), UInt(6.W), 1, 3), rng)).withAnnotations(Seq(TargetDirAnnotation(testDir))).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
+                test(new ComputeSeq(opCount, new ComputeIO[UInt](UInt(6.W), UInt(6.W), UInt(6.W), 1, 3), rng)).withAnnotations(Seq(TargetDirAnnotation(testDir))).withFlags(Array("--tr-write-vcd", "--tr-vcd-show-underscored-vars", "--tr-save-firrtl-at-load"))
                     {dut=> {
                         testModuleUInt(dut.io, dut.clock)
                     }

@@ -12,13 +12,23 @@ namespace ChiselDebug.GraphFIR
     {
         public static GroundType InferMaxWidthType(Output output, PairedIOFIRRTLNode pairNode)
         {
+            return InferMaxWidthType(pairNode.GetAllPairedIO(output));
+        }
+
+        public static GroundType InferMaxWidthType(FIRIO[] ioEndPoints)
+        {
             List<GroundType> inputTypes = new List<GroundType>();
-            foreach (Input paired in pairNode.GetAllPairedIO(output).OfType<Input>())
+            foreach (FIRIO endPoint in ioEndPoints)
             {
-                paired.InferType();
-                if (paired.Type != null)
+                if (endPoint is not ScalarIO scalar)
                 {
-                    inputTypes.Add(paired.Type);
+                    continue;
+                }
+
+                scalar.InferType();
+                if (scalar.Type != null)
+                {
+                    inputTypes.Add(scalar.Type);
                 }
             }
 
@@ -39,6 +49,18 @@ namespace ChiselDebug.GraphFIR
             else if (inputTypes.All(x => x is ClockType))
             {
                 return new ClockType();
+            }
+            else if (inputTypes.All(x => x is AsyncResetType))
+            {
+                return new AsyncResetType();
+            }
+            else if (inputTypes.All(x => x is ResetType))
+            {
+                return new ResetType();
+            }
+            else if (inputTypes.All(x => x is AnalogType))
+            {
+                return new AnalogType(maxWidth);
             }
             else
             {

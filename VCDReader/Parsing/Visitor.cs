@@ -312,7 +312,7 @@ namespace VCDReader.Parsing
 
             ulong isValidBinary = 0;
             int index = 0;
-            if (bits.Length >= Vector128<byte>.Count)
+            if (Ssse3.IsSupported && bits.Length >= Vector128<byte>.Count)
             {
                 int vecBitCount = bits.Length / Vector128<byte>.Count;
                 fixed (BitState* bitsPtr = bits)
