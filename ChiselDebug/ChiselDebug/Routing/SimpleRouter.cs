@@ -240,11 +240,6 @@ namespace ChiselDebug.Routing
                         Point neighborPos = current + moves[i].DirVec;
                         ref ScorePath neighborScore = ref board.GetCellScorePath(neighborPos);
 
-                        if (neighborScore.DirFrom != MoveDirs.None)
-                        {
-                            continue;
-                        }
-
                         //Penalty for turning while on another wire
                         bool isTurningOnEnemyWire = onEnemyWire && currentScorePath.DirFrom != MoveDirs.None && moves[i].Dir != currentScorePath.DirFrom.Reverse();
 
