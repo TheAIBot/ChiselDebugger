@@ -6,8 +6,6 @@ namespace ChiselDebug.Routing
 {
     internal class RouterBoard
     {
-        private readonly Point TopLeft;
-        private readonly Point BottomRight;
         private readonly int CellsWide;
         private readonly int CellsHigh;
         private readonly MoveDirs[] CellAllowedDirs;
@@ -19,12 +17,8 @@ namespace ChiselDebug.Routing
 
         public RouterBoard(Point neededBoardSize)
         {
-            this.TopLeft = Point.Zero;
-            this.BottomRight = neededBoardSize;
-
-            Point boardSize = BottomRight - TopLeft;
-            this.CellsWide = CeilDiv(boardSize.X, CellSize) + 1;
-            this.CellsHigh = CeilDiv(boardSize.Y, CellSize) + 1;
+            this.CellsWide = CeilDiv(neededBoardSize.X, CellSize) + 1;
+            this.CellsHigh = CeilDiv(neededBoardSize.Y, CellSize) + 1;
 
             this.CellAllowedDirs = new MoveDirs[CellsWide * CellsHigh];
             this.CellScoreAndPath = new ScorePath[CellAllowedDirs.Length];
@@ -67,7 +61,7 @@ namespace ChiselDebug.Routing
 
         internal Point GetRelativeBoardPos(Point pos)
         {
-            return new Point((pos.X - TopLeft.X) / CellSize, (pos.Y - TopLeft.Y) / CellSize);
+            return new Point(pos.X / CellSize, pos.Y / CellSize);
         }
 
         internal void PrepareBoard(List<Rectangle> usedSpace)
@@ -115,7 +109,7 @@ namespace ChiselDebug.Routing
 
         internal Rectangle GetRelativeBoard(Rectangle rect)
         {
-            Point spaceTopLeft = rect.Pos - TopLeft;
+            Point spaceTopLeft = rect.Pos;
             return new Rectangle(
                 new Point(
                     spaceTopLeft.X / CellSize,
@@ -234,7 +228,7 @@ namespace ChiselDebug.Routing
 
             MoveDirs prevDir = MoveDirs.None;
             Point boardPos = end;
-            Point actualPos = end * CellSize + TopLeft;
+            Point actualPos = end * CellSize;
             while (boardPos != start)
             {
                 allBoardPoses.Add(CellIndex(boardPos));
