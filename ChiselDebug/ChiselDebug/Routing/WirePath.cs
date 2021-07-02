@@ -73,11 +73,14 @@ namespace ChiselDebug.Routing
 
         internal bool CanCoexist(WirePath other)
         {
-            HashSet<int> ownCorners = new HashSet<int>(BoardPositions);
+            HashSet<int> ownPoses = new HashSet<int>(BoardPositions);
+
+            //Test if part of path follow each other
             bool prevCollided = false;
+            bool anyCollision = false;
             foreach (var pos in other.BoardPositions)
             {
-                if (ownCorners.Contains(pos))
+                if (ownPoses.Contains(pos))
                 {
                     if (prevCollided)
                     {
@@ -85,10 +88,36 @@ namespace ChiselDebug.Routing
                     }
 
                     prevCollided = true;
+                    anyCollision = true;
                 }
                 else
                 {
                     prevCollided = false;
+                }
+            }
+
+            //If paths do not cross each other once then there can be no problem
+            if (!anyCollision)
+            {
+                return true;
+            }
+
+            //Test if other path turns on this path
+            foreach (var turn in other.BoardPosTurns)
+            {
+                if (ownPoses.Contains(turn))
+                {
+                    return false;
+                }
+            }
+
+            //Test if this path has turns on the others path
+            HashSet<int> otherPoses = new HashSet<int>(other.BoardPositions);
+            foreach (var turn in BoardPosTurns)
+            {
+                if (otherPoses.Contains(turn))
+                {
+                    return false;
                 }
             }
 
