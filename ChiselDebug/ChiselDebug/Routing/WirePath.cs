@@ -77,6 +77,12 @@ namespace ChiselDebug.Routing
 
         internal bool CanCoexist(WirePath other)
         {
+            if (EndIO.DirIO.Position == other.EndIO.DirIO.Position ||
+                StartIO.DirIO.Position == other.StartIO.DirIO.Position)
+            {
+                return true;
+            }
+
             HashSet<int> ownPoses = new HashSet<int>(BoardPositions);
 
             //Test if part of path follow each other

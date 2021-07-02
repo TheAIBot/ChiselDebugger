@@ -95,11 +95,6 @@ namespace ChiselDebug.Routing
                     List<WirePath> needsRepathing = new List<WirePath>();
                     foreach (var oldPath in paths)
                     {
-                        if (oldPath.EndIO.DirIO.Position == path.EndIO.DirIO.Position ||
-                            oldPath.StartIO.DirIO.Position == path.StartIO.DirIO.Position)
-                        {
-                            continue;
-                        }
                         if (!path.CanCoexist(oldPath))
                         {
                             needsRepathing.Add(oldPath);
