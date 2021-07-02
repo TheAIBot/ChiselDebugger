@@ -52,13 +52,16 @@ namespace ChiselDebug.Routing
                 int rerouteCount = 0;
                 Dictionary<Line, int> repathCounter = new Dictionary<Line, int>();
 
-                PriorityQueue<LineInfo, int> linesPriority = new PriorityQueue<LineInfo, int>();
+                
+                List<LineInfo> sortedLines = new List<LineInfo>();
                 foreach ((IOInfo start, IOInfo end) in Connections.GetAllConnectionLines(placements))
                 {
                     LineInfo line = new LineInfo(start, end);
-                    linesPriority.Enqueue(line, line.GetScore());
+                    sortedLines.Add(line);
                     repathCounter.Add(line.GetLine(), 0);
                 }
+
+                Queue<LineInfo> linesPriority = new Queue<LineInfo>(sortedLines.OrderBy(x => x.GetScore()));
 
                 RouterBoard board = new RouterBoard(placements.SpaceNeeded);
                 board.PrepareBoard(placements.UsedSpace.Values.ToList());
@@ -107,7 +110,7 @@ namespace ChiselDebug.Routing
 
                         paths.Remove(repath);
 
-                        linesPriority.Enqueue(line, line.GetScore());
+                        linesPriority.Enqueue(line);
                     }
                     paths.Add(path);
                 }
