@@ -91,20 +91,15 @@ namespace ChiselDebug.Routing
             for (int i = 0; i < usedSpace.Count; i++)
             {
                 Rectangle spaceRel = GetRelativeBoard(usedSpace[i]);
-
-                //Need to remove moves not at the edge of the used space
-                //but at the outer neighbors to the uses space. That's
-                //why the rectangle is made 1 larger on all sides.
-                Rectangle spaceCellEdge = spaceRel.ResizeCentered(1);
-                for (int x = spaceCellEdge.LeftX + 1; x < spaceCellEdge.RightX; x++)
+                for (int x = spaceRel.LeftX + 1; x < spaceRel.RightX; x++)
                 {
-                    CellAllowedDirs[CellIndex(x, spaceCellEdge.TopY)] &= MoveDirs.ExceptDown;
-                    CellAllowedDirs[CellIndex(x, spaceCellEdge.BottomY)] &= MoveDirs.ExceptUp;
+                    CellAllowedDirs[CellIndex(x, spaceRel.TopY)] &= MoveDirs.ExceptDown;
+                    CellAllowedDirs[CellIndex(x, spaceRel.BottomY)] &= MoveDirs.ExceptUp;
                 }
-                for (int y = spaceCellEdge.TopY + 1; y < spaceCellEdge.BottomY; y++)
+                for (int y = spaceRel.TopY + 1; y < spaceRel.BottomY; y++)
                 {
-                    CellAllowedDirs[CellIndex(spaceCellEdge.LeftX, y)] &= MoveDirs.ExceptRight;
-                    CellAllowedDirs[CellIndex(spaceCellEdge.RightX, y)] &= MoveDirs.ExceptLeft;
+                    CellAllowedDirs[CellIndex(spaceRel.LeftX, y)] &= MoveDirs.ExceptRight;
+                    CellAllowedDirs[CellIndex(spaceRel.RightX, y)] &= MoveDirs.ExceptLeft;
                 }
             }
         }

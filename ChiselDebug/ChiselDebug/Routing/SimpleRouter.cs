@@ -170,7 +170,7 @@ namespace ChiselDebug.Routing
 
             if (startRect.HasValue)
             {
-                Rectangle startRectRelative = board.GetRelativeBoard(startRect.Value).ResizeCentered(1);
+                Rectangle startRectRelative = board.GetRelativeBoard(startRect.Value);
                 Point startGo = relativeStart;
                 MoveDirs allowedDir = start.DirIO.InitialDir.Reverse();
                 do
