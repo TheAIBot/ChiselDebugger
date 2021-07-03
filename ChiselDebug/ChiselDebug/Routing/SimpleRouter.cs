@@ -221,8 +221,8 @@ namespace ChiselDebug.Routing
                     return board.GetPath(relativeEnd, relativeStart, start, end, false);
                 }
 
-                ScorePath currentScorePath = board.GetCellScorePath(current);
-                MoveDirs allowedMoves = board.GetCellMoves(current);
+                ScorePath currentScorePath = board.GetCellScorePath(currentIndex);
+                MoveDirs allowedMoves = board.GetCellMoves(currentIndex);
 
                 if (allowedMoves.HasFlag(MoveDirs.FriendWire) && canEndEarly)
                 {
@@ -237,7 +237,8 @@ namespace ChiselDebug.Routing
                     if (allowedMoves.HasFlag(moves[i].Dir))
                     {
                         Point neighborPos = current + moves[i].DirVec;
-                        ref ScorePath neighborScore = ref board.GetCellScorePath(neighborPos);
+                        int neighbordIndex = board.CellIndex(neighborPos);
+                        ref ScorePath neighborScore = ref board.GetCellScorePath(neighbordIndex);
 
                         //Penalty for turning while on another wire
                         bool isTurningOnEnemyWire = onEnemyWire && currentScorePath.DirFrom != MoveDirs.None && moves[i].Dir != currentScorePath.DirFrom.Reverse();
@@ -248,7 +249,7 @@ namespace ChiselDebug.Routing
                             Point diff = (neighborPos - relativeStart).Abs();
                             int dist = diff.X + diff.Y;
 
-                            toSee.Enqueue(board.CellIndex(neighborPos), neighborScoreFromCurrent.GetTotalScore() + dist);
+                            toSee.Enqueue(neighbordIndex, neighborScoreFromCurrent.GetTotalScore() + dist);
                             neighborScore = neighborScoreFromCurrent;
                         }
                     }

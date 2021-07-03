@@ -53,12 +53,22 @@ namespace ChiselDebug.Routing
 
         internal MoveDirs GetCellMoves(Point pos)
         {
-            return CellAllowedDirs[CellIndex(pos)];
+            return GetCellMoves(CellIndex(pos));
+        }
+
+        internal MoveDirs GetCellMoves(int cellIndex)
+        {
+            return CellAllowedDirs[cellIndex];
         }
 
         internal ref ScorePath GetCellScorePath(Point pos)
         {
-            return ref CellScoreAndPath[CellIndex(pos)];
+            return ref GetCellScorePath(CellIndex(pos));
+        }
+
+        internal ref ScorePath GetCellScorePath(int cellIndex)
+        {
+            return ref CellScoreAndPath[cellIndex];
         }
 
         internal Point GetRelativeBoardPos(Point pos)
