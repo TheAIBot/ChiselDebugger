@@ -245,7 +245,7 @@ namespace ChiselDebug.Routing
                         ScorePath neighborScoreFromCurrent = currentScorePath.Move(moves[i].RevDir, onEnemyWire, onFriendWire, onWireCorner, isTurningOnEnemyWire);
                         if (neighborScoreFromCurrent.IsBetterScoreThan(neighborScore))
                         {
-                            Point diff = (current - relativeStart).Abs();
+                            Point diff = (neighborPos - relativeStart).Abs();
                             int dist = diff.X + diff.Y;
 
                             toSee.Enqueue(board.CellIndex(neighborPos), neighborScoreFromCurrent.GetTotalScore() + dist);
