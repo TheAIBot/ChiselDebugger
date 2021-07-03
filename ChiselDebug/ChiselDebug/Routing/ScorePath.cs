@@ -23,7 +23,7 @@
             int turns = TravelDist;
             turns += isTurning ? 5 : 0;
             turns += onEnemyWire ? 5 : 0;
-            turns += onWireCorner ? 500 : 0;
+            turns += onWireCorner && onEnemyWire ? 500 : 0;
             turns += isTurningOnEnemyWire ? 50 : 0;
 
             return new ScorePath(turns + (onFriendWire ? 0 : 1), revDir);

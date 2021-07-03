@@ -6,25 +6,21 @@ namespace ChiselDebug.Routing
 {
     internal class RouterBoard
     {
-        private readonly Point TopLeft;
-        private readonly Point BottomRight;
-        private readonly int CellsWide;
-        private readonly int CellsHigh;
+        public readonly int CellsWide;
+        public readonly int CellsHigh;
         private readonly MoveDirs[] CellAllowedDirs;
         private readonly ScorePath[] CellScoreAndPath;
         private readonly MoveDirs[] CheckpointAllowedDirs;
         private readonly ScorePath[] CheckpointScoreAndPath;
 
-        private const int CellSize = 10;
+        public const int CellSize = 10;
+        public const int MinSeparation = 4;
+        private const int RectPadding = 2;
 
         public RouterBoard(Point neededBoardSize)
         {
-            this.TopLeft = Point.Zero;
-            this.BottomRight = neededBoardSize;
-
-            Point boardSize = BottomRight - TopLeft;
-            this.CellsWide = CeilDiv(boardSize.X, CellSize) + 1;
-            this.CellsHigh = CeilDiv(boardSize.Y, CellSize) + 1;
+            this.CellsWide = CeilDiv(neededBoardSize.X, CellSize) + 1;
+            this.CellsHigh = CeilDiv(neededBoardSize.Y, CellSize) + 1;
 
             this.CellAllowedDirs = new MoveDirs[CellsWide * CellsHigh];
             this.CellScoreAndPath = new ScorePath[CellAllowedDirs.Length];
@@ -57,17 +53,27 @@ namespace ChiselDebug.Routing
 
         internal MoveDirs GetCellMoves(Point pos)
         {
-            return CellAllowedDirs[CellIndex(pos)];
+            return GetCellMoves(CellIndex(pos));
+        }
+
+        internal MoveDirs GetCellMoves(int cellIndex)
+        {
+            return CellAllowedDirs[cellIndex];
         }
 
         internal ref ScorePath GetCellScorePath(Point pos)
         {
-            return ref CellScoreAndPath[CellIndex(pos)];
+            return ref GetCellScorePath(CellIndex(pos));
+        }
+
+        internal ref ScorePath GetCellScorePath(int cellIndex)
+        {
+            return ref CellScoreAndPath[cellIndex];
         }
 
         internal Point GetRelativeBoardPos(Point pos)
         {
-            return new Point((pos.X - TopLeft.X) / CellSize, (pos.Y - TopLeft.Y) / CellSize);
+            return new Point(pos.X / CellSize, pos.Y / CellSize);
         }
 
         internal void PrepareBoard(List<Rectangle> usedSpace)
@@ -95,34 +101,29 @@ namespace ChiselDebug.Routing
             for (int i = 0; i < usedSpace.Count; i++)
             {
                 Rectangle spaceRel = GetRelativeBoard(usedSpace[i]);
-
-                //Need to remove moves not at the edge of the used space
-                //but at the outer neighbors to the uses space. That's
-                //why the rectangle is made 1 larger on all sides.
-                Rectangle spaceCellEdge = spaceRel.ResizeCentered(1);
-                for (int x = spaceCellEdge.LeftX + 1; x < spaceCellEdge.RightX; x++)
+                for (int x = spaceRel.LeftX + 1; x < spaceRel.RightX; x++)
                 {
-                    CellAllowedDirs[CellIndex(x, spaceCellEdge.TopY)] &= MoveDirs.ExceptDown;
-                    CellAllowedDirs[CellIndex(x, spaceCellEdge.BottomY)] &= MoveDirs.ExceptUp;
+                    CellAllowedDirs[CellIndex(x, spaceRel.TopY)] &= MoveDirs.ExceptDown;
+                    CellAllowedDirs[CellIndex(x, spaceRel.BottomY)] &= MoveDirs.ExceptUp;
                 }
-                for (int y = spaceCellEdge.TopY + 1; y < spaceCellEdge.BottomY; y++)
+                for (int y = spaceRel.TopY + 1; y < spaceRel.BottomY; y++)
                 {
-                    CellAllowedDirs[CellIndex(spaceCellEdge.LeftX, y)] &= MoveDirs.ExceptRight;
-                    CellAllowedDirs[CellIndex(spaceCellEdge.RightX, y)] &= MoveDirs.ExceptLeft;
+                    CellAllowedDirs[CellIndex(spaceRel.LeftX, y)] &= MoveDirs.ExceptRight;
+                    CellAllowedDirs[CellIndex(spaceRel.RightX, y)] &= MoveDirs.ExceptLeft;
                 }
             }
         }
 
         internal Rectangle GetRelativeBoard(Rectangle rect)
         {
-            Point spaceTopLeft = rect.Pos - TopLeft;
+            Point spaceTopLeft = rect.Pos;
             return new Rectangle(
                 new Point(
-                    spaceTopLeft.X / CellSize,
-                    spaceTopLeft.Y / CellSize),
+                    (spaceTopLeft.X / CellSize) - RectPadding,
+                    (spaceTopLeft.Y / CellSize) - RectPadding),
                 new Point(
-                    CeilDiv(rect.Size.X, CellSize),
-                    CeilDiv(rect.Size.Y, CellSize)));
+                    CeilDiv(rect.Size.X, CellSize) + RectPadding * 2,
+                    CeilDiv(rect.Size.Y, CellSize) + RectPadding * 2));
         }
 
         internal void CreateCheckpoint()
@@ -234,7 +235,7 @@ namespace ChiselDebug.Routing
 
             MoveDirs prevDir = MoveDirs.None;
             Point boardPos = end;
-            Point actualPos = end * CellSize + TopLeft;
+            Point actualPos = end * CellSize;
             while (boardPos != start)
             {
                 allBoardPoses.Add(CellIndex(boardPos));
@@ -256,6 +257,7 @@ namespace ChiselDebug.Routing
             allBoardPoses.Add(CellIndex(start));
             pathAsTurns.Add(actualPos);
             pathAsTurns.Reverse();
+            boardPosTurns.Reverse();
 
             return new WirePath(startIO, endIO, pathAsTurns, allBoardPoses, boardPosTurns, pathToWire);
         }
