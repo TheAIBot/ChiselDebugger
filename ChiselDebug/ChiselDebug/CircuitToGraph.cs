@@ -46,14 +46,14 @@ namespace ChiselDebug
             this.RootHelper = rootHelper;
         }
 
-        public VisitHelper ForNewModule(string moduleName, FIRRTL.DefModule moduleDef)
+        public VisitHelper ForNewModule(string moduleName, string instanceName, FIRRTL.DefModule moduleDef)
         {
-            return new VisitHelper(new GraphFIR.Module(moduleName, Mod, moduleDef), LowFirGraph, ModuleRoots, this, false, RootHelper ?? this);
+            return new VisitHelper(new GraphFIR.Module(moduleName, instanceName, Mod, moduleDef), LowFirGraph, ModuleRoots, this, false, RootHelper ?? this);
         }
 
         public VisitHelper ForNewCondModule(string moduleName, FIRRTL.DefModule moduleDef)
         {
-            return new VisitHelper(new GraphFIR.Module(moduleName, Mod, moduleDef), LowFirGraph, ModuleRoots, this, true, RootHelper ?? this);
+            return new VisitHelper(new GraphFIR.Module(moduleName, null, Mod, moduleDef), LowFirGraph, ModuleRoots, this, true, RootHelper ?? this);
         }
 
         public void AddNodeToModule(GraphFIR.FIRRTLNode node)
@@ -171,7 +171,7 @@ namespace ChiselDebug
             {
                 throw new ChiselDebugException("Circuit does not contain a module with the circuits name.");
             }
-            GraphFIR.Module mainModule = VisitModule(helper, mainModDef);
+            GraphFIR.Module mainModule = VisitModule(helper, null, mainModDef);
             foreach (var mod in mainModule.GetAllNestedNodesOfType<GraphFIR.Module>())
             {
                 CleanupModule(mod);
@@ -181,11 +181,11 @@ namespace ChiselDebug
             return new CircuitGraph(circuit.Main, mainModule);
         }
 
-        private static GraphFIR.Module VisitModule(VisitHelper parentHelper, FIRRTL.DefModule moduleDef)
+        private static GraphFIR.Module VisitModule(VisitHelper parentHelper, string moduleInstanceName, FIRRTL.DefModule moduleDef)
         {
             if (moduleDef is FIRRTL.Module mod)
             {
-                VisitHelper helper = parentHelper.ForNewModule(mod.Name, mod);
+                VisitHelper helper = parentHelper.ForNewModule(mod.Name, moduleInstanceName, mod);
                 foreach (var port in mod.Ports)
                 {
                     VisitPort(helper, port);
@@ -197,7 +197,7 @@ namespace ChiselDebug
             }
             else if (moduleDef is FIRRTL.ExtModule extMod)
             {
-                VisitHelper helper = parentHelper.ForNewModule(extMod.Name, extMod);
+                VisitHelper helper = parentHelper.ForNewModule(extMod.Name, moduleInstanceName, extMod);
                 foreach (var port in extMod.Ports)
                 {
                     VisitPort(helper, port);
@@ -425,7 +425,7 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.DefInstance instance)
             {
-                GraphFIR.Module mod = VisitModule(helper, helper.ModuleRoots[instance.Module]);
+                GraphFIR.Module mod = VisitModule(helper, instance.Name, helper.ModuleRoots[instance.Module]);
                 helper.Mod.AddModule(mod, instance.Name);
             }
             else if (statement is FIRRTL.DefNode node)

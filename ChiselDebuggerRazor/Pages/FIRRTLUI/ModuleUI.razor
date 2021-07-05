@@ -12,8 +12,12 @@
 ">
 
     <div class="moduleHeader" style="@(ShowMdwaoduleName() ? string.Empty : "visibility: hidden;"); width:@GetCurrentSize().X.ToPixels();height:@GetCurrentSize().Y.ToPixels();">
-        <div id="@ModNameID" style="display: inline-block; height:@GetCurrentSize().Y.ToPixels();line-height:@GetCurrentSize().Y.ToPixels(); transform: scale( @ModNameScale.ToHtmlNumber() );">
-            @Operation.Name
+        <div id="@ModNameID" style="display: inline-block; position: relative; top: 50%; transform: scale( @ModNameScale.ToHtmlNumber() );">
+            <div>@Operation.Name</div>
+            @if (Operation.InstanceName != null)
+            {
+                <div>@Operation.InstanceName</div>
+            }
         </div>
     </div>
 
@@ -258,6 +262,7 @@
         //Then make the text slightly smaller again so it
         //doesn't go right to the modules borders.
         ModNameScale = Math.Min(relWidth, relHeight) * 0.9f;
+        StateHasChanged();
     }
 
     public void SetShowModuleName(bool showName)
