@@ -230,8 +230,6 @@ namespace ChiselDebug.Routing
                 }
 
                 bool onEnemyWire = allowedMoves.HasFlag(MoveDirs.EnemyWire);
-                bool onFriendWire = allowedMoves.HasFlag(MoveDirs.FriendWire);
-                bool onWireCorner = allowedMoves.HasFlag(MoveDirs.WireCorner);
                 for (int i = 0; i < moves.Length; i++)
                 {
                     if (allowedMoves.HasFlag(moves[i].Dir))
@@ -240,10 +238,13 @@ namespace ChiselDebug.Routing
                         int neighbordIndex = board.CellIndex(neighborPos);
                         ref ScorePath neighborScore = ref board.GetCellScorePath(neighbordIndex);
 
-                        //Penalty for turning while on another wire
-                        bool isTurningOnEnemyWire = onEnemyWire && currentScorePath.DirFrom != MoveDirs.None && moves[i].Dir != currentScorePath.DirFrom.Reverse();
+                        MoveDirs neighborMoves = board.GetCellMoves(neighbordIndex);
+                        bool moveToEnemyWire = neighborMoves.HasFlag(MoveDirs.EnemyWire);
+                        bool moveToFriendWire = neighborMoves.HasFlag(MoveDirs.FriendWire);
+                        bool moveToWireCorner = neighborMoves.HasFlag(MoveDirs.WireCorner);
+                        bool isTurning = currentScorePath.DirFrom != MoveDirs.None && moves[i].RevDir != currentScorePath.DirFrom;
 
-                        ScorePath neighborScoreFromCurrent = currentScorePath.Move(moves[i].RevDir, onEnemyWire, onFriendWire, onWireCorner, isTurningOnEnemyWire);
+                        ScorePath neighborScoreFromCurrent = currentScorePath.Move(moves[i].RevDir, onEnemyWire, moveToEnemyWire, moveToFriendWire, moveToWireCorner, isTurning);
                         if (neighborScoreFromCurrent.IsBetterScoreThan(neighborScore))
                         {
                             Point diff = (neighborPos - relativeStart).Abs();

@@ -11,22 +11,16 @@
             this.Data = (uint)travled | ((uint)fromDir << 24);
         }
 
-        public ScorePath Move(MoveDirs revDir, bool onEnemyWire, bool onFriendWire, bool onWireCorner, bool isTurningOnEnemyWire)
+        public ScorePath Move(MoveDirs revDir, bool onEnemyWire, bool moveToEnemyWire, bool moveToFriendWire, bool moveToWireCorner, bool isTurning)
         {
-            //If the direction we are moving in is not the
-            //opposite of the direction we came from,
-            //then we must be turning unless we started
-            //the path from this point. If we didn't come
-            //from any direction then we must've started
-            //the path from here.
-            bool isTurning = DirFrom != revDir && DirFrom != MoveDirs.None;
             int turns = TravelDist;
             turns += isTurning ? 5 : 0;
-            turns += onEnemyWire ? 5 : 0;
-            turns += onWireCorner && onEnemyWire ? 500 : 0;
-            turns += isTurningOnEnemyWire ? 50 : 0;
+            turns += moveToEnemyWire ? 5 : 0;
+            turns += moveToEnemyWire && moveToWireCorner ? 500 : 0;
+            turns += isTurning && onEnemyWire ? 50 : 0;
+            turns += moveToFriendWire ? 0 : 1;
 
-            return new ScorePath(turns + (onFriendWire ? 0 : 1), revDir);
+            return new ScorePath(turns, revDir);
         }
 
         public bool IsBetterScoreThan(ScorePath score)
