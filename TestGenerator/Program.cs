@@ -24,15 +24,26 @@ namespace TestGenerator
             };
 
             const string testFilesDir = "TestFiles";
+            int totalTests = 0;
             foreach (var category in categories)
             {
-                MakeTestCategory(category, testFilesDir);
+                totalTests += MakeTestCategory(category, testFilesDir);
             }
+
+            Console.WriteLine();
+            Console.WriteLine($"Created a total of {totalTests.ToString("N0")} tests.");
         }
 
-        private static void MakeTestCategory(TestCategory category, string baseTestFilesDir)
+        private static int MakeTestCategory(TestCategory category, string baseTestFilesDir)
         {
-            //Create folderto put test files into
+            //Does folder with test files exist?
+            if (!Directory.Exists(category.testPath))
+            {
+                Console.WriteLine($"Skipping {category.categoryName} category as its test folder doesn't exist.");
+                return 0;
+            }
+
+            //Create folder to put test files into
             string testFilesDir = Path.Combine(baseTestFilesDir, category.categoryName);
             Directory.CreateDirectory(testFilesDir);
 
@@ -42,7 +53,10 @@ namespace TestGenerator
 
             List<TestInfo> foundTests = FindTests(category.testPath);
             List<TestInfo> movedTests = CopyTestsIntoFolder(foundTests, testFilesDir);
-            MakeTestCode(movedTests, category, testFilesDir, testFilesPath);
+            int testsMade = MakeTestCode(movedTests, category, testFilesDir, testFilesPath);
+
+            Console.WriteLine($"Created {testsMade} tests for the category: {category.categoryName}");
+            return testsMade;
         }
 
         private static List<TestInfo> FindTests(string testDir)
@@ -128,7 +142,7 @@ namespace TestGenerator
             return testsWithNewNames;
         }
 
-        private static void MakeTestCode(List<TestInfo> tests, TestCategory category, string testDir, string testFilesPath)
+        private static int MakeTestCode(List<TestInfo> tests, TestCategory category, string testDir, string testFilesPath)
         {
             StringBuilder loadGraphTests = new StringBuilder();
             StringBuilder inferTypeTests = new StringBuilder();
@@ -173,10 +187,14 @@ namespace TestGenerator
             File.WriteAllText(Path.Combine(testFilesPath, loadClassName + ".cs"), loadGraphTests.ToString());
             File.WriteAllText(Path.Combine(testFilesPath, inferClassName + ".cs"), inferTypeTests.ToString());
             File.WriteAllText(Path.Combine(testFilesPath, computeClassName + ".cs"), computeGraphTests.ToString());
+
+            const int CSharpTestsPerScalaTest = 3;
+            return tests.Count * CSharpTestsPerScalaTest;
         }
 
         private static void AddHeader(StringBuilder sBuilder, string className, string testDir)
         {
+            char dirSep = Path.DirectorySeparatorChar;
             sBuilder.AppendLine("using Microsoft.VisualStudio.TestTools.UnitTesting;");
             sBuilder.AppendLine();
             sBuilder.AppendLine("namespace ChiselDebugTests");
@@ -184,7 +202,7 @@ namespace TestGenerator
             sBuilder.AppendLine("\t[TestClass]");
             sBuilder.AppendLine($"\tpublic class {className}");
             sBuilder.AppendLine("\t{");
-            sBuilder.AppendLine($"\t\tconst string TestDir = @\"..\\..\\..\\..\\TestGenerator\\{testDir}\";");
+            sBuilder.AppendLine($"\t\tconst string TestDir = @\"..{dirSep}..{dirSep}..{dirSep}..{dirSep}TestGenerator{dirSep}{testDir}\";");
             sBuilder.AppendLine();
         }
     }
