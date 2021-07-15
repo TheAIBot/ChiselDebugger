@@ -13,10 +13,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Rubjerg.Graphviz" Version="1.0.7" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <ProjectReference Include="..\..\..\Graphviz.NetWrapper\Rubjerg.Graphviz\Rubjerg.Graphviz.csproj" />
     <ProjectReference Include="..\..\..\PriorityQueue\PriorityQueue\PriorityQueue.csproj" />
     <ProjectReference Include="..\..\FIRRTL\FIRRTL.csproj" />
     <ProjectReference Include="..\..\VCDReader\VCDReader.csproj" />
