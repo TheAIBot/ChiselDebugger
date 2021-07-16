@@ -11,10 +11,7 @@ namespace ChiselDebug.GraphFIR
         public DummyPassthrough(Output outIO) : base(null)
         {
             this.InIO = (Input)outIO.Flip(this);
-            InIO.SetName(null);
-
             this.Result = (Output)outIO.Copy(this);
-            Result.SetName(null);
 
             outIO.ConnectToInput(InIO);
         }

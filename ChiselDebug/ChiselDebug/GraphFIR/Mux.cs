@@ -31,7 +31,6 @@ namespace ChiselDebug.GraphFIR
             this.Decider = new Input(this, decider.Type);
             this.Result = choises.First().Copy(this);
             this.IsVectorIndexer = isVectorIndexer;
-            Result.SetName(null);
             foreach (var res in Result.Flatten())
             {
                 res.RemoveType();
@@ -39,7 +38,6 @@ namespace ChiselDebug.GraphFIR
 
             for (int i = 0; i < Choises.Length; i++)
             {
-                Choises[i].SetName(null);
                 choises[i].ConnectToInput(Choises[i]);
             }
             decider.ConnectToInput(Decider);

@@ -23,7 +23,7 @@ namespace ChiselDebug
             {
                 if (ScopeEnabledConditions.Count == 0)
                 {
-                    GraphFIR.ConstValue constEnabled = new GraphFIR.ConstValue(GetUniqueName(), new FIRRTL.UIntLiteral(1, 1));
+                    GraphFIR.ConstValue constEnabled = new GraphFIR.ConstValue(new FIRRTL.UIntLiteral(1, 1));
                     AddNodeToModule(constEnabled);
 
                     ScopeEnabledConditions.Push(constEnabled.Result);
@@ -355,7 +355,7 @@ namespace ChiselDebug
                     GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, null, cmem.Type);
                     var memory = new GraphFIR.Memory(cmem.Name, inputType, cmem.Size, 0, 0, cmem.Ruw, cmem);
 
-                    helper.Mod.AddMemory(memory);
+                    helper.AddNodeToModule(memory);
                 }
             }
             else if (statement is FIRRTL.CDefMPort memPort)
@@ -405,7 +405,7 @@ namespace ChiselDebug
                 inputType = inputType.ToFlow(GraphFIR.IO.FlowChange.Sink, null);
                 GraphFIR.Wire wire = new GraphFIR.Wire(defWire.Name, inputType, defWire);
 
-                helper.Mod.AddWire(wire);
+                helper.AddNodeToModule(wire);
             }
             else if (statement is FIRRTL.DefRegister reg)
             {
@@ -421,12 +421,12 @@ namespace ChiselDebug
 
                 GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, null, reg.Type);
                 GraphFIR.Register register = new GraphFIR.Register(reg.Name, inputType, clock, reset, initValue, reg);
-                helper.Mod.AddRegister(register);
+                helper.AddNodeToModule(register);
             }
             else if (statement is FIRRTL.DefInstance instance)
             {
                 GraphFIR.Module mod = VisitModule(helper, instance.Name, helper.ModuleRoots[instance.Module]);
-                helper.Mod.AddModule(mod, instance.Name);
+                helper.AddNodeToModule(mod);
             }
             else if (statement is FIRRTL.DefNode node)
             {
@@ -457,7 +457,7 @@ namespace ChiselDebug
                     memory.AddReadWritePort(portName);
                 }
 
-                helper.Mod.AddMemory(memory);
+                helper.AddNodeToModule(memory);
             }
             else
             {
@@ -573,7 +573,7 @@ namespace ChiselDebug
                 AddCondModule(elseEnableCond, conditional.Alt);
             }
 
-            parentHelper.Mod.AddConditional(cond);
+            parentHelper.AddNodeToModule(cond);
         }
 
         private static GraphFIR.IO.FIRIO VisitExp(VisitHelper helper, FIRRTL.Expression exp, GraphFIR.IO.IOGender gender)
@@ -585,7 +585,7 @@ namespace ChiselDebug
 
             if (exp is FIRRTL.Literal lit)
             {
-                GraphFIR.ConstValue value = new GraphFIR.ConstValue(null, lit);
+                GraphFIR.ConstValue value = new GraphFIR.ConstValue(lit);
 
                 helper.AddNodeToModule(value);
                 return value.Result;

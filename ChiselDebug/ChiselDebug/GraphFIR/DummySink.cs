@@ -12,7 +12,6 @@ namespace ChiselDebug.GraphFIR
         public DummySink(Output outIO) : base(null)
         {
             this.InIO = (Input)outIO.Flip(this);
-            InIO.SetName(null);
 
             outIO.ConnectToInput(InIO);
         }

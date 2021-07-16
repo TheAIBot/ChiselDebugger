@@ -13,10 +13,10 @@ namespace ChiselDebug.GraphFIR
         public readonly Output Result;
         private bool FirstCompute = true;
 
-        public ConstValue(string outputName, Literal value) : base(value)
+        public ConstValue(Literal value) : base(value)
         {
             this.Value = value;
-            this.Result = new Output(this, outputName, value.GetFIRType());
+            this.Result = new Output(this, null, value.GetFIRType());
         }
 
         public override Input[] GetInputs()

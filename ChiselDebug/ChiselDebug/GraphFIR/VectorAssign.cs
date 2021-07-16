@@ -44,10 +44,8 @@ namespace ChiselDebug.GraphFIR
 
             index.ConnectToInput(Index);
 
-            VecIn.SetName(null);
-            Index.SetName(null);
-            Value.SetName(null);
-            VecOut.SetName(null);
+            Index.SetName("Index");
+            Value.SetName("Value");
         }
 
         public override void Compute()

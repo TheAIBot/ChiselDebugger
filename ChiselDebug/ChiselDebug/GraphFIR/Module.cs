@@ -35,50 +35,13 @@ namespace ChiselDebug.GraphFIR
         {
             node.SetModResideIn(this);
             Nodes.Add(node);
-            foreach (var io in node.GetIO())
+            foreach (var io in node.GetVisibleIO())
             {
                 if (!io.IsAnonymous)
                 {
                     NameToIO.Add(io.Name, io);
                 }
             }
-        }
-
-        public void AddRegister(Register reg)
-        {
-            reg.SetModResideIn(this);
-            Nodes.Add(reg);
-
-            DuplexIO regIO = reg.GetAsDuplex();
-            NameToIO.Add(regIO.GetInput().Name, regIO);
-            NameToIO.Add(regIO.GetOutput().Name, regIO);
-        }
-
-        public void AddWire(Wire wire)
-        {
-            wire.SetModResideIn(this);
-            Nodes.Add(wire);
-
-            DuplexIO wireIO = wire.GetAsDuplex();
-            NameToIO.Add(wireIO.Name, wireIO);
-        }
-
-        public void AddModule(Module mod, string bundleName)
-        {
-            mod.SetModResideIn(this);
-            Nodes.Add(mod);
-
-            ModuleIO bundle = new ModuleIO(mod, bundleName, mod.ExternalIO.Values.ToList());
-            NameToIO.Add(bundleName, bundle);
-        }
-
-        public void AddMemory(Memory mem)
-        {
-            mem.SetModResideIn(this);
-            Nodes.Add(mem);
-
-            MemoryIO memIO = mem.GetIOAsBundle();
-            NameToIO.Add(memIO.Name, memIO);
         }
 
         public void AddIORename(string name, FIRIO io)
@@ -96,16 +59,6 @@ namespace ChiselDebug.GraphFIR
             {
                 NameToIO.Add(port.Name, port);
             }
-        }
-
-        public void AddConditional(Conditional cond)
-        {
-            cond.SetModResideIn(this);
-            foreach (var condMod in cond.CondMods)
-            {
-                condMod.Mod.SetModResideIn(this);
-            }
-            Nodes.Add(cond);
         }
 
         public Output AddDuplexOuputWire(Input input)
@@ -167,6 +120,11 @@ namespace ChiselDebug.GraphFIR
         public override bool TryGetIO(string ioName, out IContainerIO container)
         {
             return TryGetIOInternal(ioName, true, out container);
+        }
+
+        public override IEnumerable<FIRIO> GetVisibleIO()
+        {
+            yield return new ModuleIO(this, InstanceName, ExternalIO.Values.ToList());
         }
 
         public List<Output> GetAllModuleConnections()
