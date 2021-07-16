@@ -18,10 +18,5 @@ namespace ChiselDebug.GraphFIR
         {
             return new Output[] { Result };
         }
-
-        public override IEnumerable<FIRIO> GetVisibleIO()
-        {
-            yield return Result;
-        }
     }
 }

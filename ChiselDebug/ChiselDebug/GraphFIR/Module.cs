@@ -61,16 +61,6 @@ namespace ChiselDebug.GraphFIR
             }
         }
 
-        public void AddConditional(Conditional cond)
-        {
-            cond.SetModResideIn(this);
-            foreach (var condMod in cond.CondMods)
-            {
-                condMod.Mod.SetModResideIn(this);
-            }
-            Nodes.Add(cond);
-        }
-
         public Output AddDuplexOuputWire(Input input)
         {
             Wire wire = new Wire(GetDuplexOutputName(input), input, null);
@@ -134,12 +124,7 @@ namespace ChiselDebug.GraphFIR
 
         public override IEnumerable<FIRIO> GetVisibleIO()
         {
-            yield return GetIOAsBundle();
-        }
-
-        internal ModuleIO GetIOAsBundle()
-        {
-            return new ModuleIO(this, InstanceName, ExternalIO.Values.ToList());
+            yield return new ModuleIO(this, InstanceName, ExternalIO.Values.ToList());
         }
 
         public List<Output> GetAllModuleConnections()

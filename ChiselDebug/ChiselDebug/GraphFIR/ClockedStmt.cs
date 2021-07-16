@@ -50,11 +50,6 @@ namespace ChiselDebug.GraphFIR
             yield return Enable;
         }
 
-        public override IEnumerable<FIRIO> GetVisibleIO()
-        {
-            yield break;
-        }
-
         internal override void InferType()
         { }
     }

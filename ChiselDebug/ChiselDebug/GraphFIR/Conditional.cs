@@ -81,11 +81,6 @@ namespace ChiselDebug.GraphFIR
             throw new Exception($"Failed to find io. IO name: {ioName}");
         }
 
-        public override IEnumerable<FIRIO> GetVisibleIO()
-        {
-            yield break;
-        }
-
         public override void Compute()
         {
             throw new Exception("This node is not computable");

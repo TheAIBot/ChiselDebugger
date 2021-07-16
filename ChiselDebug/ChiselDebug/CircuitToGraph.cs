@@ -23,7 +23,7 @@ namespace ChiselDebug
             {
                 if (ScopeEnabledConditions.Count == 0)
                 {
-                    GraphFIR.ConstValue constEnabled = new GraphFIR.ConstValue(GetUniqueName(), new FIRRTL.UIntLiteral(1, 1));
+                    GraphFIR.ConstValue constEnabled = new GraphFIR.ConstValue(new FIRRTL.UIntLiteral(1, 1));
                     AddNodeToModule(constEnabled);
 
                     ScopeEnabledConditions.Push(constEnabled.Result);
@@ -573,7 +573,7 @@ namespace ChiselDebug
                 AddCondModule(elseEnableCond, conditional.Alt);
             }
 
-            parentHelper.Mod.AddConditional(cond);
+            parentHelper.AddNodeToModule(cond);
         }
 
         private static GraphFIR.IO.FIRIO VisitExp(VisitHelper helper, FIRRTL.Expression exp, GraphFIR.IO.IOGender gender)
@@ -585,7 +585,7 @@ namespace ChiselDebug
 
             if (exp is FIRRTL.Literal lit)
             {
-                GraphFIR.ConstValue value = new GraphFIR.ConstValue(null, lit);
+                GraphFIR.ConstValue value = new GraphFIR.ConstValue(lit);
 
                 helper.AddNodeToModule(value);
                 return value.Result;

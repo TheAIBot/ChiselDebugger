@@ -11,10 +11,7 @@ namespace ChiselDebug.GraphFIR
         public DummyPassthrough(Output outIO) : base(null)
         {
             this.InIO = (Input)outIO.Flip(this);
-            InIO.SetName(null);
-
             this.Result = (Output)outIO.Copy(this);
-            Result.SetName(null);
 
             outIO.ConnectToInput(InIO);
         }
@@ -33,11 +30,6 @@ namespace ChiselDebug.GraphFIR
         {
             yield return InIO;
             yield return Result;
-        }
-
-        public override IEnumerable<FIRIO> GetVisibleIO()
-        {
-            yield break;
         }
 
         public override void Compute()

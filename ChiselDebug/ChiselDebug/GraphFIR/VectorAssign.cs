@@ -44,10 +44,8 @@ namespace ChiselDebug.GraphFIR
 
             index.ConnectToInput(Index);
 
-            VecIn.SetName(null);
-            Index.SetName(null);
-            Value.SetName(null);
-            VecOut.SetName(null);
+            Index.SetName("Index");
+            Value.SetName("Value");
         }
 
         public override void Compute()
@@ -111,11 +109,6 @@ namespace ChiselDebug.GraphFIR
             yield return VecIn;
             yield return Index;
             yield return Value;
-            yield return VecOut;
-        }
-
-        public override IEnumerable<FIRIO> GetVisibleIO()
-        {
             yield return VecOut;
         }
 

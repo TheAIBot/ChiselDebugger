@@ -12,7 +12,6 @@ namespace ChiselDebug.GraphFIR
         public DummySink(Output outIO) : base(null)
         {
             this.InIO = (Input)outIO.Flip(this);
-            InIO.SetName(null);
 
             outIO.ConnectToInput(InIO);
         }
@@ -30,11 +29,6 @@ namespace ChiselDebug.GraphFIR
         public override IEnumerable<FIRIO> GetIO()
         {
             yield return InIO;
-        }
-
-        public override IEnumerable<FIRIO> GetVisibleIO()
-        {
-            yield break;
         }
 
         public override void Compute()

@@ -24,7 +24,10 @@ namespace ChiselDebug.GraphFIR
 
         public abstract IEnumerable<FIRIO> GetIO();
 
-        public abstract IEnumerable<FIRIO> GetVisibleIO();
+        public virtual IEnumerable<FIRIO> GetVisibleIO()
+        {
+            yield break;
+        }
 
         public abstract void Compute();
 
