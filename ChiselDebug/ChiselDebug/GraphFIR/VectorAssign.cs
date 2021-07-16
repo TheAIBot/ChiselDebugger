@@ -114,6 +114,11 @@ namespace ChiselDebug.GraphFIR
             yield return VecOut;
         }
 
+        public override IEnumerable<FIRIO> GetVisibleIO()
+        {
+            yield return VecOut;
+        }
+
         public override Output[] GetOutputs()
         {
             return VecOutputs.ToArray();

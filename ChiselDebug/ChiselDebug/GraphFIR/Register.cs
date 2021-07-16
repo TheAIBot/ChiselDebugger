@@ -102,6 +102,12 @@ namespace ChiselDebug.GraphFIR
             }
         }
 
+        public override IEnumerable<FIRIO> GetVisibleIO()
+        {
+            yield return new DuplexIO(this, In.Name, In, Result);
+            yield return new DuplexIO(this, Result.Name, In, Result);
+        }
+
         public override void Compute()
         {
             throw new Exception("This node is not computable");

@@ -78,6 +78,11 @@ namespace ChiselDebug.GraphFIR
             yield return MemIO;
         }
 
+        public override IEnumerable<FIRIO> GetVisibleIO()
+        {
+            yield return GetIOAsBundle();
+        }
+
         public override void Compute()
         {
             throw new Exception("This node is not computable");

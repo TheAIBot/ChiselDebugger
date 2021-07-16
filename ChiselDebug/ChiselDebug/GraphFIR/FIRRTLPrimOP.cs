@@ -1,6 +1,7 @@
 ﻿using ChiselDebug.GraphFIR.IO;
 using FIRRTL;
 using System;
+using System.Collections.Generic;
 
 namespace ChiselDebug.GraphFIR
 {
@@ -16,6 +17,11 @@ namespace ChiselDebug.GraphFIR
         public override Output[] GetOutputs()
         {
             return new Output[] { Result };
+        }
+
+        public override IEnumerable<FIRIO> GetVisibleIO()
+        {
+            yield return Result;
         }
     }
 }

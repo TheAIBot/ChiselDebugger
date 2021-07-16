@@ -24,6 +24,8 @@ namespace ChiselDebug.GraphFIR
 
         public abstract IEnumerable<FIRIO> GetIO();
 
+        public abstract IEnumerable<FIRIO> GetVisibleIO();
+
         public abstract void Compute();
 
         internal abstract void InferType();

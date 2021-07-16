@@ -355,7 +355,7 @@ namespace ChiselDebug
                     GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, null, cmem.Type);
                     var memory = new GraphFIR.Memory(cmem.Name, inputType, cmem.Size, 0, 0, cmem.Ruw, cmem);
 
-                    helper.Mod.AddMemory(memory);
+                    helper.AddNodeToModule(memory);
                 }
             }
             else if (statement is FIRRTL.CDefMPort memPort)
@@ -405,7 +405,7 @@ namespace ChiselDebug
                 inputType = inputType.ToFlow(GraphFIR.IO.FlowChange.Sink, null);
                 GraphFIR.Wire wire = new GraphFIR.Wire(defWire.Name, inputType, defWire);
 
-                helper.Mod.AddWire(wire);
+                helper.AddNodeToModule(wire);
             }
             else if (statement is FIRRTL.DefRegister reg)
             {
@@ -421,12 +421,12 @@ namespace ChiselDebug
 
                 GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, null, reg.Type);
                 GraphFIR.Register register = new GraphFIR.Register(reg.Name, inputType, clock, reset, initValue, reg);
-                helper.Mod.AddRegister(register);
+                helper.AddNodeToModule(register);
             }
             else if (statement is FIRRTL.DefInstance instance)
             {
                 GraphFIR.Module mod = VisitModule(helper, instance.Name, helper.ModuleRoots[instance.Module]);
-                helper.Mod.AddModule(mod, instance.Name);
+                helper.AddNodeToModule(mod);
             }
             else if (statement is FIRRTL.DefNode node)
             {
@@ -457,7 +457,7 @@ namespace ChiselDebug
                     memory.AddReadWritePort(portName);
                 }
 
-                helper.Mod.AddMemory(memory);
+                helper.AddNodeToModule(memory);
             }
             else
             {

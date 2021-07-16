@@ -75,6 +75,11 @@ namespace ChiselDebug.GraphFIR
             yield return Result;
         }
 
+        public override IEnumerable<FIRIO> GetVisibleIO()
+        {
+            yield return Result;
+        }
+
         public override void Compute()
         {
             ref BinaryVarValue deciderValue = ref Decider.UpdateValueFromSourceFast();

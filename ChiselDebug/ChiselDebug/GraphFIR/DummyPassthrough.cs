@@ -35,6 +35,11 @@ namespace ChiselDebug.GraphFIR
             yield return Result;
         }
 
+        public override IEnumerable<FIRIO> GetVisibleIO()
+        {
+            yield break;
+        }
+
         public override void Compute()
         {
             Result.Value.UpdateValue(ref InIO.UpdateValueFromSourceFast());

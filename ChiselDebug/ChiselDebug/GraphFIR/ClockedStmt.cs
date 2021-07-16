@@ -39,15 +39,20 @@ namespace ChiselDebug.GraphFIR
             return new Input[] { Clock, Enable };
         }
 
+        public override Output[] GetOutputs()
+        {
+            return Array.Empty<Output>();
+        }
+
         public override IEnumerable<FIRIO> GetIO()
         {
             yield return Clock;
             yield return Enable;
         }
 
-        public override Output[] GetOutputs()
+        public override IEnumerable<FIRIO> GetVisibleIO()
         {
-            return Array.Empty<Output>();
+            yield break;
         }
 
         internal override void InferType()
