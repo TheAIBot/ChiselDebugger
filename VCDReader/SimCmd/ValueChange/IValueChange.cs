@@ -140,6 +140,12 @@ namespace VCDReader
             if (Bits.Length <= value.Bits.Length)
             {
                 value.Bits.Slice(0, Bits.Length).CopyTo(Bits);
+                
+                //Has shorted it now so need to check if it's valid binary again
+                if (!value.IsValidBinary)
+                {
+                    IsValidBinary = Bits.IsAllBinary();
+                }
             }
             else if (value.Bits.Length == 0)
             {

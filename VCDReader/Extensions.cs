@@ -1,5 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using System.Text;
 
 namespace VCDReader
@@ -21,14 +25,14 @@ namespace VCDReader
 
         public static bool IsBinary(this BitState bit)
         {
-            return bit == BitState.Zero || bit == BitState.One;
+            return (int)(bit & BitState.X) == 0;
         }
 
         public static bool IsAllBinary(this Span<BitState> bits)
         {
             for (int i = 0; i < bits.Length; i++)
             {
-                if (bits[i] != BitState.Zero && bits[i] != BitState.One)
+                if (!IsBinary(bits[i]))
                 {
                     return false;
                 }

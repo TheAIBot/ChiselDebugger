@@ -44,16 +44,14 @@ namespace ChiselDebug.GraphFIR
 
             Debug.Assert(aVal.IsValidBinary == aVal.Bits.IsAllBinary());
             Debug.Assert(bVal.IsValidBinary == bVal.Bits.IsAllBinary());
-            if (!aVal.IsValidBinary || !bVal.IsValidBinary)
-            {
-                resultVal.SetAllUnknown();
-                return;
-            }
 
             resultVal.IsValidBinary = true;
-            BiArgCompute(ref aVal, ref bVal, ref resultVal);
-            Debug.Assert(resultVal.IsValidBinary == resultVal.Bits.IsAllBinary());
+            BiArgPropCompute(ref aVal, ref bVal, ref resultVal);
+
+            Debug.Assert(resultVal.IsValidBinary == resultVal.Bits.IsAllBinary(), $"A: {aVal.BitsToString()}\nB: {bVal.BitsToString()}\nR: {resultVal.BitsToString()}");
         }
+        protected abstract void BiArgPropCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result);
+
         protected abstract void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result);
 
         internal override void InferType()
@@ -71,7 +69,35 @@ namespace ChiselDebug.GraphFIR
         protected abstract IFIRType BiArgInferType();
     }
 
-    public class FIRAdd : BiArgMonoResPrimOp
+    public abstract class BiArgPrimOpAlwaysPropUnknown : BiArgMonoResPrimOp
+    {
+        public BiArgPrimOpAlwaysPropUnknown(string opName, Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base(opName, aIn, bIn, outType, defNode)
+        { }
+
+        protected override void BiArgPropCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
+        {
+            if (!a.IsValidBinary || !b.IsValidBinary)
+            {
+                result.SetAllUnknown();
+                return;
+            }
+
+            BiArgCompute(ref a, ref b, ref result);
+        }
+    }
+
+    public abstract class BiArgPrimOpCheckPropUnknown : BiArgMonoResPrimOp
+    {
+        public BiArgPrimOpCheckPropUnknown(string opName, Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base(opName, aIn, bIn, outType, defNode)
+        { }
+
+        protected override void BiArgPropCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
+        {
+            BiArgCompute(ref a, ref b, ref result);
+        }
+    }
+
+    public class FIRAdd : BiArgPrimOpAlwaysPropUnknown
     {
         public FIRAdd(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("+", aIn, bIn, outType, defNode) { }
 
@@ -92,7 +118,7 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIRSub : BiArgMonoResPrimOp
+    public class FIRSub : BiArgPrimOpAlwaysPropUnknown
     {
         public FIRSub(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("-", aIn, bIn, outType, defNode) { }
 
@@ -113,7 +139,7 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIRMul : BiArgMonoResPrimOp
+    public class FIRMul : BiArgPrimOpAlwaysPropUnknown
     {
         public FIRMul(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("*", aIn, bIn, outType, defNode) { }
 
@@ -134,7 +160,7 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIRDiv : BiArgMonoResPrimOp
+    public class FIRDiv : BiArgPrimOpAlwaysPropUnknown
     {
         public FIRDiv(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("/", aIn, bIn, outType, defNode) { }
 
@@ -163,7 +189,7 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIRRem : BiArgMonoResPrimOp
+    public class FIRRem : BiArgPrimOpAlwaysPropUnknown
     {
         public FIRRem(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("%", aIn, bIn, outType, defNode) { }
 
@@ -191,12 +217,18 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIRDshl : BiArgMonoResPrimOp
+    public class FIRDshl : BiArgPrimOpCheckPropUnknown
     {
         public FIRDshl(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("<<", aIn, bIn, outType, defNode) { }
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
+            if (!b.IsValidBinary)
+            {
+                result.SetAllUnknown();
+                return;
+            }
+
             int shift = b.AsInt();
             result.Bits.Slice(0, shift).Fill(BitState.Zero);
 
@@ -205,6 +237,11 @@ namespace ChiselDebug.GraphFIR
 
             BitState signFill = A.Type is SIntType ? a.Bits[^1] : BitState.Zero;
             result.Bits.Slice(shift + copyLength).Fill(signFill);
+
+            if (!a.IsValidBinary)
+            {
+                result.IsValidBinary = result.Bits.IsAllBinary();
+            }
         }
 
         protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
@@ -215,15 +252,26 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIRDshr : BiArgMonoResPrimOp
+    public class FIRDshr : BiArgPrimOpCheckPropUnknown
     {
         public FIRDshr(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base(">>", aIn, bIn, outType, defNode) { }
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
+            if (!b.IsValidBinary)
+            {
+                result.SetAllUnknown();
+                return;
+            }
+
             int shift = b.AsInt();
             result.Bits.Fill(A.Type is SIntType ? a.Bits[^1] : BitState.Zero);
             a.Bits.Slice(Math.Min(a.Bits.Length - 1, shift), Math.Max(0, a.Bits.Length - shift)).CopyTo(result.Bits);
+
+            if (!a.IsValidBinary)
+            {
+                result.IsValidBinary = result.Bits.IsAllBinary();
+            }
         }
 
         protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
@@ -234,7 +282,7 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIRCat : BiArgMonoResPrimOp
+    public class FIRCat : BiArgPrimOpCheckPropUnknown
     {
         public FIRCat(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("cat", aIn, bIn, outType, defNode) { }
 
@@ -245,6 +293,8 @@ namespace ChiselDebug.GraphFIR
 
             a.Bits.CopyTo(aCopy);
             b.Bits.CopyTo(bCopy);
+
+            result.IsValidBinary = a.IsValidBinary & b.IsValidBinary;
         }
 
         protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
@@ -257,7 +307,7 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public abstract class FIRCompOp : BiArgMonoResPrimOp
+    public abstract class FIRCompOp : BiArgPrimOpAlwaysPropUnknown
     {
         public FIRCompOp(string opName, Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base(opName, aIn, bIn, outType, defNode) { }
 
@@ -341,7 +391,7 @@ namespace ChiselDebug.GraphFIR
         }
     }
 
-    public abstract class FIRBitwise : BiArgMonoResPrimOp
+    public abstract class FIRBitwise : BiArgPrimOpCheckPropUnknown
     {
         public FIRBitwise(string opName, Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base(opName, aIn, bIn, outType, defNode) { }
 
@@ -353,6 +403,17 @@ namespace ChiselDebug.GraphFIR
             (SIntType a, SIntType b) => new UIntType(Math.Max(a.Width, b.Width)),
             _ => null
         };
+
+        public static BitState CompOpPropX(BitState a, BitState b, BitState computed)
+        {
+            return CompOpPropX(a | b, computed);
+        }
+
+        public static BitState CompOpPropX(BitState a, BitState computed)
+        {
+            BitState isNotBinary = a & BitState.X;
+            return isNotBinary | ((BitState)(((int)isNotBinary >> 1) ^ 1) & computed);
+        }
     }
 
     public class FIRAnd : FIRBitwise
@@ -361,22 +422,30 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
-            ReadOnlySpan<BitState> aBits = a.Bits;
-            ReadOnlySpan<BitState> bBits = b.Bits;
-            Span<BitState> resBits = result.Bits;
-            if (aBits.Length == bBits.Length)
+            int length = Math.Min(a.Bits.Length, b.Bits.Length);
+            for (int i = 0; i < length; i++)
             {
-                for (int i = 0; i < a.Bits.Length; i++)
+                result.Bits[i] = CompOpPropX(a.Bits[i], b.Bits[i], a.Bits[i] & b.Bits[i]);
+            }
+
+            if (a.Bits.Length > b.Bits.Length)
+            {
+                BitState bEnd = B.Type is SIntType ? b.Bits[^1] : BitState.Zero;
+                for (int i = length; i < a.Bits.Length; i++)
                 {
-                    resBits[i] = aBits[i] & bBits[i];
+                    result.Bits[i] = CompOpPropX(a.Bits[i], bEnd, a.Bits[i] & bEnd);
                 }
             }
-            else
+            else if (a.Bits.Length < b.Bits.Length)
             {
-                BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
-                BigInteger bVal = b.AsBigInteger(B.Type is SIntType);
-                result.SetBitsAndExtend(aVal & bVal, false);
+                BitState aEnd = A.Type is SIntType ? a.Bits[^1] : BitState.Zero;
+                for (int i = length; i < b.Bits.Length; i++)
+                {
+                    result.Bits[i] = CompOpPropX(aEnd, b.Bits[i], aEnd & b.Bits[i]);
+                }
             }
+
+            result.IsValidBinary = a.IsValidBinary & b.IsValidBinary;
         }
     }
 
@@ -386,22 +455,30 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
-            ReadOnlySpan<BitState> aBits = a.Bits;
-            ReadOnlySpan<BitState> bBits = b.Bits;
-            Span<BitState> resBits = result.Bits;
-            if (aBits.Length == bBits.Length)
+            int length = Math.Min(a.Bits.Length, b.Bits.Length);
+            for (int i = 0; i < length; i++)
             {
-                for (int i = 0; i < a.Bits.Length; i++)
+                result.Bits[i] = CompOpPropX(a.Bits[i], b.Bits[i], a.Bits[i] | b.Bits[i]);
+            }
+
+            if (a.Bits.Length > b.Bits.Length)
+            {
+                BitState bEnd = B.Type is SIntType ? b.Bits[^1] : BitState.Zero;
+                for (int i = length; i < a.Bits.Length; i++)
                 {
-                    resBits[i] = aBits[i] | bBits[i];
+                    result.Bits[i] = CompOpPropX(a.Bits[i], bEnd, a.Bits[i] | bEnd);
                 }
             }
-            else
+            else if (a.Bits.Length < b.Bits.Length)
             {
-                BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
-                BigInteger bVal = b.AsBigInteger(B.Type is SIntType);
-                result.SetBitsAndExtend(aVal | bVal, false);
+                BitState aEnd = A.Type is SIntType ? a.Bits[^1] : BitState.Zero;
+                for (int i = length; i < b.Bits.Length; i++)
+                {
+                    result.Bits[i] = CompOpPropX(aEnd, b.Bits[i], aEnd | b.Bits[i]);
+                }
             }
+
+            result.IsValidBinary = a.IsValidBinary & b.IsValidBinary;
         }
     }
 
@@ -411,26 +488,34 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
-            ReadOnlySpan<BitState> aBits = a.Bits;
-            ReadOnlySpan<BitState> bBits = b.Bits;
-            Span<BitState> resBits = result.Bits;
-            if (aBits.Length == bBits.Length)
+            int length = Math.Min(a.Bits.Length, b.Bits.Length);
+            for (int i = 0; i < length; i++)
             {
-                for (int i = 0; i < a.Bits.Length; i++)
+                result.Bits[i] = CompOpPropX(a.Bits[i], b.Bits[i], a.Bits[i] ^ b.Bits[i]);
+            }
+
+            if (a.Bits.Length > b.Bits.Length)
+            {
+                BitState bEnd = B.Type is SIntType ? b.Bits[^1] : BitState.Zero;
+                for (int i = length; i < a.Bits.Length; i++)
                 {
-                    resBits[i] = aBits[i] ^ bBits[i];
+                    result.Bits[i] = CompOpPropX(a.Bits[i], bEnd, a.Bits[i] ^ bEnd);
                 }
             }
-            else
+            else if (a.Bits.Length < b.Bits.Length)
             {
-                BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
-                BigInteger bVal = b.AsBigInteger(B.Type is SIntType);
-                result.SetBitsAndExtend(aVal ^ bVal, false);
+                BitState aEnd = A.Type is SIntType ? a.Bits[^1] : BitState.Zero;
+                for (int i = length; i < b.Bits.Length; i++)
+                {
+                    result.Bits[i] = CompOpPropX(aEnd, b.Bits[i], aEnd ^ b.Bits[i]);
+                }
             }
+
+            result.IsValidBinary = a.IsValidBinary & b.IsValidBinary;
         }
     }
 
-    public class FIRShl : BiArgMonoResPrimOp
+    public class FIRShl : BiArgPrimOpCheckPropUnknown
     {
         private readonly int ShiftBy;
         public FIRShl(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("<<", aIn, bIn, outType, defNode)
@@ -445,6 +530,11 @@ namespace ChiselDebug.GraphFIR
                 result.Bits[i + ShiftBy] = a.Bits[i];
             }
             result.Bits.Slice(0, ShiftBy).Fill(BitState.Zero);
+
+            if (!a.IsValidBinary)
+            {
+                result.IsValidBinary = result.Bits.IsAllBinary();
+            }
         }
 
         protected override IFIRType BiArgInferType() => A.Type switch
@@ -455,7 +545,7 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIRShr : BiArgMonoResPrimOp
+    public class FIRShr : BiArgPrimOpCheckPropUnknown
     {
         private readonly int ShiftBy;
         public FIRShr(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base(">>", aIn, bIn, outType, defNode)
@@ -478,12 +568,18 @@ namespace ChiselDebug.GraphFIR
                 {
                     result.Bits[0] = a.Bits[^1];
                 }
-
-                return;
             }
-            for (int i = 0; i < result.Bits.Length; i++)
+            else
             {
-                result.Bits[i] = a.Bits[i + ShiftBy];
+                for (int i = 0; i < result.Bits.Length; i++)
+                {
+                    result.Bits[i] = a.Bits[i + ShiftBy];
+                }
+            }
+
+            if (!a.IsValidBinary)
+            {
+                result.IsValidBinary = result.Bits.IsAllBinary();
             }
         }
 
