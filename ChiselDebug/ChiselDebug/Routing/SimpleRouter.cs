@@ -22,19 +22,6 @@ namespace ChiselDebug.Routing
             MissingNodeIO.RemoveWhere(x => x is INoPlaceAndRoute);
         }
 
-        private record LineInfo(IOInfo Start, IOInfo End)
-        {
-            public int GetScore()
-            {
-                return new Line(Start.DirIO.Position, End.DirIO.Position).GetManhattanDistance();
-            }
-
-            public Line GetLine()
-            {
-                return new Line(Start.DirIO.Position, End.DirIO.Position);
-            }
-        }
-
         public void UpdateIOFromNode(FIRRTLNode node, List<DirectedIO> inputOffsets, List<DirectedIO> outputOffsets)
         {
             Connections.UpdateIOFromNode(node, inputOffsets, outputOffsets);
