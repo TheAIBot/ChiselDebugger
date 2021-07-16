@@ -6,17 +6,10 @@ namespace VCDReader
 {
     public static class Extensions
     {
-        private static readonly BitState[] LeftExtend = new BitState[] { BitState.Zero, BitState.Zero, BitState.X, BitState.Z };
-        private static readonly char[] BitAsChar = new char[] { '0', '1', 'X', 'Z' };
-
-        public static BitState LeftExtendWith(this BitState bit)
-        {
-            return LeftExtend[(int)bit];
-        }
-
         public static char ToChar(this BitState bit)
         {
-            return BitAsChar[(int)bit];
+            ReadOnlySpan<byte> bitAsChar = new byte[] { (byte)'0', (byte)'1', (byte)'X', (byte)'Z' };
+            return (char)bitAsChar[(int)bit & 0b11];
         }
 
         public static bool IsBinary(this BitState bit)
@@ -44,7 +37,7 @@ namespace VCDReader
 
         public static string BitsToString(this Span<BitState> bits)
         {
-            StringBuilder sBuilder = new StringBuilder();
+            StringBuilder sBuilder = new StringBuilder(bits.Length);
             for (int i = bits.Length - 1; i >= 0; i--)
             {
                 sBuilder.Append(bits[i].ToChar());
