@@ -38,16 +38,12 @@ namespace ChiselDebug.GraphFIR
             ref BinaryVarValue aVal = ref In.UpdateValueFromSourceFast();
             ref BinaryVarValue resultVal = ref Result.GetValue();
 
-            Debug.Assert(aVal.IsValidBinary == aVal.Bits.IsAllBinary());
-            if (!aVal.IsValidBinary)
-            {
-                resultVal.SetAllUnknown();
-                return;
-            }
+            Debug.Assert(aVal.IsValidBinary == aVal.Bits.IsAllBinary(), $"Expected unknown: {aVal.BitsToString()}");
 
             resultVal.IsValidBinary = true;
             ConstBitRangeCompute(ref aVal, ref resultVal);
-            Debug.Assert(resultVal.IsValidBinary == resultVal.Bits.IsAllBinary());
+
+            Debug.Assert(resultVal.IsValidBinary == resultVal.Bits.IsAllBinary(), $"A: {aVal.BitsToString()}\nR: {resultVal.BitsToString()}");
         }
         protected abstract void ConstBitRangeCompute(ref BinaryVarValue a, ref BinaryVarValue result);
     }
@@ -63,6 +59,8 @@ namespace ChiselDebug.GraphFIR
         protected override void ConstBitRangeCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
             a.Bits.Slice(a.Bits.Length - FromMSB).CopyTo(result.Bits);
+
+            result.IsValidBinary = result.Bits.IsAllBinary();
         }
 
         internal override void InferType()
@@ -90,6 +88,8 @@ namespace ChiselDebug.GraphFIR
         protected override void ConstBitRangeCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
             a.Bits.Slice(0, a.Bits.Length - FromLSB).CopyTo(result.Bits);
+
+            result.IsValidBinary = result.Bits.IsAllBinary();
         }
 
         internal override void InferType()
@@ -119,6 +119,8 @@ namespace ChiselDebug.GraphFIR
         protected override void ConstBitRangeCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
             a.Bits.Slice(StartInclusive, EndInclusive - StartInclusive + 1).CopyTo(result.Bits);
+
+            result.IsValidBinary = result.Bits.IsAllBinary();
         }
 
         internal override void InferType()
@@ -147,8 +149,13 @@ namespace ChiselDebug.GraphFIR
         {
             a.Bits.CopyTo(result.Bits);
 
-            BitState signExt = In.Type is SIntType ? a.Bits[^1] : BitState.Zero;
-            result.Bits.Slice(a.Bits.Length, WidthAfterPad - a.Bits.Length).Fill(signExt);
+            if (result.Bits.Length > a.Bits.Length)
+            {
+                BitState signExt = In.Type is SIntType ? a.Bits[^1] : BitState.Zero;
+                result.Bits.Slice(a.Bits.Length, WidthAfterPad - a.Bits.Length).Fill(signExt);
+            }
+
+            result.IsValidBinary = a.IsValidBinary;
         }
 
         internal override void InferType()
