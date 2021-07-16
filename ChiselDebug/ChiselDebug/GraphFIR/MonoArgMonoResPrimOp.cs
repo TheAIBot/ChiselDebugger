@@ -108,7 +108,7 @@ namespace ChiselDebug.GraphFIR
         {
             result.Bits[0] = a.Bits[0];
 
-            result.IsValidBinary = result.Bits.IsAllBinary();
+            result.IsValidBinary = result.Bits[0].IsBinary();
         }
 
         protected override IFIRType MonoArgInferType() => A.Type switch

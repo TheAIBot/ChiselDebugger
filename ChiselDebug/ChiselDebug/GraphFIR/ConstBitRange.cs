@@ -60,7 +60,10 @@ namespace ChiselDebug.GraphFIR
         {
             a.Bits.Slice(a.Bits.Length - FromMSB).CopyTo(result.Bits);
 
-            result.IsValidBinary = result.Bits.IsAllBinary();
+            if (!a.IsValidBinary)
+            {
+                result.IsValidBinary = result.Bits.IsAllBinary();
+            }
         }
 
         internal override void InferType()
@@ -89,7 +92,10 @@ namespace ChiselDebug.GraphFIR
         {
             a.Bits.Slice(0, a.Bits.Length - FromLSB).CopyTo(result.Bits);
 
-            result.IsValidBinary = result.Bits.IsAllBinary();
+            if (!a.IsValidBinary)
+            {
+                result.IsValidBinary = result.Bits.IsAllBinary();
+            }
         }
 
         internal override void InferType()
@@ -120,7 +126,10 @@ namespace ChiselDebug.GraphFIR
         {
             a.Bits.Slice(StartInclusive, EndInclusive - StartInclusive + 1).CopyTo(result.Bits);
 
-            result.IsValidBinary = result.Bits.IsAllBinary();
+            if (!a.IsValidBinary)
+            {
+                result.IsValidBinary = result.Bits.IsAllBinary();
+            }
         }
 
         internal override void InferType()

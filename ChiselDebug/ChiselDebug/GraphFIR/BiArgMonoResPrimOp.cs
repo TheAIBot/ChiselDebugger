@@ -238,7 +238,10 @@ namespace ChiselDebug.GraphFIR
             BitState signFill = A.Type is SIntType ? a.Bits[^1] : BitState.Zero;
             result.Bits.Slice(shift + copyLength).Fill(signFill);
 
-            result.IsValidBinary = result.Bits.IsAllBinary();
+            if (!a.IsValidBinary)
+            {
+                result.IsValidBinary = result.Bits.IsAllBinary();
+            }
         }
 
         protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
@@ -265,7 +268,10 @@ namespace ChiselDebug.GraphFIR
             result.Bits.Fill(A.Type is SIntType ? a.Bits[^1] : BitState.Zero);
             a.Bits.Slice(Math.Min(a.Bits.Length - 1, shift), Math.Max(0, a.Bits.Length - shift)).CopyTo(result.Bits);
 
-            result.IsValidBinary = result.Bits.IsAllBinary();
+            if (!a.IsValidBinary)
+            {
+                result.IsValidBinary = result.Bits.IsAllBinary();
+            }
         }
 
         protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
@@ -525,7 +531,10 @@ namespace ChiselDebug.GraphFIR
             }
             result.Bits.Slice(0, ShiftBy).Fill(BitState.Zero);
 
-            result.IsValidBinary = result.Bits.IsAllBinary();
+            if (!a.IsValidBinary)
+            {
+                result.IsValidBinary = result.Bits.IsAllBinary();
+            }
         }
 
         protected override IFIRType BiArgInferType() => A.Type switch
@@ -568,7 +577,10 @@ namespace ChiselDebug.GraphFIR
                 }
             }
 
-            result.IsValidBinary = result.Bits.IsAllBinary();
+            if (!a.IsValidBinary)
+            {
+                result.IsValidBinary = result.Bits.IsAllBinary();
+            }
         }
 
         protected override IFIRType BiArgInferType() => A.Type switch
