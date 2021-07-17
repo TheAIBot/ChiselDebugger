@@ -17,10 +17,10 @@ namespace ChiselDebug.GraphFIR
 
         internal void AddPairedIO(FIRIO io, FIRIO ioFlipped)
         {
-            if (io is ScalarIO && ioFlipped is ScalarIO)
+            if (io is ScalarIO ioScalar && ioFlipped is ScalarIO ioFlipScalar)
             {
-                io.SetPaired(ioFlipped);
-                ioFlipped.SetPaired(io);
+                ioScalar.SetPaired(ioFlipScalar);
+                ioFlipScalar.SetPaired(ioScalar);
             }
             else
             {
@@ -28,8 +28,11 @@ namespace ChiselDebug.GraphFIR
                 var ioFlipWalk = ioFlipped.WalkIOTree();
                 foreach (var pair in ioWalk.Zip(ioFlipWalk))
                 {
-                    pair.First.SetPaired(pair.Second);
-                    pair.Second.SetPaired(pair.First);
+                    if (pair.First is ScalarIO firstScalar && pair.Second is ScalarIO secondScalar)
+                    {
+                        firstScalar.SetPaired(secondScalar);
+                        secondScalar.SetPaired(firstScalar);
+                    }
                 }
             }
         }
@@ -59,12 +62,7 @@ namespace ChiselDebug.GraphFIR
             }
         }
 
-        public FIRIO GetPairedIO(FIRIO io)
-        {
-            return io.GetPaired();
-        }
-
-        public FIRIO[] GetAllPairedIO(FIRIO io)
+        public FIRIO[] GetAllPairedIO(ScalarIO io)
         {
             List<FIRIO> allPairs = new List<FIRIO>();
             if (io.GetPaired() != null)
@@ -77,11 +75,6 @@ namespace ChiselDebug.GraphFIR
             }
 
             return allPairs.ToArray();
-        }
-
-        public bool IsPartOfPair(FIRIO io)
-        {
-            return io.GetPaired() != null || OneToManyPairs.ContainsKey(io);
         }
     }
 }

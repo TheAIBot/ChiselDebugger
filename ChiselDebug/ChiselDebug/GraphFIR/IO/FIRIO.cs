@@ -11,7 +11,6 @@ namespace ChiselDebug.GraphFIR.IO
         public bool IsAnonymous => Name == null;
         public AggregateIO ParentIO { get; private set; } = null;
         public bool IsPartOfAggregateIO => ParentIO != null;
-        private FIRIO Paired;
 
         public FIRIO(FIRRTLNode node, string name)
         {
@@ -109,16 +108,6 @@ namespace ChiselDebug.GraphFIR.IO
             }
 
             throw new Exception($"Failed to find io. IO name: {ioName}");
-        }
-
-        public void SetPaired(FIRIO paired)
-        {
-            Paired = paired;
-        }
-
-        public FIRIO GetPaired()
-        {
-            return Paired;
         }
     }
 }

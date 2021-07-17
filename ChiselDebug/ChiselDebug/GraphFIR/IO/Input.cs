@@ -10,6 +10,7 @@ namespace ChiselDebug.GraphFIR.IO
     {
         private Output Con;
         private List<Connection> CondCons = null;
+        private Output Paired = null;
 
         public Input(FIRRTLNode node, IFIRType type) : this(node, null, type)
         { }
@@ -308,6 +309,16 @@ namespace ChiselDebug.GraphFIR.IO
         public override ref BinaryVarValue FetchValue()
         {
             return ref UpdateValueFromSourceFast();
+        }
+
+        public override Output GetPaired()
+        {
+            return Paired;
+        }
+
+        public override void SetPaired(ScalarIO paired)
+        {
+            Paired = (Output)paired;
         }
     }
 }

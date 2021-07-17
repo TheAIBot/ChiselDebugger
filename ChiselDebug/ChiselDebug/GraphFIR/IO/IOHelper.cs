@@ -70,8 +70,8 @@ namespace ChiselDebug.GraphFIR.IO
                         Input intIn = (Input)input.Copy(condMod);
                         condMod.AddAnonymousExternalIO(extIn);
                         condMod.AddAnonymousInternalIO(intIn);
-                        Output extOut = (Output)intIn.GetPaired();
-                        Output intOut = (Output)extIn.GetPaired();
+                        Output extOut = intIn.GetPaired();
+                        Output intOut = extIn.GetPaired();
 
                         connection.From.ConnectToInput(extIn);
                         intOut.ConnectToInput(intIn);
@@ -132,7 +132,7 @@ namespace ChiselDebug.GraphFIR.IO
                                     {
                                         Input flipped = (Input)connection.From.Flip(mod);
                                         mod.AddAnonymousInternalIO(flipped);
-                                        Output extOutput = (Output)flipped.GetPaired();
+                                        Output extOutput = flipped.GetPaired();
 
                                         connection.From.ConnectToInput(flipped, false, false, connection.Condition);
                                         input.ReplaceConnection(connection, extOutput);
@@ -153,7 +153,7 @@ namespace ChiselDebug.GraphFIR.IO
                                 {
                                     Input flipped = (Input)cons.From.Flip(mod);
                                     mod.AddAnonymousExternalIO(flipped);
-                                    Output intOutput = (Output)flipped.GetPaired();
+                                    Output intOutput = flipped.GetPaired();
 
                                     cons.From.ConnectToInput(flipped, false, false, cons.Condition);
                                     input.ReplaceConnection(cons, intOutput);

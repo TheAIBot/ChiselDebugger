@@ -9,6 +9,7 @@ namespace ChiselDebug.GraphFIR.IO
     public class Output : ScalarIO
     {
         private List<Input> To = null;
+        private Input Paired = null;
 
 
         public Output(FIRRTLNode node, string name, IFIRType type) : base(node, name, type)
@@ -97,6 +98,16 @@ namespace ChiselDebug.GraphFIR.IO
         public override ref BinaryVarValue FetchValue()
         {
             return ref Value.Value;
+        }
+
+        public override Input GetPaired()
+        {
+            return Paired;
+        }
+
+        public override void SetPaired(ScalarIO paired)
+        {
+            Paired = (Input)paired;
         }
     }
 }

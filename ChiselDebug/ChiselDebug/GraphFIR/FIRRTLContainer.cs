@@ -68,12 +68,12 @@ namespace ChiselDebug.GraphFIR
 
         public override Input[] GetInputs()
         {
-            return FlattenAndFilterIO<Input>(AllIOInOrder.Select(x => x.GetPaired()));
+            return FlattenAndFilterIOPaired<Output, Input>(AllIOInOrder);
         }
 
         public override Output[] GetOutputs()
         {
-            return FlattenAndFilterIO<Output>(AllIOInOrder.Select(x => x.GetPaired()));
+            return FlattenAndFilterIOPaired<Input, Output>(AllIOInOrder);
         }
 
         public override Dictionary<string, FIRIO>.ValueCollection GetIO()
@@ -118,18 +118,18 @@ namespace ChiselDebug.GraphFIR
             }
         }
 
-        internal static T[] FlattenAndFilterIO<T>(IEnumerable<FIRIO> io)
+        internal static To[] FlattenAndFilterIOPaired<From, To>(IEnumerable<FIRIO> io) where From : ScalarIO where To : ScalarIO
         {
-            List<T> filtered = new List<T>();
+            List<To> filtered = new List<To>();
             List<ScalarIO> scalars = new List<ScalarIO>();
             foreach (var value in io)
             {
                 scalars.Clear();
                 foreach (var flatValue in value.Flatten(scalars))
                 {
-                    if (flatValue is T tFlatVal)
+                    if (flatValue is From tFlatVal)
                     {
-                        filtered.Add(tFlatVal);
+                        filtered.Add((To)tFlatVal.GetPaired());
                     }
                 }
             }

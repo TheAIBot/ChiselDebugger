@@ -120,5 +120,8 @@ namespace ChiselDebug.GraphFIR.IO
         {
             return Value.IsInitialized();
         }
+
+        public abstract ScalarIO GetPaired();
+        public abstract void SetPaired(ScalarIO paired);
     }
 }

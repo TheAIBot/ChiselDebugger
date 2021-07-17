@@ -27,7 +27,7 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
                         continue;
                     }
 
-                    if (!((Input)con.GetPaired()).IsConnectedToAnything())
+                    if (!con.GetPaired().IsConnectedToAnything())
                     {
                         continue;
                     }

@@ -38,7 +38,7 @@ namespace ChiselDebug.CombGraph
             //Copy value from other side of module
             if (IsBorderIO)
             {
-                Input input = (Input)Con.GetPaired();
+                Input input = Con.GetPaired();
                 if (input.IsConnectedToAnything())
                 {
                     Con.Value.UpdateValue(ref input.UpdateValueFromSourceFast());

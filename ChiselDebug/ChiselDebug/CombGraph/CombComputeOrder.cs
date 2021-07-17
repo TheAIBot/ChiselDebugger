@@ -76,7 +76,7 @@ namespace ChiselDebug.CombGraph
             {
                 foreach (var output in childMod.GetInternalOutputs())
                 {
-                    Input paired = (Input)output.GetPaired();
+                    Input paired = output.GetPaired();
                     if (output.IsConnectedToAnything() && !paired.IsConnectedToAnything())
                     {
                         startingPoints.Add(output);
@@ -84,7 +84,7 @@ namespace ChiselDebug.CombGraph
                 }
                 foreach (var input in childMod.GetInternalInputs())
                 {
-                    Output paired = (Output)input.GetPaired();
+                    Output paired = input.GetPaired();
                     if (paired.IsConnectedToAnything() && !input.IsConnectedToAnything())
                     {
                         startingPoints.Add(paired);
@@ -95,7 +95,7 @@ namespace ChiselDebug.CombGraph
             {
                 foreach (var output in wire.GetOutputs())
                 {
-                    Input paired = (Input)output.GetPaired();
+                    Input paired = output.GetPaired();
                     if (!paired.IsConnectedToAnything())
                     {
                         startingPoints.Add(output);
@@ -252,7 +252,7 @@ namespace ChiselDebug.CombGraph
 
                 if (missingCons.Count == 0)
                 {
-                    Output inPairedOut = (Output)modInput.GetPaired();
+                    Output inPairedOut = modInput.GetPaired();
                     AddMaybeBlockedCon(toTraverse, blockedOutputs, inPairedOut);
 
                     seenButMissingBorderInputCons.Remove(modInput);
