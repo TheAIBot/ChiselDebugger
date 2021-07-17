@@ -104,11 +104,13 @@ namespace Benchmarker
                 {
                     timer.Stop();
                     float msPerState = (float)timer.ElapsedMilliseconds / reportEveryXTimeStates;
+                    float statesPerMs = 1.0f / msPerState;
+                    float statesPerSecs = statesPerMs * 1000.0f;
                     float totalRemainingMs = msPerState * (timeline.StateCount - i);
 
                     const int msPerSec = 1_000;
                     float remainingSeconds = totalRemainingMs / msPerSec;
-                    Console.WriteLine($"{i}/{timeline.StateCount} Remaining: {remainingSeconds.ToString("N0")}");
+                    Console.WriteLine($"{i}/{timeline.StateCount} Remaining: {remainingSeconds.ToString("N0")} States/sec: {statesPerSecs.ToString("N0")}");
                     timer.Restart();
                 }
             }
