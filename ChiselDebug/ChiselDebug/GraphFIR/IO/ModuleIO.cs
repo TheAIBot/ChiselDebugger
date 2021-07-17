@@ -10,7 +10,7 @@ namespace ChiselDebug.GraphFIR.IO
     {
         public readonly Module Mod;
 
-        public ModuleIO(Module mod, string name, List<FIRIO> io) : base(mod, name, io, true)
+        public ModuleIO(Module mod, string name, List<FIRIO> io) : base(mod, name, io)
         {
             this.Mod = mod;
         }

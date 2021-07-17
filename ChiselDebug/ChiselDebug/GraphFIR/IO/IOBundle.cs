@@ -9,21 +9,14 @@ namespace ChiselDebug.GraphFIR.IO
         private readonly List<FIRIO> OrderedIO;
         private readonly Dictionary<string, FIRIO> IO = new Dictionary<string, FIRIO>();
 
-        public IOBundle(FIRRTLNode node, string name, List<FIRIO> io, bool twoWayRelationship = true) : base(node, name)
+        public IOBundle(FIRRTLNode node, string name, List<FIRIO> io) : base(node, name)
         {
             this.OrderedIO = io.ToList();
 
             foreach (var firIO in io)
             {
                 IO.Add(firIO.Name, firIO);
-            }
-
-            if (twoWayRelationship)
-            {
-                foreach (var firIO in IO.Values)
-                {
-                    firIO.SetParentIO(this);
-                }
+                firIO.SetParentIO(this);
             }
         }
 
@@ -115,7 +108,7 @@ namespace ChiselDebug.GraphFIR.IO
         public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)
         {
             List<FIRIO> changedFlow = OrderedIO.Select(x => x.ToFlow(flow, node)).ToList();
-            return new IOBundle(node, Name, changedFlow, IsVisibleAggregate());
+            return new IOBundle(node, Name, changedFlow);
         }
 
         public override IEnumerable<ScalarIO> Flatten()
