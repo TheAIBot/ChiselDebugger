@@ -46,7 +46,6 @@ namespace ChiselDebug.GraphFIR
 
             this.ChoiseInputs = Choises.SelectMany(x => x.Flatten().Cast<Input>()).ToArray();
             this.ResultOutputs = Result.Flatten().Cast<Output>().ToArray();
-            this.ChoiseIsSInt = new bool[ResultOutputs.Length];
         }
 
         public override Input[] GetInputs()
@@ -126,7 +125,7 @@ namespace ChiselDebug.GraphFIR
                 ref BinaryVarValue fromBin = ref ChosenInputs[i].UpdateValueFromSourceFast();
                 ref BinaryVarValue toBin = ref ResultOutputs[i].GetValue();
 
-                toBin.SetBitsAndExtend(ref fromBin, ChoiseIsSInt[i]);
+                toBin.SetBitsAndExtend(ref fromBin, ChosenInputs[i].Value.IsSigned);
             }
         }
 
@@ -135,12 +134,6 @@ namespace ChiselDebug.GraphFIR
             foreach (Input input in GetInputs())
             {
                 input.InferType();
-            }
-
-            var firstChoise = Choises.First().Flatten().Cast<Input>().ToArray();
-            for (int i = 0; i < firstChoise.Length; i++)
-            {
-                ChoiseIsSInt[i] = firstChoise[i].Type is SIntType;
             }
         }
     }

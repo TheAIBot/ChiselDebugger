@@ -7,7 +7,7 @@ namespace ChiselDebug.GraphFIR
 {
     public struct ValueType
     {
-        private readonly bool IsSigned;
+        public readonly bool IsSigned;
         private readonly bool HasInitialized;
         internal BinaryVarValue Value;
         private string ValueString;

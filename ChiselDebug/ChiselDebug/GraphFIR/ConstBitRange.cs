@@ -160,7 +160,7 @@ namespace ChiselDebug.GraphFIR
 
             if (result.Bits.Length > a.Bits.Length)
             {
-                BitState signExt = In.Type is SIntType ? a.Bits[^1] : BitState.Zero;
+                BitState signExt = In.Value.IsSigned ? a.Bits[^1] : BitState.Zero;
                 result.Bits.Slice(a.Bits.Length, WidthAfterPad - a.Bits.Length).Fill(signExt);
             }
 

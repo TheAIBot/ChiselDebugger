@@ -103,9 +103,9 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
-            BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
-            BigInteger bVal = b.AsBigInteger(A.Type is SIntType);
-            result.SetBitsAndExtend(aVal + bVal, Result.Type is SIntType);
+            BigInteger aVal = a.AsBigInteger(A.Value.IsSigned);
+            BigInteger bVal = b.AsBigInteger(B.Value.IsSigned);
+            result.SetBitsAndExtend(aVal + bVal, Result.Value.IsSigned);
         }
 
         protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
@@ -124,9 +124,9 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
-            BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
-            BigInteger bVal = b.AsBigInteger(A.Type is SIntType);
-            result.SetBitsAndExtend(aVal - bVal, Result.Type is SIntType);
+            BigInteger aVal = a.AsBigInteger(A.Value.IsSigned);
+            BigInteger bVal = b.AsBigInteger(B.Value.IsSigned);
+            result.SetBitsAndExtend(aVal - bVal, Result.Value.IsSigned);
         }
 
         protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
@@ -145,9 +145,9 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
-            BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
-            BigInteger bVal = b.AsBigInteger(A.Type is SIntType);
-            result.SetBitsAndExtend(aVal * bVal, Result.Type is SIntType);
+            BigInteger aVal = a.AsBigInteger(A.Value.IsSigned);
+            BigInteger bVal = b.AsBigInteger(B.Value.IsSigned);
+            result.SetBitsAndExtend(aVal * bVal, Result.Value.IsSigned);
         }
 
         protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
@@ -166,8 +166,8 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
-            BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
-            BigInteger bVal = b.AsBigInteger(B.Type is SIntType);
+            BigInteger aVal = a.AsBigInteger(A.Value.IsSigned);
+            BigInteger bVal = b.AsBigInteger(B.Value.IsSigned);
             //Handle divide by zero
             if (bVal == 0)
             {
@@ -175,7 +175,7 @@ namespace ChiselDebug.GraphFIR
             }
             else
             {
-                result.SetBitsAndExtend(aVal / bVal, Result.Type is SIntType);
+                result.SetBitsAndExtend(aVal / bVal, Result.Value.IsSigned);
             }
         }
 
@@ -195,15 +195,15 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
-            BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
-            BigInteger bVal = b.AsBigInteger(B.Type is SIntType);
+            BigInteger aVal = a.AsBigInteger(A.Value.IsSigned);
+            BigInteger bVal = b.AsBigInteger(B.Value.IsSigned);
             if (bVal == 0)
             {
                 result.SetAllUnknown();
             }
             else
             {
-                result.SetBitsAndExtend(aVal % bVal, Result.Type is SIntType);
+                result.SetBitsAndExtend(aVal % bVal, Result.Value.IsSigned);
             }
         }
 
@@ -235,7 +235,7 @@ namespace ChiselDebug.GraphFIR
             int copyLength = Math.Min(result.Bits.Length - shift, a.Bits.Length);
             a.Bits.CopyTo(result.Bits.Slice(shift, copyLength));
 
-            BitState signFill = A.Type is SIntType ? a.Bits[^1] : BitState.Zero;
+            BitState signFill = A.Value.IsSigned ? a.Bits[^1] : BitState.Zero;
             result.Bits.Slice(shift + copyLength).Fill(signFill);
 
             if (!a.IsValidBinary)
@@ -265,7 +265,7 @@ namespace ChiselDebug.GraphFIR
             }
 
             int shift = b.AsInt();
-            result.Bits.Fill(A.Type is SIntType ? a.Bits[^1] : BitState.Zero);
+            result.Bits.Fill(A.Value.IsSigned ? a.Bits[^1] : BitState.Zero);
             a.Bits.Slice(Math.Min(a.Bits.Length - 1, shift), Math.Max(0, a.Bits.Length - shift)).CopyTo(result.Bits);
 
             if (!a.IsValidBinary)
@@ -327,7 +327,7 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
-            bool value = a.SameValue(ref b, A.Type is SIntType);
+            bool value = a.SameValue(ref b, A.Value.IsSigned);
             result.Bits[0] = value ? BitState.One : BitState.Zero;
         }
     }
@@ -338,7 +338,7 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
-            bool value = a.SameValue(ref b, A.Type is SIntType);
+            bool value = a.SameValue(ref b, A.Value.IsSigned);
             result.Bits[0] = !value ? BitState.One : BitState.Zero;
         }
     }
@@ -349,8 +349,8 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
-            BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
-            BigInteger bVal = b.AsBigInteger(B.Type is SIntType);
+            BigInteger aVal = a.AsBigInteger(A.Value.IsSigned);
+            BigInteger bVal = b.AsBigInteger(B.Value.IsSigned);
             result.SetBits(aVal >= bVal ? 1 : 0);
         }
     }
@@ -361,8 +361,8 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
-            BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
-            BigInteger bVal = b.AsBigInteger(B.Type is SIntType);
+            BigInteger aVal = a.AsBigInteger(A.Value.IsSigned);
+            BigInteger bVal = b.AsBigInteger(B.Value.IsSigned);
             result.SetBits(aVal <= bVal ? 1 : 0);
         }
     }
@@ -373,8 +373,8 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
-            BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
-            BigInteger bVal = b.AsBigInteger(B.Type is SIntType);
+            BigInteger aVal = a.AsBigInteger(A.Value.IsSigned);
+            BigInteger bVal = b.AsBigInteger(B.Value.IsSigned);
             result.SetBits(aVal > bVal ? 1 : 0);
         }
     }
@@ -385,8 +385,8 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
-            BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
-            BigInteger bVal = b.AsBigInteger(B.Type is SIntType);
+            BigInteger aVal = a.AsBigInteger(A.Value.IsSigned);
+            BigInteger bVal = b.AsBigInteger(B.Value.IsSigned);
             result.SetBits(aVal < bVal ? 1 : 0);
         }
     }
@@ -430,7 +430,7 @@ namespace ChiselDebug.GraphFIR
 
             if (a.Bits.Length > b.Bits.Length)
             {
-                BitState bEnd = B.Type is SIntType ? b.Bits[^1] : BitState.Zero;
+                BitState bEnd = B.Value.IsSigned ? b.Bits[^1] : BitState.Zero;
                 for (int i = length; i < a.Bits.Length; i++)
                 {
                     result.Bits[i] = CompOpPropX(a.Bits[i], bEnd, a.Bits[i] & bEnd);
@@ -438,7 +438,7 @@ namespace ChiselDebug.GraphFIR
             }
             else if (a.Bits.Length < b.Bits.Length)
             {
-                BitState aEnd = A.Type is SIntType ? a.Bits[^1] : BitState.Zero;
+                BitState aEnd = A.Value.IsSigned ? a.Bits[^1] : BitState.Zero;
                 for (int i = length; i < b.Bits.Length; i++)
                 {
                     result.Bits[i] = CompOpPropX(aEnd, b.Bits[i], aEnd & b.Bits[i]);
@@ -463,7 +463,7 @@ namespace ChiselDebug.GraphFIR
 
             if (a.Bits.Length > b.Bits.Length)
             {
-                BitState bEnd = B.Type is SIntType ? b.Bits[^1] : BitState.Zero;
+                BitState bEnd = B.Value.IsSigned ? b.Bits[^1] : BitState.Zero;
                 for (int i = length; i < a.Bits.Length; i++)
                 {
                     result.Bits[i] = CompOpPropX(a.Bits[i], bEnd, a.Bits[i] | bEnd);
@@ -471,7 +471,7 @@ namespace ChiselDebug.GraphFIR
             }
             else if (a.Bits.Length < b.Bits.Length)
             {
-                BitState aEnd = A.Type is SIntType ? a.Bits[^1] : BitState.Zero;
+                BitState aEnd = A.Value.IsSigned ? a.Bits[^1] : BitState.Zero;
                 for (int i = length; i < b.Bits.Length; i++)
                 {
                     result.Bits[i] = CompOpPropX(aEnd, b.Bits[i], aEnd | b.Bits[i]);
@@ -496,7 +496,7 @@ namespace ChiselDebug.GraphFIR
 
             if (a.Bits.Length > b.Bits.Length)
             {
-                BitState bEnd = B.Type is SIntType ? b.Bits[^1] : BitState.Zero;
+                BitState bEnd = B.Value.IsSigned ? b.Bits[^1] : BitState.Zero;
                 for (int i = length; i < a.Bits.Length; i++)
                 {
                     result.Bits[i] = CompOpPropX(a.Bits[i], bEnd, a.Bits[i] ^ bEnd);
@@ -504,7 +504,7 @@ namespace ChiselDebug.GraphFIR
             }
             else if (a.Bits.Length < b.Bits.Length)
             {
-                BitState aEnd = A.Type is SIntType ? a.Bits[^1] : BitState.Zero;
+                BitState aEnd = A.Value.IsSigned ? a.Bits[^1] : BitState.Zero;
                 for (int i = length; i < b.Bits.Length; i++)
                 {
                     result.Bits[i] = CompOpPropX(aEnd, b.Bits[i], aEnd ^ b.Bits[i]);
@@ -560,7 +560,7 @@ namespace ChiselDebug.GraphFIR
             //equal to sign bit if signed.
             if (ShiftBy >= a.Bits.Length)
             {
-                if (A.Type is UIntType)
+                if (!A.Value.IsSigned)
                 {
                     result.Bits[0] = BitState.Zero;
                 }

@@ -126,18 +126,14 @@ namespace ChiselDebug.GraphFIR
 
         protected override void MonoArgCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
-            if (A.Type is UIntType)
+            if (!A.Value.IsSigned)
             {
                 a.Bits.CopyTo(result.Bits);
                 result.Bits[^1] = BitState.Zero;
             }
-            else if (A.Type is SIntType)
-            {
-                a.Bits.CopyTo(result.Bits);
-            }
             else
             {
-                throw new Exception($"Input to prim op cvt must be either uint or sint. Type: {A.Type}");
+                a.Bits.CopyTo(result.Bits);
             }
 
             result.IsValidBinary = a.IsValidBinary;
@@ -163,8 +159,8 @@ namespace ChiselDebug.GraphFIR
                 return;
             }
 
-            BigInteger aVal = a.AsBigInteger(A.Type is SIntType);
-            result.SetBitsAndExtend(-aVal, Result.Type is SIntType);
+            BigInteger aVal = a.AsBigInteger(A.Value.IsSigned);
+            result.SetBitsAndExtend(-aVal, Result.Value.IsSigned);
         }
 
         protected override IFIRType MonoArgInferType() => A.Type switch
