@@ -46,6 +46,12 @@ namespace ChiselDebug.CombGraph
             }
         }
 
+        private void ComputeConOptimized()
+        {
+            Input input = Con.GetPaired();
+            Con.Value.UpdateValue(ref input.UpdateValueFromSourceFast());
+        }
+
         public Output ComputeGetIfChanged()
         {
             if (Node != null)
@@ -77,6 +83,18 @@ namespace ChiselDebug.CombGraph
             else
             {
                 ComputeCon();
+            }
+        }
+
+        public void ComputeFastOptimized()
+        {
+            if (Node != null)
+            {
+                ComputeNode();
+            }
+            else
+            {
+                ComputeConOptimized();
             }
         }
 

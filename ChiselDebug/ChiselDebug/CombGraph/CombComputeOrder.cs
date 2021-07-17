@@ -11,11 +11,16 @@ namespace ChiselDebug.CombGraph
     {
         private readonly Output[] StartOutputs;
         private Computable[] ComputeOrder;
+        private bool HasBeenOptimized = false;
 
-        public CombComputeOrder(Output[] startOutputs, Computable[] computeOrder)
+        public CombComputeOrder(Output[] startOutputs, Computable[] computeOrder) : this(startOutputs, computeOrder, false)
+        { }
+
+        private CombComputeOrder(Output[] startOutputs, Computable[] computeOrder, bool isOptimized)
         {
             this.StartOutputs = startOutputs;
             this.ComputeOrder = computeOrder;
+            this.HasBeenOptimized = isOptimized;
         }
 
         public List<Output> ComputeAndGetChanged()
@@ -35,9 +40,19 @@ namespace ChiselDebug.CombGraph
 
         public void ComputeFast()
         {
-            for (int i = 0; i < ComputeOrder.Length; i++)
+            if (HasBeenOptimized)
             {
-                ComputeOrder[i].ComputeFast();
+                for (int i = 0; i < ComputeOrder.Length; i++)
+                {
+                    ComputeOrder[i].ComputeFastOptimized();
+                }
+            }
+            else
+            {
+                for (int i = 0; i < ComputeOrder.Length; i++)
+                {
+                    ComputeOrder[i].ComputeFast();
+                }
             }
         }
 
@@ -66,7 +81,12 @@ namespace ChiselDebug.CombGraph
 
         public CombComputeOrder Copy()
         {
-            return new CombComputeOrder(StartOutputs.ToArray(), ComputeOrder.ToArray());
+            return new CombComputeOrder(StartOutputs.ToArray(), ComputeOrder.ToArray(), HasBeenOptimized);
+        }
+
+        internal void SetIsOptimized()
+        {
+            HasBeenOptimized = true;
         }
 
         public static CombComputeOrder MakeMonoGraph(Module module)

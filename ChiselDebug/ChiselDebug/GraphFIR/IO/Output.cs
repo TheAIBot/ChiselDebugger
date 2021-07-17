@@ -6,7 +6,7 @@ using VCDReader;
 
 namespace ChiselDebug.GraphFIR.IO
 {
-    public class Output : ScalarIO
+    public sealed class Output : ScalarIO
     {
         private List<Input> To = null;
         private Input Paired = null;
