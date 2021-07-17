@@ -231,19 +231,24 @@ namespace ChiselDebug
 
         private static void VisitPort(VisitHelper helper, FIRRTL.Port port)
         {
-            var io = VisitType(helper, port.Direction, port.Name, port.Type);
+            var io = VisitType(helper, port.Direction, port.Name, port.Type, false);
             helper.Mod.AddExternalIO(io.Copy(helper.Mod));
         }
 
-        private static GraphFIR.IO.FIRIO VisitType(VisitHelper helper, FIRRTL.Dir direction, string name, FIRRTL.IFIRType type)
+        private static GraphFIR.IO.FIRIO VisitTypeAsPassive(VisitHelper helper, FIRRTL.Dir direction, string name, FIRRTL.IFIRType type)
+        {
+            return VisitType(helper, direction, name, type, true);
+        }
+
+        private static GraphFIR.IO.FIRIO VisitType(VisitHelper helper, FIRRTL.Dir direction, string name, FIRRTL.IFIRType type, bool forcePassive)
         {
             if (type is FIRRTL.BundleType bundle)
             {
-                return VisitBundle(helper, direction, name, bundle);
+                return VisitBundle(helper, direction, name, bundle, forcePassive);
             }
             else if (type is FIRRTL.VectorType vec)
             {
-                return VisitVector(helper, direction, name, vec);
+                return VisitVector(helper, direction, name, vec, forcePassive);
             }
             else if (direction == FIRRTL.Dir.Input)
             {
@@ -259,21 +264,22 @@ namespace ChiselDebug
             }
         }
 
-        private static GraphFIR.IO.FIRIO VisitBundle(VisitHelper helper, FIRRTL.Dir direction, string bundleName, FIRRTL.BundleType bundle)
+        private static GraphFIR.IO.FIRIO VisitBundle(VisitHelper helper, FIRRTL.Dir direction, string bundleName, FIRRTL.BundleType bundle, bool forcePassive)
         {
             List<GraphFIR.IO.FIRIO> io = new List<GraphFIR.IO.FIRIO>();
             foreach (var field in bundle.Fields)
             {
-                FIRRTL.Dir fieldDir = direction.Flip(field.Flip);
-                io.Add(VisitType(helper, fieldDir, field.Name, field.Type));
+                //If passive then ignore flips so all flows are the same
+                FIRRTL.Dir fieldDir = !forcePassive ? direction.Flip(field.Flip) : direction;
+                io.Add(VisitType(helper, fieldDir, field.Name, field.Type, forcePassive));
             }
 
             return new GraphFIR.IO.IOBundle(null, bundleName, io);
         }
 
-        private static GraphFIR.IO.FIRIO VisitVector(VisitHelper helper, FIRRTL.Dir direction, string vectorName, FIRRTL.VectorType vec)
+        private static GraphFIR.IO.FIRIO VisitVector(VisitHelper helper, FIRRTL.Dir direction, string vectorName, FIRRTL.VectorType vec, bool forcePassive)
         {
-            var type = VisitType(helper, direction, null, vec.Type);
+            var type = VisitType(helper, direction, null, vec.Type, forcePassive);
             return new GraphFIR.IO.Vector(null, vectorName, vec.Size, type);
         }
 
@@ -352,7 +358,7 @@ namespace ChiselDebug
                 }
                 else
                 {
-                    GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, null, cmem.Type);
+                    GraphFIR.IO.FIRIO inputType = VisitTypeAsPassive(helper, FIRRTL.Dir.Input, null, cmem.Type);
                     var memory = new GraphFIR.Memory(cmem.Name, inputType, cmem.Size, 0, 0, cmem.Ruw, cmem);
 
                     helper.AddNodeToModule(memory);
@@ -401,7 +407,7 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.DefWire defWire)
             {
-                GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Output, null, defWire.Type);
+                GraphFIR.IO.FIRIO inputType = VisitTypeAsPassive(helper, FIRRTL.Dir.Output, null, defWire.Type);
                 inputType = inputType.ToFlow(GraphFIR.IO.FlowChange.Sink, null);
                 GraphFIR.Wire wire = new GraphFIR.Wire(defWire.Name, inputType, defWire);
 
@@ -419,7 +425,7 @@ namespace ChiselDebug
                     initValue = VisitExp(helper, reg.Init, GraphFIR.IO.IOGender.Male);
                 }
 
-                GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, null, reg.Type);
+                GraphFIR.IO.FIRIO inputType = VisitTypeAsPassive(helper, FIRRTL.Dir.Input, null, reg.Type);
                 GraphFIR.Register register = new GraphFIR.Register(reg.Name, inputType, clock, reset, initValue, reg);
                 helper.AddNodeToModule(register);
             }
@@ -441,7 +447,7 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.DefMemory mem)
             {
-                GraphFIR.IO.FIRIO inputType = VisitType(helper, FIRRTL.Dir.Input, null, mem.Type);
+                GraphFIR.IO.FIRIO inputType = VisitTypeAsPassive(helper, FIRRTL.Dir.Input, null, mem.Type);
                 var memory = new GraphFIR.Memory(mem.Name, inputType, mem.Depth, mem.ReadLatency, mem.WriteLatency, mem.Ruw, mem);
 
                 foreach (var portName in mem.Readers)
