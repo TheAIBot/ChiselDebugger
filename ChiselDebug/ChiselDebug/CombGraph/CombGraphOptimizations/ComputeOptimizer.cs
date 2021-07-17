@@ -8,7 +8,7 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
 {
     internal static class ComputeOptimizer
     {
-        public static CombComputeGraph Optimize(CombComputeGraph graph)
+        public static CombComputeOrder Optimize(CombComputeOrder graph)
         {
             graph.ComputeFast();
 

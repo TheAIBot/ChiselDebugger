@@ -10,36 +10,33 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
 {
     internal static class OmitSuperfluousCons
     {
-        public static void Optimize(CombComputeGraph graph)
+        public static void Optimize(CombComputeOrder compOrder)
         {
-            foreach (var node in graph.GetAllNodesInComputeOrder())
+            ReadOnlySpan<Computable> oldOrder = compOrder.GetComputeOrder();
+            List<Computable> newOrder = new List<Computable>();
+
+            for (int i = 0; i < oldOrder.Length; i++)
             {
-                ReadOnlySpan<Computable> oldOrder = node.GetComputeOrder();
-                List<Computable> newOrder = new List<Computable>();
+                ref readonly var comp = ref oldOrder[i];
 
-                for (int i = 0; i < oldOrder.Length; i++)
+                Output con = comp.GetConnection();
+                if (con != null)
                 {
-                    ref readonly var comp = ref oldOrder[i];
-
-                    Output con = comp.GetConnection();
-                    if (con != null)
+                    if (!comp.IsBorderIO)
                     {
-                        if (!comp.IsBorderIO)
-                        {
-                            continue;
-                        }
-
-                        if (!((Input)con.GetPaired()).IsConnectedToAnything())
-                        {
-                            continue;
-                        }
+                        continue;
                     }
 
-                    newOrder.Add(comp);
+                    if (!((Input)con.GetPaired()).IsConnectedToAnything())
+                    {
+                        continue;
+                    }
                 }
 
-                node.SetComputeOrder(newOrder.ToArray());
+                newOrder.Add(comp);
             }
+
+            compOrder.SetComputeOrder(newOrder.ToArray());
         }
     }
 }

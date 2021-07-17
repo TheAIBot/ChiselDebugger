@@ -10,75 +10,72 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
 {
     internal static class ConstFolding
     {
-        public static void Optimize(CombComputeGraph graph)
+        public static void Optimize(CombComputeOrder compOrder)
         {
             HashSet<Output> constOutput = new HashSet<Output>();
-            foreach (var node in graph.GetAllNodesInComputeOrder())
+            ReadOnlySpan<Computable> oldOrder = compOrder.GetComputeOrder();
+            List<Computable> newOrder = new List<Computable>();
+
+            for (int i = 0; i < oldOrder.Length; i++)
             {
-                ReadOnlySpan<Computable> oldOrder = node.GetComputeOrder();
-                List<Computable> newOrder = new List<Computable>();
+                ref readonly var comp = ref oldOrder[i];
+                var firNode = comp.GetNode();
 
-                for (int i = 0; i < oldOrder.Length; i++)
+                if (firNode != null)
                 {
-                    ref readonly var comp = ref oldOrder[i];
-                    var firNode = comp.GetNode();
-
-                    if (firNode != null)
+                    if (firNode is ConstValue constNode)
                     {
-                        if (firNode is ConstValue constNode)
+                        constOutput.Add(constNode.Result);
+                    }
+                    else
+                    {
+                        bool allConstInputs = true;
+                        foreach (var nodeInput in firNode.GetInputs())
                         {
-                            constOutput.Add(constNode.Result);
-                        }
-                        else
-                        {
-                            bool allConstInputs = true;
-                            foreach (var nodeInput in firNode.GetInputs())
+                            foreach (var inputCon in nodeInput.GetConnections())
                             {
-                                foreach (var inputCon in nodeInput.GetConnections())
+                                if (!constOutput.Contains(inputCon.From))
                                 {
-                                    if (!constOutput.Contains(inputCon.From))
-                                    {
-                                        allConstInputs = false;
-                                        break;
-                                    }
-                                    if (inputCon.Condition != null && !constOutput.Contains(inputCon.Condition))
-                                    {
-                                        allConstInputs = false;
-                                        break;
-                                    }
+                                    allConstInputs = false;
+                                    break;
                                 }
-
-                                if (!allConstInputs)
+                                if (inputCon.Condition != null && !constOutput.Contains(inputCon.Condition))
                                 {
+                                    allConstInputs = false;
                                     break;
                                 }
                             }
 
-                            if (allConstInputs)
+                            if (!allConstInputs)
                             {
-                                foreach (var nodeOutput in firNode.GetOutputs())
-                                {
-                                    constOutput.Add(nodeOutput);
-                                }
-                            }
-                            else
-                            {
-                                newOrder.Add(comp);
+                                break;
                             }
                         }
-                    }
-                    else
-                    {
-                        var connection = comp.GetConnection();
-                        if (!constOutput.Contains(connection))
+
+                        if (allConstInputs)
+                        {
+                            foreach (var nodeOutput in firNode.GetOutputs())
+                            {
+                                constOutput.Add(nodeOutput);
+                            }
+                        }
+                        else
                         {
                             newOrder.Add(comp);
                         }
                     }
                 }
-
-                node.SetComputeOrder(newOrder.ToArray());
+                else
+                {
+                    var connection = comp.GetConnection();
+                    if (!constOutput.Contains(connection))
+                    {
+                        newOrder.Add(comp);
+                    }
+                }
             }
+
+            compOrder.SetComputeOrder(newOrder.ToArray());
         }
     }
 }
