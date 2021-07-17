@@ -44,11 +44,6 @@ namespace ChiselDebug.GraphFIR
 
         public bool IsTrue()
         {
-            if (Value.Bits.Length > 1)
-            {
-                throw new Exception("Value must be a single bit when asking if it's true.");
-            }
-
             return Value.Bits[0] == BitState.One;
         }
 
