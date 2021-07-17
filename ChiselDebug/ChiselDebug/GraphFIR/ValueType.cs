@@ -44,6 +44,7 @@ namespace ChiselDebug.GraphFIR
 
         public bool IsTrue()
         {
+            Debug.Assert(Value.Bits.Length == 1, "Connection condition must have a width of 1.");
             return Value.Bits[0] == BitState.One;
         }
 
