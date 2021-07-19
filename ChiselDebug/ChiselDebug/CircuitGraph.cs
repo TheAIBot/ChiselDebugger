@@ -258,7 +258,7 @@ namespace ChiselDebug
 
         public void SetState(CircuitState state, bool isVerilogVCD)
         {
-            if (VarDefToCon.Count == 0)
+            if (VarDefIDToCon.Count == 0)
             {
                 foreach (BinaryVarValue varValue in state.VariableValues.Values)
                 {

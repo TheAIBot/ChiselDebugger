@@ -122,9 +122,57 @@ namespace ChiselDebugTests
             return extension == "treadle.lo.fir";
         }
 
+        public readonly struct VarIDToIO
+        {
+            public readonly VarDef VariableDef;
+            public readonly ScalarIO IO;
+
+            public VarIDToIO(VarDef variable, ScalarIO io)
+            {
+                this.VariableDef = variable;
+                this.IO = io;
+            }
+        }
+
+        internal static VarIDToIO[] GetUsedVars(CircuitGraph graph, VCDTimeline timeline, bool isLoFIRRTL, bool isVerilogVCD, WireIgnoreTracker ignoreTracker)
+        {
+            List<VarIDToIO> varIDToIO = new List<VarIDToIO>();
+            CircuitState firstState = timeline.GetFirstState();
+            foreach (BinaryVarValue expected in firstState.VariableValues.Values)
+            {
+                foreach (var variable in expected.Variables)
+                {
+                    ScalarIO varCon = graph.GetConnection(variable, isVerilogVCD);
+                    if (varCon == null)
+                    {
+                        ignoreTracker.IgnoreBecauseNotExist(variable);
+                        continue;
+                    }
+
+                    //Input to memory read port is delayed by passing it through registers but this
+                    //step is only done as the last step in the firrtl transformation and therefore
+                    //is only present in loFIRRTL. Inputs to en and addr for read port can therefore
+                    //only be compared hen running loFIRRTL because other wise the delay is not added
+                    //and thus not simulated here.
+                    if (!isLoFIRRTL && varCon.IsPartOfAggregateIO &&
+                        ((varCon.ParentIO is MemReadPort && (varCon.Name == "en" || varCon.Name == "addr")) ||
+                         (varCon.ParentIO is MemRWPort && (varCon.Name == "en" || varCon.Name == "addr" || varCon.Name == "wmode"))))
+                    {
+                        ignoreTracker.IgnorebecauseMemReadDelay(variable);
+                        continue;
+                    }
+
+                    varIDToIO.Add(new VarIDToIO(variable, varCon));
+                }
+            }
+            return varIDToIO.ToArray();
+        }
+
         internal static void VerifyCircuitState(CircuitGraph graph, VCDTimeline timeline, bool isLoFIRRTL, bool isVerilogVCD)
         {
             WireIgnoreTracker ignoreTracker = new WireIgnoreTracker();
+            VarIDToIO[] varsToCheck = GetUsedVars(graph, timeline, isLoFIRRTL, isVerilogVCD, ignoreTracker);
+
             List<string> stateErrors = new List<string>();
             foreach (var state in timeline.GetAllDistinctStates())
             {
@@ -139,42 +187,30 @@ namespace ChiselDebugTests
                 }
 
                 graph.ComputeRemainingGraphFast();
-                foreach (BinaryVarValue expected in state.VariableValues.Values)
+                for (int z = 0; z < varsToCheck.Length; z++)
                 {
-                    foreach (var variable in expected.Variables)
+                    BinaryVarValue expected = state.VariableValues[varsToCheck[z].VariableDef.ID];
+                    ScalarIO varCon = varsToCheck[z].IO;
+                    if (varCon is Input input)
                     {
-                        ignoreTracker.AddWireState();
-                        ScalarIO varCon = graph.GetConnection(variable, isVerilogVCD);
-                        if (varCon is Input input)
-                        {
-                            input.UpdateValueFromSource();
-                        }
-                        if (varCon == null)
-                        {
-                            ignoreTracker.IgnoreBecauseNotExist(variable);
-                            continue;
-                        }
+                        input.UpdateValueFromSource();
+                    }
 
-                        //Input to memory read port is delayed by passing it through registers but this
-                        //step is only done as the last step in the firrtl transformation and therefore
-                        //is only present in loFIRRTL. Inputs to en and addr for read port can therefore
-                        //only be compared hen running loFIRRTL because other wise the delay is not added
-                        //and thus not simulated here.
-                        if (!isLoFIRRTL && varCon.IsPartOfAggregateIO && 
-                            ((varCon.ParentIO is MemReadPort && (varCon.Name == "en" || varCon.Name == "addr")) ||
-                             (varCon.ParentIO is MemRWPort && (varCon.Name == "en" || varCon.Name == "addr" || varCon.Name == "wmode"))))
+                    ref BinaryVarValue actual = ref varCon.GetValue();
+                    if (expected.IsValidBinary && actual.IsValidBinary)
+                    {
+                        if (!expected.SameValue(ref actual))
                         {
-                            ignoreTracker.IgnorebecauseMemReadDelay(variable);
-                            continue;
+                            stateErrors.Add($"\nTime: {state.Time.ToString("N0")}\nName: {varCon.GetFullName()}\nExpected: {expected.BitsToString()}\nActual:   {actual.BitsToString()}\n");
                         }
-
-                        ref BinaryVarValue actual = ref varCon.GetValue();
-
-                        for (int i = 0; i < Math.Min(expected.Bits.Length, actual.Bits.Length); i++)
+                    }
+                    else
+                    {
+                        for (int i = 0; i < expected.Bits.Length; i++)
                         {
                             if (!actual.Bits[i].IsBinary())
                             {
-                                ignoreTracker.IgnoreBecauseUnknown(variable);
+                                ignoreTracker.IgnoreBecauseUnknown(varsToCheck[z].VariableDef);
                                 break;
                             }
 
@@ -182,20 +218,18 @@ namespace ChiselDebugTests
                             {
                                 //graph.SetStateFast(state, isVerilogVCD);
                                 stateErrors.Add($"\nTime: {state.Time.ToString("N0")}\nName: {varCon.GetFullName()}\nExpected: {expected.BitsToString()}\nActual:   {actual.BitsToString()}\n");
-                                goto skipCheckRest;
+                                break;
                             }
                         }
                     }
-                skipCheckRest:
-                    int q = 0;
-                }
 
-                if (stateErrors.Count > 0)
-                {
-                    ignoreTracker.WriteToConsole();
-                    Console.WriteLine();
-                    Console.WriteLine(graph.StateToString());
-                    Assert.Fail(string.Join('\n', stateErrors));
+                    if (stateErrors.Count > 0)
+                    {
+                        ignoreTracker.WriteToConsole();
+                        Console.WriteLine();
+                        Console.WriteLine(graph.StateToString());
+                        Assert.Fail(string.Join('\n', stateErrors));
+                    }
                 }
             }
 
