@@ -422,6 +422,15 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
+            void ExtendedBitwise(int length, Input shorter, Span<BitState> shorterBits, Span<BitState> longerBits, Span<BitState> resultBits)
+            {
+                BitState shorterEnd = shorter.Value.IsSigned ? shorterBits[^1] : BitState.Zero;
+                for (int i = length; i < longerBits.Length; i++)
+                {
+                    resultBits[i] = CompOpPropX(longerBits[i], shorterEnd, longerBits[i] & shorterEnd);
+                }
+            }
+
             int length = Math.Min(a.Bits.Length, b.Bits.Length);
             for (int i = 0; i < length; i++)
             {
@@ -430,19 +439,11 @@ namespace ChiselDebug.GraphFIR
 
             if (a.Bits.Length > b.Bits.Length)
             {
-                BitState bEnd = B.Value.IsSigned ? b.Bits[^1] : BitState.Zero;
-                for (int i = length; i < a.Bits.Length; i++)
-                {
-                    result.Bits[i] = CompOpPropX(a.Bits[i], bEnd, a.Bits[i] & bEnd);
-                }
+                ExtendedBitwise(length, B, b.Bits, a.Bits, result.Bits);
             }
             else if (a.Bits.Length < b.Bits.Length)
             {
-                BitState aEnd = A.Value.IsSigned ? a.Bits[^1] : BitState.Zero;
-                for (int i = length; i < b.Bits.Length; i++)
-                {
-                    result.Bits[i] = CompOpPropX(aEnd, b.Bits[i], aEnd & b.Bits[i]);
-                }
+                ExtendedBitwise(length, A, a.Bits, b.Bits, result.Bits);
             }
 
             result.IsValidBinary = a.IsValidBinary & b.IsValidBinary;
@@ -455,6 +456,15 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
+            void ExtendedBitwise(int length, Input shorter, Span<BitState> shorterBits, Span<BitState> longerBits, Span<BitState> resultBits)
+            {
+                BitState shorterEnd = shorter.Value.IsSigned ? shorterBits[^1] : BitState.Zero;
+                for (int i = length; i < longerBits.Length; i++)
+                {
+                    resultBits[i] = CompOpPropX(longerBits[i], shorterEnd, longerBits[i] | shorterEnd);
+                }
+            }
+
             int length = Math.Min(a.Bits.Length, b.Bits.Length);
             for (int i = 0; i < length; i++)
             {
@@ -463,19 +473,11 @@ namespace ChiselDebug.GraphFIR
 
             if (a.Bits.Length > b.Bits.Length)
             {
-                BitState bEnd = B.Value.IsSigned ? b.Bits[^1] : BitState.Zero;
-                for (int i = length; i < a.Bits.Length; i++)
-                {
-                    result.Bits[i] = CompOpPropX(a.Bits[i], bEnd, a.Bits[i] | bEnd);
-                }
+                ExtendedBitwise(length, B, b.Bits, a.Bits, result.Bits);
             }
             else if (a.Bits.Length < b.Bits.Length)
             {
-                BitState aEnd = A.Value.IsSigned ? a.Bits[^1] : BitState.Zero;
-                for (int i = length; i < b.Bits.Length; i++)
-                {
-                    result.Bits[i] = CompOpPropX(aEnd, b.Bits[i], aEnd | b.Bits[i]);
-                }
+                ExtendedBitwise(length, A, a.Bits, b.Bits, result.Bits);
             }
 
             result.IsValidBinary = a.IsValidBinary & b.IsValidBinary;
@@ -488,6 +490,15 @@ namespace ChiselDebug.GraphFIR
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
+            void ExtendedBitwise(int length, Input shorter, Span<BitState> shorterBits, Span<BitState> longerBits, Span<BitState> resultBits)
+            {
+                BitState shorterEnd = shorter.Value.IsSigned ? shorterBits[^1] : BitState.Zero;
+                for (int i = length; i < longerBits.Length; i++)
+                {
+                    resultBits[i] = CompOpPropX(longerBits[i], shorterEnd, longerBits[i] ^ shorterEnd);
+                }
+            }
+
             int length = Math.Min(a.Bits.Length, b.Bits.Length);
             for (int i = 0; i < length; i++)
             {
@@ -496,19 +507,11 @@ namespace ChiselDebug.GraphFIR
 
             if (a.Bits.Length > b.Bits.Length)
             {
-                BitState bEnd = B.Value.IsSigned ? b.Bits[^1] : BitState.Zero;
-                for (int i = length; i < a.Bits.Length; i++)
-                {
-                    result.Bits[i] = CompOpPropX(a.Bits[i], bEnd, a.Bits[i] ^ bEnd);
-                }
+                ExtendedBitwise(length, B, b.Bits, a.Bits, result.Bits);
             }
             else if (a.Bits.Length < b.Bits.Length)
             {
-                BitState aEnd = A.Value.IsSigned ? a.Bits[^1] : BitState.Zero;
-                for (int i = length; i < b.Bits.Length; i++)
-                {
-                    result.Bits[i] = CompOpPropX(aEnd, b.Bits[i], aEnd ^ b.Bits[i]);
-                }
+                ExtendedBitwise(length, A, a.Bits, b.Bits, result.Bits);
             }
 
             result.IsValidBinary = a.IsValidBinary & b.IsValidBinary;
