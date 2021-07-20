@@ -16,8 +16,9 @@ namespace ChiselDebug.GraphFIR
         public readonly bool IsVectorIndexer;
 
         private readonly Input[] ChoiseInputs;
-        private readonly bool[] ChoiseIsSInt;
         private readonly Output[] ResultOutputs;
+        private readonly BinaryVarValue[] UnknownOutputs;
+        private bool CanOverrideResult = false;
 
         public Mux(List<FIRIO> choises, Output decider, FirrtlNode defNode, bool isVectorIndexer = false) : base(defNode)
         {
@@ -46,6 +47,7 @@ namespace ChiselDebug.GraphFIR
 
             this.ChoiseInputs = Choises.SelectMany(x => x.Flatten().Cast<Input>()).ToArray();
             this.ResultOutputs = Result.Flatten().Cast<Output>().ToArray();
+            this.UnknownOutputs = new BinaryVarValue[ResultOutputs.Length];
         }
 
         public override Input[] GetInputs()
@@ -80,10 +82,7 @@ namespace ChiselDebug.GraphFIR
             //so therefore it's set to undecided
             if (!deciderValue.IsValidBinary)
             {
-                foreach (var output in ResultOutputs)
-                {
-                    output.GetValue().SetAllUnknown();
-                }
+                SetResultToUnknown();
                 return;
             }
 
@@ -103,11 +102,7 @@ namespace ChiselDebug.GraphFIR
                     //Conditionally valid
                     if (Choises.Length == 1)
                     {
-                        foreach (Output output in ResultOutputs)
-                        {
-                            output.GetValue().SetAllUnknown();
-                        }
-
+                        SetResultToUnknown();
                         return;
                     }
 
@@ -120,12 +115,40 @@ namespace ChiselDebug.GraphFIR
                 ChosenInputs = ChoiseInputs.AsSpan(ResultOutputs.Length * index, ResultOutputs.Length);
             }
 
-            for (int i = 0; i < ResultOutputs.Length; i++)
+            if (CanOverrideResult)
             {
-                ref BinaryVarValue fromBin = ref ChosenInputs[i].UpdateValueFromSourceFast();
-                ref BinaryVarValue toBin = ref ResultOutputs[i].GetValue();
+                for (int i = 0; i < ResultOutputs.Length; i++)
+                {
+                    ResultOutputs[i].Value.OverrideValue(ref ChosenInputs[i].UpdateValueFromSourceFast());
+                }
+            }
+            else
+            {
+                for (int i = 0; i < ResultOutputs.Length; i++)
+                {
+                    ref BinaryVarValue fromBin = ref ChosenInputs[i].UpdateValueFromSourceFast();
+                    ref BinaryVarValue toBin = ref ResultOutputs[i].GetValue();
 
-                toBin.SetBitsAndExtend(ref fromBin, ChosenInputs[i].Value.IsSigned);
+                    toBin.SetBitsAndExtend(ref fromBin, ChosenInputs[i].Value.IsSigned);
+                }
+            }
+        }
+
+        private void SetResultToUnknown()
+        {
+            if (CanOverrideResult)
+            {
+                for (int i = 0; i < ResultOutputs.Length; i++)
+                {
+                    ResultOutputs[i].Value.OverrideValue(ref UnknownOutputs[i]);
+                }
+            }
+            else
+            {
+                foreach (Output output in ResultOutputs)
+                {
+                    output.GetValue().SetAllUnknown();
+                }
             }
         }
 
@@ -134,6 +157,37 @@ namespace ChiselDebug.GraphFIR
             foreach (Input input in GetInputs())
             {
                 input.InferType();
+            }
+            foreach (Output output in GetOutputs())
+            {
+                output.InferType();
+            }
+
+            for (int i = 0; i < UnknownOutputs.Length; i++)
+            {
+                UnknownOutputs[i] = new BinaryVarValue(ResultOutputs[i].Type.Width, false);
+                UnknownOutputs[i].SetAllUnknown();
+            }
+
+            //If no input is extended to fit its output then it's possible
+            //to directly point to the input values instead of copying
+            //its value to the output
+            bool noExtension = true;
+            for (int i = 0; i < ResultOutputs.Length; i++)
+            {
+                for (int x = 0; x < Choises.Length; x++)
+                {
+                    if (ResultOutputs[i].Type.Width != ChoiseInputs[i + x * ResultOutputs.Length].Type.Width)
+                    {
+                        noExtension = false;
+                        break;
+                    }
+                }
+            }
+
+            if (noExtension)
+            {
+                CanOverrideResult = true;
             }
         }
     }
