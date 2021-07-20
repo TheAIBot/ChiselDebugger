@@ -77,6 +77,11 @@ namespace ChiselDebug.GraphFIR.IO
             Value = new ValueType(Type);
         }
 
+        public void SetDefaultValueNoState()
+        {
+            Value = new ValueType(Type, true);
+        }
+
         public ref BinaryVarValue GetValue()
         {
             return ref Value.Value;

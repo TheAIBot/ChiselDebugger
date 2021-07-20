@@ -22,6 +22,20 @@ namespace ChiselDebug.GraphFIR
             this.ValueString = null;
         }
 
+        public ValueType(GroundType type, bool doNotMakeVar)
+        {
+            this.IsSigned = type is SIntType;
+            this.HasInitialized = true;
+            this.Value = new BinaryVarValue();
+
+            this.ValueString = null;
+        }
+
+        public void OverrideValue(ref BinaryVarValue update)
+        {
+            Value = update;
+        }
+
         public void UpdateValue(ref BinaryVarValue update)
         {
             Value.SetBitsAndExtend(ref update, IsSigned);

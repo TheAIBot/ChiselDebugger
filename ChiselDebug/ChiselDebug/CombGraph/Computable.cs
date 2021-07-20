@@ -41,7 +41,7 @@ namespace ChiselDebug.CombGraph
                 Input input = Con.GetPaired();
                 if (input.IsConnectedToAnything())
                 {
-                    Con.Value.UpdateValue(ref input.UpdateValueFromSourceFast());
+                    Con.Value.OverrideValue(ref input.UpdateValueFromSourceFast());
                 }
             }
         }
@@ -49,7 +49,7 @@ namespace ChiselDebug.CombGraph
         private void ComputeConOptimized()
         {
             Input input = Con.GetPaired();
-            Con.Value.UpdateValue(ref input.UpdateValueFromSourceFast());
+            Con.Value.OverrideValue(ref input.UpdateValueFromSourceFast());
         }
 
         public Output ComputeGetIfChanged()
@@ -107,8 +107,15 @@ namespace ChiselDebug.CombGraph
             else
             {
                 Con.InferType();
-                Con.SetDefaultvalue();
-                OldValue = new BinaryVarValue(Con.GetValue().Bits.Length, false);
+                if (IsBorderIO && Con.GetPaired().IsConnectedToAnything())
+                {
+                    Con.SetDefaultValueNoState();
+                }
+                else
+                {
+                    Con.SetDefaultvalue();
+                }
+                OldValue = new BinaryVarValue(Con.Type.Width, false);
                 OldValue.SetAllUnknown();
 
                 foreach (var input in Con.GetConnectedInputs())
