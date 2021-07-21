@@ -74,12 +74,10 @@ namespace ChiselDebug.GraphFIR.IO
 
         public void SetDefaultvalue()
         {
-            Value = new ValueType(Type);
-        }
-
-        public void SetDefaultValueNoState()
-        {
-            Value = new ValueType(Type, true);
+            if (Value == null)
+            {
+                Value = new ValueType(Type);
+            }
         }
 
         public ref BinaryVarValue GetValue()
@@ -123,7 +121,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         public bool HasValue()
         {
-            return Value.IsInitialized();
+            return Value != null;
         }
 
         public abstract ScalarIO GetPaired();

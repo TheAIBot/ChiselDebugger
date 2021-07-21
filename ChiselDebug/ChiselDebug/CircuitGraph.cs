@@ -275,7 +275,7 @@ namespace ChiselDebug
                             continue;
                         }
 
-                        if (!con.Value.IsInitialized())
+                        if (!con.HasValue())
                         {
                             continue;
                         }
@@ -335,7 +335,7 @@ namespace ChiselDebug
             {
                 foreach (var scalar in io.Flatten())
                 {
-                    if (!scalar.IsAnonymous && scalar.Value.IsInitialized())
+                    if (!scalar.IsAnonymous && scalar.HasValue())
                     {
                         builder.Append(indentation + '\t');
                         builder.Append(scalar.GetFullName());
@@ -386,7 +386,7 @@ namespace ChiselDebug
                             builder.Append(indentation);
                             builder.Append(ioName);
                             builder.Append(" = ");
-                            if (scalar.Value.IsInitialized())
+                            if (scalar.HasValue())
                             {
                                 builder.AppendLine(scalar.Value.ToBinaryString());
                             }

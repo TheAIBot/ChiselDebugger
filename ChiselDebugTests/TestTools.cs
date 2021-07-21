@@ -96,7 +96,7 @@ namespace ChiselDebugTests
                     }
 
                     ref BinaryVarValue  actual = ref varCon.GetValue();
-                    if (!varCon.Value.IsInitialized())
+                    if (!varCon.HasValue())
                     {
                         continue;
                     }

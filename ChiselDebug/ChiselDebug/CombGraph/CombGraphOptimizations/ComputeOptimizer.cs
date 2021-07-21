@@ -16,6 +16,7 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
 
             ConstFolding.Optimize(optimized);
             OmitSuperfluousCons.Optimize(optimized);
+            RemoveBorderPassCopies.Optimize(optimized);
 
 
             return optimized.ToOptimized();
