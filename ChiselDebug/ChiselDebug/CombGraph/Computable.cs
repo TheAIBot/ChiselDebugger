@@ -90,10 +90,7 @@ namespace ChiselDebug.CombGraph
             {
                 Con.InferType();
                 Con.SetDefaultvalue();
-                if (IsBorderIO)
-                {
-                    Con.GetPaired().Value = Con.Value;
-                }
+
                 OldValue = new BinaryVarValue(Con.Type.Width, false);
                 OldValue.SetAllUnknown();
 
