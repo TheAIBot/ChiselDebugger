@@ -10,7 +10,7 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
 {
     internal static class ConstFolding
     {
-        public static void Optimize(CombComputeOrder compOrder)
+        public static void Optimize(CombComputeOrder<Computable> compOrder)
         {
             HashSet<Output> constOutput = new HashSet<Output>();
             ReadOnlySpan<Computable> oldOrder = compOrder.GetComputeOrder();

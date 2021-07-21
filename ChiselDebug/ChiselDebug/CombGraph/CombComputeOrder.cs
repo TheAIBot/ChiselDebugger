@@ -7,20 +7,15 @@ using System.Linq;
 
 namespace ChiselDebug.CombGraph
 {
-    public class CombComputeOrder
+    public class CombComputeOrder<T> where T : ICompute
     {
         private readonly Output[] StartOutputs;
-        private Computable[] ComputeOrder;
-        private bool HasBeenOptimized = false;
+        private T[] ComputeOrder;
 
-        public CombComputeOrder(Output[] startOutputs, Computable[] computeOrder) : this(startOutputs, computeOrder, false)
-        { }
-
-        private CombComputeOrder(Output[] startOutputs, Computable[] computeOrder, bool isOptimized)
+        private CombComputeOrder(Output[] startOutputs, T[] computeOrder)
         {
             this.StartOutputs = startOutputs;
             this.ComputeOrder = computeOrder;
-            this.HasBeenOptimized = isOptimized;
         }
 
         public List<Output> ComputeAndGetChanged()
@@ -40,19 +35,9 @@ namespace ChiselDebug.CombGraph
 
         public void ComputeFast()
         {
-            if (HasBeenOptimized)
+            for (int i = 0; i < ComputeOrder.Length; i++)
             {
-                for (int i = 0; i < ComputeOrder.Length; i++)
-                {
-                    ComputeOrder[i].ComputeFastOptimized();
-                }
-            }
-            else
-            {
-                for (int i = 0; i < ComputeOrder.Length; i++)
-                {
-                    ComputeOrder[i].ComputeFast();
-                }
+                ComputeOrder[i].Compute();
             }
         }
 
@@ -69,27 +54,33 @@ namespace ChiselDebug.CombGraph
             return StartOutputs;
         }
 
-        public ReadOnlySpan<Computable> GetComputeOrder()
+        public ReadOnlySpan<T> GetComputeOrder()
         {
             return ComputeOrder;
         }
 
-        public void SetComputeOrder(Computable[] order)
+        public void SetComputeOrder(T[] order)
         {
             ComputeOrder = order;
         }
 
-        public CombComputeOrder Copy()
+        public CombComputeOrder<T> Copy()
         {
-            return new CombComputeOrder(StartOutputs.ToArray(), ComputeOrder.ToArray(), HasBeenOptimized);
+            return new CombComputeOrder<T>(StartOutputs.ToArray(), ComputeOrder.ToArray());
         }
 
-        internal void SetIsOptimized()
+        public CombComputeOrder<ComputableOpti> ToOptimized()
         {
-            HasBeenOptimized = true;
+            ComputableOpti[] optimized = new ComputableOpti[ComputeOrder.Length];
+            for (int i = 0; i < ComputeOrder.Length; i++)
+            {
+                optimized[i] = new ComputableOpti(ComputeOrder[i]);
+            }
+
+            return new CombComputeOrder<ComputableOpti>(StartOutputs.ToArray(), optimized);
         }
 
-        public static CombComputeOrder MakeMonoGraph(Module module)
+        public static CombComputeOrder<Computable> MakeMonoGraph(Module module)
         {
             List<Output> startingPoints = new List<Output>();
             foreach (var childMod in module.GetAllNestedNodesOfType<Module>())
@@ -158,7 +149,7 @@ namespace ChiselDebug.CombGraph
             }
         }
 
-        private static CombComputeOrder MakeCombComputeNode(Output[] outputs)
+        private static CombComputeOrder<Computable> MakeCombComputeNode(Output[] outputs)
         {
             HashSet<Output> seenCons = new HashSet<Output>();
             HashSet<SourceSinkCon> seenSourceSinkCons = new HashSet<SourceSinkCon>();
@@ -379,7 +370,7 @@ namespace ChiselDebug.CombGraph
                 }
             }
 
-            return new CombComputeOrder(outputs, computeOrder.ToArray());
+            return new CombComputeOrder<Computable>(outputs, computeOrder.ToArray());
         }
     }
 }

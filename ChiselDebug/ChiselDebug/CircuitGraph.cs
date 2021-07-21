@@ -16,8 +16,8 @@ namespace ChiselDebug
     {
         public readonly string Name;
         public readonly Module MainModule;
-        public readonly CombComputeOrder ComputeGraph;
-        public readonly CombComputeOrder OptimizedComputegraph;
+        public readonly CombComputeOrder<Computable> ComputeGraph;
+        public readonly CombComputeOrder<ComputableOpti> OptimizedComputegraph;
         private readonly Dictionary<VarDef, ScalarIO> VarDefToCon = new Dictionary<VarDef, ScalarIO>();
         private readonly HashSet<Output> ComputeAllowsUpdate = new HashSet<Output>();
         private readonly Dictionary<string, List<Output>> VarDefIDToCon = new Dictionary<string, List<Output>>();
@@ -26,7 +26,7 @@ namespace ChiselDebug
         {
             this.Name = name;
             this.MainModule = mainModule;
-            this.ComputeGraph = CombComputeOrder.MakeMonoGraph(MainModule);
+            this.ComputeGraph = CombComputeOrder<Computable>.MakeMonoGraph(MainModule);
             ComputeGraph.InferTypes();
             this.OptimizedComputegraph = ComputeOptimizer.Optimize(ComputeGraph);
 

@@ -10,7 +10,7 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
 {
     internal static class OmitSuperfluousCons
     {
-        public static void Optimize(CombComputeOrder compOrder)
+        public static void Optimize(CombComputeOrder<Computable> compOrder)
         {
             ReadOnlySpan<Computable> oldOrder = compOrder.GetComputeOrder();
             List<Computable> newOrder = new List<Computable>();

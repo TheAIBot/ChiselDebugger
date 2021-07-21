@@ -5,7 +5,7 @@ using VCDReader;
 
 namespace ChiselDebug.CombGraph
 {
-    public struct Computable
+    public struct Computable : ICompute
     {
         private readonly FIRRTLNode Node;
         private readonly Output Con;
@@ -46,12 +46,6 @@ namespace ChiselDebug.CombGraph
             }
         }
 
-        private void ComputeConOptimized()
-        {
-            Input input = Con.GetPaired();
-            Con.Value.OverrideValue(ref input.UpdateValueFromSourceFast());
-        }
-
         public Output ComputeGetIfChanged()
         {
             if (Node != null)
@@ -74,7 +68,7 @@ namespace ChiselDebug.CombGraph
             return null;
         }
 
-        public void ComputeFast()
+        public void Compute()
         {
             if (Node != null)
             {
@@ -83,18 +77,6 @@ namespace ChiselDebug.CombGraph
             else
             {
                 ComputeCon();
-            }
-        }
-
-        public void ComputeFastOptimized()
-        {
-            if (Node != null)
-            {
-                ComputeNode();
-            }
-            else
-            {
-                ComputeConOptimized();
             }
         }
 
