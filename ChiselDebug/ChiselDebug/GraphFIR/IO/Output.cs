@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using VCDReader;
 
 namespace ChiselDebug.GraphFIR.IO
@@ -98,6 +99,11 @@ namespace ChiselDebug.GraphFIR.IO
         public override ref BinaryVarValue FetchValue()
         {
             return ref Value.Value;
+        }
+
+        public void SetFromBigInt(BigInteger newValue)
+        {
+            Value.SetFromBigInt(newValue);
         }
 
         public override Input GetPaired()

@@ -22,6 +22,7 @@ namespace VCDReader
         public bool IsValidBinary;
 
         public Span<BitState> Bits => BitSlice.Span;
+        public int Length => BitSlice.Length;
         public List<VarDef>? Variables => Vars;
 
         public BinaryVarValue(UnsafeMemory<BitState> bits, List<VarDef> variables, bool isValidBinary)

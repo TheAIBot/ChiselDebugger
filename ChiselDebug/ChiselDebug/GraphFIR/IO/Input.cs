@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using VCDReader;
 
 namespace ChiselDebug.GraphFIR.IO
@@ -229,29 +230,14 @@ namespace ChiselDebug.GraphFIR.IO
 
         public void UpdateValueFromSource()
         {
-            if (CondCons != null)
+            ValueType enabledValue = FetchValueFromSourceFast();
+            if (enabledValue != Value)
             {
-                for (int i = CondCons.Count - 1; i >= 0; i--)
-                {
-                    var condCon = CondCons[i];
-                    if (condCon.IsEnabled())
-                    {
-                        Value.UpdateFrom(ref condCon.From.Value);
-                        return;
-                    }
-                }
+                Value.UpdateFrom(enabledValue);
             }
-
-            if (Con != null)
-            {
-                Value.UpdateFrom(ref Con.Value);
-                return;
-            }
-
-            Value.Value.SetAllUnknown();
         }
 
-        public ref BinaryVarValue UpdateValueFromSourceFast()
+        private ValueType FetchValueFromSourceFast()
         {
             if (CondCons != null)
             {
@@ -260,30 +246,35 @@ namespace ChiselDebug.GraphFIR.IO
                     var condCon = CondCons[i];
                     if (condCon.IsEnabled())
                     {
-                        if (condCon.From.Type.Width == Type.Width)
-                        {
-                            return ref condCon.From.GetValue();
-                        }
-
-                        Value.UpdateFrom(ref condCon.From.Value);
-                        return ref GetValue();
+                        return condCon.From.Value;
                     }
                 }
             }
 
             if (Con != null)
             {
-                if (Con.Type.Width == Type.Width)
-                {
-                    return ref Con.GetValue();
-                }
-
-                Value.UpdateFrom(ref Con.Value);
-                return ref GetValue();
+                return Con.Value;
             }
 
             Value.Value.SetAllUnknown();
-            return ref GetValue();
+            return Value;
+        }
+
+        public ref BinaryVarValue UpdateValueFromSourceFast()
+        {
+            ValueType enabledValue = FetchValueFromSourceFast();
+            if (enabledValue.Value.Length != Value.Value.Length)
+            {
+                Value.UpdateFrom(enabledValue);
+                return ref GetValue();
+            }
+
+            return ref enabledValue.Value;
+        }
+
+        public BigInteger GetValueAsBigInt()
+        {
+            return Value.GetAsBigInt();
         }
 
         public override void InferGroundType()
