@@ -24,6 +24,15 @@
     private ScopedNodeIO ChoiseIO = null;
     private ScopedNodeIO ResultIO = null;
 
+    protected override void OnFirstParametersSetAsync()
+    {
+        int heightForSlope = INDENT * 2;
+        int heightForIO = Operation.Choises.Length * IOPositionCalc.MinSpaceBetweenIO;
+        SetCurrentSize(new Point(WIDTH, heightForSlope + heightForIO));
+
+        base.OnFirstParametersSetAsync();
+    }
+
     protected override List<DirectedIO> OnMakeInputs(int width, int height)
     {
         List<DirectedIO> inputs = new List<DirectedIO>();
@@ -33,7 +42,7 @@
         inputs.Add(new DirectedIO(Operation.Decider, deciderOffset, MoveDirs.Down));
 
         ChoiseIO = IOPositionCalc.VerticalScopedIO(Operation.Choises.ToArray(), 0, INDENT, INDENT);
-        SetCurrentSize(new Point(GetCurrentSize().X, ChoiseIO.HeightNeeded));
+        ChoiseIO.VerticalRecenter(height);
 
         inputs.AddRange(ChoiseIO.GetInputDirIO());
 

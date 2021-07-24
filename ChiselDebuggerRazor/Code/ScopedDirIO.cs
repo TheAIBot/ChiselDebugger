@@ -25,7 +25,7 @@ namespace ChiselDebuggerRazor.Code
         public void SetY(int newY)
         {
             Point currPos = DirIO.Position;
-            Point newPos = new Point(DirIO.Position.X, newY);
+            Point newPos = new Point(currPos.X, newY);
             Point offset = newPos - currPos;
 
             DirIO = DirIO.WithOffsetPosition(offset);

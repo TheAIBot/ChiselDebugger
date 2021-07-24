@@ -11,7 +11,7 @@ namespace ChiselDebuggerRazor.Code
     internal static class IOPositionCalc
     {
         private const int MaxSpaceBetweenIO = 40;
-        private const int MinSpaceBetweenIO = 20;
+        public const int MinSpaceBetweenIO = 20;
         private const int ExtraSpaceBetweenBundles = 10;
         public const int ScopeExtraY = (MinSpaceBetweenIO + ExtraSpaceBetweenBundles) / 3;
         public const int ScopeWidth = 5;
@@ -57,8 +57,7 @@ namespace ChiselDebuggerRazor.Code
 
             MakeScopedIO(inputIO, outputIO, io, fixedX, ref inputY, ref outputY, 0, ignoreDisconnectedIO);
 
-            int heightNeeded = Math.Max(inputY, outputY) + endYPadding;
-            return new ScopedNodeIO(inputIO, outputIO, heightNeeded, startYPadding, endYPadding);
+            return new ScopedNodeIO(inputIO, outputIO, startYPadding, endYPadding);
         }
 
         private static bool MakeScopedIO(List<ScopedDirIO> inputIO, List<ScopedDirIO> outputIO, FIRIO[] io, int fixedX, ref int inputYOffset, ref int outputYOffset, int scopeDepth, bool ignoreDisconnectedIO)

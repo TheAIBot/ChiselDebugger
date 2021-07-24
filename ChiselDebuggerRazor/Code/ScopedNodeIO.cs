@@ -32,13 +32,16 @@ namespace ChiselDebuggerRazor.Code
         };
 
 
-        public ScopedNodeIO(List<ScopedDirIO> inputs, List<ScopedDirIO> outputs, int heightNeeded, int yStartPad, int yEndPad)
+        public ScopedNodeIO(List<ScopedDirIO> inputs, List<ScopedDirIO> outputs, int yStartPad, int yEndPad)
         {
             this.InputOffsets = inputs;
             this.OutputOffsets = outputs;
-            this.HeightNeeded = heightNeeded;
             this.YStartPadding = yStartPad;
             this.YEndPadding = yEndPad;
+
+            int inputHeight = inputs.Count > 0 ? inputs.Max(x => x.DirIO.Position.Y) : 0;
+            int outputHeight = outputs.Count > 0 ? outputs.Max(x => x.DirIO.Position.Y) : 0;
+            this.HeightNeeded = Math.Max(inputHeight, outputHeight) + yEndPad;
 
             RemakeScopes();
         }
@@ -190,7 +193,7 @@ namespace ChiselDebuggerRazor.Code
             var inputCopies = InputOffsets.Select(x => x.Copy()).ToList();
             var outputCopies = OutputOffsets.Select(x => x.Copy()).ToList();
 
-            return new ScopedNodeIO(inputCopies, outputCopies, HeightNeeded, YStartPadding, YEndPadding);
+            return new ScopedNodeIO(inputCopies, outputCopies, YStartPadding, YEndPadding);
         }
     }
 }
