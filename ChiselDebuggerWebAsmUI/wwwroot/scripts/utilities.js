@@ -41,6 +41,10 @@ const reObserver = new ResizeObserver(async entries => {
         const oldSize = oldSizes[elementID];
         const newSize = JSUtils.getElementSize(entry.target);
 
+        if (newSize.Width == 0 && newSize.Height == 0) {
+            continue;
+        }
+
         if (!oldSize.approxEquals(newSize)) {
             oldSizes[elementID] = newSize;
             elemID.push(elementID);
