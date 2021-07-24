@@ -14,7 +14,6 @@ namespace ChiselDebuggerRazor.Code
         private Stream HiFirrtlStream;
         private Stream LoFirrtlStream;
         private Stream VCDStream;
-        public bool IsVerilogVCD;
         public bool IsReady => Ready;
 
         public delegate void CircuitData();
@@ -33,7 +32,7 @@ namespace ChiselDebuggerRazor.Code
             return VCDStream;
         }
 
-        public void UpdateFromPath(string hiFirrtlPath, string loFirrtlPath, string vcdPath, bool isVerilogVCD)
+        public void UpdateFromPath(string hiFirrtlPath, string loFirrtlPath, string vcdPath)
         {
             Clear();
 
@@ -50,7 +49,6 @@ namespace ChiselDebuggerRazor.Code
                 VCDStream = File.OpenRead(vcdPath);
             }
 
-            IsVerilogVCD = isVerilogVCD;
             Ready = true;
             OnViewCircuit?.Invoke();
         }
@@ -70,7 +68,7 @@ namespace ChiselDebuggerRazor.Code
             return memStream;
         }
 
-        public async Task<bool> UpdateFromFiles(IReadOnlyList<IBrowserFile> files, bool isVerilogVCD)
+        public async Task<bool> UpdateFromFiles(IReadOnlyList<IBrowserFile> files)
         {
             Clear();
 
@@ -108,7 +106,6 @@ namespace ChiselDebuggerRazor.Code
             LoFirrtlStream = loFirrtlPath.Result;
             VCDStream = vcdPath.Result;
 
-            IsVerilogVCD = isVerilogVCD;
             Ready = true;
             OnViewCircuit?.Invoke();
             return true;

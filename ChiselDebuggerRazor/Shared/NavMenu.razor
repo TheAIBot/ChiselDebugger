@@ -68,13 +68,13 @@
         string filenameNoExtension = firrtlFilename.Split('.').First();
         string vcdPath = System.IO.Path.Combine(ExamplesFolder, $"{filenameNoExtension}.vcd");
 
-        Files.UpdateFromPath(hiFirPath, loFirPath, vcdPath, true);
+        Files.UpdateFromPath(hiFirPath, loFirPath, vcdPath);
     }
 
     private async void LoadFiles(InputFileChangeEventArgs e)
     {
         var files = e.GetMultipleFiles();
 
-        await Files.UpdateFromFiles(e.GetMultipleFiles(), false);
+        await Files.UpdateFromFiles(e.GetMultipleFiles());
     }
 }

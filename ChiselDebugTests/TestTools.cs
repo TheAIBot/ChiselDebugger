@@ -89,7 +89,7 @@ namespace ChiselDebugTests
             {
                 foreach (var variable in variables)
                 {
-                    ScalarIO varCon = graph.GetConnection(variable, isVerilogVCD);
+                    ScalarIO varCon = graph.GetConnection(variable);
                     if (varCon == null)
                     {
                         continue;
@@ -142,7 +142,7 @@ namespace ChiselDebugTests
             {
                 foreach (var variable in expected.Variables)
                 {
-                    ScalarIO varCon = graph.GetConnection(variable, isVerilogVCD);
+                    ScalarIO varCon = graph.GetConnection(variable);
                     if (varCon == null)
                     {
                         ignoreTracker.IgnoreBecauseNotExist(variable);
@@ -176,7 +176,7 @@ namespace ChiselDebugTests
             List<string> stateErrors = new List<string>();
             foreach (var state in timeline.GetAllDistinctStates())
             {
-                graph.SetState(state, isVerilogVCD);
+                graph.SetState(state);
                 if (state.Time == timeline.TimeInterval.StartInclusive)
                 {
                     continue;

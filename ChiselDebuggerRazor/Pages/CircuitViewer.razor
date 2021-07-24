@@ -84,7 +84,7 @@ else if (ThrownException is Exception)
                 using var hiFir = Files.GetHiFirrtlStream();
                 using var vcd = Files.GetVCDStream();
 
-                LoadFirData(loFir, hiFir, vcd, Files.IsVerilogVCD);
+                LoadFirData(loFir, hiFir, vcd);
             }
             catch (Exception e)
             {
@@ -94,7 +94,7 @@ else if (ThrownException is Exception)
         });
     }
 
-    private void LoadFirData(Stream loFirStream, Stream hiFirStream, Stream vcdStream, bool isVerilogVCD)
+    private void LoadFirData(Stream loFirStream, Stream hiFirStream, Stream vcdStream)
     {
         CircuitGraph loGraph = null;
         if (loFirStream != null)
@@ -117,7 +117,7 @@ else if (ThrownException is Exception)
         if (vcdStream != null)
         {
             using VCD vcd = VCDReader.Parse.FromStream(vcdStream);
-            DebugCtrl.AddVCD(vcd, isVerilogVCD);
+            DebugCtrl.AddVCD(vcd);
 
             InvokestateHasChanged();
         }

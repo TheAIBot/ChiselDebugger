@@ -20,7 +20,6 @@ namespace ChiselDebuggerRazor.Code
     {
         private readonly CircuitGraph Graph;
         public VCDTimeline Timeline { get; set; } = null;
-        private bool IsVerilogVCD;
         private readonly Dictionary<FIRRTLNode, ModuleLayout> FIRNodeToModCtrl = new Dictionary<FIRRTLNode, ModuleLayout>();
         private readonly List<ModuleLayout> ModControllers = new List<ModuleLayout>();
         private readonly PlacementTemplator PlacementTemplates = new PlacementTemplator();
@@ -39,10 +38,9 @@ namespace ChiselDebuggerRazor.Code
             this.Graph = graph;
         }
 
-        public void AddVCD(VCD vcd, bool isVerilogVCD)
+        public void AddVCD(VCD vcd)
         {
             Timeline = new VCDTimeline(vcd);
-            IsVerilogVCD = isVerilogVCD;
 
             SetCircuitState(Timeline.TimeInterval.StartInclusive);
         }
@@ -93,7 +91,7 @@ namespace ChiselDebuggerRazor.Code
         {
             StateLimiter.AddWork(time, stateTime =>
             {
-                Graph.SetState(Timeline.GetStateAtTime(stateTime), IsVerilogVCD);
+                Graph.SetState(Timeline.GetStateAtTime(stateTime));
                 Graph.ComputeRemainingGraph();
 
                 if (RootModCtrl != null)
