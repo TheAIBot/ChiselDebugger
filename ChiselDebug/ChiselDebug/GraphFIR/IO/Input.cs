@@ -237,7 +237,7 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        private ValueType FetchValueFromSourceFast()
+        public ValueType FetchValueFromSourceFast()
         {
             if (CondCons != null)
             {
