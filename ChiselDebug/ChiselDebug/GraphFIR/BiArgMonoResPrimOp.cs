@@ -36,24 +36,6 @@ namespace ChiselDebug.GraphFIR
             yield return Result;
         }
 
-        public override void Compute()
-        {
-            ref BinaryVarValue aVal = ref A.UpdateValueFromSourceFast();
-            ref BinaryVarValue bVal = ref B.UpdateValueFromSourceFast();
-            ref BinaryVarValue resultVal = ref Result.GetValue();
-
-            Debug.Assert(aVal.IsValidBinary == aVal.Bits.IsAllBinary());
-            Debug.Assert(bVal.IsValidBinary == bVal.Bits.IsAllBinary());
-
-            resultVal.IsValidBinary = true;
-            BiArgPropCompute(ref aVal, ref bVal, ref resultVal);
-
-            Debug.Assert(resultVal.IsValidBinary == resultVal.Bits.IsAllBinary(), $"A: {aVal.BitsToString()}\nB: {bVal.BitsToString()}\nR: {resultVal.BitsToString()}");
-        }
-        protected abstract void BiArgPropCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result);
-
-        protected abstract void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result);
-
         internal override void InferType()
         {
             if (Result.Type is GroundType ground && ground.IsTypeFullyKnown())
@@ -74,16 +56,21 @@ namespace ChiselDebug.GraphFIR
         public BiArgPrimOpAlwaysPropUnknown(string opName, Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base(opName, aIn, bIn, outType, defNode)
         { }
 
-        protected override void BiArgPropCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
+        public override void Compute()
         {
-            if (!a.IsValidBinary || !b.IsValidBinary)
+            ValueType a = A.FetchValueFromSourceFast();
+            ValueType b = B.FetchValueFromSourceFast();
+            if (!a.Value.IsValidBinary || !b.Value.IsValidBinary)
             {
-                result.SetAllUnknown();
+                Result.Value.Value.SetAllUnknown();
                 return;
             }
 
-            BiArgCompute(ref a, ref b, ref result);
+            Result.Value.Value.IsValidBinary = true;
+            BiArgCompute(a, b);
         }
+
+        protected abstract void BiArgCompute(ValueType a, ValueType b);
     }
 
     public abstract class BiArgPrimOpCheckPropUnknown : BiArgMonoResPrimOp
@@ -91,21 +78,31 @@ namespace ChiselDebug.GraphFIR
         public BiArgPrimOpCheckPropUnknown(string opName, Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base(opName, aIn, bIn, outType, defNode)
         { }
 
-        protected override void BiArgPropCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
+        public override void Compute()
         {
-            BiArgCompute(ref a, ref b, ref result);
+            ref BinaryVarValue aVal = ref A.UpdateValueFromSourceFast();
+            ref BinaryVarValue bVal = ref B.UpdateValueFromSourceFast();
+            ref BinaryVarValue resultVal = ref Result.GetValue();
+
+            Debug.Assert(aVal.IsValidBinary == aVal.Bits.IsAllBinary());
+            Debug.Assert(bVal.IsValidBinary == bVal.Bits.IsAllBinary());
+
+            resultVal.IsValidBinary = true;
+            BiArgCompute(ref aVal, ref bVal, ref resultVal);
+
+            Debug.Assert(resultVal.IsValidBinary == resultVal.Bits.IsAllBinary(), $"A: {aVal.BitsToString()}\nB: {bVal.BitsToString()}\nR: {resultVal.BitsToString()}");
         }
+
+        protected abstract void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result);
     }
 
     public class FIRAdd : BiArgPrimOpAlwaysPropUnknown
     {
         public FIRAdd(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("+", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
+        protected override void BiArgCompute(ValueType a, ValueType b)
         {
-            BigInteger aVal = a.AsBigInteger(A.Value.IsSigned);
-            BigInteger bVal = b.AsBigInteger(B.Value.IsSigned);
-            result.SetBitsAndExtend(aVal + bVal, Result.Value.IsSigned);
+            Result.SetFromBigInt(a.GetAsBigInt() + b.GetAsBigInt());
         }
 
         protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
@@ -122,11 +119,9 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRSub(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("-", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
+        protected override void BiArgCompute(ValueType a, ValueType b)
         {
-            BigInteger aVal = a.AsBigInteger(A.Value.IsSigned);
-            BigInteger bVal = b.AsBigInteger(B.Value.IsSigned);
-            result.SetBitsAndExtend(aVal - bVal, Result.Value.IsSigned);
+            Result.SetFromBigInt(a.GetAsBigInt() - b.GetAsBigInt());
         }
 
         protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
@@ -143,11 +138,9 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRMul(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("*", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
+        protected override void BiArgCompute(ValueType a, ValueType b)
         {
-            BigInteger aVal = a.AsBigInteger(A.Value.IsSigned);
-            BigInteger bVal = b.AsBigInteger(B.Value.IsSigned);
-            result.SetBitsAndExtend(aVal * bVal, Result.Value.IsSigned);
+            Result.SetFromBigInt(a.GetAsBigInt() * b.GetAsBigInt());
         }
 
         protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
@@ -164,18 +157,18 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRDiv(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("/", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
+        protected override void BiArgCompute(ValueType a, ValueType b)
         {
-            BigInteger aVal = a.AsBigInteger(A.Value.IsSigned);
-            BigInteger bVal = b.AsBigInteger(B.Value.IsSigned);
+            BigInteger aVal = a.GetAsBigInt();
+            BigInteger bVal = b.GetAsBigInt();
             //Handle divide by zero
             if (bVal == 0)
             {
-                result.SetAllUnknown();
+                Result.Value.Value.SetAllUnknown();
             }
             else
             {
-                result.SetBitsAndExtend(aVal / bVal, Result.Value.IsSigned);
+                Result.SetFromBigInt(aVal / bVal);
             }
         }
 
@@ -193,17 +186,18 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRRem(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("%", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
+        protected override void BiArgCompute(ValueType a, ValueType b)
         {
-            BigInteger aVal = a.AsBigInteger(A.Value.IsSigned);
-            BigInteger bVal = b.AsBigInteger(B.Value.IsSigned);
+            BigInteger aVal = a.GetAsBigInt();
+            BigInteger bVal = b.GetAsBigInt();
+            //Handle divide by zero
             if (bVal == 0)
             {
-                result.SetAllUnknown();
+                Result.Value.Value.SetAllUnknown();
             }
             else
             {
-                result.SetBitsAndExtend(aVal % bVal, Result.Value.IsSigned);
+                Result.SetFromBigInt(aVal % bVal);
             }
         }
 
@@ -325,10 +319,10 @@ namespace ChiselDebug.GraphFIR
     {
         public FIREq(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("=", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
+        protected override void BiArgCompute(ValueType a, ValueType b)
         {
-            bool value = a.SameValue(ref b, A.Value.IsSigned);
-            result.Bits[0] = value ? BitState.One : BitState.Zero;
+            bool value = a.SameValueAs(b);
+            Result.Value.Value.Bits[0] = value ? BitState.One : BitState.Zero;
         }
     }
 
@@ -336,10 +330,10 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRNeq(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("≠", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
+        protected override void BiArgCompute(ValueType a, ValueType b)
         {
-            bool value = a.SameValue(ref b, A.Value.IsSigned);
-            result.Bits[0] = !value ? BitState.One : BitState.Zero;
+            bool value = a.SameValueAs(b);
+            Result.Value.Value.Bits[0] = !value ? BitState.One : BitState.Zero;
         }
     }
 
@@ -347,11 +341,11 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRGeq(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("≥", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
+        protected override void BiArgCompute(ValueType a, ValueType b)
         {
-            BigInteger aVal = a.AsBigInteger(A.Value.IsSigned);
-            BigInteger bVal = b.AsBigInteger(B.Value.IsSigned);
-            result.SetBits(aVal >= bVal ? 1 : 0);
+            BigInteger aVal = a.GetAsBigInt();
+            BigInteger bVal = b.GetAsBigInt();
+            Result.Value.Value.SetBits(aVal >= bVal ? 1 : 0);
         }
     }
 
@@ -359,11 +353,11 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRLeq(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("≤", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
+        protected override void BiArgCompute(ValueType a, ValueType b)
         {
-            BigInteger aVal = a.AsBigInteger(A.Value.IsSigned);
-            BigInteger bVal = b.AsBigInteger(B.Value.IsSigned);
-            result.SetBits(aVal <= bVal ? 1 : 0);
+            BigInteger aVal = a.GetAsBigInt();
+            BigInteger bVal = b.GetAsBigInt();
+            Result.Value.Value.SetBits(aVal <= bVal ? 1 : 0);
         }
     }
 
@@ -371,11 +365,11 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRGt(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base(">", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
+        protected override void BiArgCompute(ValueType a, ValueType b)
         {
-            BigInteger aVal = a.AsBigInteger(A.Value.IsSigned);
-            BigInteger bVal = b.AsBigInteger(B.Value.IsSigned);
-            result.SetBits(aVal > bVal ? 1 : 0);
+            BigInteger aVal = a.GetAsBigInt();
+            BigInteger bVal = b.GetAsBigInt();
+            Result.Value.Value.SetBits(aVal > bVal ? 1 : 0);
         }
     }
 
@@ -383,11 +377,11 @@ namespace ChiselDebug.GraphFIR
     {
         public FIRLt(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("<", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
+        protected override void BiArgCompute(ValueType a, ValueType b)
         {
-            BigInteger aVal = a.AsBigInteger(A.Value.IsSigned);
-            BigInteger bVal = b.AsBigInteger(B.Value.IsSigned);
-            result.SetBits(aVal < bVal ? 1 : 0);
+            BigInteger aVal = a.GetAsBigInt();
+            BigInteger bVal = b.GetAsBigInt();
+            Result.Value.Value.SetBits(aVal < bVal ? 1 : 0);
         }
     }
 

@@ -274,7 +274,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         public BigInteger GetValueAsBigInt()
         {
-            return Value.GetAsBigInt();
+            return FetchValueFromSourceFast().GetAsBigInt();
         }
 
         public override void InferGroundType()

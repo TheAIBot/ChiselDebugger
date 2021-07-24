@@ -47,6 +47,11 @@ namespace ChiselDebug.GraphFIR
             return Value.Bits[0] == BitState.One;
         }
 
+        public bool SameValueAs(ValueType other)
+        {
+            return Value.SameValue(ref other.Value, IsSigned);
+        }
+        
         public BigInteger GetAsBigInt()
         {
             return Value.AsBigInteger(IsSigned);
