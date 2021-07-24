@@ -3,11 +3,10 @@
 <div id="@SizeWatcherID" class="muxContainer" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();">
     <div class="muxShape" style="height:@GetCurrentSize().Y.ToPixels();"></div>
 
-    @foreach (var input in InputOffsets)
+    @if (DeciderIO != null)
     {
-        <IOPortUI Position="@input.Position" IO="@input.IO"></IOPortUI>
+        <IOPortUI Position="@DeciderIO.Position" IO="@DeciderIO.IO"></IOPortUI>
     }
-
     <ScopedIOUI NodeIO="@ChoiseIO"></ScopedIOUI>
     <ScopedIOUI NodeIO="@ResultIO"></ScopedIOUI>
 </div>
@@ -21,6 +20,7 @@
     private const int WIDTH = 25;
     private const int INDENT = 12;
     private const int USABLE_CHOISE_HEIGHT = 25;
+    private DirectedIO DeciderIO = null;
     private ScopedNodeIO ChoiseIO = null;
     private ScopedNodeIO ResultIO = null;
 
@@ -35,17 +35,16 @@
 
     protected override List<DirectedIO> OnMakeInputs(int width, int height)
     {
-        List<DirectedIO> inputs = new List<DirectedIO>();
-
         //Add chose input
         Point deciderOffset = new Point(WIDTH / 2, INDENT / 2);
-        inputs.Add(new DirectedIO(Operation.Decider, deciderOffset, MoveDirs.Down));
+        DeciderIO = new DirectedIO(Operation.Decider, deciderOffset, MoveDirs.Down);
 
         ChoiseIO = IOPositionCalc.VerticalScopedIO(Operation.Choises.ToArray(), 0, INDENT, INDENT);
         ChoiseIO.VerticalRecenter(height);
 
+        List<DirectedIO> inputs = new List<DirectedIO>();
+        inputs.Add(DeciderIO);
         inputs.AddRange(ChoiseIO.GetInputDirIO());
-
         return inputs;
     }
 
