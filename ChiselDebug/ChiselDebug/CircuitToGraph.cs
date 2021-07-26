@@ -542,7 +542,7 @@ namespace ChiselDebug
                 //Fill out module
                 VisitStatement(helper, body);
 
-                cond.AddConditionalModule(internalEnaDummy.InIO, helper.Mod);
+                cond.AddConditionalModule(helper.Mod);
 
                 helper.ExitEnabledScope();
             }

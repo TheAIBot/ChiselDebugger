@@ -94,8 +94,8 @@ namespace ChiselDebug.GraphFIR.IO
                 {
                     foreach (var condMod in condNode.CondMods)
                     {
-                        containedCondMods.Add(condMod.Mod);
-                        BypassThroughCondModules(condMod.Mod);
+                        containedCondMods.Add(condMod);
+                        BypassThroughCondModules(condMod);
                     }
                 }
             }

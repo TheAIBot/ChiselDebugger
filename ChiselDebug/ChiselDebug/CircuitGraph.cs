@@ -365,7 +365,7 @@ namespace ChiselDebug
                     {
                         builder.Append(indentation);
                         builder.AppendLine("when");
-                        NodesStateToString(builder, condMod.Mod.GetAllNodes(), indentation);
+                        NodesStateToString(builder, condMod.GetAllNodes(), indentation);
                     }
                 }
                 else

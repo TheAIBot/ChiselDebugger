@@ -100,7 +100,7 @@ namespace ChiselDebug.GraphFIR
                 {
                     foreach (var condMod in condNode.CondMods)
                     {
-                        if (condMod.Mod.TryGetIO(ioName, out container))
+                        if (condMod.TryGetIO(ioName, out container))
                         {
                             return true;
                         }
@@ -250,7 +250,7 @@ namespace ChiselDebug.GraphFIR
                 {
                     foreach (var condMod in cond.CondMods)
                     {
-                        foreach (var tFound in condMod.Mod.GetAllNestedNodesOfType<T>())
+                        foreach (var tFound in condMod.GetAllNestedNodesOfType<T>())
                         {
                             yield return tFound;
                         }

@@ -84,7 +84,7 @@ namespace ChiselDebuggerRazor.Code
             int y = 0;
             foreach (var condMod in Cond.CondMods)
             {
-                Module mod = condMod.Mod;
+                Module mod = condMod;
                 Point offset = new Point(0, y);
                 positions.Add(new Positioned<Module>(offset, mod));
 
@@ -97,7 +97,7 @@ namespace ChiselDebuggerRazor.Code
                     outputOffsets.Add(outOfset.WithOffsetPosition(offset));
                 }
 
-                y += ModuleSizes[condMod.Mod].Y;
+                y += ModuleSizes[condMod].Y;
             }
 
             CondSize = new Point(ModuleSizes.Values.Max(x => x.X), y);
