@@ -302,8 +302,8 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.Stop stop)
             {
-                var clock = (GraphFIR.IO.Output)VisitExp(helper, stop.Clk, GraphFIR.IO.IOGender.Male);
-                var enable = (GraphFIR.IO.Output)VisitExp(helper, stop.Enabled, GraphFIR.IO.IOGender.Male);
+                var clock = (GraphFIR.IO.Output)VisitExp(helper, stop.Clk, GraphFIR.IO.FlowChange.Source);
+                var enable = (GraphFIR.IO.Output)VisitExp(helper, stop.Enabled, GraphFIR.IO.FlowChange.Source);
 
                 var firStop = new GraphFIR.FirStop(clock, enable, stop.Ret, stop);
                 helper.AddNodeToModule(firStop);
@@ -390,15 +390,15 @@ namespace ChiselDebug
                     helper.Mod.AddMemoryPort(port);
                 }
 
-                ConnectIO(helper, VisitExp(helper, memPort.Exps[0], GraphFIR.IO.IOGender.Male), port.Address, false);
-                ConnectIO(helper, VisitExp(helper, memPort.Exps[1], GraphFIR.IO.IOGender.Male), port.Clock, false, false);
+                ConnectIO(helper, VisitExp(helper, memPort.Exps[0], GraphFIR.IO.FlowChange.Source), port.Address, false);
+                ConnectIO(helper, VisitExp(helper, memPort.Exps[1], GraphFIR.IO.FlowChange.Source), port.Clock, false, false);
                 ConnectIO(helper, helper.ScopeEnabledCond, port.Enabled, false);
 
                 //if port has mask then by default set whole mask to true
                 if (port.HasMask())
                 {
                     GraphFIR.IO.FIRIO mask = port.GetMask();
-                    GraphFIR.IO.Output const1 = (GraphFIR.IO.Output)VisitExp(helper, new FIRRTL.UIntLiteral(0, 1), GraphFIR.IO.IOGender.Male);
+                    GraphFIR.IO.Output const1 = (GraphFIR.IO.Output)VisitExp(helper, new FIRRTL.UIntLiteral(0, 1), GraphFIR.IO.FlowChange.Source);
                     foreach (var maskInput in mask.Flatten())
                     {
                         ConnectIO(helper, const1, maskInput, false);
@@ -415,14 +415,14 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.DefRegister reg)
             {
-                GraphFIR.IO.Output clock = (GraphFIR.IO.Output)VisitExp(helper, reg.Clock, GraphFIR.IO.IOGender.Male);
+                GraphFIR.IO.Output clock = (GraphFIR.IO.Output)VisitExp(helper, reg.Clock, GraphFIR.IO.FlowChange.Source);
                 GraphFIR.IO.Output reset = null;
                 GraphFIR.IO.FIRIO initValue = null;
 
                 if (reg.HasResetAndInit())
                 {
-                    reset = (GraphFIR.IO.Output)VisitExp(helper, reg.Reset, GraphFIR.IO.IOGender.Male);
-                    initValue = VisitExp(helper, reg.Init, GraphFIR.IO.IOGender.Male);
+                    reset = (GraphFIR.IO.Output)VisitExp(helper, reg.Reset, GraphFIR.IO.FlowChange.Source);
+                    initValue = VisitExp(helper, reg.Init, GraphFIR.IO.FlowChange.Source);
                 }
 
                 GraphFIR.IO.FIRIO inputType = VisitTypeAsPassive(helper, FIRRTL.Dir.Input, null, reg.Type);
@@ -436,7 +436,7 @@ namespace ChiselDebug
             }
             else if (statement is FIRRTL.DefNode node)
             {
-                var nodeOut = VisitExp(helper, node.Value, GraphFIR.IO.IOGender.Male);
+                var nodeOut = VisitExp(helper, node.Value, GraphFIR.IO.FlowChange.Source);
 
                 if (node.Value is not FIRRTL.RefLikeExpression)
                 {
@@ -473,8 +473,8 @@ namespace ChiselDebug
 
         private static void VisitConnect(VisitHelper helper, FIRRTL.Expression exprFrom, FIRRTL.Expression exprTo, bool isPartial)
         {
-            GraphFIR.IO.FIRIO from = VisitExp(helper, exprFrom, GraphFIR.IO.IOGender.Male);
-            GraphFIR.IO.FIRIO to = (GraphFIR.IO.FIRIO)VisitRef(helper, exprTo, helper.Mod, GraphFIR.IO.IOGender.Female);
+            GraphFIR.IO.FIRIO from = VisitExp(helper, exprFrom, GraphFIR.IO.FlowChange.Source);
+            GraphFIR.IO.FIRIO to = (GraphFIR.IO.FIRIO)VisitRef(helper, exprTo, helper.Mod, GraphFIR.IO.FlowChange.Sink);
 
             //Can only connect two aggregates. If any of the two are not an
             //aggregate type then try convert both to scalar io and connect them.
@@ -547,7 +547,7 @@ namespace ChiselDebug
                 helper.ExitEnabledScope();
             }
 
-            GraphFIR.IO.Output enableCond = (GraphFIR.IO.Output)VisitExp(parentHelper, conditional.Pred, GraphFIR.IO.IOGender.Male);
+            GraphFIR.IO.Output enableCond = (GraphFIR.IO.Output)VisitExp(parentHelper, conditional.Pred, GraphFIR.IO.FlowChange.Source);
 
             if (conditional.HasIf())
             {
@@ -582,11 +582,11 @@ namespace ChiselDebug
             parentHelper.AddNodeToModule(cond);
         }
 
-        private static GraphFIR.IO.FIRIO VisitExp(VisitHelper helper, FIRRTL.Expression exp, GraphFIR.IO.IOGender gender)
+        private static GraphFIR.IO.FIRIO VisitExp(VisitHelper helper, FIRRTL.Expression exp, GraphFIR.IO.FlowChange ioFlow)
         {
             if (exp is FIRRTL.RefLikeExpression)
             {
-                return (GraphFIR.IO.FIRIO)VisitRef(helper, exp, helper.Mod, gender);
+                return (GraphFIR.IO.FIRIO)VisitRef(helper, exp, helper.Mod, ioFlow);
             }
 
             if (exp is FIRRTL.Literal lit)
@@ -598,7 +598,7 @@ namespace ChiselDebug
             }
             else if (exp is FIRRTL.DoPrim prim)
             {
-                var args = prim.Args.Select(x => VisitExp(helper, x, GraphFIR.IO.IOGender.Male)).Cast<GraphFIR.IO.Output>().ToArray();
+                var args = prim.Args.Select(x => VisitExp(helper, x, GraphFIR.IO.FlowChange.Source)).Cast<GraphFIR.IO.Output>().ToArray();
                 GraphFIR.FIRRTLPrimOP nodePrim;
                 if (prim.Op is FIRRTL.Add)
                 {
@@ -723,13 +723,13 @@ namespace ChiselDebug
                 else if (prim.Op is FIRRTL.Shl)
                 {
                     var constLit = new FIRRTL.UIntLiteral(prim.Consts[0], (int)prim.Consts[0].GetBitLength());
-                    var constOutput = (GraphFIR.IO.Output)VisitExp(helper, constLit, GraphFIR.IO.IOGender.Male);
+                    var constOutput = (GraphFIR.IO.Output)VisitExp(helper, constLit, GraphFIR.IO.FlowChange.Source);
                     nodePrim = new GraphFIR.FIRShl(args[0], constOutput, prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Shr)
                 {
                     var constLit = new FIRRTL.UIntLiteral(prim.Consts[0], (int)prim.Consts[0].GetBitLength());
-                    var constOutput = (GraphFIR.IO.Output)VisitExp(helper, constLit, GraphFIR.IO.IOGender.Male);
+                    var constOutput = (GraphFIR.IO.Output)VisitExp(helper, constLit, GraphFIR.IO.FlowChange.Source);
                     nodePrim = new GraphFIR.FIRShr(args[0], constOutput, prim.Type, prim);
                 }
                 else
@@ -742,9 +742,9 @@ namespace ChiselDebug
             }
             else if (exp is FIRRTL.Mux mux)
             {
-                var cond = (GraphFIR.IO.Output)VisitExp(helper, mux.Cond, GraphFIR.IO.IOGender.Male);
-                var ifTrue = VisitExp(helper, mux.TrueValue, GraphFIR.IO.IOGender.Male);
-                var ifFalse = VisitExp(helper, mux.FalseValue, GraphFIR.IO.IOGender.Male);
+                var cond = (GraphFIR.IO.Output)VisitExp(helper, mux.Cond, GraphFIR.IO.FlowChange.Source);
+                var ifTrue = VisitExp(helper, mux.TrueValue, GraphFIR.IO.FlowChange.Source);
+                var ifFalse = VisitExp(helper, mux.FalseValue, GraphFIR.IO.FlowChange.Source);
 
                 GraphFIR.Mux node = new GraphFIR.Mux(new List<GraphFIR.IO.FIRIO>() { ifTrue, ifFalse }, cond, mux);
 
@@ -753,8 +753,8 @@ namespace ChiselDebug
             }
             else if (exp is FIRRTL.ValidIf validIf)
             {
-                var cond = (GraphFIR.IO.Output)VisitExp(helper, validIf.Cond, GraphFIR.IO.IOGender.Male);
-                var ifValid = VisitExp(helper, validIf.Value, GraphFIR.IO.IOGender.Male);
+                var cond = (GraphFIR.IO.Output)VisitExp(helper, validIf.Cond, GraphFIR.IO.FlowChange.Source);
+                var ifValid = VisitExp(helper, validIf.Value, GraphFIR.IO.FlowChange.Source);
 
                 GraphFIR.Mux node = new GraphFIR.Mux(new List<GraphFIR.IO.FIRIO>() { ifValid }, cond, validIf);
 
@@ -767,7 +767,7 @@ namespace ChiselDebug
             }
         }
 
-        private static GraphFIR.IO.IContainerIO VisitRef(VisitHelper helper, FIRRTL.Expression exp, GraphFIR.IO.IContainerIO currContainer, GraphFIR.IO.IOGender gender)
+        private static GraphFIR.IO.IContainerIO VisitRef(VisitHelper helper, FIRRTL.Expression exp, GraphFIR.IO.IContainerIO currContainer, GraphFIR.IO.FlowChange ioFlow)
         {
             GraphFIR.IO.IContainerIO refContainer;
             if (exp is FIRRTL.Reference reference)
@@ -776,23 +776,23 @@ namespace ChiselDebug
             }
             else if (exp is FIRRTL.SubField subField)
             {
-                var subContainer = VisitExp(helper, subField.Expr, gender);
+                var subContainer = VisitExp(helper, subField.Expr, ioFlow);
                 refContainer = subContainer.GetIO(subField.Name);
             }
             else if (exp is FIRRTL.SubIndex subIndex)
             {
-                var subVec = VisitExp(helper, subIndex.Expr, gender);
+                var subVec = VisitExp(helper, subIndex.Expr, ioFlow);
                 var vec = (GraphFIR.IO.Vector)subVec;
 
                 refContainer = vec.GetIndex(subIndex.Value);
             }
             else if (exp is FIRRTL.SubAccess subAccess)
             {
-                var subVec = VisitExp(helper, subAccess.Expr, gender);
+                var subVec = VisitExp(helper, subAccess.Expr, ioFlow);
                 var vec = (GraphFIR.IO.Vector)subVec;
-                var index = (GraphFIR.IO.Output)VisitExp(helper, subAccess.Index, GraphFIR.IO.IOGender.Male);
+                var index = (GraphFIR.IO.Output)VisitExp(helper, subAccess.Index, GraphFIR.IO.FlowChange.Source);
 
-                if (gender == GraphFIR.IO.IOGender.Male)
+                if (ioFlow == GraphFIR.IO.FlowChange.Source)
                 {
                     GraphFIR.Mux node = new GraphFIR.Mux(vec.GetIOInOrder().ToList(), index, null, true);
                     helper.AddNodeToModule(node);
@@ -821,7 +821,7 @@ namespace ChiselDebug
                 //specified.
                 if (memPort.FromHighLevelFIRRTL)
                 {
-                    return GetIOGender(helper, memPort, gender);
+                    return GetIOGender(helper, memPort, ioFlow);
                 }
             }
             else
@@ -831,16 +831,16 @@ namespace ChiselDebug
                 //Dealing with it is ugly which is why i want to contain it.
                 if (refContainer is GraphFIR.IO.FIRIO firIO)
                 {
-                    return GetIOGender(helper, firIO, gender);
+                    return GetIOGender(helper, firIO, ioFlow);
                 }
             }
 
             return refContainer;
         }
 
-        private static GraphFIR.IO.FIRIO GetIOGender(VisitHelper helper, GraphFIR.IO.FIRIO io, GraphFIR.IO.IOGender gender)
+        private static GraphFIR.IO.FIRIO GetIOGender(VisitHelper helper, GraphFIR.IO.FIRIO io, GraphFIR.IO.FlowChange ioFlow)
         {
-            if (io is GraphFIR.IO.Input input && gender == GraphFIR.IO.IOGender.Male)
+            if (io is GraphFIR.IO.Input input && ioFlow == GraphFIR.IO.FlowChange.Source)
             {
                 string duplexOutputName = helper.Mod.GetDuplexOutputName(input);
 
@@ -856,7 +856,7 @@ namespace ChiselDebug
                 return input.GetModResideIn().AddDuplexOuputWire(input);
             }
 
-            return io.GetAsGender(gender);
+            return io.GetAsFlow(ioFlow);
         }
     }
 }
