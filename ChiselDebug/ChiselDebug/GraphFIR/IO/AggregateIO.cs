@@ -15,7 +15,5 @@
         }
 
         public abstract FIRIO[] GetIOInOrder();
-
-        public abstract bool IsVisibleAggregate();
     }
 }

@@ -32,11 +32,6 @@ namespace ChiselDebug.GraphFIR.IO
             return IO.ToArray();
         }
 
-        public override bool IsVisibleAggregate()
-        {
-            return IO.FirstOrDefault()?.IsPartOfAggregateIO ?? false;
-        }
-
         public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Output condition = null)
         {
             if (input is not Vector)

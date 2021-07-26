@@ -59,11 +59,6 @@ namespace ChiselDebug.GraphFIR.IO
             throw new Exception("Duplex can't be passive of any type.");
         }
 
-        public override bool IsVisibleAggregate()
-        {
-            return false;
-        }
-
         public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)
         {
             return flow switch

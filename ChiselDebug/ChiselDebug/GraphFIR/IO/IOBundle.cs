@@ -43,11 +43,6 @@ namespace ChiselDebug.GraphFIR.IO
             return OrderedIO.ToArray();
         }
 
-        public override bool IsVisibleAggregate()
-        {
-            return IO.Values.FirstOrDefault()?.IsPartOfAggregateIO ?? false;
-        }
-
         public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Output condition = null)
         {
             if (input is not IOBundle)
@@ -179,11 +174,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         protected void AddIO(string name, FIRIO io)
         {
-            if (IsVisibleAggregate())
-            {
-                io.SetParentIO(this);
-            }
-
+            io.SetParentIO(this);
             OrderedIO.Add(io);
             IO.Add(name, io);
         }
