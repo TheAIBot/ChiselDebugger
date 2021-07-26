@@ -33,7 +33,7 @@
         base.OnFirstParametersSetAsync();
     }
 
-    protected override List<DirectedIO> OnMakeInputs(int width, int height)
+    protected override DirectedIO[] OnMakeInputs(int width, int height)
     {
         //Add chose input
         Point deciderOffset = new Point(WIDTH / 2, INDENT / 2);
@@ -42,13 +42,14 @@
         ChoiseIO = IOPositionCalc.VerticalScopedIO(Operation.Choises.ToArray(), 0, INDENT, INDENT);
         ChoiseIO.VerticalRecenter(height);
 
-        List<DirectedIO> inputs = new List<DirectedIO>();
-        inputs.Add(DeciderIO);
-        inputs.AddRange(ChoiseIO.GetInputDirIO());
-        return inputs;
+        DirectedIO[] choiseDirIO = ChoiseIO.GetInputDirIO();
+        DirectedIO[] inputIO = new DirectedIO[choiseDirIO.Length + 1];
+        inputIO[0] = DeciderIO;
+        Array.Copy(choiseDirIO, 0, inputIO, 1, choiseDirIO.Length);
+        return inputIO;
     }
 
-    protected override List<DirectedIO> OnMakeOutputs(int width, int height)
+    protected override DirectedIO[] OnMakeOutputs(int width, int height)
     {
         ResultIO = IOPositionCalc.VerticalScopedIO(new FIRIO[] { Operation.Result }, WIDTH, INDENT, INDENT);
         ResultIO.VerticalRecenter(GetCurrentSize().Y);

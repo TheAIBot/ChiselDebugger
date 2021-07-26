@@ -16,7 +16,7 @@ namespace ChiselDebuggerRazor.Code
         public const int ScopeExtraY = (MinSpaceBetweenIO + ExtraSpaceBetweenBundles) / 3;
         public const int ScopeWidth = 5;
 
-        internal static List<DirectedIO> EvenVertical(int height, ScalarIO[] io, int fixedX, int startY)
+        internal static DirectedIO[] EvenVertical(int height, ScalarIO[] io, int fixedX, int startY)
         {
             int usableHeight = height - startY * 2;
             int spaceBetweenIO;
@@ -35,13 +35,13 @@ namespace ChiselDebuggerRazor.Code
                 startY += (usableHeight - usedSpace) / 2;
             }
 
-            List<DirectedIO> posIO = new List<DirectedIO>();
+            DirectedIO[] posIO = new DirectedIO[io.Length];
             for (int i = 0; i < io.Length; i++)
             {
                 int y = startY + spaceBetweenIO * i;
 
                 Point pos = new Point(fixedX, y);
-                posIO.Add(new DirectedIO(io[i], pos, MoveDirs.Right));
+                posIO[i] = new DirectedIO(io[i], pos, MoveDirs.Right);
             }
 
             return posIO;

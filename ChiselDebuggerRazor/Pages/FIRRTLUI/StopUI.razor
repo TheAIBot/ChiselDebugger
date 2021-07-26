@@ -31,22 +31,23 @@
         base.OnFirstParametersSetAsync();
     }
 
-    protected override List<DirectedIO> OnMakeInputs(int width, int height)
+    protected override DirectedIO[] OnMakeInputs(int width, int height)
     {
-        List<DirectedIO> io = new List<DirectedIO>();
         int spacing = height / 3;
         int y = spacing;
-        foreach (var input in Operation.GetInputs())
+        Input[] inputs = Operation.GetInputs();
+        DirectedIO[] dirInputs = new DirectedIO[inputs.Length];
+        for (int i = 0; i < inputs.Length; i++)
         {
-            io.Add(new DirectedIO(input, new Point(0, y), MoveDirs.Right));
+            dirInputs[i] = new DirectedIO(inputs[i], new Point(0, y), MoveDirs.Right);
             y += spacing;
         }
 
-        return io;
+        return dirInputs;
     }
 
-    protected override List<DirectedIO> OnMakeOutputs(int width, int height)
+    protected override DirectedIO[] OnMakeOutputs(int width, int height)
     {
-        return new List<DirectedIO>();
+        return Array.Empty<DirectedIO>();
     }
 }

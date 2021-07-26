@@ -11,8 +11,8 @@ namespace ChiselDebuggerRazor.Code
     {
         private readonly Conditional Cond;
         private readonly Dictionary<FIRRTLNode, Point> ModuleSizes = new Dictionary<FIRRTLNode, Point>();
-        private readonly Dictionary<FIRRTLNode, List<DirectedIO>> InputOffsets = new Dictionary<FIRRTLNode, List<DirectedIO>>();
-        private readonly Dictionary<FIRRTLNode, List<DirectedIO>> OutputOffsets = new Dictionary<FIRRTLNode, List<DirectedIO>>();
+        private readonly Dictionary<FIRRTLNode, DirectedIO[]> InputOffsets = new Dictionary<FIRRTLNode, DirectedIO[]>();
+        private readonly Dictionary<FIRRTLNode, DirectedIO[]> OutputOffsets = new Dictionary<FIRRTLNode, DirectedIO[]>();
         private Point CondSize = Point.Zero;
 
         public delegate void LayoutHandler(List<Positioned<Module>> positions, FIRComponentUpdate componentInfo);
@@ -47,7 +47,7 @@ namespace ChiselDebuggerRazor.Code
             return false;
         }
 
-        private bool UpdateOffsets(FIRRTLNode node, Dictionary<FIRRTLNode, List<DirectedIO>> nodeOffsets, List<DirectedIO> offsets)
+        private bool UpdateOffsets(FIRRTLNode node, Dictionary<FIRRTLNode, DirectedIO[]> nodeOffsets, DirectedIO[] offsets)
         {
             //Data changed if this node didn't have previous offsets
             if (nodeOffsets.TryAdd(node, offsets))
@@ -56,14 +56,14 @@ namespace ChiselDebuggerRazor.Code
             }
 
             //Only update if the offsets are different
-            List<DirectedIO> oldOffsets = nodeOffsets[node];
-            if (oldOffsets.Count != offsets.Count)
+            DirectedIO[] oldOffsets = nodeOffsets[node];
+            if (oldOffsets.Length != offsets.Length)
             {
                 nodeOffsets[node] = offsets;
                 return true;
             }
 
-            for (int i = 0; i < oldOffsets.Count; i++)
+            for (int i = 0; i < oldOffsets.Length; i++)
             {
                 if (oldOffsets[i] != offsets[i])
                 {
@@ -75,7 +75,7 @@ namespace ChiselDebuggerRazor.Code
             return false;
         }
 
-        private (List<Positioned<Module>> modPoses, List<DirectedIO> inOffsets, List<DirectedIO> outOffsets) UpdateAndGetModPositions()
+        private (List<Positioned<Module>> modPoses, DirectedIO[] inOffsets, DirectedIO[] outOffsets) UpdateAndGetModPositions()
         {
 
             List<DirectedIO> inputOffsets = new List<DirectedIO>();
@@ -102,7 +102,7 @@ namespace ChiselDebuggerRazor.Code
 
             CondSize = new Point(ModuleSizes.Values.Max(x => x.X), y);
 
-            return (positions, inputOffsets, outputOffsets);
+            return (positions, inputOffsets.ToArray(), outputOffsets.ToArray());
         }
 
         public override void UpdateComponentInfo(FIRComponentUpdate updateData)

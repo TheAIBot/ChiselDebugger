@@ -19,7 +19,7 @@
         base.OnFirstParametersSetAsync();
     }
 
-    protected override List<DirectedIO> OnMakeInputs(int width, int height)
+    protected override DirectedIO[] OnMakeInputs(int width, int height)
     {
         NodeIO = IOPositionCalc.VerticalScopedIO(Operation.GetIO().ToArray(), GetCurrentSize().X, GetPaddedTitleHeight(), 10);
         SetCurrentSize(new Point(GetCurrentSize().X, NodeIO.HeightNeeded));
@@ -27,7 +27,7 @@
         return NodeIO.GetInputDirIO();
     }
 
-    protected override List<DirectedIO> OnMakeOutputs(int width, int height)
+    protected override DirectedIO[] OnMakeOutputs(int width, int height)
     {
         return NodeIO.GetOutputDirIO();
     }

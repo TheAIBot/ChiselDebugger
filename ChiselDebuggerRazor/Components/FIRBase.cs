@@ -35,9 +35,8 @@ namespace ChiselDebuggerRazor.Components
         private Point PreviousSize = Point.Zero;
         private int RenderCounter = 0;
         protected readonly string SizeWatcherID = UniqueID.UniqueHTMLID();
-        protected List<DirectedIO> InputOffsets = new List<DirectedIO>();
-        protected List<DirectedIO> OutputOffsets = new List<DirectedIO>();
-        private readonly List<string> SizeWatchIDs = new List<string>();
+        protected DirectedIO[] InputOffsets = Array.Empty<DirectedIO>();
+        protected DirectedIO[] OutputOffsets = Array.Empty<DirectedIO>();
 
         protected Point GetCurrentSize()
         {
@@ -74,7 +73,6 @@ namespace ChiselDebuggerRazor.Components
         protected void AddSizeWatcher(string componentID, JSEvents.ResizeHandler onResize)
         {
             JSEvents.BatchAddResizeListener(JS, componentID, onResize);
-            SizeWatchIDs.Add(componentID);
         }
 
         private void JSOnResize(ElemWH size)
@@ -101,7 +99,7 @@ namespace ChiselDebuggerRazor.Components
             return true;
         }
 
-        protected abstract List<DirectedIO> OnMakeInputs(int width, int height);
-        protected abstract List<DirectedIO> OnMakeOutputs(int width, int height);
+        protected abstract DirectedIO[] OnMakeInputs(int width, int height);
+        protected abstract DirectedIO[] OnMakeOutputs(int width, int height);
     }
 }

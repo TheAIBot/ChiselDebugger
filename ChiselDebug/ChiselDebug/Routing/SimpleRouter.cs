@@ -23,7 +23,7 @@ namespace ChiselDebug.Routing
             MissingNodeIO.RemoveWhere(x => x is INoPlaceAndRoute);
         }
 
-        public void UpdateIOFromNode(FIRRTLNode node, List<DirectedIO> inputOffsets, List<DirectedIO> outputOffsets)
+        public void UpdateIOFromNode(FIRRTLNode node, DirectedIO[] inputOffsets, DirectedIO[] outputOffsets)
         {
             Connections.UpdateIOFromNode(node, inputOffsets, outputOffsets);
 

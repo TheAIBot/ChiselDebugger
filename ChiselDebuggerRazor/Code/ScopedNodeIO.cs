@@ -93,14 +93,14 @@ namespace ChiselDebuggerRazor.Code
             return scopes;
         }
 
-        public List<DirectedIO> GetInputDirIO()
+        public DirectedIO[] GetInputDirIO()
         {
-            return InputOffsets.Select(x => x.DirIO).ToList();
+            return InputOffsets.Select(x => x.DirIO).ToArray();
         }
 
-        public List<DirectedIO> GetOutputDirIO()
+        public DirectedIO[] GetOutputDirIO()
         {
-            return OutputOffsets.Select(x => x.DirIO).ToList();
+            return OutputOffsets.Select(x => x.DirIO).ToArray();
         }
 
         public void UpdateOutputX(int newX)

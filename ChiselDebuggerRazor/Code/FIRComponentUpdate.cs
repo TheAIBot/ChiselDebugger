@@ -11,10 +11,10 @@ namespace ChiselDebuggerRazor.Code
     {
         public readonly FIRRTLNode Node;
         public readonly Point Size;
-        public readonly List<DirectedIO> InputOffsets;
-        public readonly List<DirectedIO> OutputOffsets;
+        public readonly DirectedIO[] InputOffsets;
+        public readonly DirectedIO[] OutputOffsets;
 
-        public FIRComponentUpdate(FIRRTLNode node, Point size, List<DirectedIO> inputOffsets, List<DirectedIO> outputOffsets)
+        public FIRComponentUpdate(FIRRTLNode node, Point size, DirectedIO[] inputOffsets, DirectedIO[] outputOffsets)
         {
             this.Node = node;
             this.Size = size;

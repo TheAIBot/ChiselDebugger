@@ -121,7 +121,7 @@ namespace ChiselDebuggerRazor.Code
             }
         }
 
-        public void UpdateIOFromNode(FIRRTLNode node, List<DirectedIO> inputOffsets, List<DirectedIO> outputOffsets)
+        public void UpdateIOFromNode(FIRRTLNode node, DirectedIO[] inputOffsets, DirectedIO[] outputOffsets)
         {
             WireRouter.UpdateIOFromNode(node, inputOffsets, outputOffsets);
         }
