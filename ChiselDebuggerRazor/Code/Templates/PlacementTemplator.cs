@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Code.Templates
@@ -40,7 +41,7 @@ namespace ChiselDebuggerRazor.Code.Templates
             }
         }
 
-        public void AddTemplateParameters(string moduleName, PlacingBase placer, FIRRTLNode[] nodeOrder)
+        public void AddTemplateParameters(string moduleName, PlacingBase placer, FIRRTLNode[] nodeOrder, CancellationToken cancelToken)
         {
             lock (TemplateGenerating)
             {
@@ -55,6 +56,11 @@ namespace ChiselDebuggerRazor.Code.Templates
             WorkLimiter.AddWork(() =>
             {
                 var placeInfo = placer.PositionModuleComponents();
+                if (cancelToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 AddTemplate(moduleName, placeInfo, nodeOrder);
             });
         }

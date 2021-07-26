@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Code.Templates
@@ -40,7 +41,7 @@ namespace ChiselDebuggerRazor.Code.Templates
             }
         }
 
-        public void AddTemplateParameters(string moduleName, SimpleRouter router, PlacementInfo placeInfo, FIRRTLNode[] nodeOrder, FIRIO[] ioOrder)
+        public void AddTemplateParameters(string moduleName, SimpleRouter router, PlacementInfo placeInfo, FIRRTLNode[] nodeOrder, FIRIO[] ioOrder, CancellationToken cancelToken)
         {
             lock (TemplateGenerating)
             {
@@ -54,7 +55,12 @@ namespace ChiselDebuggerRazor.Code.Templates
 
             WorkLimiter.AddWork(() =>
             {
-                var wires = router.PathLines(placeInfo);
+                var wires = router.PathLines(placeInfo, cancelToken);
+                if (cancelToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 AddTemplate(moduleName, wires, nodeOrder, ioOrder);
             });
         }

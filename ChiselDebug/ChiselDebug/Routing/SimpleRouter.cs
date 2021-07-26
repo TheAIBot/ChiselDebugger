@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ChiselDebug.Routing
@@ -37,13 +38,11 @@ namespace ChiselDebug.Routing
             return MissingNodeIO.Count == 0;
         }
 
-        public List<WirePath> PathLines(PlacementInfo placements)
+        public List<WirePath> PathLines(PlacementInfo placements, CancellationToken cancelToken)
         {
             try
             {
-                int rerouteCount = 0;
                 Dictionary<Line, int> repathCounter = new Dictionary<Line, int>();
-
                 
                 List<LineInfo> sortedLines = new List<LineInfo>();
                 foreach ((IOInfo start, IOInfo end) in Connections.GetAllConnectionLines(placements))
@@ -62,7 +61,11 @@ namespace ChiselDebug.Routing
                 List<WirePath> paths = new List<WirePath>();
                 while (linesPriority.Count > 0)
                 {
-                    //Debug.WriteLine(linesPriority.Count);
+                    if (cancelToken.IsCancellationRequested)
+                    {
+                        return new List<WirePath>();
+                    }
+
                     (IOInfo start, IOInfo end) = linesPriority.Dequeue();
 
                     Rectangle? startRect = null;

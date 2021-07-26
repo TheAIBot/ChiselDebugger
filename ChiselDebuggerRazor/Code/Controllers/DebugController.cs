@@ -9,6 +9,7 @@ using ChiselDebuggerRazor.Components;
 using ChiselDebuggerRazor.Pages.FIRRTLUI;
 using ChiselDebuggerRazor.Pages.FIRRTLUI.IOUI;
 using Microsoft.AspNetCore.Components.Web;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks.Dataflow;
@@ -16,7 +17,7 @@ using VCDReader;
 
 namespace ChiselDebuggerRazor.Code
 {
-    public class DebugController
+    public class DebugController : IDisposable
     {
         private readonly CircuitGraph Graph;
         public VCDTimeline Timeline { get; set; } = null;
@@ -25,6 +26,7 @@ namespace ChiselDebuggerRazor.Code
         private readonly PlacementTemplator PlacementTemplates = new PlacementTemplator();
         private readonly RouteTemplator RouteTemplates = new RouteTemplator();
         private readonly SeqWorkOverrideOld<ulong> StateLimiter = new SeqWorkOverrideOld<ulong>();
+        private readonly CancellationTokenSource CancelSource = new CancellationTokenSource();
         private ModuleLayout RootModCtrl = null;
         private IOWindowUI IOWindow = null;
 
@@ -62,12 +64,12 @@ namespace ChiselDebuggerRazor.Code
 
         internal void AddPlaceTemplateParameters(string moduleName, PlacingBase placer, FIRRTLNode[] nodeOrder)
         {
-            PlacementTemplates.AddTemplateParameters(moduleName, placer, nodeOrder);
+            PlacementTemplates.AddTemplateParameters(moduleName, placer, nodeOrder, CancelSource.Token);
         }
 
         internal void AddRouteTemplateParameters(string moduleName, SimpleRouter router, PlacementInfo placeInfo, FIRRTLNode[] nodeOrder, FIRIO[] ioOrder)
         {
-            RouteTemplates.AddTemplateParameters(moduleName, router, placeInfo, nodeOrder, ioOrder);
+            RouteTemplates.AddTemplateParameters(moduleName, router, placeInfo, nodeOrder, ioOrder, CancelSource.Token);
         }
 
         internal bool TryGetPlaceTemplate(string moduleName, ModuleLayout modLayout, out PlacementInfo placement)
@@ -89,10 +91,15 @@ namespace ChiselDebuggerRazor.Code
 
         public void SetCircuitState(ulong time)
         {
+            CancellationToken cancelToken = CancelSource.Token;
             StateLimiter.AddWork(time, stateTime =>
             {
                 Graph.SetState(Timeline.GetStateAtTime(stateTime));
                 Graph.ComputeRemainingGraph();
+                if (cancelToken.IsCancellationRequested)
+                {
+                    return;
+                }
 
                 if (RootModCtrl != null)
                 {
@@ -119,6 +126,11 @@ namespace ChiselDebuggerRazor.Code
         public void MouseExitIO(FIRIO io, MouseEventArgs args)
         {
             IOWindow?.MouseExit(io, args);
+        }
+
+        public void Dispose()
+        {
+            CancelSource.Cancel();
         }
     }
 }
