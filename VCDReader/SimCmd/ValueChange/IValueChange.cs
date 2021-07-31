@@ -25,7 +25,7 @@ namespace VCDReader
         public int Length => BitSlice.Length;
         public List<VarDef>? Variables => Vars;
 
-        public BinaryVarValue(UnsafeMemory<BitState> bits, List<VarDef> variables, bool isValidBinary)
+        public BinaryVarValue(UnsafeMemory<BitState> bits, List<VarDef>? variables, bool isValidBinary)
         {
             Debug.Assert(isValidBinary == bits.Span.IsAllBinary());
             this.BitSlice = bits;
@@ -351,7 +351,7 @@ namespace VCDReader
         private readonly List<VarDef>? Vars;
         public List<VarDef>? Variables => Vars;
 
-        public RealVarValue(double value, List<VarDef> variables)
+        public RealVarValue(double value, List<VarDef>? variables)
         {
             this.Value = value;
             this.Vars = variables;
