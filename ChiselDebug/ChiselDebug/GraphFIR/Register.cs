@@ -1,4 +1,6 @@
-﻿using ChiselDebug.GraphFIR.IO;
+﻿#nullable enable
+
+using ChiselDebug.GraphFIR.IO;
 using FIRRTL;
 using System;
 using System.Collections.Generic;
@@ -13,7 +15,7 @@ namespace ChiselDebug.GraphFIR
         public readonly string Name;
         public readonly FIRIO In;
         public readonly FIRIO Result;
-        public readonly Input? Clock;
+        public readonly Input Clock;
         public readonly Input? Reset;
         public readonly FIRIO? Init;
 
