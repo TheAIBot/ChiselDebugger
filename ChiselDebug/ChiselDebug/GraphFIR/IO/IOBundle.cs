@@ -106,17 +106,6 @@ namespace ChiselDebug.GraphFIR.IO
             return new IOBundle(node, Name, changedFlow);
         }
 
-        public override IEnumerable<ScalarIO> Flatten()
-        {
-            foreach (var io in OrderedIO)
-            {
-                foreach (var nested in io.Flatten())
-                {
-                    yield return nested;
-                }
-            }
-        }
-
         public override List<ScalarIO> Flatten(List<ScalarIO> list)
         {
             foreach (var io in OrderedIO)

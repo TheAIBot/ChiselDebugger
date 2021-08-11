@@ -57,17 +57,6 @@ namespace ChiselDebug.GraphFIR.IO
             return new Vector(node, Name, Length, IO[0].ToFlow(flow, node));
         }
 
-        public override IEnumerable<ScalarIO> Flatten()
-        {
-            for (int i = 0; i < IO.Length; i++)
-            {
-                foreach (var nested in IO[i].Flatten())
-                {
-                    yield return nested;
-                }
-            }
-        }
-
         public override List<ScalarIO> Flatten(List<ScalarIO> list)
         {
             for (int i = 0; i < IO.Length; i++)

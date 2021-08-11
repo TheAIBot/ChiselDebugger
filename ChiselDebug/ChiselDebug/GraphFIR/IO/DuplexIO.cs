@@ -19,18 +19,6 @@ namespace ChiselDebug.GraphFIR.IO
             throw new Exception("Duplex can't be connected to anything.");
         }
 
-        public override IEnumerable<ScalarIO> Flatten()
-        {
-            foreach (var io in InIO.Flatten())
-            {
-                yield return io;
-            }
-            foreach (var io in OutIO.Flatten())
-            {
-                yield return io;
-            }
-        }
-
         public override List<ScalarIO> Flatten(List<ScalarIO> list)
         {
             InIO.Flatten(list);

@@ -89,7 +89,10 @@ namespace ChiselDebug.GraphFIR.IO
         {
             return ToFlow(FlowChange.Preserve, node ?? Node);
         }
-        public abstract IEnumerable<ScalarIO> Flatten();
+        public List<ScalarIO> Flatten()
+        {
+            return Flatten(new List<ScalarIO>());
+        }
         public abstract List<ScalarIO> Flatten(List<ScalarIO> list);
         public abstract bool IsPassiveOfType<T>();
         public bool IsPassive()
