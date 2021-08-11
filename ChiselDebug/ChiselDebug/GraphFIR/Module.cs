@@ -80,7 +80,7 @@ namespace ChiselDebug.GraphFIR
             return input.GetFullName() + "/out";
         }
 
-        public bool TryGetIOInternal(string ioName, bool lookUp, out IContainerIO container)
+        public bool TryGetIOInternal(string ioName, bool lookUp, bool lookDown, out IContainerIO container)
         {
             if (NameToIO.TryGetValue(ioName, out FIRIO innerIO))
             {
@@ -100,7 +100,7 @@ namespace ChiselDebug.GraphFIR
                 {
                     foreach (var condMod in condNode.CondMods)
                     {
-                        if (condMod.TryGetIO(ioName, out container))
+                        if (condMod.TryGetIOInternal(ioName, true, false, out container))
                         {
                             return true;
                         }
@@ -108,7 +108,7 @@ namespace ChiselDebug.GraphFIR
                 }
             }
 
-            if (IsConditional && ResideIn.TryGetIOInternal(ioName, false, out container))
+            if (lookDown && IsConditional && ResideIn.TryGetIOInternal(ioName, false, true, out container))
             {
                 return true;
             }
@@ -119,7 +119,7 @@ namespace ChiselDebug.GraphFIR
 
         public override bool TryGetIO(string ioName, out IContainerIO container)
         {
-            return TryGetIOInternal(ioName, true, out container);
+            return TryGetIOInternal(ioName, true, true, out container);
         }
 
         public override IEnumerable<FIRIO> GetVisibleIO()
