@@ -99,7 +99,6 @@ namespace ChiselDebug.GraphFIR.IO
         {
             return IsPassiveOfType<Input>() || IsPassiveOfType<Output>();
         }
-        public abstract IEnumerable<FIRIO> WalkIOTree();
         public abstract bool TryGetIO(string ioName, out IContainerIO container);
 
         public IContainerIO GetIO(string ioName)

@@ -72,19 +72,6 @@ namespace ChiselDebug.GraphFIR.IO
             return IO[0].IsPassiveOfType<T>();
         }
 
-        public override IEnumerable<FIRIO> WalkIOTree()
-        {
-            yield return this;
-
-            foreach (var io in GetIOInOrder())
-            {
-                foreach (var nested in io.WalkIOTree())
-                {
-                    yield return nested;
-                }
-            }
-        }
-
         public override bool TryGetIO(string ioName, out IContainerIO container)
         {
             if (int.TryParse(ioName, out int index))

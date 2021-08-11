@@ -10,48 +10,43 @@ namespace ChiselDebug.GraphFIR
 {
     public abstract class PairedIOFIRRTLNode : FIRRTLNode
     {
-        private readonly Dictionary<FIRIO, List<FIRIO>> OneToManyPairs = new Dictionary<FIRIO, List<FIRIO>>();
+        private readonly Dictionary<ScalarIO, List<ScalarIO>> OneToManyPairs = new Dictionary<ScalarIO, List<ScalarIO>>();
 
         public PairedIOFIRRTLNode(FirrtlNode defNode) : base(defNode)
         { }
 
         internal void AddPairedIO(FIRIO io, FIRIO ioFlipped)
         {
+            //This is here to avoid allocations when both a scalars
             if (io is ScalarIO ioScalar && ioFlipped is ScalarIO ioFlipScalar)
             {
                 ioScalar.SetPaired(ioFlipScalar);
                 ioFlipScalar.SetPaired(ioScalar);
+                return;
             }
-            else
+
+            foreach (var pair in io.Flatten().Zip(ioFlipped.Flatten()))
             {
-                var ioWalk = io.WalkIOTree();
-                var ioFlipWalk = ioFlipped.WalkIOTree();
-                foreach (var pair in ioWalk.Zip(ioFlipWalk))
-                {
-                    if (pair.First is ScalarIO firstScalar && pair.Second is ScalarIO secondScalar)
-                    {
-                        firstScalar.SetPaired(secondScalar);
-                        secondScalar.SetPaired(firstScalar);
-                    }
-                }
+                pair.First.SetPaired(pair.Second);
+                pair.Second.SetPaired(pair.First);
             }
         }
 
         internal void AddOneToManyPairedIO(FIRIO io, List<FIRIO> flippedIOs)
         {
-            FIRIO[] oneIO = io.WalkIOTree().ToArray();
-            FIRIO[][] manyIOs = flippedIOs.Select(x => x.WalkIOTree().ToArray()).ToArray();
-            if (!manyIOs.All(x => x.Length == oneIO.Length))
+            List<ScalarIO> oneIO = io.Flatten();
+            List<ScalarIO>[] manyIOs = flippedIOs.Select(x => x.Flatten()).ToArray();
+            if (!manyIOs.All(x => x.Count == oneIO.Count))
             {
                 throw new Exception($"IO must be of the same size.");
             }
 
-            for (int i = 0; i < oneIO.Length; i++)
+            for (int i = 0; i < oneIO.Count; i++)
             {
-                List<FIRIO> pairs;
+                List<ScalarIO> pairs;
                 if (!OneToManyPairs.TryGetValue(oneIO[i], out pairs))
                 {
-                    pairs = new List<FIRIO>();
+                    pairs = new List<ScalarIO>();
                     OneToManyPairs.Add(oneIO[i], pairs);
                 }
 
@@ -62,9 +57,9 @@ namespace ChiselDebug.GraphFIR
             }
         }
 
-        public FIRIO[] GetAllPairedIO(ScalarIO io)
+        public ScalarIO[] GetAllPairedIO(ScalarIO io)
         {
-            List<FIRIO> allPairs = new List<FIRIO>();
+            List<ScalarIO> allPairs = new List<ScalarIO>();
             if (io.GetPaired() != null)
             {
                 allPairs.Add(io.GetPaired());

@@ -15,7 +15,7 @@ namespace ChiselDebug.GraphFIR
             return InferMaxWidthType(pairNode.GetAllPairedIO(output));
         }
 
-        public static GroundType InferMaxWidthType(FIRIO[] ioEndPoints)
+        public static GroundType InferMaxWidthType(ScalarIO[] ioEndPoints)
         {
             List<GroundType> inputTypes = new List<GroundType>();
             foreach (FIRIO endPoint in ioEndPoints)

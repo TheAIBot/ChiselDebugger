@@ -29,11 +29,6 @@ namespace ChiselDebug.GraphFIR.IO
             return list;
         }
 
-        public override IEnumerable<FIRIO> WalkIOTree()
-        {
-            yield return this;
-        }
-
         public override bool TryGetIO(string ioName, out IContainerIO container)
         {
             container = null;

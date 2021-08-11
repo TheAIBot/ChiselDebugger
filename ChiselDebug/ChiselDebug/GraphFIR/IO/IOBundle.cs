@@ -129,26 +129,6 @@ namespace ChiselDebug.GraphFIR.IO
             return true;
         }
 
-        public override IEnumerable<FIRIO> WalkIOTree()
-        {
-            yield return this;
-
-            foreach (var io in OrderedIO)
-            {
-                if (io is ScalarIO)
-                {
-                    yield return io;
-                }
-                else
-                {
-                    foreach (var nested in io.WalkIOTree())
-                    {
-                        yield return nested;
-                    }
-                }
-            }
-        }
-
         public override bool TryGetIO(string ioName, out IContainerIO container)
         {
             if (IO.TryGetValue(ioName, out FIRIO innerIO))
