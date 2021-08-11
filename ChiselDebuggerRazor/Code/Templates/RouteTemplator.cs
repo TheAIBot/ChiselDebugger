@@ -55,7 +55,11 @@ namespace ChiselDebuggerRazor.Code.Templates
 
             WorkLimiter.AddWork(() =>
             {
-                var wires = router.PathLines(placeInfo, cancelToken);
+                List<WirePath> wires;
+                if (!router.TryPathLines(placeInfo, cancelToken, out wires))
+                {
+                    return;
+                }
                 if (cancelToken.IsCancellationRequested)
                 {
                     return;
