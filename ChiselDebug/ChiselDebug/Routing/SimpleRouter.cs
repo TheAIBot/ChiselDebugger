@@ -38,81 +38,81 @@ namespace ChiselDebug.Routing
             return MissingNodeIO.Count == 0;
         }
 
-        public List<WirePath> PathLines(PlacementInfo placements, CancellationToken cancelToken)
+        public bool TryPathLines(PlacementInfo placements, CancellationToken cancelToken, out List<WirePath> wiresPaths)
         {
-            try
+            Dictionary<Line, int> repathCounter = new Dictionary<Line, int>();
+
+            List<LineInfo> sortedLines = new List<LineInfo>();
+            foreach ((IOInfo start, IOInfo end) in Connections.GetAllConnectionLines(placements))
             {
-                Dictionary<Line, int> repathCounter = new Dictionary<Line, int>();
-                
-                List<LineInfo> sortedLines = new List<LineInfo>();
-                foreach ((IOInfo start, IOInfo end) in Connections.GetAllConnectionLines(placements))
+                LineInfo line = new LineInfo(start, end);
+                sortedLines.Add(line);
+                repathCounter.Add(line.GetLine(), 0);
+            }
+
+            Queue<LineInfo> linesPriority = new Queue<LineInfo>(sortedLines.OrderBy(x => x.GetScore()));
+
+            RouterBoard board = new RouterBoard(placements.SpaceNeeded);
+            board.PrepareBoard(placements.UsedSpace.Values.ToList());
+            board.CreateCheckpoint();
+
+            List<WirePath> paths = new List<WirePath>();
+            while (linesPriority.Count > 0)
+            {
+                if (cancelToken.IsCancellationRequested)
                 {
-                    LineInfo line = new LineInfo(start, end);
-                    sortedLines.Add(line);
-                    repathCounter.Add(line.GetLine(), 0);
+                    wiresPaths = null;
+                    return false;
                 }
 
-                Queue<LineInfo> linesPriority = new Queue<LineInfo>(sortedLines.OrderBy(x => x.GetScore()));
+                (IOInfo start, IOInfo end) = linesPriority.Dequeue();
 
-                RouterBoard board = new RouterBoard(placements.SpaceNeeded);
-                board.PrepareBoard(placements.UsedSpace.Values.ToList());
-                board.CreateCheckpoint();
-
-                List<WirePath> paths = new List<WirePath>();
-                while (linesPriority.Count > 0)
+                Rectangle? startRect = null;
+                Rectangle? endRect = null;
+                if (placements.UsedSpace.ContainsKey(start.Node))
                 {
-                    if (cancelToken.IsCancellationRequested)
-                    {
-                        return new List<WirePath>();
-                    }
-
-                    (IOInfo start, IOInfo end) = linesPriority.Dequeue();
-
-                    Rectangle? startRect = null;
-                    Rectangle? endRect = null;
-                    if (placements.UsedSpace.ContainsKey(start.Node))
-                    {
-                        startRect = placements.UsedSpace[start.Node];
-                    }
-                    if (placements.UsedSpace.ContainsKey(end.Node))
-                    {
-                        endRect = placements.UsedSpace[end.Node];
-                    }
-
-                    WirePath path = PathLine(board, start, end, startRect, endRect, paths);
-                    Debug.Assert(path.StartIO == start && path.EndIO == end);
-
-                    List<WirePath> needsRepathing = new List<WirePath>();
-                    foreach (var oldPath in paths)
-                    {
-                        if (!path.CanCoexist(oldPath))
-                        {
-                            needsRepathing.Add(oldPath);
-                        }
-                    }
-                    foreach (var repath in needsRepathing)
-                    {
-                        LineInfo line = new LineInfo(repath.StartIO, repath.EndIO);
-                        if (repathCounter[line.GetLine()]++ >= 20)
-                        {
-                            continue;
-                        }
-
-                        paths.Remove(repath);
-
-                        linesPriority.Enqueue(line);
-                    }
-                    paths.Add(path);
+                    startRect = placements.UsedSpace[start.Node];
+                }
+                if (placements.UsedSpace.ContainsKey(end.Node))
+                {
+                    endRect = placements.UsedSpace[end.Node];
                 }
 
-                RefineWirePaths(board, paths);
-                return paths;
+                WirePath path;
+                if (!TryPathLine(board, start, end, startRect, endRect, paths, out path))
+                {
+                    Debug.WriteLine("Failed to find a path:");
+                    wiresPaths = null;
+                    return false;
+                }
+
+                Debug.Assert(path.StartIO == start && path.EndIO == end);
+                List<WirePath> needsRepathing = new List<WirePath>();
+                foreach (var oldPath in paths)
+                {
+                    if (!path.CanCoexist(oldPath))
+                    {
+                        needsRepathing.Add(oldPath);
+                    }
+                }
+                foreach (var repath in needsRepathing)
+                {
+                    LineInfo line = new LineInfo(repath.StartIO, repath.EndIO);
+                    if (repathCounter[line.GetLine()]++ >= 20)
+                    {
+                        continue;
+                    }
+
+                    paths.Remove(repath);
+
+                    linesPriority.Enqueue(line);
+                }
+                paths.Add(path);
             }
-            catch (Exception e)
-            {
-                Debug.WriteLine(e.Message + Environment.NewLine + e.StackTrace);
-                throw;
-            }
+
+            RefineWirePaths(board, paths);
+            wiresPaths = paths;
+            return true;
         }
 
         private readonly struct MoveData
@@ -131,7 +131,7 @@ namespace ChiselDebug.Routing
             }
         }
 
-        private WirePath PathLine(RouterBoard board, IOInfo start, IOInfo end, Rectangle? startRect, Rectangle? endRect, List<WirePath> allPaths)
+        private bool TryPathLine(RouterBoard board, IOInfo start, IOInfo end, Rectangle? startRect, Rectangle? endRect, List<WirePath> allPaths, out WirePath wirePath)
         {
             board.ReloadCheckpoint();
 
@@ -208,7 +208,8 @@ namespace ChiselDebug.Routing
 
                 if (current == relativeStart)
                 {
-                    return board.GetPath(relativeEnd, relativeStart, start, end, false);
+                    wirePath = board.GetPath(relativeEnd, relativeStart, start, end, false);
+                    return true;
                 }
 
                 ScorePath currentScorePath = board.GetCellScorePath(currentIndex);
@@ -216,7 +217,8 @@ namespace ChiselDebug.Routing
 
                 if (allowedMoves.HasFlag(MoveDirs.FriendWire) && canEndEarly)
                 {
-                    return board.GetPath(relativeEnd, current, start, end, true);
+                    wirePath = board.GetPath(relativeEnd, current, start, end, true);
+                    return true;
                 }
 
                 bool onEnemyWire = allowedMoves.HasFlag(MoveDirs.EnemyWire);
@@ -249,7 +251,8 @@ namespace ChiselDebug.Routing
 
             Debug.WriteLine(board.BoardAllowedMovesToString(relativeEnd, relativeStart));
             Debug.WriteLine(board.BoardStateToString(relativeEnd, relativeStart));
-            throw new Exception("Failed to find a path.");
+            wirePath = null;
+            return false;
         }
 
         private void RefineWirePaths(RouterBoard board, List<WirePath> paths)
