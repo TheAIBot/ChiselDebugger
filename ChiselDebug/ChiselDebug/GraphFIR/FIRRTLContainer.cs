@@ -137,9 +137,15 @@ namespace ChiselDebug.GraphFIR
             return filtered.ToArray();
         }
 
-        public virtual FIRIO[] GetAllIOOrdered()
+        protected List<ScalarIO> GetAllInternalIOOrdered()
         {
-            return AllIOInOrder.SelectMany(x => x.Flatten()).ToArray();
+            List<ScalarIO> ordered = new List<ScalarIO>();
+            foreach (var io in AllIOInOrder)
+            {
+                io.Flatten(ordered);
+            }
+
+            return ordered;
         }
 
         internal override void InferType()

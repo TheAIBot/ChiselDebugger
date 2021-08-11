@@ -187,11 +187,16 @@ namespace ChiselDebug.GraphFIR
             return GetAllNodes().Append(this).ToArray();
         }
 
-        public override FIRIO[] GetAllIOOrdered()
+        public FIRIO[] GetAllIOOrdered()
         {
-            List<FIRIO> allOrdered = new List<FIRIO>();
-            allOrdered.AddRange(base.GetAllIOOrdered());
-            allOrdered.AddRange(Nodes.SelectMany(x => x.GetIO().SelectMany(x => x.Flatten())));
+            List<ScalarIO> allOrdered = GetAllInternalIOOrdered();
+            foreach (var node in Nodes)
+            {
+                foreach (var io in node.GetIO())
+                {
+                    io.Flatten(allOrdered);
+                }
+            }
 
             return allOrdered.ToArray();
         }
