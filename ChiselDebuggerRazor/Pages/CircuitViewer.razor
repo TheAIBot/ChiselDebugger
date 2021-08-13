@@ -80,6 +80,8 @@ else if (ThrownException is Exception)
             {
                 DragEventID = UniqueID.UniqueHTMLID();
                 CircuitContainerID = UniqueID.UniqueHTMLID();
+                DebugCtrl?.Dispose();
+                DebugCtrl = null;
 
                 using var loFir = Files.GetLoFirrtlStream();
                 using var hiFir = Files.GetHiFirrtlStream();
@@ -109,7 +111,6 @@ else if (ThrownException is Exception)
 
         ModulePosition = new Positioned<ChiselDebug.GraphFIR.Module>(Point.Zero, graph.MainModule);
         RootModLayout = new CircuitLayout();
-        DebugCtrl?.Dispose();
         DebugCtrl = new DebugController(graph);
         DebugCtrl.OnCircuitSizeChanged += CircuitSizeChanged;
 
