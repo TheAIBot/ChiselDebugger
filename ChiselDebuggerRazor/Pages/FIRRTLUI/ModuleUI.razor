@@ -21,7 +21,12 @@
         </div>
     </div>
 
-    <div class="moduleContent" style="@(ShowModuleContent() ? string.Empty : "visibility: hidden;");transform: scale(@ContentScale.ToHtmlNumber());">
+    <div class="moduleContent" style="
+        @(ShowModuleContent() ? string.Empty : "visibility: hidden;")
+        transform: scale(@ContentScale.ToHtmlNumber());
+        width: @(((1 / ContentScale) * 100).ToPercent());
+        height: @(((1 / ContentScale) * 100).ToPercent());">
+
         @foreach (var posOp in ModuleOpPoses)
         {
             @if (posOp.Value is Mux)
