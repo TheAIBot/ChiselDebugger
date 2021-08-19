@@ -103,11 +103,8 @@ namespace ChiselDebug.CombGraph
                 }
             }
 
-
-
             Dictionary<FIRRTLNode, HashSet<Output>> seenButMissingFirNodeInputs = new Dictionary<FIRRTLNode, HashSet<Output>>();
             Dictionary<Input, HashSet<Output>> seenButMissingBorderInputCons = new Dictionary<Input, HashSet<Output>>();
-            HashSet<FIRRTLNode> finishedNodes = new HashSet<FIRRTLNode>();
             Dictionary<Output, List<FIRRTLNode>> nodeInputBlocker = new Dictionary<Output, List<FIRRTLNode>>();
             Dictionary<Output, List<Input>> modInputBlocker = new Dictionary<Output, List<Input>>();
 
@@ -135,7 +132,6 @@ namespace ChiselDebug.CombGraph
                         AddSinkToSearch(toTraverse, nodeOutput);
                     }
 
-                    finishedNodes.Add(node);
                     seenButMissingFirNodeInputs.Remove(node);
                 }
             }
@@ -200,11 +196,6 @@ namespace ChiselDebug.CombGraph
                     }
                     else
                     {
-                        if (finishedNodes.Contains(conInput.Sink.Node))
-                        {
-                            Debug.Assert(conInput.Sink.Node.GetInputs().SelectMany(x => x.GetConnections()).All(x => seenCons.Contains(x.From)));
-                            continue;
-                        }
                         HashSet<Output> missingCons;
                         if (!seenButMissingFirNodeInputs.TryGetValue(conInput.Sink.Node, out missingCons))
                         {
