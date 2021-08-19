@@ -86,7 +86,7 @@ namespace ChiselDebug.CombGraph
                 }
             }
 
-            void AddSinkToSearch(Stack<(Output con, Input input)> toTraverse, Output output)
+            void AddSinkToSearch(Stack<SourceSinkCon> toTraverse, Output output)
             {
                 if (seenCons.Add(output))
                 {
@@ -98,7 +98,7 @@ namespace ChiselDebug.CombGraph
                     SourceSinkCon con = new SourceSinkCon(output, input);
                     if (seenSourceSinkCons.Add(con))
                     {
-                        toTraverse.Push((output, input));
+                        toTraverse.Push(con);
                     }
                 }
             }
@@ -116,7 +116,7 @@ namespace ChiselDebug.CombGraph
                 computeOrder.Add(new Computable(computeFirst));
             }
 
-            Stack<(Output con, Input input)> toTraverse = new Stack<(Output con, Input input)>();
+            Stack<SourceSinkCon> toTraverse = new Stack<SourceSinkCon>();
 
 
             void FoundNodeDep(Output con, FIRRTLNode node, HashSet<Output> missingCons)
@@ -164,64 +164,64 @@ namespace ChiselDebug.CombGraph
                 while (toTraverse.Count > 0)
                 {
                     var conInput = toTraverse.Pop();
-                    if (nodeInputBlocker.TryGetValue(conInput.con, out var blockedNodeInputs))
+                    if (nodeInputBlocker.TryGetValue(conInput.Source, out var blockedNodeInputs))
                     {
                         foreach (var blockedNode in blockedNodeInputs)
                         {
-                            FoundNodeDep(conInput.con, blockedNode, seenButMissingFirNodeInputs[blockedNode]);
+                            FoundNodeDep(conInput.Source, blockedNode, seenButMissingFirNodeInputs[blockedNode]);
                         }
-                        nodeInputBlocker.Remove(conInput.con);
+                        nodeInputBlocker.Remove(conInput.Source);
                     }
-                    if (modInputBlocker.TryGetValue(conInput.con, out var blockedModInputs))
+                    if (modInputBlocker.TryGetValue(conInput.Source, out var blockedModInputs))
                     {
                         foreach (var blockedInput in blockedModInputs)
                         {
-                            FoundBorderInputDep(conInput.con, blockedInput, seenButMissingBorderInputCons[blockedInput]);
+                            FoundBorderInputDep(conInput.Source, blockedInput, seenButMissingBorderInputCons[blockedInput]);
                         }
-                        modInputBlocker.Remove(conInput.con);
+                        modInputBlocker.Remove(conInput.Source);
                     }
 
                     //Punch through module border to continue search on the other side
-                    if (conInput.input.Node is Module || conInput.input.Node is Wire)
+                    if (conInput.Sink.Node is Module || conInput.Sink.Node is Wire)
                     {
                         HashSet<Output> missingCons;
-                        if (!seenButMissingBorderInputCons.TryGetValue(conInput.input, out missingCons))
+                        if (!seenButMissingBorderInputCons.TryGetValue(conInput.Sink, out missingCons))
                         {
                             missingCons = new HashSet<Output>();
-                            seenButMissingBorderInputCons.Add(conInput.input, missingCons);
+                            seenButMissingBorderInputCons.Add(conInput.Sink, missingCons);
 
-                            AddMissingCons(missingCons, conInput.input, modInputBlocker, conInput.input);
+                            AddMissingCons(missingCons, conInput.Sink, modInputBlocker, conInput.Sink);
                         }
 
-                        FoundBorderInputDep(conInput.con, conInput.input, missingCons);
+                        FoundBorderInputDep(conInput.Source, conInput.Sink, missingCons);
                     }
                     //Ignore state preserving components as a combinatorial graph
                     //shouldn't cross those
-                    else if (conInput.input.Node is IStatePreserving)
+                    else if (conInput.Sink.Node is IStatePreserving)
                     {
                         continue;
                     }
                     else
                     {
-                        if (finishedNodes.Contains(conInput.input.Node))
+                        if (finishedNodes.Contains(conInput.Sink.Node))
                         {
-                            Debug.Assert(conInput.input.Node.GetInputs().SelectMany(x => x.GetConnections()).All(x => seenCons.Contains(x.From)));
+                            Debug.Assert(conInput.Sink.Node.GetInputs().SelectMany(x => x.GetConnections()).All(x => seenCons.Contains(x.From)));
                             continue;
                         }
                         HashSet<Output> missingCons;
-                        if (!seenButMissingFirNodeInputs.TryGetValue(conInput.input.Node, out missingCons))
+                        if (!seenButMissingFirNodeInputs.TryGetValue(conInput.Sink.Node, out missingCons))
                         {
                             missingCons = new HashSet<Output>();
-                            seenButMissingFirNodeInputs.Add(conInput.input.Node, missingCons);
+                            seenButMissingFirNodeInputs.Add(conInput.Sink.Node, missingCons);
 
-                            ScalarIO[] nodeInputs = conInput.input.Node.GetInputs();
+                            ScalarIO[] nodeInputs = conInput.Sink.Node.GetInputs();
                             foreach (Input input in nodeInputs)
                             {
-                                AddMissingCons(missingCons, input, nodeInputBlocker, conInput.input.Node);
+                                AddMissingCons(missingCons, input, nodeInputBlocker, conInput.Sink.Node);
                             }
                         }
 
-                        FoundNodeDep(conInput.con, conInput.input.Node, missingCons);
+                        FoundNodeDep(conInput.Source, conInput.Sink.Node, missingCons);
                     }
                 }
             }
@@ -232,8 +232,8 @@ namespace ChiselDebug.CombGraph
 
     internal readonly struct SourceSinkCon
     {
-        private readonly Output Source;
-        private readonly Input Sink;
+        public readonly Output Source;
+        public readonly Input Sink;
 
         public SourceSinkCon(Output source, Input sink)
         {
