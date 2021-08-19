@@ -128,10 +128,7 @@ namespace ChiselDebug.CombGraph
                 //with the components output
                 if (missingCons.Count == 0)
                 {
-                    if (node is not IStatePreserving)
-                    {
-                        computeOrder.Add(new Computable(node));
-                    }
+                    computeOrder.Add(new Computable(node));
 
                     foreach (var nodeOutput in node.GetOutputs())
                     {
