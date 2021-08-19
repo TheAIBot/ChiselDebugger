@@ -69,24 +69,18 @@ namespace ChiselDebug.CombGraph
             HashSet<SourceSinkCon> seenSourceSinkCons = new HashSet<SourceSinkCon>();
             List<Computable> computeOrder = new List<Computable>();
 
-            void AddMissingCons<T>(HashSet<Output> missingCons, Input input, Dictionary<Output, List<T>> blocker, T blocked)
+            Dictionary<FIRRTLNode, HashSet<Output>> seenButMissingFirNodeInputs = new Dictionary<FIRRTLNode, HashSet<Output>>();
+            Dictionary<Output, List<FIRRTLNode>> nodeInputBlocker = new Dictionary<Output, List<FIRRTLNode>>();
+            BorderBlockers borderBlockers = new BorderBlockers();
+
+            foreach (var computeFirst in outputs.Where(x => x.Node is not Module && (x.Node is not IStatePreserving)).Select(x => x.Node).Distinct())
             {
-                foreach (var con in input.GetConnections())
-                {
-                    if (!seenCons.Contains(con.From))
-                    {
-                        missingCons.Add(con.From);
-                    }
-                    if (con.Condition != null && !seenCons.Contains(con.Condition))
-                    {
-                        missingCons.Add(con.Condition);
-                        blocker.TryAdd(con.Condition, new List<T>());
-                        blocker[con.Condition].Add(blocked);
-                    }
-                }
+                computeOrder.Add(new Computable(computeFirst));
             }
 
-            void AddSinkToSearch(Stack<SourceSinkCon> toTraverse, Output output)
+            Stack<SourceSinkCon> toTraverse = new Stack<SourceSinkCon>();
+
+            void AddSinkToSearch(Output output)
             {
                 seenCons.Add(output);
                 computeOrder.Add(new Computable(output));
@@ -100,18 +94,6 @@ namespace ChiselDebug.CombGraph
                     }
                 }
             }
-
-            Dictionary<FIRRTLNode, HashSet<Output>> seenButMissingFirNodeInputs = new Dictionary<FIRRTLNode, HashSet<Output>>();
-            Dictionary<Input, HashSet<Output>> seenButMissingBorderInputCons = new Dictionary<Input, HashSet<Output>>();
-            Dictionary<Output, List<FIRRTLNode>> nodeInputBlocker = new Dictionary<Output, List<FIRRTLNode>>();
-            Dictionary<Output, List<Input>> modInputBlocker = new Dictionary<Output, List<Input>>();
-
-            foreach (var computeFirst in outputs.Where(x => x.Node is not Module && (x.Node is not IStatePreserving)).Select(x => x.Node).Distinct())
-            {
-                computeOrder.Add(new Computable(computeFirst));
-            }
-
-            Stack<SourceSinkCon> toTraverse = new Stack<SourceSinkCon>();
 
 
             void FoundNodeDep(Output con, FIRRTLNode node, HashSet<Output> missingCons)
@@ -127,30 +109,16 @@ namespace ChiselDebug.CombGraph
 
                     foreach (var nodeOutput in node.GetOutputs())
                     {
-                        AddSinkToSearch(toTraverse, nodeOutput);
+                        AddSinkToSearch(nodeOutput);
                     }
 
                     seenButMissingFirNodeInputs.Remove(node);
                 }
             }
 
-            void FoundBorderInputDep(Output con, Input modInput, HashSet<Output> missingCons)
-            {
-                missingCons.Remove(con);
-
-                if (missingCons.Count == 0)
-                {
-                    Output inPairedOut = modInput.GetPaired();
-                    AddSinkToSearch(toTraverse, inPairedOut);
-
-                    seenButMissingBorderInputCons.Remove(modInput);
-                }
-            }
-
-
             foreach (var output in outputs)
             {
-                AddSinkToSearch(toTraverse, output);
+                AddSinkToSearch(output);
 
                 while (toTraverse.Count > 0)
                 {
@@ -163,28 +131,16 @@ namespace ChiselDebug.CombGraph
                         }
                         nodeInputBlocker.Remove(conInput.Source);
                     }
-                    if (modInputBlocker.TryGetValue(conInput.Source, out var blockedModInputs))
-                    {
-                        foreach (var blockedInput in blockedModInputs)
-                        {
-                            FoundBorderInputDep(conInput.Source, blockedInput, seenButMissingBorderInputCons[blockedInput]);
-                        }
-                        modInputBlocker.Remove(conInput.Source);
-                    }
+                    borderBlockers.TryUnblockWithSource(conInput.Source, AddSinkToSearch);
 
                     //Punch through module border to continue search on the other side
                     if (conInput.Sink.Node is Module || conInput.Sink.Node is Wire)
                     {
-                        HashSet<Output> missingCons;
-                        if (!seenButMissingBorderInputCons.TryGetValue(conInput.Sink, out missingCons))
+                        HashSet<Output> missingCons = borderBlockers.GetMissingSources(seenCons, conInput.Sink);
+                        if (borderBlockers.TryHasFoundAllDeps(conInput.Source, conInput.Sink, missingCons, out Output borderExit))
                         {
-                            missingCons = new HashSet<Output>();
-                            seenButMissingBorderInputCons.Add(conInput.Sink, missingCons);
-
-                            AddMissingCons(missingCons, conInput.Sink, modInputBlocker, conInput.Sink);
+                            AddSinkToSearch(borderExit);
                         }
-
-                        FoundBorderInputDep(conInput.Source, conInput.Sink, missingCons);
                     }
                     //Ignore state preserving components as a combinatorial graph
                     //shouldn't cross those
@@ -200,19 +156,115 @@ namespace ChiselDebug.CombGraph
                             missingCons = new HashSet<Output>();
                             seenButMissingFirNodeInputs.Add(conInput.Sink.Node, missingCons);
 
-                            ScalarIO[] nodeInputs = conInput.Sink.Node.GetInputs();
-                            foreach (Input input in nodeInputs)
-                            {
-                                AddMissingCons(missingCons, input, nodeInputBlocker, conInput.Sink.Node);
-                            }
+                            AddMissingCons(seenCons, missingCons, nodeInputBlocker, conInput.Sink.Node);
                         }
 
                         FoundNodeDep(conInput.Source, conInput.Sink.Node, missingCons);
                     }
+
+                    
                 }
             }
 
             return new CombComputeOrder<Computable>(outputs, computeOrder.ToArray());
+        }
+
+        private static void AddMissingCons(HashSet<Output> seenCons, HashSet<Output> missingCons, Dictionary<Output, List<FIRRTLNode>> blocker, FIRRTLNode blocked)
+        {
+            foreach (Input input in blocked.GetInputs())
+            {
+                AddMissingConnections(seenCons, missingCons, input, blocker, blocked);
+            }
+        }
+
+        private static void AddMissingConnections<T>(HashSet<Output> seenCons, HashSet<Output> missingCons, Input input, Dictionary<Output, List<T>> blocker, T blocked)
+        {
+            foreach (var con in input.GetConnections())
+            {
+                if (!seenCons.Contains(con.From))
+                {
+                    missingCons.Add(con.From);
+                }
+                if (con.Condition != null && !seenCons.Contains(con.Condition))
+                {
+                    missingCons.Add(con.Condition);
+                    blocker.TryAdd(con.Condition, new List<T>());
+                    blocker[con.Condition].Add(blocked);
+                }
+            }
+        }
+    }
+
+    internal class BorderBlockers
+    {
+        private readonly Dictionary<Input, HashSet<Output>> SeenButMissingSources = new Dictionary<Input, HashSet<Output>>();
+        private readonly Dictionary<Output, List<Input>> ModInputBlocker = new Dictionary<Output, List<Input>>();
+
+        public HashSet<Output> GetMissingSources(HashSet<Output> seenCons, Input target)
+        {
+            HashSet<Output> missingCons;
+            if (!SeenButMissingSources.TryGetValue(target, out missingCons))
+            {
+                missingCons = new HashSet<Output>();
+                SeenButMissingSources.Add(target, missingCons);
+
+                AddMissingCons(seenCons, missingCons, ModInputBlocker, target);
+            }
+
+            return missingCons;
+        }
+
+        private void AddMissingCons(HashSet<Output> seenCons, HashSet<Output> missingCons, Dictionary<Output, List<Input>> blocker, Input blocked)
+        {
+            AddMissingConnections(seenCons, missingCons, blocked, blocker, blocked);
+        }
+
+        private void AddMissingConnections<T>(HashSet<Output> seenCons, HashSet<Output> missingCons, Input input, Dictionary<Output, List<T>> blocker, T blocked)
+        {
+            foreach (var con in input.GetConnections())
+            {
+                if (!seenCons.Contains(con.From))
+                {
+                    missingCons.Add(con.From);
+                }
+                if (con.Condition != null && !seenCons.Contains(con.Condition))
+                {
+                    missingCons.Add(con.Condition);
+                    blocker.TryAdd(con.Condition, new List<T>());
+                    blocker[con.Condition].Add(blocked);
+                }
+            }
+        }
+
+        public bool TryHasFoundAllDeps(Output con, Input modInput, HashSet<Output> missingCons, out Output otherSide)
+        {
+            missingCons.Remove(con);
+
+            if (missingCons.Count == 0)
+            {
+                SeenButMissingSources.Remove(modInput);
+
+                otherSide = modInput.GetPaired();
+                return true;
+            }
+
+            otherSide = null;
+            return false;
+        }
+
+        public void TryUnblockWithSource(Output source, Action<Output> addSinkToSearch)
+        {
+            if (ModInputBlocker.TryGetValue(source, out var blockedModInputs))
+            {
+                foreach (var blockedInput in blockedModInputs)
+                {
+                    if (TryHasFoundAllDeps(source, blockedInput, SeenButMissingSources[blockedInput], out Output borderExit))
+                    {
+                        addSinkToSearch(borderExit);
+                    }
+                }
+                ModInputBlocker.Remove(source);
+            }
         }
     }
 
