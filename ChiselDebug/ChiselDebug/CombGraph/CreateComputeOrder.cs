@@ -88,10 +88,8 @@ namespace ChiselDebug.CombGraph
 
             void AddSinkToSearch(Stack<SourceSinkCon> toTraverse, Output output)
             {
-                if (seenCons.Add(output))
-                {
-                    computeOrder.Add(new Computable(output));
-                }
+                seenCons.Add(output);
+                computeOrder.Add(new Computable(output));
 
                 foreach (var input in output.GetConnectedInputs())
                 {
