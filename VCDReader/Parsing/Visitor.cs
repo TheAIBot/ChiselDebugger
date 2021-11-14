@@ -148,7 +148,6 @@ namespace VCDReader.Parsing
             ReadOnlySpan<byte> dumpOffToken = new byte[] { (byte)'$', (byte)'d', (byte)'u', (byte)'m', (byte)'p', (byte)'o', (byte)'f', (byte)'f' };
             ReadOnlySpan<byte> dumpOnToken = new byte[] { (byte)'$', (byte)'d', (byte)'u', (byte)'m', (byte)'p', (byte)'o', (byte)'n' };
             ReadOnlySpan<byte> dumpVarsToken = new byte[] { (byte)'$', (byte)'d', (byte)'u', (byte)'m', (byte)'p', (byte)'v', (byte)'a', (byte)'r', (byte)'s' };
-            ReadOnlySpan<byte> hashtagToken = new byte[] { (byte)'#' };
 
             //It may be the case that it's first discovered now that
             // the end of the file has been reached.
@@ -161,8 +160,25 @@ namespace VCDReader.Parsing
 
                 return;
             }
-
-            if (declWord.SequenceEqual(commentToken))
+            char firstChar = (char)declWord[0];
+            char firstCharLowered = (char)(firstChar | 0b10_0000);
+            if (firstCharLowered == 'b')
+            {
+                VisitBinaryVectorValueChange(lexer, declWord.Slice(1), idToVariable, pass, bitAlloc);
+            }
+            else if (firstCharLowered == 'r')
+            {
+                VisitRealVectorValueChange(lexer, declWord.Slice(1), idToVariable, pass, bitAlloc);
+            }
+            else if (firstChar != '#' && firstChar != '$')
+            {
+                VisitScalarValueChange(ref declWordMem, idToVariable, pass, bitAlloc);
+            }
+            else if (firstChar == '#')
+            {
+                pass.SimCmd = VisitSimTime(declWord);
+            }
+            else if (declWord.SequenceEqual(commentToken))
             {
                 
                 string text = lexer.NextUntil(endToken).ToCharString();
@@ -186,13 +202,10 @@ namespace VCDReader.Parsing
             {
                 pass.SimCmd = new DumpVars(VisitValueChangeStream(lexer, idToVariable, pass, bitAlloc));
             }
-            else if (declWord.StartsWith(hashtagToken))
-            {
-                pass.SimCmd = VisitSimTime(declWord);
-            }
+
             else
             {
-                VisitValueChange(lexer, declWordMem, idToVariable, pass, bitAlloc);
+                VisitValueChange(lexer, ref declWordMem, idToVariable, pass, bitAlloc);
             }
         }
 
@@ -209,7 +222,7 @@ namespace VCDReader.Parsing
                     break;
                 }
 
-                VisitValueChange(lexer, text, idToVariable, pass, bitAlloc);
+                VisitValueChange(lexer, ref text, idToVariable, pass, bitAlloc);
                 if (pass.HasBinValue)
                 {
                     changes.Add(pass.BinValue);
@@ -228,25 +241,26 @@ namespace VCDReader.Parsing
             return changes;
         }
 
-        internal static void VisitValueChange(VCDLexer lexer, ReadOnlyMemory<byte> text, IDToVarDef idToVariable, SimPass pass, BitAllocator bitAlloc)
+        internal static void VisitValueChange(VCDLexer lexer, ref ReadOnlyMemory<byte> text, IDToVarDef idToVariable, SimPass pass, BitAllocator bitAlloc)
         {
             if (text.Length < 2)
             {
-                throw new Exception($"Invalid value change: {text.ToString()}");
+                throw new Exception($"Invalid value change: {text}");
             }
 
             ReadOnlySpan<byte> textSpan = text.Span;
-            if (textSpan[0] == 'b' || textSpan[0] == 'B')
+            char firstCharLowered = (char)(textSpan[0] | 0b10_0000);
+            if (firstCharLowered == 'b')
             {
                 VisitBinaryVectorValueChange(lexer, textSpan.Slice(1), idToVariable, pass, bitAlloc);
             }
-            else if (textSpan[0] == 'r' || textSpan[0] == 'R')
+            else if (firstCharLowered == 'r')
             {
                 VisitRealVectorValueChange(lexer, textSpan.Slice(1), idToVariable, pass, bitAlloc);
             }
             else
             {
-                VisitScalarValueChange(text, idToVariable, pass, bitAlloc);
+                VisitScalarValueChange(ref text, idToVariable, pass, bitAlloc);
             }
         }
 
@@ -285,7 +299,7 @@ namespace VCDReader.Parsing
             }
         }
 
-        internal static void VisitScalarValueChange(ReadOnlyMemory<byte> text, IDToVarDef idToVariable, SimPass pass, BitAllocator bitAlloc)
+        internal static void VisitScalarValueChange(ref ReadOnlyMemory<byte> text, IDToVarDef idToVariable, SimPass pass, BitAllocator bitAlloc)
         {
             UnsafeMemory<BitState> bits = bitAlloc.GetBits(1);
             BitState bit = ToBitState(text.Span[0]);
