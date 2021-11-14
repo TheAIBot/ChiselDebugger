@@ -48,10 +48,12 @@ namespace ChiselDebug
 
         internal void AddChanges(ReadOnlySpan<BinaryVarValue> changes, ulong time)
         {
-            foreach (var change in changes)
+            for (int i = 0; i < changes.Length; i++)
             {
+                ref readonly var change = ref changes[i];
                 var variable = change.Variables[0];
-                VariableValues[variable.ID] = change;
+                ref var dictStoreLocation = ref CollectionsMarshal.GetValueRefOrAddDefault(VariableValues, variable.ID, out bool _);
+                dictStoreLocation = change;
             }
 
             Time = time;

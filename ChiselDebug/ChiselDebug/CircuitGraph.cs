@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using VCDReader;
 
@@ -299,7 +300,7 @@ namespace ChiselDebug
             {
                 foreach (var idOutputs in VarDefIDToCon)
                 {
-                    BinaryVarValue binValue = state.VariableValues[idOutputs.Key];
+                    ref var binValue = ref CollectionsMarshal.GetValueRefOrNullRef(state.VariableValues, idOutputs.Key);
                     foreach (var output in idOutputs.Value)
                     {
                         output.Value.UpdateValue(ref binValue);

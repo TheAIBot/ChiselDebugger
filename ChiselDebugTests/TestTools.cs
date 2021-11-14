@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using VCDReader;
@@ -189,7 +190,7 @@ namespace ChiselDebugTests
                 graph.ComputeRemainingGraphFast();
                 for (int z = 0; z < varsToCheck.Length; z++)
                 {
-                    BinaryVarValue expected = state.VariableValues[varsToCheck[z].VariableDef.ID];
+                    ref var expected = ref CollectionsMarshal.GetValueRefOrNullRef(state.VariableValues, varsToCheck[z].VariableDef.ID);
                     ScalarIO varCon = varsToCheck[z].IO;
 
                     ref BinaryVarValue actual = ref (varCon is Input input ? ref input.UpdateValueFromSourceFast() : ref varCon.GetValue());
