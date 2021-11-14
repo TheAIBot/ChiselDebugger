@@ -252,7 +252,8 @@ namespace VCDReader.Parsing
 
         internal static void VisitBinaryVectorValueChange(VCDLexer lexer, ReadOnlySpan<byte> valueText, IDToVarDef idToVariable, SimPass pass, BitAllocator bitAlloc)
         {
-            (UnsafeMemory<BitState> bits, bool isValidBinary) = ToBitStates(valueText, bitAlloc);
+            UnsafeMemory<BitState> bits = bitAlloc.GetBits(valueText.Length);
+            bool isValidBinary = ToBitStates(valueText, in bits);
             var id = lexer.NextWordAsMem();
 
             if (idToVariable.TryGetValue(id, out List<VarDef>? variables))
@@ -303,9 +304,8 @@ namespace VCDReader.Parsing
             }
         }
 
-        internal static unsafe (UnsafeMemory<BitState> bits, bool isValidBinary) ToBitStates(ReadOnlySpan<byte> valueText, BitAllocator bitAlloc)
+        internal static unsafe bool ToBitStates(ReadOnlySpan<byte> valueText, in UnsafeMemory<BitState> bitsMem)
         {
-            UnsafeMemory<BitState> bitsMem = bitAlloc.GetBits(valueText.Length);
             Span<BitState> bits = bitsMem.Span;
 
             var shuffleIdxs = Vector128.Create(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0).AsByte();
@@ -349,7 +349,7 @@ namespace VCDReader.Parsing
                 isValidBinary |= (uint)bit & 0b10;
             }
 
-            return (bitsMem, isValidBinary == 0);
+            return isValidBinary == 0;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
