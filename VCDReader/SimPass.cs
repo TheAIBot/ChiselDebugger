@@ -5,12 +5,13 @@ namespace VCDReader
     public class SimPass
     {
         public ISimCmd? SimCmd = null;
-        public BinaryVarValue? BinValue = null;
+        public BinaryVarValue BinValue;
+        public bool HasBinValue = false;
         public RealVarValue? RealValue = null;
 
         internal bool HasCmd()
         {
-            return SimCmd != null || BinValue.HasValue || RealValue.HasValue;
+            return SimCmd != null || HasBinValue || RealValue.HasValue;
         }
 
         internal ISimCmd GetCmd()
@@ -19,7 +20,7 @@ namespace VCDReader
             {
                 return SimCmd;
             }
-            else if (BinValue.HasValue)
+            else if (HasBinValue)
             {
                 return BinValue;
             }
@@ -36,7 +37,7 @@ namespace VCDReader
         internal void Reset()
         {
             SimCmd = null;
-            BinValue = null;
+            HasBinValue = false;
             RealValue = null;
         }
     }

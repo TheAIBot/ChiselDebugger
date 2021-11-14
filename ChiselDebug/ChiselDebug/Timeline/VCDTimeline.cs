@@ -74,10 +74,10 @@ namespace ChiselDebug.Timeline
                     }
                     startTime = time.Time;
                 }
-                else if (simCmd.BinValue.HasValue)
+                else if (simCmd.HasBinValue)
                 {
-                    followState.AddChange(simCmd.BinValue.Value);
-                    binChanges.Add(simCmd.BinValue.Value);
+                    followState.AddChange(ref simCmd.BinValue);
+                    binChanges.Add(simCmd.BinValue);
                     currTimeStepLength++;
                 }
             }

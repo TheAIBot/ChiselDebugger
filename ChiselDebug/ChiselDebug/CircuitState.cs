@@ -3,6 +3,7 @@ using ChiselDebug.GraphFIR.IO;
 using ChiselDebug.Timeline;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using VCDReader;
 
 namespace ChiselDebug
@@ -56,10 +57,11 @@ namespace ChiselDebug
             Time = time;
         }
 
-        internal void AddChange(BinaryVarValue value)
+        internal void AddChange(ref BinaryVarValue value)
         {
             var variable = value.Variables[0];
-            VariableValues[variable.ID] = value;
+            ref var dictStoreLocation = ref CollectionsMarshal.GetValueRefOrAddDefault(VariableValues, variable.ID, out bool _);
+            dictStoreLocation = value;
         }
 
         public CircuitState Copy()

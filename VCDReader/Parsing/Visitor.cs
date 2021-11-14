@@ -210,7 +210,7 @@ namespace VCDReader.Parsing
                 }
 
                 VisitValueChange(lexer, text, idToVariable, pass, bitAlloc);
-                if (pass.BinValue.HasValue)
+                if (pass.HasBinValue)
                 {
                     changes.Add(pass.BinValue);
                 }
@@ -258,6 +258,7 @@ namespace VCDReader.Parsing
             if (idToVariable.TryGetValue(id, out List<VarDef>? variables))
             {
                 pass.BinValue = new BinaryVarValue(bits, variables, isValidBinary);
+                pass.HasBinValue = true;
             }
             else
             {
@@ -294,6 +295,7 @@ namespace VCDReader.Parsing
             if (idToVariable.TryGetValue(id, out List<VarDef>? variable))
             {
                 pass.BinValue = new BinaryVarValue(bits, variable, ((int)bit & 0b10) == 0);
+                pass.HasBinValue = true;
             }
             else
             {
