@@ -1,7 +1,6 @@
 ﻿using FIRRTL;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 using VCDReader;
 
@@ -10,7 +9,7 @@ namespace ChiselDebug.GraphFIR.IO
     public sealed class Input : ScalarIO
     {
         private Output Con;
-        private List<Connection> CondCons = null;
+        private RefEnabledList<Connection> CondCons = new RefEnabledList<Connection>();
         private Output Paired = null;
 
         public Input(FIRRTLNode node, IFIRType type) : this(node, null, type)
@@ -34,17 +33,14 @@ namespace ChiselDebug.GraphFIR.IO
             }
             else
             {
-                if (CondCons != null)
+                for (int i = 0; i < CondCons.Count; i++)
                 {
-                    for (int i = 0; i < CondCons.Count; i++)
+                    if (CondCons[i] == replace)
                     {
-                        if (CondCons[i] == replace)
-                        {
-                            replace.From.DisconnectOnlyOutputSide(this);
-                            replaceWith.ConnectOnlyOutputSide(this);
-                            CondCons[i] = new Connection(replaceWith, replace.Condition);
-                            return;
-                        }
+                        replace.From.DisconnectOnlyOutputSide(this);
+                        replaceWith.ConnectOnlyOutputSide(this);
+                        CondCons[i] = new Connection(replaceWith, replace.Condition);
+                        return;
                     }
                 }
 
@@ -54,7 +50,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         public override bool IsConnectedToAnything()
         {
-            return Con != null || (CondCons != null && CondCons.Count > 0);
+            return Con != null || CondCons.Count > 0;
         }
 
         public Connection[] GetConnections()
@@ -64,12 +60,10 @@ namespace ChiselDebug.GraphFIR.IO
             {
                 cons.Add(new Connection(Con));
             }
-            if (CondCons != null)
+
+            for (int i = 0; i < CondCons.Count; i++)
             {
-                for (int i = 0; i < CondCons.Count; i++)
-                {
-                    cons.Add(CondCons[i]);
-                }
+                cons.Add(CondCons[i]);
             }
 
             return cons.ToArray();
@@ -86,12 +80,10 @@ namespace ChiselDebug.GraphFIR.IO
             {
                 Con.ConnectToInput(input);
             }
-            if (CondCons != null)
+
+            foreach (var condCon in CondCons.ToArray())
             {
-                foreach (var condCon in CondCons.ToArray())
-                {
-                    condCon.From.ConnectToInput(input, false, false, condCon.Condition);
-                }
+                condCon.From.ConnectToInput(input, false, false, condCon.Condition);
             }
 
             DisconnectAll();
@@ -107,17 +99,14 @@ namespace ChiselDebug.GraphFIR.IO
             else
             {
                 bool didDisconnect = false;
-                if (CondCons != null)
+                for (int i = 0; i < CondCons.Count; i++)
                 {
-                    for (int i = 0; i < CondCons.Count; i++)
+                    if (CondCons[i] == toDisconnect)
                     {
-                        if (CondCons[i] == toDisconnect)
-                        {
-                            CondCons[i].From.DisconnectOnlyOutputSide(this);
-                            CondCons.RemoveAt(i);
-                            didDisconnect = true;
-                            break;
-                        }
+                        CondCons[i].From.DisconnectOnlyOutputSide(this);
+                        CondCons.RemoveAt(i);
+                        didDisconnect = true;
+                        break;
                     }
                 }
 
@@ -135,25 +124,17 @@ namespace ChiselDebug.GraphFIR.IO
                 Disconnect(new Connection(Con));
             }
 
-            if (CondCons != null)
+            for (int i = 0; i < CondCons.Count; i++)
             {
-                foreach (var condCon in CondCons)
-                {
-                    condCon.From.DisconnectOnlyOutputSide(this);
-                }
-                CondCons.Clear();
+                CondCons[i].From.DisconnectOnlyOutputSide(this);
             }
+            CondCons.Clear();
         }
 
         public void Connect(Output con, Output condition)
         {
             if (condition != null)
             {
-                if (CondCons == null)
-                {
-                    CondCons = new List<Connection>();
-                }
-
                 /*
                  * handle this
                  * 
@@ -208,15 +189,12 @@ namespace ChiselDebug.GraphFIR.IO
 
         public Output GetEnabledSource()
         {
-            if (CondCons != null)
+            for (int i = CondCons.Count - 1; i >= 0; i--)
             {
-                for (int i = CondCons.Count - 1; i >= 0; i--)
+                var condCon = CondCons[i];
+                if (condCon.IsEnabled())
                 {
-                    var condCon = CondCons[i];
-                    if (condCon.IsEnabled())
-                    {
-                        return condCon.From;
-                    }
+                    return condCon.From;
                 }
             }
 
@@ -239,15 +217,12 @@ namespace ChiselDebug.GraphFIR.IO
 
         public ValueType FetchValueFromSourceFast()
         {
-            if (CondCons != null)
+            for (int i = CondCons.Count - 1; i >= 0; i--)
             {
-                for (int i = CondCons.Count - 1; i >= 0; i--)
+                ref readonly var condCon = ref CondCons[i];
+                if (condCon.IsEnabled())
                 {
-                    var condCon = CondCons[i];
-                    if (condCon.IsEnabled())
-                    {
-                        return condCon.From.Value;
-                    }
+                    return condCon.From.Value;
                 }
             }
 
@@ -289,9 +264,9 @@ namespace ChiselDebug.GraphFIR.IO
             {
                 endPoints.Add(Con);
             }
-            if (CondCons != null)
+            for (int i = 0; i < CondCons.Count; i++)
             {
-                endPoints.AddRange(CondCons.Select(x => x.From));
+                endPoints.Add(CondCons[i].From);
             }
 
             SetType(TypeHelper.InferMaxWidthType(endPoints.ToArray()));
