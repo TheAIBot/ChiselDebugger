@@ -301,43 +301,43 @@ namespace VCDReader.Parsing
             }
         }
 
-        private static Vector128<byte> onlyFirstBit = Vector128.Create((byte)1);
-        private static Vector128<byte> onlySecondBit = Vector128.Create((byte)2);
-        private static Vector128<byte> shuffleIdxs = Vector128.Create(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0).AsByte();
-
         internal static unsafe (UnsafeMemory<BitState> bits, bool isValidBinary) ToBitStates(ReadOnlySpan<byte> valueText, BitAllocator bitAlloc)
         {
             UnsafeMemory<BitState> bitsMem = bitAlloc.GetBits(valueText.Length);
             Span<BitState> bits = bitsMem.Span;
 
+            var shuffleIdxs = Vector128.Create(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0).AsByte();
+            var onlyFirstBit = Vector128.Create((byte)1);
+            var onlySecondBit = Vector128.Create((byte)2);
+
             ulong isValidBinary = 0;
             int index = 0;
             if (Ssse3.IsSupported && bits.Length >= Vector128<byte>.Count)
             {
-                int vecBitCount = bits.Length / Vector128<byte>.Count;
+                int vecBitCount = bits.Length - Vector128<byte>.Count;
                 fixed (BitState* bitsPtr = bits)
                 {
                     fixed (byte* textPtr = valueText)
                     {
+                        byte* bitsStorePtr = (byte*)bitsPtr + bits.Length - Vector128<byte>.Count;
                         Vector128<ulong> isValidBin = Vector128<ulong>.Zero;
-                        for (; index < vecBitCount; index++)
+                        for (; index <= vecBitCount; index += Vector128<byte>.Count)
                         {
-                            var charText = Avx.LoadVector128(textPtr + index * Vector128<byte>.Count);
+                            var charText = Avx.LoadVector128(textPtr + index);
                             var byteText = Avx.Shuffle(charText, shuffleIdxs);
 
                             var firstBit = Avx.And(onlyFirstBit, Avx.Or(byteText, Avx.ShiftRightLogical(byteText.AsInt32(), 1).AsByte()));
                             var secondBit = Avx.And(onlySecondBit, Avx.ShiftRightLogical(byteText.AsInt32(), 5).AsByte());
                             var bytesAsBitStates = Avx.Or(firstBit, secondBit);
 
-                            Avx.Store((byte*)bitsPtr + bits.Length - (index + 1) * Vector128<byte>.Count, bytesAsBitStates);
+                            Avx.Store(bitsStorePtr, bytesAsBitStates);
+                            bitsStorePtr -= Vector128<byte>.Count;
                             isValidBin = Avx.Or(isValidBin, secondBit.AsUInt64());
                         }
 
                         isValidBinary = isValidBin.GetElement(0) | isValidBin.GetElement(1);
                     }
                 }
-
-                index *= Vector128<byte>.Count;
             }
 
             for (; index < bits.Length; index++)
