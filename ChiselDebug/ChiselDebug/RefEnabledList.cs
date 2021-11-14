@@ -17,6 +17,12 @@ namespace ChiselDebug
             Count = 0;
         }
 
+        public RefEnabledList(int capacity)
+        {
+            Values = new T[capacity];
+            Count = 0;
+        }
+
         public void Add(T value)
         {
             Add(ref value);
@@ -53,7 +59,9 @@ namespace ChiselDebug
 
         public T[] ToArray()
         {
-            return Values.ToArray();
+            T[] copy = new T[Count];
+            Array.Copy(Values, copy, Count);
+            return copy;
         }
 
         private void EnsureCanFitOneMoreValue()
