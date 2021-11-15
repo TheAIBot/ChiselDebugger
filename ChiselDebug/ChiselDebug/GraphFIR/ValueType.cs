@@ -57,9 +57,9 @@ namespace ChiselDebug.GraphFIR
             return Value.AsBigInteger(IsSigned);
         }
 
-        public void SetFromBigInt(BigInteger newValue)
+        public void SetFromBigInt(in BigInteger newValue)
         {
-            Value.SetBitsAndExtend(newValue, IsSigned);
+            Value.SetBitsAndExtend(in newValue);
         }
 
         public string ToBinaryString()

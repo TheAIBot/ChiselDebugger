@@ -160,7 +160,7 @@ namespace ChiselDebug.GraphFIR
             }
 
             BigInteger aVal = a.AsBigInteger(A.Value.IsSigned);
-            result.SetBitsAndExtend(-aVal, Result.Value.IsSigned);
+            result.SetBitsAndExtend(-aVal);
         }
 
         protected override IFIRType MonoArgInferType() => A.Type switch

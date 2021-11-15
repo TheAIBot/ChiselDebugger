@@ -178,7 +178,7 @@ namespace VCDReader
             SetBits((ulong)value);
         }
 
-        public void SetBitsAndExtend(BigInteger value, bool asSigned)
+        public void SetBitsAndExtend(in BigInteger value)
         {
             IsValidBinary = true;
 

@@ -101,9 +101,9 @@ namespace ChiselDebug.GraphFIR.IO
             return ref Value.Value;
         }
 
-        public void SetFromBigInt(BigInteger newValue)
+        public void SetFromBigInt(in BigInteger newValue)
         {
-            Value.SetFromBigInt(newValue);
+            Value.SetFromBigInt(in newValue);
         }
 
         public override Input GetPaired()
