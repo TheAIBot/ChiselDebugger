@@ -7,7 +7,7 @@ using VCDReader;
 
 namespace ChiselDebug.GraphFIR
 {
-    public class ConstValue : FIRRTLNode, INoPlaceAndRoute
+    public sealed class ConstValue : FIRRTLNode, INoPlaceAndRoute
     {
         public readonly Literal Value;
         public readonly Output Result;

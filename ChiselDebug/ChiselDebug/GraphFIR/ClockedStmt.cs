@@ -9,7 +9,7 @@ using VCDReader;
 
 namespace ChiselDebug.GraphFIR
 {
-    public class FirStop : FIRRTLNode
+    public sealed class FirStop : FIRRTLNode
     {
         public readonly Input Clock;
         public readonly Input Enable;

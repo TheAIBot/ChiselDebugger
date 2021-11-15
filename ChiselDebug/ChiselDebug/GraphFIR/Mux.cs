@@ -8,7 +8,7 @@ using VCDReader;
 
 namespace ChiselDebug.GraphFIR
 {
-    public class Mux : PairedIOFIRRTLNode
+    public sealed class Mux : PairedIOFIRRTLNode
     {
         public readonly FIRIO[] Choises;
         public readonly Input Decider;

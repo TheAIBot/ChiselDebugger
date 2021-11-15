@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ChiselDebug.GraphFIR
 {
-    public class Memory : FIRRTLNode, IContainerIO, IStatePreserving
+    public sealed class Memory : FIRRTLNode, IContainerIO, IStatePreserving
     {
         public readonly string Name;
         public readonly FIRIO InputType;

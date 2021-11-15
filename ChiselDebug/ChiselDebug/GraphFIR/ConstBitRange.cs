@@ -48,7 +48,7 @@ namespace ChiselDebug.GraphFIR
         protected abstract void ConstBitRangeCompute(ref BinaryVarValue a, ref BinaryVarValue result);
     }
 
-    public class Head : ConstBitRange
+    public sealed class Head : ConstBitRange
     {
         public readonly int FromMSB;
         public Head(Output arg1, IFIRType outType, int fromMSB, FirrtlNode defNode) : base("head", arg1, outType, defNode)
@@ -80,7 +80,7 @@ namespace ChiselDebug.GraphFIR
         }
     }
 
-    public class Tail : ConstBitRange
+    public sealed class Tail : ConstBitRange
     {
         public readonly int FromLSB;
         public Tail(Output arg1, IFIRType outType, int fromLSB, FirrtlNode defNode) : base("tail", arg1, outType, defNode)
@@ -112,7 +112,7 @@ namespace ChiselDebug.GraphFIR
         }
     }
 
-    public class BitExtract : ConstBitRange
+    public sealed class BitExtract : ConstBitRange
     {
         public readonly int StartInclusive;
         public readonly int EndInclusive;
@@ -146,7 +146,7 @@ namespace ChiselDebug.GraphFIR
         }
     }
 
-    public class Pad : ConstBitRange
+    public sealed class Pad : ConstBitRange
     {
         public readonly int WidthAfterPad;
         public Pad(Output arg1, IFIRType outType, int newWidth, FirrtlNode defNode) : base("pad", arg1, outType, defNode)

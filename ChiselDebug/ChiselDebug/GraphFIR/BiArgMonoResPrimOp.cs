@@ -96,7 +96,7 @@ namespace ChiselDebug.GraphFIR
         protected abstract void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result);
     }
 
-    public class FIRAdd : BiArgPrimOpAlwaysPropUnknown
+    public sealed class FIRAdd : BiArgPrimOpAlwaysPropUnknown
     {
         public FIRAdd(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("+", aIn, bIn, outType, defNode) { }
 
@@ -115,7 +115,7 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIRSub : BiArgPrimOpAlwaysPropUnknown
+    public sealed class FIRSub : BiArgPrimOpAlwaysPropUnknown
     {
         public FIRSub(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("-", aIn, bIn, outType, defNode) { }
 
@@ -134,7 +134,7 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIRMul : BiArgPrimOpAlwaysPropUnknown
+    public sealed class FIRMul : BiArgPrimOpAlwaysPropUnknown
     {
         public FIRMul(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("*", aIn, bIn, outType, defNode) { }
 
@@ -153,7 +153,7 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIRDiv : BiArgPrimOpAlwaysPropUnknown
+    public sealed class FIRDiv : BiArgPrimOpAlwaysPropUnknown
     {
         public FIRDiv(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("/", aIn, bIn, outType, defNode) { }
 
@@ -182,7 +182,7 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIRRem : BiArgPrimOpAlwaysPropUnknown
+    public sealed class FIRRem : BiArgPrimOpAlwaysPropUnknown
     {
         public FIRRem(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("%", aIn, bIn, outType, defNode) { }
 
@@ -211,7 +211,7 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIRDshl : BiArgPrimOpCheckPropUnknown
+    public sealed class FIRDshl : BiArgPrimOpCheckPropUnknown
     {
         public FIRDshl(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("<<", aIn, bIn, outType, defNode) { }
 
@@ -246,7 +246,7 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIRDshr : BiArgPrimOpCheckPropUnknown
+    public sealed class FIRDshr : BiArgPrimOpCheckPropUnknown
     {
         public FIRDshr(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base(">>", aIn, bIn, outType, defNode) { }
 
@@ -276,7 +276,7 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIRCat : BiArgPrimOpCheckPropUnknown
+    public sealed class FIRCat : BiArgPrimOpCheckPropUnknown
     {
         public FIRCat(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("cat", aIn, bIn, outType, defNode) { }
 
@@ -315,7 +315,7 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIREq : FIRCompOp
+    public sealed class FIREq : FIRCompOp
     {
         public FIREq(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("=", aIn, bIn, outType, defNode) { }
 
@@ -326,7 +326,7 @@ namespace ChiselDebug.GraphFIR
         }
     }
 
-    public class FIRNeq : FIRCompOp
+    public sealed class FIRNeq : FIRCompOp
     {
         public FIRNeq(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("≠", aIn, bIn, outType, defNode) { }
 
@@ -337,7 +337,7 @@ namespace ChiselDebug.GraphFIR
         }
     }
 
-    public class FIRGeq : FIRCompOp
+    public sealed class FIRGeq : FIRCompOp
     {
         public FIRGeq(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("≥", aIn, bIn, outType, defNode) { }
 
@@ -349,7 +349,7 @@ namespace ChiselDebug.GraphFIR
         }
     }
 
-    public class FIRLeq : FIRCompOp
+    public sealed class FIRLeq : FIRCompOp
     {
         public FIRLeq(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("≤", aIn, bIn, outType, defNode) { }
 
@@ -361,7 +361,7 @@ namespace ChiselDebug.GraphFIR
         }
     }
 
-    public class FIRGt : FIRCompOp
+    public sealed class FIRGt : FIRCompOp
     {
         public FIRGt(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base(">", aIn, bIn, outType, defNode) { }
 
@@ -373,7 +373,7 @@ namespace ChiselDebug.GraphFIR
         }
     }
 
-    public class FIRLt : FIRCompOp
+    public sealed class FIRLt : FIRCompOp
     {
         public FIRLt(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("<", aIn, bIn, outType, defNode) { }
 
@@ -410,7 +410,7 @@ namespace ChiselDebug.GraphFIR
         }
     }
 
-    public class FIRAnd : FIRBitwise
+    public sealed class FIRAnd : FIRBitwise
     {
         public FIRAnd(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("&", aIn, bIn, outType, defNode) { }
 
@@ -444,7 +444,7 @@ namespace ChiselDebug.GraphFIR
         }
     }
 
-    public class FIROr : FIRBitwise
+    public sealed class FIROr : FIRBitwise
     {
         public FIROr(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("|", aIn, bIn, outType, defNode) { }
 
@@ -478,7 +478,7 @@ namespace ChiselDebug.GraphFIR
         }
     }
 
-    public class FIRXor : FIRBitwise
+    public sealed class FIRXor : FIRBitwise
     {
         public FIRXor(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("^", aIn, bIn, outType, defNode) { }
 
@@ -512,7 +512,7 @@ namespace ChiselDebug.GraphFIR
         }
     }
 
-    public class FIRShl : BiArgPrimOpCheckPropUnknown
+    public sealed class FIRShl : BiArgPrimOpCheckPropUnknown
     {
         private readonly int ShiftBy;
         public FIRShl(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("<<", aIn, bIn, outType, defNode)
@@ -542,7 +542,7 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIRShr : BiArgPrimOpCheckPropUnknown
+    public sealed class FIRShr : BiArgPrimOpCheckPropUnknown
     {
         private readonly int ShiftBy;
         public FIRShr(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base(">>", aIn, bIn, outType, defNode)

@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace ChiselDebug.GraphFIR
 {
-    public class DummySink : FIRRTLNode, INoPlaceAndRoute
+    public sealed class DummySink : FIRRTLNode, INoPlaceAndRoute
     {
         public readonly Input InIO;
 

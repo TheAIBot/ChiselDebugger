@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace ChiselDebug.GraphFIR.IO
 {
-    public class MemoryIO : IOBundle
+    public sealed class MemoryIO : IOBundle
     {
         private readonly List<MemPort> Ports = new List<MemPort>();
         private readonly FIRIO InputType;

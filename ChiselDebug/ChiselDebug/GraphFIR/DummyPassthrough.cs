@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ChiselDebug.GraphFIR
 {
-    public class DummyPassthrough : FIRRTLNode, INoPlaceAndRoute
+    public sealed class DummyPassthrough : FIRRTLNode, INoPlaceAndRoute
     {
         public readonly Input InIO;
         public readonly Output Result;

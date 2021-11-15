@@ -8,7 +8,7 @@ using VCDReader;
 
 namespace ChiselDebug.GraphFIR
 {
-    public class Module : FIRRTLContainer
+    public sealed class Module : FIRRTLContainer
     {
         public readonly string Name;
         public readonly string InstanceName;

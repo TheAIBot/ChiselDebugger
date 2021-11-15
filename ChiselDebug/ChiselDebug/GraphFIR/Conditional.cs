@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ChiselDebug.GraphFIR
 {
-    public class Conditional : FIRRTLNode, IContainerIO
+    public sealed class Conditional : FIRRTLNode, IContainerIO
     {
         private readonly List<Module> ConditionalModules = new List<Module>();
         public IReadOnlyList<Module> CondMods => ConditionalModules;

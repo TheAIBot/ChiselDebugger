@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace ChiselDebug.GraphFIR.IO
 {
-    public class MemReadPort : MemPort
+    public sealed class MemReadPort : MemPort
     {
         internal readonly FIRIO DataOut;
 

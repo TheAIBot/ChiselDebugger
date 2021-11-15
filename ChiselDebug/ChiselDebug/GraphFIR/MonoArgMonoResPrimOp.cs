@@ -60,7 +60,7 @@ namespace ChiselDebug.GraphFIR
         protected abstract IFIRType MonoArgInferType();
     }
 
-    public class FIRAsUInt : MonoArgMonoResPrimOp
+    public sealed class FIRAsUInt : MonoArgMonoResPrimOp
     {
         public FIRAsUInt(Output aIn, IFIRType outType, FirrtlNode defNode) : base("asUInt", aIn, outType, defNode) { }
 
@@ -80,7 +80,7 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIRAsSInt : MonoArgMonoResPrimOp
+    public sealed class FIRAsSInt : MonoArgMonoResPrimOp
     {
         public FIRAsSInt(Output aIn, IFIRType outType, FirrtlNode defNode) : base("asSInt", aIn, outType, defNode) { }
 
@@ -100,7 +100,7 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIRAsClock : MonoArgMonoResPrimOp
+    public sealed class FIRAsClock : MonoArgMonoResPrimOp
     {
         public FIRAsClock(Output aIn, IFIRType outType, FirrtlNode defNode) : base("asClock", aIn, outType, defNode) { }
 
@@ -120,7 +120,7 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIRCvt : MonoArgMonoResPrimOp
+    public sealed class FIRCvt : MonoArgMonoResPrimOp
     {
         public FIRCvt(Output aIn, IFIRType outType, FirrtlNode defNode) : base("cvt", aIn, outType, defNode) { }
 
@@ -147,7 +147,7 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIRNeg : MonoArgMonoResPrimOp
+    public sealed class FIRNeg : MonoArgMonoResPrimOp
     {
         public FIRNeg(Output aIn, IFIRType outType, FirrtlNode defNode) : base("-", aIn, outType, defNode) { }
 
@@ -171,7 +171,7 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIRNot : MonoArgMonoResPrimOp
+    public sealed class FIRNot : MonoArgMonoResPrimOp
     {
         public FIRNot(Output aIn, IFIRType outType, FirrtlNode defNode) : base("~", aIn, outType, defNode) { }
 
@@ -193,7 +193,7 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIRAndr : MonoArgMonoResPrimOp
+    public sealed class FIRAndr : MonoArgMonoResPrimOp
     {
         public FIRAndr(Output aIn, IFIRType outType, FirrtlNode defNode) : base("andr", aIn, outType, defNode) { }
 
@@ -222,7 +222,7 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIROrr : MonoArgMonoResPrimOp
+    public sealed class FIROrr : MonoArgMonoResPrimOp
     {
         public FIROrr(Output aIn, IFIRType outType, FirrtlNode defNode) : base("orr", aIn, outType, defNode) { }
 
@@ -251,7 +251,7 @@ namespace ChiselDebug.GraphFIR
         };
     }
 
-    public class FIRXorr : MonoArgMonoResPrimOp
+    public sealed class FIRXorr : MonoArgMonoResPrimOp
     {
         public FIRXorr(Output aIn, IFIRType outType, FirrtlNode defNode) : base("xorr", aIn, outType, defNode) { }
 

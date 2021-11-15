@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace ChiselDebug.GraphFIR
 {
-    public class Wire : PairedIOFIRRTLNode
+    public sealed class Wire : PairedIOFIRRTLNode
     {
         public readonly string Name;
         public readonly FIRIO In;

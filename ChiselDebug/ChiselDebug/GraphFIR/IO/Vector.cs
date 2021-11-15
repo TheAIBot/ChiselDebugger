@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ChiselDebug.GraphFIR.IO
 {
-    public class Vector : AggregateIO
+    public sealed class Vector : AggregateIO
     {
         private readonly FIRIO[] IO;
         public int Length => IO.Length;

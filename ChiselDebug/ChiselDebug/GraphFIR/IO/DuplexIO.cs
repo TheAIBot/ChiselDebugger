@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ChiselDebug.GraphFIR.IO
 {
-    public class DuplexIO : AggregateIO
+    public sealed class DuplexIO : AggregateIO
     {
         private readonly FIRIO InIO;
         private readonly FIRIO OutIO;

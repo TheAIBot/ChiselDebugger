@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ChiselDebug.GraphFIR.IO
 {
-    public class ModuleIO : IOBundle
+    public sealed class ModuleIO : IOBundle
     {
         public readonly Module Mod;
 

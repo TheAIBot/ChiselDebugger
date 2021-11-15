@@ -6,7 +6,7 @@ using VCDReader;
 
 namespace ChiselDebug.GraphFIR
 {
-    public class ValueType
+    public sealed class ValueType
     {
         public readonly bool IsSigned;
         internal BinaryVarValue Value;

@@ -9,7 +9,7 @@ using VCDReader;
 
 namespace ChiselDebug.GraphFIR
 {
-    public class VectorAssign : FIRRTLNode
+    public sealed class VectorAssign : FIRRTLNode
     {
         private readonly Vector VecIn;
         private readonly Input Index;
