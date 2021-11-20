@@ -6,54 +6,6 @@ using System.Threading.Tasks;
 
 namespace ChiselDebug.Graphing
 {
-    internal class Node<T>
-    {
-        public HashSet<Node<T>> Incomming { get; private set; } = new HashSet<Node<T>>();
-        public HashSet<Node<T>> Outgoing { get; private set; } = new HashSet<Node<T>>();
-        public HashSet<Node<T>> Indirectly { get; private set; } = new HashSet<Node<T>>();
-        public readonly T Value;
-
-        public Node(T value)
-        {
-            this.Value = value;
-        }
-
-        public void AddEdgeTo(Node<T> node)
-        {
-            Outgoing.Add(node);
-            node.Incomming.Add(this);
-        }
-
-        public void RemoveEdgeTo(Node<T> node)
-        {
-            Outgoing.Remove(node);
-            node.Incomming.Remove(this);
-        }
-
-        public void MakeIndirectEdges()
-        {
-            foreach (var from in Outgoing)
-            {
-                foreach (var to in Outgoing)
-                {
-                    if (from == to)
-                    {
-                        continue;
-                    }
-
-                    from.Indirectly.Add(to);
-                }
-            }
-        }
-
-        public void InvertEdges()
-        {
-            var tmp = Incomming;
-            Incomming = Outgoing;
-            Outgoing = tmp;
-        }
-    }
-
     internal class Graph<T>
     {
         public readonly List<Node<T>> Nodes = new List<Node<T>>();
@@ -79,14 +31,6 @@ namespace ChiselDebug.Graphing
             foreach (var childNode in node.Outgoing)
             {
                 node.RemoveEdgeTo(childNode);
-            }
-        }
-
-        public void MakeIndirectConnections()
-        {
-            foreach (var node in Nodes)
-            {
-                node.MakeIndirectEdges();
             }
         }
 

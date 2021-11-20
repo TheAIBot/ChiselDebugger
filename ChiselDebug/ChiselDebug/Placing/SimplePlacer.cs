@@ -87,7 +87,6 @@ namespace ChiselDebug
                     graph.AddEdge(from, to);
                 }
             }
-            graph.MakeIndirectConnections();
 
             var placement = GetPlacements(graph);
             foreach (var modIONode in modInputNodes)
