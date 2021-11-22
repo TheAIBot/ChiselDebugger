@@ -224,9 +224,10 @@ namespace ChiselDebug.Routing
                 bool onEnemyWire = allowedMoves.HasFlag(MoveDirs.EnemyWire);
                 for (int i = 0; i < moves.Length; i++)
                 {
-                    if (allowedMoves.HasFlag(moves[i].Dir))
+                    ref readonly MoveData move = ref moves[i];
+                    if (allowedMoves.HasFlag(move.Dir))
                     {
-                        Point neighborPos = current + moves[i].DirVec;
+                        Point neighborPos = current + move.DirVec;
                         int neighbordIndex = board.CellIndex(neighborPos);
                         ref ScorePath neighborScore = ref board.GetCellScorePath(neighbordIndex);
 
@@ -234,13 +235,12 @@ namespace ChiselDebug.Routing
                         bool moveToEnemyWire = neighborMoves.HasFlag(MoveDirs.EnemyWire);
                         bool moveToFriendWire = neighborMoves.HasFlag(MoveDirs.FriendWire);
                         bool moveToWireCorner = neighborMoves.HasFlag(MoveDirs.WireCorner);
-                        bool isTurning = currentScorePath.DirFrom != MoveDirs.None && moves[i].RevDir != currentScorePath.DirFrom;
+                        bool isTurning = currentScorePath.DirFrom != MoveDirs.None && move.RevDir != currentScorePath.DirFrom;
 
-                        ScorePath neighborScoreFromCurrent = currentScorePath.Move(moves[i].RevDir, onEnemyWire, moveToEnemyWire, moveToFriendWire, moveToWireCorner, isTurning);
+                        ScorePath neighborScoreFromCurrent = currentScorePath.Move(move.RevDir, onEnemyWire, moveToEnemyWire, moveToFriendWire, moveToWireCorner, isTurning);
                         if (neighborScoreFromCurrent.IsBetterScoreThan(neighborScore))
                         {
-                            Point diff = (neighborPos - relativeStart).Abs();
-                            int dist = diff.X + diff.Y;
+                            int dist = Point.ManhattanDistance(in neighborPos, in relativeStart);
 
                             toSee.Enqueue(neighbordIndex, neighborScoreFromCurrent.GetTotalScore() + dist);
                             neighborScore = neighborScoreFromCurrent;

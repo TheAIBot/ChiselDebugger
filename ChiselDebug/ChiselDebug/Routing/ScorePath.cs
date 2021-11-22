@@ -13,14 +13,25 @@
 
         public ScorePath Move(MoveDirs revDir, bool onEnemyWire, bool moveToEnemyWire, bool moveToFriendWire, bool moveToWireCorner, bool isTurning)
         {
+            int onEnemyWireInt = BoolToInt(onEnemyWire);
+            int moveToEnemyWireInt = BoolToInt(moveToEnemyWire);
+            int moveToFriendWireInt = BoolToInt(!moveToFriendWire);
+            int moveToWireCornerInt = BoolToInt(moveToWireCorner);
+            int isTurningInt = BoolToInt(isTurning);
+
             int turns = TravelDist;
-            turns += isTurning ? 5 : 0;
-            turns += moveToEnemyWire ? 5 : 0;
-            turns += moveToEnemyWire && moveToWireCorner ? 500 : 0;
-            turns += isTurning && onEnemyWire ? 50 : 0;
-            turns += moveToFriendWire ? 0 : 1;
+            turns += isTurningInt * 5;
+            turns += moveToEnemyWireInt * 5;
+            turns += (moveToEnemyWireInt & moveToWireCornerInt) * 500;
+            turns += (isTurningInt & onEnemyWireInt) * 50;
+            turns += moveToFriendWireInt;
 
             return new ScorePath(turns, revDir);
+        }
+
+        private unsafe static int BoolToInt(bool value)
+        {
+            return *((byte*)&value);
         }
 
         public bool IsBetterScoreThan(ScorePath score)

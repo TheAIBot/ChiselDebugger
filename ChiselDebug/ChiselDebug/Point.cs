@@ -85,6 +85,11 @@ namespace ChiselDebug
             return new Point(Math.Min(a.X, b.X), Math.Min(a.Y, b.Y));
         }
 
+        public static int ManhattanDistance(in Point a, in Point b)
+        {
+            return Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y);
+        }
+
         public Point Abs()
         {
             return new Point(Math.Abs(X), Math.Abs(Y));
