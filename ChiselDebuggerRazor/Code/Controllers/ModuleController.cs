@@ -74,6 +74,7 @@ namespace ChiselDebuggerRazor.Code
 
         public void SubscribeToPlaceTemplate(PlacedHandler onPlaced)
         {
+            DebugCtrl.PlaceRouteStats.IncrementNeedToPlace();
             OnPlacedNodes += onPlaced;
 
             if (DebugCtrl.TryGetPlaceTemplate(Mod.Name, this, out var placement))
@@ -84,6 +85,7 @@ namespace ChiselDebuggerRazor.Code
 
         public void SubscribeToRouteTemplate(RoutedHandler onRouted)
         {
+            DebugCtrl.PlaceRouteStats.IncrementNeedToRoute();
             OnWiresRouted += onRouted;
 
             if (DebugCtrl.TryGetRouteTemplate(Mod.Name, this, out var wires))
@@ -94,11 +96,13 @@ namespace ChiselDebuggerRazor.Code
 
         public void PlaceNodes(PlacementInfo placements)
         {
+            DebugCtrl.PlaceRouteStats.PlaceDone(this);
             OnPlacedNodes?.Invoke(placements);
         }
 
         public void PlaceWires(List<WirePath> wires)
         {
+            DebugCtrl.PlaceRouteStats.RouteDone(this);
             OnWiresRouted?.Invoke(wires);
         }
 

@@ -27,6 +27,7 @@ namespace ChiselDebuggerRazor.Code
         private readonly RouteTemplator RouteTemplates = new RouteTemplator();
         private readonly SeqWorkOverrideOld<ulong> StateLimiter = new SeqWorkOverrideOld<ulong>();
         private readonly CancellationTokenSource CancelSource = new CancellationTokenSource();
+        internal readonly PlaceAndRouteStats PlaceRouteStats = new PlaceAndRouteStats();
         private ModuleLayout RootModCtrl = null;
         private IOWindowUI IOWindow = null;
 
