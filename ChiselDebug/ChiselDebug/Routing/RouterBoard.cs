@@ -4,29 +4,83 @@ using System.Text;
 
 namespace ChiselDebug.Routing
 {
-    internal class RouterBoard
+    internal class SubBoard
     {
-        public readonly int CellsWide;
-        public readonly int CellsHigh;
+        internal Point BoardPos;
         private readonly MoveDirs[] CellAllowedDirs;
         private readonly ScorePath[] CellScoreAndPath;
         private readonly MoveDirs[] CheckpointAllowedDirs;
         private readonly ScorePath[] CheckpointScoreAndPath;
+        internal bool HasCheckpoint => CheckpointAllowedDirs != null;
 
-        public const int CellSize = 10;
+        internal SubBoard(Point boardPos, bool needsCheckpoint)
+        {
+            BoardPos = boardPos;
+            CellAllowedDirs = new MoveDirs[RouterBoard.SubBoardSize];
+            CellScoreAndPath = new ScorePath[RouterBoard.SubBoardSize];
+
+            if (needsCheckpoint)
+            {
+                CheckpointAllowedDirs = new MoveDirs[RouterBoard.SubBoardSize];
+                CheckpointScoreAndPath = new ScorePath[RouterBoard.SubBoardSize];
+            }
+
+
+            ClearBoard();
+        }
+
+        internal ref MoveDirs GetCellMoves(int index)
+        {
+            return ref CellAllowedDirs[index];
+        }
+
+        internal ref ScorePath GetCellScorePath(int index)
+        {
+            return ref CellScoreAndPath[index];
+        }
+
+        internal void CreateCheckpoint()
+        {
+            Array.Copy(CellAllowedDirs, CheckpointAllowedDirs, CellAllowedDirs.Length);
+            Array.Copy(CellScoreAndPath, CheckpointScoreAndPath, CellScoreAndPath.Length);
+        }
+
+        internal void ReloadCheckpoint()
+        {
+            Array.Copy(CheckpointAllowedDirs, CellAllowedDirs, CellAllowedDirs.Length);
+            Array.Copy(CheckpointScoreAndPath, CellScoreAndPath, CellScoreAndPath.Length);
+        }
+
+        internal void ClearBoard()
+        {
+            Array.Fill(CellAllowedDirs, MoveDirs.All);
+            Array.Fill(CellScoreAndPath, ScorePath.NotReachedYet());
+        }
+    }
+
+    internal class RouterBoard
+    {
+        public readonly int CellsWide;
+        public readonly int CellsHigh;
+        private readonly int SubBoardsWide;
+        private readonly int SubBoardsHigh;
+        private readonly SubBoard[] SubBoards;
+        internal const int SubBoardSideLength = 32;
+        internal const int SubBoardSize = SubBoardSideLength * SubBoardSideLength;
+        private readonly Queue<SubBoard> UnusedBoards = new Queue<SubBoard>();
+        private SubBoard PrevBoard = null;
+
+        private const int CellSize = 10;
         public const int MinSeparation = 4;
         private const int RectPadding = 2;
 
         public RouterBoard(Point neededBoardSize)
         {
-            this.CellsWide = CeilDiv(neededBoardSize.X, CellSize) + 1;
-            this.CellsHigh = CeilDiv(neededBoardSize.Y, CellSize) + 1;
-
-            this.CellAllowedDirs = new MoveDirs[CellsWide * CellsHigh];
-            this.CellScoreAndPath = new ScorePath[CellAllowedDirs.Length];
-
-            this.CheckpointAllowedDirs = new MoveDirs[CellAllowedDirs.Length];
-            this.CheckpointScoreAndPath = new ScorePath[CellAllowedDirs.Length];
+            CellsWide = CeilDiv(neededBoardSize.X, CellSize) + 1;
+            CellsHigh = CeilDiv(neededBoardSize.Y, CellSize) + 1;
+            SubBoardsWide = CeilDiv(CellsWide, SubBoardSideLength);
+            SubBoardsHigh = CeilDiv(CellsHigh, SubBoardSideLength);
+            SubBoards = new SubBoard[SubBoardsWide * SubBoardsHigh];
         }
 
         private static int CeilDiv(int x, int y)
@@ -34,41 +88,118 @@ namespace ChiselDebug.Routing
             return (x + (y - 1)) / y;
         }
 
-        internal int CellIndex(int x, int y)
-        {
-            return y * CellsWide + x;
-        }
-
         internal int CellIndex(Point pos)
         {
             return CellIndex(pos.X, pos.Y);
         }
 
+        internal int CellIndex(int x, int y)
+        {
+            return CellIndex(x, y, CellsWide);
+        }
+
+        private static int CellIndex(int x, int y, int width)
+        {
+            return y * width + x;
+        }
+
         public Point CellFromIndex(int index)
         {
+            return CellFromIndex(index, CellsWide);
+        }
+
+        private static Point CellFromIndex(int index, int div)
+        {
             int x;
-            int y = Math.DivRem(index, CellsWide, out x);
+            int y = Math.DivRem(index, div, out x);
             return new Point(x, y);
         }
 
-        internal MoveDirs GetCellMoves(Point pos)
+        internal ref MoveDirs GetCellMoves(int cellIndex)
         {
-            return GetCellMoves(CellIndex(pos));
+            return ref GetCellMoves(CellFromIndex(cellIndex));
         }
 
-        internal MoveDirs GetCellMoves(int cellIndex)
+        internal ref MoveDirs GetCellMoves(int x, int y)
         {
-            return CellAllowedDirs[cellIndex];
+            return ref GetCellMoves(new Point(x, y));
         }
 
-        internal ref ScorePath GetCellScorePath(Point pos)
+        internal ref MoveDirs GetCellMoves(Point pos)
         {
-            return ref GetCellScorePath(CellIndex(pos));
+            return ref GetCellMoves(pos, false);
+        }
+
+        private ref MoveDirs GetCellMoves(int x, int y, bool needsCheckpoint)
+        {
+            return ref GetCellMoves(new Point(x, y), needsCheckpoint);
+        }
+
+        private ref MoveDirs GetCellMoves(Point pos, bool needsCheckpoint)
+        {
+            (uint boardPosX, uint subBoardPosX) = Math.DivRem((uint)pos.X, SubBoardSideLength);
+            (uint boardPosY, uint subBoardPosY) = Math.DivRem((uint)pos.Y, SubBoardSideLength);
+            if (PrevBoard != null && PrevBoard.BoardPos == new Point((int)boardPosX, (int)boardPosY))
+            {
+                return ref PrevBoard.GetCellMoves(CellIndex((int)subBoardPosX, (int)subBoardPosY, SubBoardSideLength));
+            }
+
+            int subBoardIndex = CellIndex((int)boardPosX, (int)boardPosY, SubBoardsWide);
+            int subCellIndex = CellIndex((int)subBoardPosX, (int)subBoardPosY, SubBoardSideLength);
+
+            ref SubBoard subBoard = ref SubBoards[subBoardIndex];
+            if (subBoard == null)
+            {
+                Point boardPos = new Point((int)boardPosX, (int)boardPosY);
+                if (!needsCheckpoint && UnusedBoards.Count > 0)
+                {
+                    subBoard = UnusedBoards.Dequeue();
+                    subBoard.BoardPos = boardPos;
+                }
+                else
+                {
+                    subBoard = new SubBoard(boardPos, needsCheckpoint);
+                }
+            }
+
+            PrevBoard = subBoard;
+            return ref subBoard.GetCellMoves(subCellIndex);
         }
 
         internal ref ScorePath GetCellScorePath(int cellIndex)
         {
-            return ref CellScoreAndPath[cellIndex];
+            return ref GetCellScorePath(CellFromIndex(cellIndex));
+        }
+
+        internal ref ScorePath GetCellScorePath(Point pos)
+        {
+            (uint boardPosX, uint subBoardPosX) = Math.DivRem((uint)pos.X, SubBoardSideLength);
+            (uint boardPosY, uint subBoardPosY) = Math.DivRem((uint)pos.Y, SubBoardSideLength);
+            if (PrevBoard != null && PrevBoard.BoardPos == new Point((int)boardPosX, (int)boardPosY))
+            {
+                return ref PrevBoard.GetCellScorePath(CellIndex((int)subBoardPosX, (int)subBoardPosY, SubBoardSideLength));
+            }
+
+            int subBoardIndex = CellIndex((int)boardPosX, (int)boardPosY, SubBoardsWide);
+            int subCellIndex = CellIndex((int)subBoardPosX, (int)subBoardPosY, SubBoardSideLength);
+
+            ref SubBoard subBoard = ref SubBoards[subBoardIndex];
+            if (subBoard == null)
+            {
+                Point boardPos = new Point((int)boardPosX, (int)boardPosY);
+                if (UnusedBoards.Count > 0)
+                {
+                    subBoard = UnusedBoards.Dequeue();
+                    subBoard.BoardPos = boardPos;
+                }
+                else
+                {
+                    subBoard = new SubBoard(new Point((int)boardPosX, (int)boardPosY), false);
+                }
+            }
+
+            PrevBoard = subBoard;
+            return ref subBoard.GetCellScorePath(subCellIndex);
         }
 
         internal Point GetRelativeBoardPos(Point pos)
@@ -78,21 +209,16 @@ namespace ChiselDebug.Routing
 
         internal void PrepareBoard(List<Rectangle> usedSpace)
         {
-            //Start with all moves are legal
-            MoveDirs allDirs = MoveDirs.All;
-            Array.Fill(CellAllowedDirs, allDirs);
-            Array.Fill(CellScoreAndPath, ScorePath.NotReachedYet());
-
             //Moves that go outside the board are not allowed
             for (int x = 0; x < CellsWide; x++)
             {
-                CellAllowedDirs[CellIndex(x, 0)] &= MoveDirs.None;
-                CellAllowedDirs[CellIndex(x, CellsHigh - 1)] &= MoveDirs.None;
+                GetCellMoves(x, 0, true) &= MoveDirs.None;
+                GetCellMoves(x, CellsHigh - 1, true) &= MoveDirs.None;
             }
             for (int y = 0; y < CellsHigh; y++)
             {
-                CellAllowedDirs[CellIndex(0, y)] &= MoveDirs.None;
-                CellAllowedDirs[CellIndex(CellsWide - 1, y)] &= MoveDirs.None;
+                GetCellMoves(0, y, true) &= MoveDirs.None;
+                GetCellMoves(CellsWide - 1, y, true) &= MoveDirs.None;
             }
 
             //Moves that go into used space are not allowed.
@@ -103,13 +229,13 @@ namespace ChiselDebug.Routing
                 Rectangle spaceRel = GetRelativeBoard(usedSpace[i]);
                 for (int x = spaceRel.LeftX + 1; x < spaceRel.RightX; x++)
                 {
-                    CellAllowedDirs[CellIndex(x, spaceRel.TopY)] &= MoveDirs.ExceptDown;
-                    CellAllowedDirs[CellIndex(x, spaceRel.BottomY)] &= MoveDirs.ExceptUp;
+                    GetCellMoves(x, spaceRel.TopY, true) &= MoveDirs.ExceptDown;
+                    GetCellMoves(x, spaceRel.BottomY, true) &= MoveDirs.ExceptUp;
                 }
                 for (int y = spaceRel.TopY + 1; y < spaceRel.BottomY; y++)
                 {
-                    CellAllowedDirs[CellIndex(spaceRel.LeftX, y)] &= MoveDirs.ExceptRight;
-                    CellAllowedDirs[CellIndex(spaceRel.RightX, y)] &= MoveDirs.ExceptLeft;
+                    GetCellMoves(spaceRel.LeftX, y, true) &= MoveDirs.ExceptRight;
+                    GetCellMoves(spaceRel.RightX, y, true) &= MoveDirs.ExceptLeft;
                 }
             }
         }
@@ -128,14 +254,26 @@ namespace ChiselDebug.Routing
 
         internal void CreateCheckpoint()
         {
-            Array.Copy(CellAllowedDirs, CheckpointAllowedDirs, CellAllowedDirs.Length);
-            Array.Copy(CellScoreAndPath, CheckpointScoreAndPath, CellScoreAndPath.Length);
+            for (int i = 0; i < SubBoards.Length; i++)
+            {
+                SubBoards[i]?.CreateCheckpoint();
+            }
         }
 
         internal void ReloadCheckpoint()
         {
-            Array.Copy(CheckpointAllowedDirs, CellAllowedDirs, CellAllowedDirs.Length);
-            Array.Copy(CheckpointScoreAndPath, CellScoreAndPath, CellScoreAndPath.Length);
+            PrevBoard = null;
+            for (int i = 0; i < SubBoards.Length; i++)
+            {
+                if (SubBoards[i] != null && !SubBoards[i].HasCheckpoint)
+                {
+                    SubBoards[i].ClearBoard();
+                    UnusedBoards.Enqueue(SubBoards[i]);
+                    SubBoards[i] = null;
+                    continue;
+                }
+                SubBoards[i]?.ReloadCheckpoint();
+            }
         }
 
         internal void SetAllOutgoingMoves(Point pos)
@@ -163,12 +301,12 @@ namespace ChiselDebug.Routing
                 allowedMoved |= MoveDirs.Down;
             }
 
-            CellAllowedDirs[CellIndex(cellPosX, cellPosY)] = allowedMoved;
+            GetCellMoves(cellPosX, cellPosY) = allowedMoved;
         }
 
         internal void SetCellAllowedMoves(Point pos, MoveDirs moves)
         {
-            CellAllowedDirs[CellIndex(pos)] = moves;
+            GetCellMoves(pos) = moves;
         }
 
         internal void AddCellAllowedMoves(Point pos, MoveDirs moves)
@@ -178,7 +316,7 @@ namespace ChiselDebug.Routing
 
         internal void AddCellAllowedMoves(int posIndex, MoveDirs moves)
         {
-            CellAllowedDirs[posIndex] |= moves;
+            GetCellMoves(posIndex) |= moves;
         }
 
         internal void SetAllIncommingMoves(Point pos)
@@ -188,19 +326,19 @@ namespace ChiselDebug.Routing
 
             if (cellPosX - 1 >= 0)
             {
-                CellAllowedDirs[CellIndex(cellPosX - 1, cellPosY)] |= MoveDirs.Right;
+                GetCellMoves(cellPosX - 1, cellPosY) |= MoveDirs.Right;
             }
             if (cellPosX + 1 < CellsWide)
             {
-                CellAllowedDirs[CellIndex(cellPosX + 1, cellPosY)] |= MoveDirs.Left;
+                GetCellMoves(cellPosX + 1, cellPosY) |= MoveDirs.Left;
             }
             if (cellPosY - 1 >= 0)
             {
-                CellAllowedDirs[CellIndex(cellPosX, cellPosY - 1)] |= MoveDirs.Down;
+                GetCellMoves(cellPosX, cellPosY - 1) |= MoveDirs.Down;
             }
             if (cellPosY + 1 < CellsHigh)
             {
-                CellAllowedDirs[CellIndex(cellPosX, cellPosY + 1)] |= MoveDirs.Up;
+                GetCellMoves(cellPosX, cellPosY + 1) |= MoveDirs.Up;
             }
         }
 
@@ -211,19 +349,19 @@ namespace ChiselDebug.Routing
 
             if (cellPosX - 1 >= 0)
             {
-                CellAllowedDirs[CellIndex(cellPosX - 1, cellPosY)] &= MoveDirs.ExceptRight;
+                GetCellMoves(cellPosX - 1, cellPosY) &= MoveDirs.ExceptRight;
             }
             if (cellPosX + 1 < CellsWide)
             {
-                CellAllowedDirs[CellIndex(cellPosX + 1, cellPosY)] &= MoveDirs.ExceptLeft;
+                GetCellMoves(cellPosX + 1, cellPosY) &= MoveDirs.ExceptLeft;
             }
             if (cellPosY - 1 >= 0)
             {
-                CellAllowedDirs[CellIndex(cellPosX, cellPosY - 1)] &= MoveDirs.ExceptDown;
+                GetCellMoves(cellPosX, cellPosY - 1) &= MoveDirs.ExceptDown;
             }
             if (cellPosY + 1 < CellsHigh)
             {
-                CellAllowedDirs[CellIndex(cellPosX, cellPosY + 1)] &= MoveDirs.ExceptUp;
+                GetCellMoves(cellPosX, cellPosY + 1) &= MoveDirs.ExceptUp;
             }
         }
 
