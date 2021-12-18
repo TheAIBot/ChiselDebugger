@@ -7,16 +7,16 @@ namespace ChiselDebug.Routing
 {
     internal class SubBoard
     {
-        internal Point BoardPos;
+        internal int BoardIndex;
         private readonly MoveDirs[] CellAllowedDirs;
         private readonly ScorePath[] CellScoreAndPath;
         private readonly MoveDirs[] CheckpointAllowedDirs;
         private readonly ScorePath[] CheckpointScoreAndPath;
         internal bool HasCheckpoint => CheckpointAllowedDirs != null;
 
-        internal SubBoard(Point boardPos, bool needsCheckpoint)
+        internal SubBoard(int boardIndex, bool needsCheckpoint)
         {
-            BoardPos = boardPos;
+            BoardIndex = boardIndex;
             CellAllowedDirs = GC.AllocateArray<MoveDirs>(RouterBoard.SubBoardSize, true);
             CellScoreAndPath = GC.AllocateArray<ScorePath>(RouterBoard.SubBoardSize, true);
 
@@ -167,29 +167,30 @@ namespace ChiselDebug.Routing
 
         private ref MoveDirs GetCellMoves(Point pos, bool needsCheckpoint)
         {
-            int boardPosX = (int)((uint)pos.X / SubBoardSideLength);
-            int boardPosY = (int)((uint)pos.Y / SubBoardSideLength);
-            int subBoardPosX = (int)((uint)pos.X % SubBoardSideLength);
-            int subBoardPosY = (int)((uint)pos.Y % SubBoardSideLength);
+            uint x = (uint)pos.X;
+            uint y = (uint)pos.Y;
+            int boardPosX = (int)(x / SubBoardSideLength);
+            int boardPosY = (int)(y / SubBoardSideLength);
+            int subBoardPosX = (int)(x % SubBoardSideLength);
+            int subBoardPosY = (int)(y % SubBoardSideLength);
             int subCellIndex = CellIndex(subBoardPosX, subBoardPosY, SubBoardSideLength);
-            if (PrevBoard != null && PrevBoard.BoardPos == new Point(boardPosX, boardPosY))
+            int subBoardIndex = CellIndex(boardPosX, boardPosY, SubBoardsWide);
+            if (PrevBoard != null && PrevBoard.BoardIndex == subBoardIndex)
             {
                 return ref PrevBoard.GetCellMoves(subCellIndex);
             }
 
-            int subBoardIndex = CellIndex(boardPosX, boardPosY, SubBoardsWide);
             ref SubBoard subBoard = ref SubBoards[subBoardIndex];
             if (subBoard == null)
             {
-                Point boardPos = new Point(boardPosX, boardPosY);
                 if (!needsCheckpoint && UnusedBoards.Count > 0)
                 {
                     subBoard = UnusedBoards.Dequeue();
-                    subBoard.BoardPos = boardPos;
+                    subBoard.BoardIndex = subBoardIndex;
                 }
                 else
                 {
-                    subBoard = new SubBoard(boardPos, needsCheckpoint);
+                    subBoard = new SubBoard(subBoardIndex, needsCheckpoint);
                 }
             }
 
@@ -197,36 +198,32 @@ namespace ChiselDebug.Routing
             return ref subBoard.GetCellMoves(subCellIndex);
         }
 
-        internal ref ScorePath GetCellScorePath(int cellIndex)
-        {
-            return ref GetCellScorePath(CellFromIndex(cellIndex));
-        }
-
         internal ref ScorePath GetCellScorePath(Point pos)
         {
-            int boardPosX = (int)((uint)pos.X / SubBoardSideLength);
-            int boardPosY = (int)((uint)pos.Y / SubBoardSideLength);
-            int subBoardPosX = (int)((uint)pos.X % SubBoardSideLength);
-            int subBoardPosY = (int)((uint)pos.Y % SubBoardSideLength);
+            uint x = (uint)pos.X;
+            uint y = (uint)pos.Y;
+            int boardPosX = (int)(x / SubBoardSideLength);
+            int boardPosY = (int)(y / SubBoardSideLength);
+            int subBoardPosX = (int)(x % SubBoardSideLength);
+            int subBoardPosY = (int)(y % SubBoardSideLength);
             int subCellIndex = CellIndex(subBoardPosX, subBoardPosY, SubBoardSideLength);
-            if (PrevBoard != null && PrevBoard.BoardPos == new Point(boardPosX, boardPosY))
+            int subBoardIndex = CellIndex(boardPosX, boardPosY, SubBoardsWide);
+            if (PrevBoard != null && PrevBoard.BoardIndex == subBoardIndex)
             {
                 return ref PrevBoard.GetCellScorePath(subCellIndex);
             }
 
-            int subBoardIndex = CellIndex(boardPosX, boardPosY, SubBoardsWide);
             ref SubBoard subBoard = ref SubBoards[subBoardIndex];
             if (subBoard == null)
             {
-                Point boardPos = new Point(boardPosX, boardPosY);
                 if (UnusedBoards.Count > 0)
                 {
                     subBoard = UnusedBoards.Dequeue();
-                    subBoard.BoardPos = boardPos;
+                    subBoard.BoardIndex = subBoardIndex;
                 }
                 else
                 {
-                    subBoard = new SubBoard(boardPos, false);
+                    subBoard = new SubBoard(subBoardIndex, false);
                 }
             }
 
@@ -241,29 +238,30 @@ namespace ChiselDebug.Routing
 
         private CellData GetCellData(Point pos, bool needsCheckpoint)
         {
-            int boardPosX = (int)((uint)pos.X / SubBoardSideLength);
-            int boardPosY = (int)((uint)pos.Y / SubBoardSideLength);
-            int subBoardPosX = (int)((uint)pos.X % SubBoardSideLength);
-            int subBoardPosY = (int)((uint)pos.Y % SubBoardSideLength);
+            uint x = (uint)pos.X;
+            uint y = (uint)pos.Y;
+            int boardPosX = (int)(x / SubBoardSideLength);
+            int boardPosY = (int)(y / SubBoardSideLength);
+            int subBoardPosX = (int)(x % SubBoardSideLength);
+            int subBoardPosY = (int)(y % SubBoardSideLength);
             int subCellIndex = CellIndex(subBoardPosX, subBoardPosY, SubBoardSideLength);
-            if (PrevBoard != null && PrevBoard.BoardPos == new Point(boardPosX, boardPosY))
+            int subBoardIndex = CellIndex(boardPosX, boardPosY, SubBoardsWide);
+            if (PrevBoard != null && PrevBoard.BoardIndex == subBoardIndex)
             {
                 return PrevBoard.GetCellData(subCellIndex);
             }
 
-            int subBoardIndex = CellIndex(boardPosX, boardPosY, SubBoardsWide);
             ref SubBoard subBoard = ref SubBoards[subBoardIndex];
             if (subBoard == null)
             {
-                Point boardPos = new Point(boardPosX, boardPosY);
                 if (!needsCheckpoint && UnusedBoards.Count > 0)
                 {
                     subBoard = UnusedBoards.Dequeue();
-                    subBoard.BoardPos = boardPos;
+                    subBoard.BoardIndex = subBoardIndex;
                 }
                 else
                 {
-                    subBoard = new SubBoard(boardPos, needsCheckpoint);
+                    subBoard = new SubBoard(subBoardIndex, needsCheckpoint);
                 }
             }
 
