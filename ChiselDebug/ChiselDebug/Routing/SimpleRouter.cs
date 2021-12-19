@@ -119,14 +119,12 @@ namespace ChiselDebug.Routing
             public readonly MoveDirs Dir;
             public readonly MoveDirs RevDir;
             public readonly Point DirVec;
-            public readonly Point RevDirVec;
 
             public MoveData(MoveDirs dir)
             {
                 this.Dir = dir;
                 this.RevDir = dir.Reverse();
                 this.DirVec = Dir.MovePoint(Point.Zero);
-                this.RevDirVec = RevDir.MovePoint(Point.Zero);
             }
         }
 
@@ -193,11 +191,11 @@ namespace ChiselDebug.Routing
             toSee.Enqueue(board.CellIndex(relativeEnd), 0);
 
             ReadOnlySpan<MoveData> moves = new MoveData[] 
-            { 
+            {
                 new MoveData(MoveDirs.Up),
-                new MoveData(MoveDirs.Down),
                 new MoveData(MoveDirs.Left),
-                new MoveData(MoveDirs.Right)
+                new MoveData(MoveDirs.Right),
+                new MoveData(MoveDirs.Down)
             };
 
             bool canEndEarly = ((Input)end.DirIO.IO).GetConnections().Length == 1;
@@ -214,7 +212,7 @@ namespace ChiselDebug.Routing
                 ScorePath currentScorePath = board.GetCellScorePath(currentIndex);
                 MoveDirs allowedMoves = board.GetCellMoves(currentIndex);
 
-                if (allowedMoves.HasFlag(MoveDirs.FriendWire) && canEndEarly)
+                if (canEndEarly && allowedMoves.HasFlag(MoveDirs.FriendWire))
                 {
                     wirePath = board.GetPath(relativeEnd, board.CellFromIndex(currentIndex), start, end, true);
                     return true;
