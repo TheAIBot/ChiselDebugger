@@ -135,6 +135,7 @@ namespace ChiselDebug.Routing
             board.ReloadCheckpoint();
 
             Point relativeStart = board.GetRelativeBoardPos(start.DirIO.Position);
+            int relativeStartIndex = board.CellIndex(relativeStart);
             Point relativeEnd = board.GetRelativeBoardPos(end.DirIO.Position);
 
             //Start position may lie inside the component rectangle
@@ -203,9 +204,8 @@ namespace ChiselDebug.Routing
             while (toSee.Count > 0)
             {
                 int currentIndex = toSee.Dequeue();
-                Point current = board.CellFromIndex(currentIndex);
 
-                if (current == relativeStart)
+                if (currentIndex == relativeStartIndex)
                 {
                     wirePath = board.GetPath(relativeEnd, relativeStart, start, end, false);
                     return true;
@@ -216,7 +216,7 @@ namespace ChiselDebug.Routing
 
                 if (allowedMoves.HasFlag(MoveDirs.FriendWire) && canEndEarly)
                 {
-                    wirePath = board.GetPath(relativeEnd, current, start, end, true);
+                    wirePath = board.GetPath(relativeEnd, board.CellFromIndex(currentIndex), start, end, true);
                     return true;
                 }
 
@@ -226,11 +226,10 @@ namespace ChiselDebug.Routing
                     ref readonly MoveData move = ref moves[i];
                     if (allowedMoves.HasFlag(move.Dir))
                     {
-                        Point neighborPos = current + move.DirVec;
-                        int neighbordIndex = board.CellIndex(neighborPos);
-                        ref ScorePath neighborScore = ref board.GetCellScorePath(neighbordIndex);
+                        int neighborIndex = currentIndex + board.CellIndex(move.DirVec);
+                        ref ScorePath neighborScore = ref board.GetCellScorePath(neighborIndex);
 
-                        MoveDirs neighborMoves = board.GetCellMoves(neighbordIndex);
+                        MoveDirs neighborMoves = board.GetCellMoves(neighborIndex);
                         bool moveToEnemyWire = neighborMoves.HasFlag(MoveDirs.EnemyWire);
                         bool moveToFriendWire = neighborMoves.HasFlag(MoveDirs.FriendWire);
                         bool moveToWireCorner = neighborMoves.HasFlag(MoveDirs.WireCorner);
@@ -239,9 +238,10 @@ namespace ChiselDebug.Routing
                         ScorePath neighborScoreFromCurrent = currentScorePath.Move(move.RevDir, onEnemyWire, moveToEnemyWire, moveToFriendWire, moveToWireCorner, isTurning);
                         if (neighborScoreFromCurrent.IsBetterScoreThan(neighborScore))
                         {
+                            Point neighborPos = board.CellFromIndex(neighborIndex);
                             int dist = Point.ManhattanDistance(in neighborPos, in relativeStart);
 
-                            toSee.Enqueue(neighbordIndex, neighborScoreFromCurrent.GetTotalScore() + dist);
+                            toSee.Enqueue(neighborIndex, neighborScoreFromCurrent.GetTotalScore() + dist);
                             neighborScore = neighborScoreFromCurrent;
                         }
                     }
