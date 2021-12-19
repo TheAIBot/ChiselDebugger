@@ -44,7 +44,11 @@ namespace ChiselDebuggerRazor.Code
             }
             this.ModuleNodes = Mod.GetAllNodes();
             this.ModuleNodesWithModule = Mod.GetAllNodesIncludeModule();
-            this.ModuleIO = Mod.GetAllIOOrdered();
+
+            List<FIRIO> allShownIO = new List<FIRIO>();
+            allShownIO.AddRange(Mod.GetAllIOOrdered());
+            allShownIO.AddRange(allShownIO.Select(x => x.ParentIO).Where(x => x != null).Distinct().ToArray());
+            this.ModuleIO = allShownIO.ToArray();
 
             DebugCtrl.AddModCtrl(Mod.Name, this, ModuleNodes, ModuleNodesWithModule, ModuleIO);
         }

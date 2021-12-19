@@ -44,7 +44,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         public override bool IsPassiveOfType<T>()
         {
-            throw new Exception("Duplex can't be passive of any type.");
+            return false;
         }
 
         public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)

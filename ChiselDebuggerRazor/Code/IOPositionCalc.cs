@@ -55,12 +55,12 @@ namespace ChiselDebuggerRazor.Code
             int inputY = startYPadding;
             int outputY = inputY;
 
-            MakeScopedIO(inputIO, outputIO, io, fixedX, ref inputY, ref outputY, 0, ignoreDisconnectedIO);
+            MakeScopedIO(inputIO, outputIO, io, fixedX, ref inputY, ref outputY, 0, false, null);
 
             return new ScopedNodeIO(inputIO, outputIO, startYPadding, endYPadding);
         }
 
-        private static bool MakeScopedIO(List<ScopedDirIO> inputIO, List<ScopedDirIO> outputIO, FIRIO[] io, int fixedX, ref int inputYOffset, ref int outputYOffset, int scopeDepth, bool ignoreDisconnectedIO)
+        private static bool MakeScopedIO(List<ScopedDirIO> inputIO, List<ScopedDirIO> outputIO, FIRIO[] io, int fixedX, ref int inputYOffset, ref int outputYOffset, int scopeDepth, bool ignoreDisconnectedIO, FIRIO parentIO)
         {
             FIRIO[] allIO = io.SelectMany(x => x.Flatten()).ToArray();
             if (allIO.Any(x => x is Input) && allIO.Any(x => x is Output))
@@ -70,12 +70,16 @@ namespace ChiselDebuggerRazor.Code
             }
 
             bool addedIO = false;
+            if (parentIO != null && parentIO.IsPassive())
+            {
+                addedIO |= MakeNoScopeIO(inputIO, outputIO, parentIO, fixedX, ref inputYOffset, ref outputYOffset, scopeDepth, ignoreDisconnectedIO);
+            }
             for (int i = 0; i < io.Length; i++)
             {
                 if (io[i] is AggregateIO aggIO)
                 {
                     int inScope = aggIO.IsPartOfAggregateIO ? 1 : 0;
-                    bool addedAtleastOne = MakeScopedIO(inputIO, outputIO, aggIO.GetIOInOrder(), fixedX, ref inputYOffset, ref outputYOffset, scopeDepth + inScope, ignoreDisconnectedIO);
+                    bool addedAtleastOne = MakeScopedIO(inputIO, outputIO, aggIO.GetIOInOrder(), fixedX, ref inputYOffset, ref outputYOffset, scopeDepth + inScope, ignoreDisconnectedIO, aggIO);
 
                     //Only add padding if aggregate added some io and if
                     //there might be more io to follow
@@ -101,15 +105,10 @@ namespace ChiselDebuggerRazor.Code
             return addedIO;
         }
 
-        private static bool MakeNoScopeIO(List<ScopedDirIO> inputIO, List<ScopedDirIO> outputIO, ScalarIO io, int fixedX, ref int inputYOffset, ref int outputYOffset, int scopeDepth, bool ignoreDisconnectedIO)
+        private static bool MakeNoScopeIO(List<ScopedDirIO> inputIO, List<ScopedDirIO> outputIO, FIRIO io, int fixedX, ref int inputYOffset, ref int outputYOffset, int scopeDepth, bool ignoreDisconnectedIO)
         {
-            if (ignoreDisconnectedIO && !io.IsConnectedToAnything())
-            {
-                return false;
-            }
-
             scopeDepth = Math.Max(0, scopeDepth);
-            if (io is Input)
+            if (io.IsPassiveOfType<Input>())
             {
                 int scopeOffset = (scopeDepth + 1) * ScopeWidth;
                 Point inputPos = new Point(0, inputYOffset);
@@ -119,7 +118,7 @@ namespace ChiselDebuggerRazor.Code
                 inputYOffset += MinSpaceBetweenIO;
                 return true;
             }
-            else if (io is Output)
+            else if (io.IsPassiveOfType<Output>())
             {
                 int scopeOffset = -(scopeDepth + 1) * ScopeWidth;
                 Point outputPos = new Point(fixedX, outputYOffset);
