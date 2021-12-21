@@ -1,13 +1,9 @@
 ﻿using ChiselDebug.GraphFIR;
 using ChiselDebug.GraphFIR.IO;
-using ChiselDebug.Routing;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 
-namespace ChiselDebug
+namespace ChiselDebug.Routing
 {
     public class ConnectionsHandler
     {
