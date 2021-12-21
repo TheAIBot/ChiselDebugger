@@ -169,6 +169,40 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
+        public static (Output output, Input input) OrderIO(ScalarIO a, ScalarIO b)
+        {
+            if (a is Output && b is Input)
+            {
+                return ((Output)a, (Input)b);
+            }
+            else if (a is Input && b is Output)
+            {
+                return ((Output)b, (Input)a);
+            }
+            else
+            {
+                throw new Exception();
+            }
+        }
+
+        private static bool TryIsIOPassiveAggWithSingleAggEndpoint(Module mod, FIRIO io, HashSet<Module> containedCondMods, out List<AggregateIO> endpoints)
+        {
+            if (io is not AggregateIO)
+            {
+                endpoints = null;
+                return false;
+            }
+
+            if (!io.IsPassive())
+            {
+                endpoints = null;
+                return false;
+            }
+
+            endpoints = (io as AggregateIO).GetAllOrderlyConnectedEndpoints();
+            return true;
+        }
+
         public static bool TryGetParentMemPort(FIRIO io, out MemPort port)
         {
             FIRIO node = io.Flatten().First();
