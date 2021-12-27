@@ -39,7 +39,7 @@
         Point deciderOffset = new Point(WIDTH / 2, INDENT / 2);
         DeciderIO = new DirectedIO(Operation.Decider, deciderOffset, MoveDirs.Down);
 
-        ChoiseIO = IOPositionCalc.VerticalScopedIO(Operation.Choises.ToArray(), 0, INDENT, INDENT);
+        ChoiseIO = IOPositionCalc.VerticalScopedIO(new FIRIO[] { Operation.ChoisesVec }, 0, INDENT, INDENT);
         ChoiseIO.VerticalRecenter(height);
 
         DirectedIO[] choiseDirIO = ChoiseIO.GetInputDirIO();

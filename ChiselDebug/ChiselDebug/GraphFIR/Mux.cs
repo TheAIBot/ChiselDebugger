@@ -14,6 +14,7 @@ namespace ChiselDebug.GraphFIR
         public readonly Input Decider;
         public readonly FIRIO Result;
         public readonly bool IsVectorIndexer;
+        public readonly Vector ChoisesVec;
 
         private readonly Input[] ChoiseInputs;
         private readonly Output[] ResultOutputs;
@@ -36,6 +37,10 @@ namespace ChiselDebug.GraphFIR
             {
                 res.RemoveType();
             }
+
+            // IO need to be connected to a parent vector so
+            // aggregate io lines can be drawn to a mux
+            ChoisesVec = new Vector(this, string.Empty, Choises.ToArray());
 
             for (int i = 0; i < Choises.Length; i++)
             {

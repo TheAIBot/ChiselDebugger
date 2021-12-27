@@ -27,6 +27,22 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
+        public Vector(FIRRTLNode node, string name, FIRIO[] ios) : base(node, name)
+        {
+            if (!(ios.All(x => x.IsPassiveOfType<Input>()) || 
+                  ios.All(x => x.IsPassiveOfType<Output>())))
+            {
+                throw new Exception("IO type of vector must be passive.");
+            }
+
+            this.IO = ios.ToArray();
+            for (int i = 0; i < IO.Length; i++)
+            {
+                IO[i].SetName(i.ToString());
+                IO[i].SetParentIO(this);
+            }
+        }
+
         public override FIRIO[] GetIOInOrder()
         {
             return IO.ToArray();
