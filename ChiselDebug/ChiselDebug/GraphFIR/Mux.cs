@@ -70,11 +70,7 @@ namespace ChiselDebug.GraphFIR
 
         public override IEnumerable<FIRIO> GetIO()
         {
-            foreach (var io in Choises)
-            {
-                yield return io;
-            }
-
+            yield return ChoisesVec;
             yield return Decider;
             yield return Result;
         }

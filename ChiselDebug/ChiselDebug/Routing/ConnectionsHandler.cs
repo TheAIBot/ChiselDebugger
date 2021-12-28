@@ -53,7 +53,7 @@ namespace ChiselDebug.Routing
         {
             disallowedConnections = new Dictionary<Output, HashSet<Input>>();
             List<(IOInfo start, IOInfo end)> lines = new List<(IOInfo start, IOInfo end)>();
-            HashSet<AggregateIO> alreadyMade = new HashSet<AggregateIO>();
+            Dictionary<AggregateIO, HashSet<AggregateIO>> alreadyMade = new Dictionary<AggregateIO, HashSet<AggregateIO>>();
             List<Output> outputIOs = IOInfos.Keys.OfType<Output>().ToList();
             foreach (var output in outputIOs)
             {
@@ -68,14 +68,15 @@ namespace ChiselDebug.Routing
                     continue;
                 }
 
-                foreach (var endPoint in outputParent.GetAllOrderlyConnectedEndpoints())
+                foreach (var endPoint in outputParent.GetConnections())
                 {
                     if (!endPoint.Flatten().All(x => IOInfos.ContainsKey(x)))
                     {
                         continue;
                     }
 
-                    if (!alreadyMade.Add(outputParent))
+                    alreadyMade.TryAdd(outputParent, new HashSet<AggregateIO>());
+                    if (!alreadyMade[outputParent].Add(endPoint))
                     {
                         continue;
                     }
@@ -87,7 +88,7 @@ namespace ChiselDebug.Routing
                         disallowedConnections[connection.output].Add(connection.input);
                     }
 
-                    IOInfo outputInfo = IOInfos[output];
+                    IOInfo outputInfo = IOInfos[outputParent];
                     IOInfo inputInfo = IOInfos[endPoint];
                     lines.Add(MakeLine(nodePoses, outputInfo, inputInfo));
                     break;

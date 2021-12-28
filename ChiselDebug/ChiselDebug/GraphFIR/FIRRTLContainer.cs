@@ -40,7 +40,7 @@ namespace ChiselDebug.GraphFIR
             AddPairedIO(externalIO, internalIO);
         }
 
-        public void AddAnonymousExternalIO(ScalarIO io)
+        public void AddAnonymousExternalIO(FIRIO io)
         {
             string uniqueName = $"~${UniqueNameGen++}";
             io.SetName(uniqueName);
@@ -48,7 +48,7 @@ namespace ChiselDebug.GraphFIR
             AddExternalIO(io);
         }
 
-        public void AddAnonymousInternalIO(ScalarIO io)
+        public void AddAnonymousInternalIO(FIRIO io)
         {
             string uniqueName = $"~${UniqueNameGen++}";
             io.SetName(uniqueName);

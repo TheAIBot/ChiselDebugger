@@ -64,8 +64,22 @@ namespace ChiselDebug.GraphFIR.IO
             int shortestLength = Math.Min(Length, other.Length);
             for (int i = 0; i < shortestLength; i++)
             {
-                IO[i].ConnectToInput(other.IO[i], allowPartial, asPassive, condition);
+                if (IO[i] is ScalarIO ioScalar && other.IO[i] is ScalarIO otherScalar)
+                {
+                    var io = IOHelper.OrderIO(ioScalar, otherScalar);
+                    io.output.ConnectToInput(io.input, allowPartial, asPassive, condition);
+                }
+                else if (IO[i] is AggregateIO && other.IO[i] is AggregateIO)
+                {
+                    IO[i].ConnectToInput(other.IO[i], allowPartial, asPassive, condition);
+                }
+                else
+                {
+                    throw new Exception("Two vector do not contain the same types.");
+                }
             }
+
+            base.ConnectToInput(input, allowPartial, asPassive, condition);
         }
 
         public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)

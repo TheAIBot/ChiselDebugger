@@ -5,7 +5,8 @@ using System.Linq;
 namespace ChiselDebug.GraphFIR.IO
 {
     public abstract class AggregateIO : FIRIO 
-    { 
+    {
+        private HashSet<AggregateIO> Connections = null;
         public AggregateIO(FIRRTLNode node, string name) : base(node, name) { }
 
         public override FIRIO GetInput()
@@ -20,83 +21,78 @@ namespace ChiselDebug.GraphFIR.IO
 
         public abstract FIRIO[] GetIOInOrder();
 
-        public List<AggregateIO> GetAllOrderlyConnectedEndpoints()
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Output condition = null)
         {
-            List<AggregateIO> orderlyConnected = new List<AggregateIO>();
-            FIRIO[] ioInOrder = GetIOInOrder();
-            if (ioInOrder.Length == 0)
-            {
-                return orderlyConnected;
-            }
-
-            HashSet<AggregateIO> potentialEndpoints = GetAllParentIOEndpoints(ioInOrder[0]).ToHashSet();
-            for (int i = 1; i < ioInOrder.Length; i++)
-            {
-                potentialEndpoints.IntersectWith(GetAllParentIOEndpoints(ioInOrder[i]));
-            }
-
-            List<ScalarIO> flattenedIO = Flatten();
-            foreach (var potentialEndpoint in potentialEndpoints)
-            {
-                if (potentialEndpoint.GetType() != this.GetType())
-                {
-                    continue;
-                }
-
-                List<ScalarIO> potentialEndpointIOs = potentialEndpoint.Flatten();
-                if (potentialEndpointIOs.Count != flattenedIO.Count)
-                {
-                    continue;
-                }
-
-                bool hasConnectionsInOrder = true;
-                for (int i = 0; i < flattenedIO.Count; i++)
-                {
-                    var fromTo = IOHelper.OrderIO(flattenedIO[i], potentialEndpointIOs[i]);
-                    if (!fromTo.output.GetConnectedInputs().Contains(fromTo.input))
-                    {
-                        hasConnectionsInOrder = false;
-                        break;
-                    }
-                }
-
-                if (hasConnectionsInOrder)
-                {
-                    orderlyConnected.Add(potentialEndpoint);
-                }
-            }
-
-            return orderlyConnected;            
+            var aggIO = input as AggregateIO;
+            AddConnection(aggIO);
+            aggIO.AddConnection(this);
         }
 
-        private static IEnumerable<AggregateIO> GetAllParentIOEndpoints(FIRIO io)
+        public void AddConnection(AggregateIO aggIO)
         {
-            if (io is ScalarIO scalar)
+            if (Connections == null)
             {
-                return GetAllEndpointConnections(scalar).Select(x => x.ParentIO).Where(x => x != null);
-            }
-            else if (io is AggregateIO aggIO)
-            {
-                return aggIO.GetAllOrderlyConnectedEndpoints().Select(x => x.ParentIO).Where(x => x != null);
+                Connections = new HashSet<AggregateIO>();
             }
 
-            throw new Exception($"Unknown type of {io}");
+            Connections.Add(aggIO);
         }
 
-        private static IEnumerable<ScalarIO> GetAllEndpointConnections(ScalarIO scalar)
+        public void ReplaceConnection(AggregateIO replace, AggregateIO replaceWith)
         {
-            if (scalar is Input input)
+            if (!replace.IsPassiveOfType<Output>())
             {
-                return input.GetConnections().Select(x => x.From);
+                throw new ArgumentException(nameof(replace), "IO to replace must be passive of type output");
             }
-            else if (scalar is Output output)
+
+            if (!replaceWith.IsPassiveOfType<Output>())
             {
-                return output.GetConnectedInputs();
+                throw new ArgumentException(nameof(replaceWith), "IO to replace with must be passive of type output");
             }
-            else
+
+            if (Connections == null)
             {
-                throw new Exception("Invalid scalar type");
+                throw new InvalidOperationException("can't replace ana aggregates connection if it has no connections.");
             }
+
+            if (!Connections.Contains(replace))
+            {
+                throw new ArgumentOutOfRangeException(nameof(replace), "This aggregate io is not connection to the io that will be replaced.");
+            }
+
+            if (replace.GetType() != replaceWith.GetType())
+            {
+                throw new ArgumentException(nameof(replaceWith), "The io being replaced and what it's being replaced with must be ofthe same type.");
+            }
+
+            List<Input> currentScalars = Flatten().Cast<Input>().ToList();
+            List<Output> replaceScalars = replace.Flatten().Cast<Output>().ToList();
+            List<Output> replaceWithScalars = replaceWith.Flatten().Cast<Output>().ToList();
+            if (replaceScalars.Count != replaceWithScalars.Count)
+            {
+                throw new ArgumentException($"The size of {nameof(replace)} and {nameof(replaceWith)} must be the same when replacing");
+            }
+
+            for (int i = 0; i < replaceScalars.Count; i++)
+            {
+                var connection = currentScalars[i].GetConnection(replaceScalars[i]).Value;
+                currentScalars[i].ReplaceConnection(connection, replaceWithScalars[i]);
+            }
+
+            Connections.Remove(replace);
+            Connections.Add(replaceWith);
+            replace.Connections.Remove(this);
+            replaceWith.AddConnection(this);
+        }
+
+        public AggregateIO[] GetConnections()
+        {
+            if (Connections == null)
+            {
+                return Array.Empty<AggregateIO>();
+            }
+
+            return Connections.ToArray();
         }
     }
 }

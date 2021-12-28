@@ -172,12 +172,12 @@ namespace ChiselDebug
                 throw new ChiselDebugException("Circuit does not contain a module with the circuits name.");
             }
             GraphFIR.Module mainModule = VisitModule(helper, null, mainModDef);
+            GraphFIR.IO.AggregateConnections.ConnectionAllAggregateIO(mainModule);
             foreach (var mod in mainModule.GetAllNestedNodesOfType<GraphFIR.Module>())
             {
                 CleanupModule(mod);
             }
-            //mainModule.InferType();
-            //mainModule.FinishConnections();
+
             return new CircuitGraph(circuit.Main, mainModule);
         }
 

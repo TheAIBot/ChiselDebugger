@@ -98,6 +98,8 @@ namespace ChiselDebug.GraphFIR.IO
                     throw new Exception($"Can't connect IO of type {a.GetType()} to {b.GetType()}.");
                 }
             }
+
+            base.ConnectToInput(input, allowPartial, asPassive, condition);
         }
 
         public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)

@@ -110,6 +110,86 @@ namespace ChiselDebug.GraphFIR.IO
             {
                 foreach (var io in node.GetIO().ToArray())
                 {
+                    HashSet<ScalarIO> bypassMade = new HashSet<ScalarIO>();
+                    if (TryIsIOPassiveAggWithSingleAggEndpoint(io, out var aggEndpoints))
+                    {
+                        foreach (var aggEndpoint in aggEndpoints)
+                        {
+                            var ioConnections = GetScalarConnections(io as AggregateIO, aggEndpoint).ToList();
+                            if (io.IsPassiveOfType<Output>())
+                            {
+                                bool needToBypass = true;
+                                Output condition = null;
+                                foreach (var ioConnection in ioConnections)
+                                {
+                                    var connection = ioConnection.input.GetConnection(ioConnection.output);
+                                    if (ioConnection.input.GetModResideIn() == mod || containedCondMods.Contains(ioConnection.input.GetModResideIn()))
+                                    {
+                                        needToBypass = false;
+                                        break;
+                                    }
+                                    if (connection?.Condition == null)
+                                    {
+                                        needToBypass = false;
+                                        break;
+                                    }
+
+                                    condition = connection.Value.Condition;
+                                }
+
+                                if (!needToBypass)
+                                {
+                                    continue;
+                                }
+
+                                FIRIO flipped = io.Flip(mod);
+                                mod.AddAnonymousInternalIO(flipped);
+                                AggregateIO extAggIO = flipped.Flatten().First().GetPaired().ParentIO;
+
+                                io.ConnectToInput(flipped, false, false, condition);
+                                aggEndpoint.ReplaceConnection((io as AggregateIO), extAggIO);
+                            }
+                            else if (io.IsPassiveOfType<Input>())
+                            {
+                                bool needToBypass = true;
+                                Output condition = null;
+                                foreach (var ioConnection in ioConnections)
+                                {
+                                    if (ioConnection.output.GetModResideIn() == mod || containedCondMods.Contains(ioConnection.output.GetModResideIn()))
+                                    {
+                                        needToBypass = false;
+                                        break;
+                                    }
+
+                                    if (ioConnection.output.GetModResideIn() == mod)
+                                    {
+                                        needToBypass = false;
+                                        break;
+                                    }
+
+                                    var connection = ioConnection.input.GetConnection(ioConnection.output);
+                                    condition = connection?.Condition;
+                                }
+
+                                if (!needToBypass)
+                                {
+                                    continue;
+                                }
+
+                                FIRIO flipped = io.Flip(mod);
+                                mod.AddAnonymousInternalIO(flipped);
+                                AggregateIO extAggIO = flipped.Flatten().First().GetPaired().ParentIO;
+
+                                aggEndpoint.ConnectToInput(extAggIO, false, false, condition);
+                                (io as AggregateIO).ReplaceConnection(aggEndpoint, flipped as AggregateIO);
+                            }
+                            else
+                            {
+                                throw new Exception($"Unknown io: {io.GetType()}");
+                            }
+                        }
+                    }
+
                     scalars.Clear();
                     foreach (var scalar in io.Flatten(scalars))
                     {
@@ -142,21 +222,21 @@ namespace ChiselDebug.GraphFIR.IO
                         }
                         else if (scalar is Input input)
                         {
-                            foreach (var cons in input.GetConnections())
+                            foreach (var connection in input.GetConnections())
                             {
-                                if (cons.From.GetModResideIn() == mod || containedCondMods.Contains(cons.From.GetModResideIn()))
+                                if (connection.From.GetModResideIn() == mod || containedCondMods.Contains(connection.From.GetModResideIn()))
                                 {
                                     continue;
                                 }
 
-                                if (cons.From.GetModResideIn() != mod)
+                                if (connection.From.GetModResideIn() != mod)
                                 {
-                                    Input flipped = (Input)cons.From.Flip(mod);
+                                    Input flipped = (Input)connection.From.Flip(mod);
                                     mod.AddAnonymousExternalIO(flipped);
                                     Output intOutput = flipped.GetPaired();
 
-                                    cons.From.ConnectToInput(flipped, false, false, cons.Condition);
-                                    input.ReplaceConnection(cons, intOutput);
+                                    connection.From.ConnectToInput(flipped, false, false, connection.Condition);
+                                    input.ReplaceConnection(connection, intOutput);
                                 }
                             }
                         }
@@ -169,25 +249,9 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public static (Output output, Input input) OrderIO(ScalarIO a, ScalarIO b)
+        private static bool TryIsIOPassiveAggWithSingleAggEndpoint(FIRIO io, out AggregateIO[] endpoints)
         {
-            if (a is Output && b is Input)
-            {
-                return ((Output)a, (Input)b);
-            }
-            else if (a is Input && b is Output)
-            {
-                return ((Output)b, (Input)a);
-            }
-            else
-            {
-                throw new Exception();
-            }
-        }
-
-        private static bool TryIsIOPassiveAggWithSingleAggEndpoint(Module mod, FIRIO io, HashSet<Module> containedCondMods, out List<AggregateIO> endpoints)
-        {
-            if (io is not AggregateIO)
+            if (io is not AggregateIO aggIO)
             {
                 endpoints = null;
                 return false;
@@ -199,9 +263,23 @@ namespace ChiselDebug.GraphFIR.IO
                 return false;
             }
 
-            endpoints = (io as AggregateIO).GetAllOrderlyConnectedEndpoints();
+            endpoints = aggIO.GetConnections();
             return true;
         }
+
+        private static IEnumerable<(Output output, Input input)> GetScalarConnections(AggregateIO a, AggregateIO b)
+        {
+            return a.Flatten()
+                    .Zip(b.Flatten())
+                    .Select(x => OrderIO(x.First, x.Second));
+        }
+
+        public static (Output output, Input input) OrderIO(ScalarIO a, ScalarIO b) => (a, b) switch
+        {
+            (Output aOut, Input bIn) => (aOut, bIn),
+            (Input aIn, Output bOut) => (bOut, aIn),
+            _ => throw new Exception()
+        };
 
         public static bool TryGetParentMemPort(FIRIO io, out MemPort port)
         {
