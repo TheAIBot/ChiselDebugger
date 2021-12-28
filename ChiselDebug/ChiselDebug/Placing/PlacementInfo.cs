@@ -1,4 +1,5 @@
 ﻿using ChiselDebug.GraphFIR;
+using ChiselDebug.GraphFIR.IO;
 using ChiselDebug.Graphing;
 using System;
 using System.Collections.Generic;
@@ -39,8 +40,8 @@ namespace ChiselDebug
         {
             List<RankWidth> ranks = GetNodeRanks();
 
-            int modOutputCount = mod.GetInternalOutputs().Sum(x => x.IsConnectedToAnything() ? 1 : 0);
-            int modInputCount = mod.GetInternalInputs().Sum(x => x.IsConnectedToAnything() ? 1 : 0);
+            int modOutputCount = SpaceForWire(mod.GetInternalOutputs());
+            int modInputCount = SpaceForWire(mod.GetInternalInputs());
 
             int[] xSpacing = new int[ranks.Count + 1];
 
@@ -50,8 +51,8 @@ namespace ChiselDebug
 
             for (int i = 0; i < ranks.Count; i++)
             {
-                xSpacing[i] += ranks[i].Nodes.Sum(x => x.GetInputs().Sum(y => y.IsConnectedToAnything() ? 1 : 0)) * spaceForWire;
-                xSpacing[i + 1] += ranks[i].Nodes.Sum(x => x.GetOutputs().Sum(y => y.IsConnectedToAnything() ? 1 : 0)) * spaceForWire;
+                xSpacing[i] += ranks[i].Nodes.Sum(x => SpaceForWire(x.GetInputs())) * spaceForWire;
+                xSpacing[i + 1] += ranks[i].Nodes.Sum(x => SpaceForWire(x.GetOutputs())) * spaceForWire;
             }
 
             int xOffset = xSpacing[0];
@@ -88,6 +89,42 @@ namespace ChiselDebug
             }
 
             SpaceNeeded = new Point(SpaceNeeded.X + xSpacing[^1], SpaceNeeded.Y);
+        }
+
+        private static int SpaceForWire(IEnumerable<ScalarIO> io)
+        {
+            Dictionary<AggregateIO, bool> aggConnectionHasBeenHit = new Dictionary<AggregateIO, bool>();
+            Dictionary<ScalarIO, AggregateIO> scalarToAggregateIO = new Dictionary<ScalarIO, AggregateIO>();
+            foreach (var aggIO in IOHelper.GetAllAggregateIOs(io.ToList()).OrderByDescending(x => x.Flatten().Count))
+            {
+                if (aggIO.IsPassive() && aggIO.OnlyConnectedWithAggregateConnections())
+                {
+                    aggConnectionHasBeenHit.Add(aggIO, false);
+                    foreach (var scalar in aggIO.Flatten())
+                    {
+                        scalarToAggregateIO.TryAdd(scalar, aggIO);
+                    }
+                }
+            }
+
+            int spaceCounter = 0;
+            foreach (var scalar in io)
+            {
+                if (scalarToAggregateIO.TryGetValue(scalar, out var aggIO))
+                {
+                    if (!aggConnectionHasBeenHit[aggIO])
+                    {
+                        aggConnectionHasBeenHit[aggIO] = true;
+                        spaceCounter++;
+                    }                    
+                }
+                else
+                {
+                    spaceCounter += scalar.IsConnectedToAnything() ? 1 : 0;
+                }
+            }
+
+            return spaceCounter;
         }
 
         public void AddBorderPadding(Point padding)

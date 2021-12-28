@@ -268,7 +268,7 @@ namespace ChiselDebug.GraphFIR.IO
             _ => throw new Exception()
         };
 
-        public static HashSet<AggregateIO> GetAllAggregateIOs(List<ScalarIO> scalarIOs)
+        public static HashSet<AggregateIO> GetAllAggregateIOs(IEnumerable<ScalarIO> scalarIOs)
         {
             HashSet<AggregateIO> allAggIO = new HashSet<AggregateIO>();
             foreach (var scalarIO in scalarIOs)
