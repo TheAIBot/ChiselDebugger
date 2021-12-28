@@ -74,7 +74,6 @@ namespace ChiselDebug.Routing
                     IOInfo outputInfo = IOInfos[aggregateOutput];
                     IOInfo inputInfo = IOInfos[endPoint];
                     lines.Add(MakeLine(nodePoses, outputInfo, inputInfo));
-                    break;
                 }
             }
 
