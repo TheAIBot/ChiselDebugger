@@ -15,17 +15,8 @@ namespace ChiselDebug.GraphFIR.IO
                                             .SelectMany(x => x.GetIO())
                                             .SelectMany(x => x.Flatten())
                                             .ToList();
-            
-            HashSet<AggregateIO> allAggIO = new HashSet<AggregateIO>();
-            foreach (var scalarIO in allScalarIO)
-            {
-                var currentParent = scalarIO.ParentIO;
-                while (currentParent != null && allAggIO.Add(currentParent))
-                {
-                    currentParent = currentParent.ParentIO;
-                }
-            }
 
+            HashSet<AggregateIO> allAggIO = IOHelper.GetAllAggregateIOs(allScalarIO);
             foreach (var aggIO in allAggIO)
             {
                 foreach (var connectedAggIO in GetAllOrderlyConnectedEndpoints(aggIO))

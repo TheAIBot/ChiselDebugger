@@ -268,6 +268,21 @@ namespace ChiselDebug.GraphFIR.IO
             _ => throw new Exception()
         };
 
+        public static HashSet<AggregateIO> GetAllAggregateIOs(List<ScalarIO> scalarIOs)
+        {
+            HashSet<AggregateIO> allAggIO = new HashSet<AggregateIO>();
+            foreach (var scalarIO in scalarIOs)
+            {
+                var currentParent = scalarIO.ParentIO;
+                while (currentParent != null && allAggIO.Add(currentParent))
+                {
+                    currentParent = currentParent.ParentIO;
+                }
+            }
+
+            return allAggIO;
+        }
+
         public static bool TryGetParentMemPort(FIRIO io, out MemPort port)
         {
             FIRIO node = io.Flatten().First();
