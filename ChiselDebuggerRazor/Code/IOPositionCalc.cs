@@ -75,14 +75,18 @@ namespace ChiselDebuggerRazor.Code
                 addedIO |= MakeNoScopeIO(inputIO, outputIO, parentIO, fixedX, ref inputYOffset, ref outputYOffset, scopeDepth, ignoreDisconnectedIO);
                 if (parentIO.OnlyConnectedWithAggregateConnections())
                 {
-                    return addedIO;
+                    var paired = parentIO.Flatten().FirstOrDefault()?.GetPaired()?.ParentIO;
+                    if (paired == null || paired.OnlyConnectedWithAggregateConnections())
+                    {
+                        return addedIO;
+                    }
                 }
             }
             for (int i = 0; i < io.Length; i++)
             {
                 if (io[i] is AggregateIO aggIO)
                 {
-                    int inScope = aggIO.IsPartOfAggregateIO ? 1 : 0;
+                    int inScope = parentIO != null ? 1 : 0;
                     bool addedAtleastOne = MakeScopedIO(inputIO, outputIO, aggIO.GetIOInOrder(), fixedX, ref inputYOffset, ref outputYOffset, scopeDepth + inScope, ignoreDisconnectedIO, aggIO);
 
                     //Only add padding if aggregate added some io and if
