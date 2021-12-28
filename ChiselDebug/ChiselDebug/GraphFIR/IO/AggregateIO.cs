@@ -4,9 +4,10 @@ using System.Linq;
 
 namespace ChiselDebug.GraphFIR.IO
 {
+    public record AggregateConnection(AggregateIO To, Output Condition);
     public abstract class AggregateIO : FIRIO 
     {
-        private HashSet<AggregateIO> Connections = null;
+        private HashSet<AggregateConnection> Connections = null;
         public AggregateIO(FIRRTLNode node, string name) : base(node, name) { }
 
         public override FIRIO GetInput()
@@ -24,21 +25,31 @@ namespace ChiselDebug.GraphFIR.IO
         public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Output condition = null)
         {
             var aggIO = input as AggregateIO;
-            AddConnection(aggIO);
-            aggIO.AddConnection(this);
+            AddConnection(aggIO, condition);
+            aggIO.AddConnection(this, condition);
         }
 
-        public void AddConnection(AggregateIO aggIO)
+        public void AddConnection(AggregateIO aggIO, Output condition)
         {
             if (Connections == null)
             {
-                Connections = new HashSet<AggregateIO>();
+                Connections = new HashSet<AggregateConnection>();
             }
 
-            Connections.Add(aggIO);
+            Connections.Add(new AggregateConnection(aggIO, condition));
         }
 
-        public void ReplaceConnection(AggregateIO replace, AggregateIO replaceWith)
+        public void RemoveConnection(AggregateIO aggIO, Output condition)
+        {
+            if (Connections == null)
+            {
+                throw new InvalidOperationException("Can't remove connections from an io that never had any connections.");
+            }
+
+            Connections.Remove(new AggregateConnection(aggIO, condition));
+        }
+
+        public void ReplaceConnection(AggregateIO replace, AggregateIO replaceWith, Output condition)
         {
             if (!replace.IsPassiveOfType<Output>())
             {
@@ -52,10 +63,10 @@ namespace ChiselDebug.GraphFIR.IO
 
             if (Connections == null)
             {
-                throw new InvalidOperationException("can't replace ana aggregates connection if it has no connections.");
+                throw new InvalidOperationException("can't replace an aggregates connection if it has no connections.");
             }
 
-            if (!Connections.Contains(replace))
+            if (!Connections.Contains(new AggregateConnection(replace, condition)))
             {
                 throw new ArgumentOutOfRangeException(nameof(replace), "This aggregate io is not connection to the io that will be replaced.");
             }
@@ -75,21 +86,21 @@ namespace ChiselDebug.GraphFIR.IO
 
             for (int i = 0; i < replaceScalars.Count; i++)
             {
-                var connection = currentScalars[i].GetConnection(replaceScalars[i]).Value;
+                var connection = currentScalars[i].GetConnection(replaceScalars[i], condition);
                 currentScalars[i].ReplaceConnection(connection, replaceWithScalars[i]);
             }
 
-            Connections.Remove(replace);
-            Connections.Add(replaceWith);
-            replace.Connections.Remove(this);
-            replaceWith.AddConnection(this);
+            RemoveConnection(replace, condition);
+            AddConnection(replaceWith, condition);
+            replace.RemoveConnection(this, condition);
+            replaceWith.AddConnection(this, condition);
         }
 
-        public AggregateIO[] GetConnections()
+        public AggregateConnection[] GetConnections()
         {
             if (Connections == null)
             {
-                return Array.Empty<AggregateIO>();
+                return Array.Empty<AggregateConnection>();
             }
 
             return Connections.ToArray();

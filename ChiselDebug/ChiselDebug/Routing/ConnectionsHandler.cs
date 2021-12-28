@@ -68,7 +68,7 @@ namespace ChiselDebug.Routing
                     continue;
                 }
 
-                foreach (var endPoint in outputParent.GetConnections())
+                foreach (var endPoint in outputParent.GetConnections().Select(x => x.To))
                 {
                     if (!endPoint.Flatten().All(x => IOInfos.ContainsKey(x)))
                     {

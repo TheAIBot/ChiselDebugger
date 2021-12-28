@@ -111,30 +111,21 @@ namespace ChiselDebug.GraphFIR.IO
                 foreach (var io in node.GetIO().ToArray())
                 {
                     HashSet<ScalarIO> bypassMade = new HashSet<ScalarIO>();
-                    if (TryIsIOPassiveAggWithSingleAggEndpoint(io, out var aggEndpoints))
+                    if (TryIsIOPassiveAggWithSingleAggEndpoint(io, out var endpointConnections))
                     {
-                        foreach (var aggEndpoint in aggEndpoints)
+                        foreach (var endpointConnection in endpointConnections)
                         {
-                            var ioConnections = GetScalarConnections(io as AggregateIO, aggEndpoint).ToList();
+                            var ioConnections = GetScalarConnections(io as AggregateIO, endpointConnection.To).ToList();
                             if (io.IsPassiveOfType<Output>())
                             {
                                 bool needToBypass = true;
-                                Output condition = null;
                                 foreach (var ioConnection in ioConnections)
                                 {
-                                    var connection = ioConnection.input.GetConnection(ioConnection.output);
                                     if (ioConnection.input.GetModResideIn() == mod || containedCondMods.Contains(ioConnection.input.GetModResideIn()))
                                     {
                                         needToBypass = false;
                                         break;
                                     }
-                                    if (connection?.Condition == null)
-                                    {
-                                        needToBypass = false;
-                                        break;
-                                    }
-
-                                    condition = connection.Value.Condition;
                                 }
 
                                 if (!needToBypass)
@@ -146,13 +137,12 @@ namespace ChiselDebug.GraphFIR.IO
                                 mod.AddAnonymousInternalIO(flipped);
                                 AggregateIO extAggIO = flipped.Flatten().First().GetPaired().ParentIO;
 
-                                io.ConnectToInput(flipped, false, false, condition);
-                                aggEndpoint.ReplaceConnection((io as AggregateIO), extAggIO);
+                                io.ConnectToInput(flipped, false, false, endpointConnection.Condition);
+                                endpointConnection.To.ReplaceConnection((io as AggregateIO), extAggIO, endpointConnection.Condition);
                             }
                             else if (io.IsPassiveOfType<Input>())
                             {
                                 bool needToBypass = true;
-                                Output condition = null;
                                 foreach (var ioConnection in ioConnections)
                                 {
                                     if (ioConnection.output.GetModResideIn() == mod || containedCondMods.Contains(ioConnection.output.GetModResideIn()))
@@ -166,9 +156,6 @@ namespace ChiselDebug.GraphFIR.IO
                                         needToBypass = false;
                                         break;
                                     }
-
-                                    var connection = ioConnection.input.GetConnection(ioConnection.output);
-                                    condition = connection?.Condition;
                                 }
 
                                 if (!needToBypass)
@@ -180,8 +167,8 @@ namespace ChiselDebug.GraphFIR.IO
                                 mod.AddAnonymousInternalIO(flipped);
                                 AggregateIO extAggIO = flipped.Flatten().First().GetPaired().ParentIO;
 
-                                aggEndpoint.ConnectToInput(extAggIO, false, false, condition);
-                                (io as AggregateIO).ReplaceConnection(aggEndpoint, flipped as AggregateIO);
+                                endpointConnection.To.ConnectToInput(extAggIO, false, false, endpointConnection.Condition);
+                                (io as AggregateIO).ReplaceConnection(endpointConnection.To, flipped as AggregateIO, endpointConnection.Condition);
                             }
                             else
                             {
@@ -249,21 +236,21 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        private static bool TryIsIOPassiveAggWithSingleAggEndpoint(FIRIO io, out AggregateIO[] endpoints)
+        private static bool TryIsIOPassiveAggWithSingleAggEndpoint(FIRIO io, out AggregateConnection[] endpointConnections)
         {
             if (io is not AggregateIO aggIO)
             {
-                endpoints = null;
+                endpointConnections = null;
                 return false;
             }
 
             if (!io.IsPassive())
             {
-                endpoints = null;
+                endpointConnections = null;
                 return false;
             }
 
-            endpoints = aggIO.GetConnections();
+            endpointConnections = aggIO.GetConnections();
             return true;
         }
 

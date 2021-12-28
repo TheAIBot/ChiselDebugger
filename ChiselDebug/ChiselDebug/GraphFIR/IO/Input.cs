@@ -69,21 +69,24 @@ namespace ChiselDebug.GraphFIR.IO
             return cons.ToArray();
         }
 
-        public Connection? GetConnection(Output from)
+        public Connection GetConnection(Output from, Output condition)
         {
-            if (Con == from)
+            if (condition == null && Con == from)
             {
                 return new Connection(from);
             }
-            for (int i = 0; i < CondCons.Count; i++)
+            else
             {
-                if (CondCons[i].From == from)
+                for (int i = 0; i < CondCons.Count; i++)
                 {
-                    return CondCons[i];
+                    if (CondCons[i].From == from && CondCons[i].Condition == condition)
+                    {
+                        return CondCons[i];
+                    }
                 }
             }
 
-            return null;
+            throw new Exception("Input is not connected to the given output.");
         }
 
         public override FIRIO GetInput()
