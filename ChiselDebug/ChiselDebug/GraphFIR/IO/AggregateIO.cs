@@ -117,6 +117,11 @@ namespace ChiselDebug.GraphFIR.IO
             int connectionCount = Connections.Count;
             foreach (var scalar in Flatten())
             {
+                if (!scalar.IsConnectedToAnything())
+                {
+                    continue;
+                }
+
                 if (scalar is Input input && input.GetConnections().Length != connectionCount)
                 {
                     return false;
