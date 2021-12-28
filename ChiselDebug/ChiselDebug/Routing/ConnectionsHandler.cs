@@ -63,6 +63,10 @@ namespace ChiselDebug.Routing
                 }
 
                 AggregateIO outputParent = output.ParentIO;
+                if (!outputParent.IsPassive())
+                {
+                    continue;
+                }
                 if (!outputParent.Flatten().All(x => IOInfos.ContainsKey(x)))
                 {
                     continue;
