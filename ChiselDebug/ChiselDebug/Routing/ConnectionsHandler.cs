@@ -54,45 +54,24 @@ namespace ChiselDebug.Routing
             disallowedConnections = new Dictionary<Output, HashSet<Input>>();
             List<(IOInfo start, IOInfo end)> lines = new List<(IOInfo start, IOInfo end)>();
             Dictionary<AggregateIO, HashSet<AggregateIO>> alreadyMade = new Dictionary<AggregateIO, HashSet<AggregateIO>>();
-            List<Output> outputIOs = IOInfos.Keys.OfType<Output>().ToList();
-            foreach (var output in outputIOs)
+            foreach (var aggregateOutput in IOInfos.Keys.OfType<AggregateIO>().Where(x => x.IsPassiveOfType<Output>()))
             {
-                if (!output.IsPartOfAggregateIO)
+                foreach (var endPoint in aggregateOutput.GetConnections().Select(x => x.To))
                 {
-                    continue;
-                }
-
-                AggregateIO outputParent = output.ParentIO;
-                if (!outputParent.IsPassive())
-                {
-                    continue;
-                }
-                if (!outputParent.Flatten().All(x => IOInfos.ContainsKey(x)))
-                {
-                    continue;
-                }
-
-                foreach (var endPoint in outputParent.GetConnections().Select(x => x.To))
-                {
-                    if (!endPoint.Flatten().All(x => IOInfos.ContainsKey(x)))
+                    alreadyMade.TryAdd(aggregateOutput, new HashSet<AggregateIO>());
+                    if (!alreadyMade[aggregateOutput].Add(endPoint))
                     {
                         continue;
                     }
 
-                    alreadyMade.TryAdd(outputParent, new HashSet<AggregateIO>());
-                    if (!alreadyMade[outputParent].Add(endPoint))
-                    {
-                        continue;
-                    }
-
-                    var connections = outputParent.Flatten().Zip(endPoint.Flatten()).Select(x => IOHelper.OrderIO(x.First, x.Second));
+                    var connections = aggregateOutput.Flatten().Zip(endPoint.Flatten()).Select(x => IOHelper.OrderIO(x.First, x.Second));
                     foreach (var connection in connections)
                     {
                         disallowedConnections.TryAdd(connection.output, new HashSet<Input>());
                         disallowedConnections[connection.output].Add(connection.input);
                     }
 
-                    IOInfo outputInfo = IOInfos[outputParent];
+                    IOInfo outputInfo = IOInfos[aggregateOutput];
                     IOInfo inputInfo = IOInfos[endPoint];
                     lines.Add(MakeLine(nodePoses, outputInfo, inputInfo));
                     break;

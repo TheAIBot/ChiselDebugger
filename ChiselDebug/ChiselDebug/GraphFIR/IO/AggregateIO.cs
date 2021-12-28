@@ -8,6 +8,7 @@ namespace ChiselDebug.GraphFIR.IO
     public abstract class AggregateIO : FIRIO 
     {
         private HashSet<AggregateConnection> Connections = null;
+        public bool HasAggregateConnections => Connections?.Count > 0;
         public AggregateIO(FIRRTLNode node, string name) : base(node, name) { }
 
         public override FIRIO GetInput()
@@ -104,6 +105,29 @@ namespace ChiselDebug.GraphFIR.IO
             }
 
             return Connections.ToArray();
+        }
+
+        public bool OnlyConnectedWithAggregateConnections()
+        {
+            if (!HasAggregateConnections)
+            {
+                return false;
+            }
+
+            int connectionCount = Connections.Count;
+            foreach (var scalar in Flatten())
+            {
+                if (scalar is Input input && input.GetConnections().Length != connectionCount)
+                {
+                    return false;
+                }
+                else if (scalar is Output output && output.GetConnectedInputs().Count() != connectionCount)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }
