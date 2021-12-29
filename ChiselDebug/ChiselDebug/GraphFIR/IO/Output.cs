@@ -21,6 +21,11 @@ namespace ChiselDebug.GraphFIR.IO
             return To != null && To.Count > 0;
         }
 
+        public override bool IsConnectedToAnythingPlaceable()
+        {
+            return IsConnectedToAnything() && To.Any(x => x.Node is not INoPlaceAndRoute);
+        }
+
         public override FIRIO GetOutput()
         {
             return this;

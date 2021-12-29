@@ -1,6 +1,7 @@
 ﻿using FIRRTL;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using VCDReader;
 
@@ -51,6 +52,12 @@ namespace ChiselDebug.GraphFIR.IO
         public override bool IsConnectedToAnything()
         {
             return Con != null || CondCons.Count > 0;
+        }
+
+        public override bool IsConnectedToAnythingPlaceable()
+        {
+            return (Con != null && Con.Node is not INoPlaceAndRoute) ||
+                   (CondCons.Count > 0 && CondCons.ToArray().Any(x => x.From.Node is not INoPlaceAndRoute));
         }
 
         public Connection[] GetConnections()

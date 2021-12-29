@@ -22,6 +22,8 @@ namespace ChiselDebug.GraphFIR.IO
 
         public abstract bool IsConnectedToAnything();
 
+        public abstract bool IsConnectedToAnythingPlaceable();
+
         public override List<ScalarIO> Flatten(List<ScalarIO> list)
         {
             list.Add(this);

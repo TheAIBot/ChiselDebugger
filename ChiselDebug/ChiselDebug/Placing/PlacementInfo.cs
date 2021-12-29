@@ -120,7 +120,7 @@ namespace ChiselDebug
                 }
                 else
                 {
-                    spaceCounter += scalar.IsConnectedToAnything() ? 1 : 0;
+                    spaceCounter += scalar.IsConnectedToAnythingPlaceable() ? 1 : 0;
                 }
             }
 
