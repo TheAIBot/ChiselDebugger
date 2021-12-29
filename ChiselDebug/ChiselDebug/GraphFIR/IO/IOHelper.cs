@@ -105,6 +105,7 @@ namespace ChiselDebug.GraphFIR.IO
                 return;
             }
 
+            Dictionary<Connection, Output> bypasses = new Dictionary<Connection, Output>();
             foreach (var node in mod.GetAllNodes())
             {
                 foreach (var io in node.GetIO().ToArray())
@@ -133,12 +134,19 @@ namespace ChiselDebug.GraphFIR.IO
 
                                     if (connection.Condition != null)
                                     {
+                                        if (bypasses.TryGetValue(connection, out var bypassOutput))
+                                        {
+                                            input.ReplaceConnection(connection, bypassOutput);
+                                            continue;
+                                        }
+
                                         Input flipped = (Input)connection.From.Flip(mod);
                                         mod.AddAnonymousInternalIO(flipped);
                                         Output extOutput = flipped.GetPaired();
 
                                         connection.From.ConnectToInput(flipped, false, false, connection.Condition);
                                         input.ReplaceConnection(connection, extOutput);
+                                        bypasses.Add(connection, extOutput);
                                     }
                                 }
                             }
@@ -154,12 +162,19 @@ namespace ChiselDebug.GraphFIR.IO
 
                                 if (connection.From.GetModResideIn() != mod)
                                 {
+                                    if (bypasses.TryGetValue(connection, out var bypassOutput))
+                                    {
+                                        input.ReplaceConnection(connection, bypassOutput);
+                                        continue;
+                                    }
+
                                     Input flipped = (Input)connection.From.Flip(mod);
                                     mod.AddAnonymousExternalIO(flipped);
                                     Output intOutput = flipped.GetPaired();
 
                                     connection.From.ConnectToInput(flipped, false, false, connection.Condition);
                                     input.ReplaceConnection(connection, intOutput);
+                                    bypasses.Add(connection, intOutput);
                                 }
                             }
                         }
