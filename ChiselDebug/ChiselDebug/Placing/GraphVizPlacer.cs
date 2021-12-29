@@ -76,7 +76,7 @@ namespace ChiselDebug
             int edgeCounter = 0;
             foreach (Output output in outputToNode.Keys)
             {
-                if (!output.IsConnectedToAnything())
+                if (!output.IsConnectedToAnythingPlaceable())
                 {
                     continue;
                 }
