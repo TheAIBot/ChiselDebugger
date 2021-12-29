@@ -18,8 +18,7 @@ namespace ChiselDebug
 
         public int GetManhattanDistance()
         {
-            Point diff = (End - Start).Abs();
-            return diff.X + diff.Y;
+            return Point.ManhattanDistance(Start, End);
         }
 
         public override bool Equals(object obj)

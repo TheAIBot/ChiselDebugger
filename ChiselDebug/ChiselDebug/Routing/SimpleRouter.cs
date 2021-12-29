@@ -168,6 +168,8 @@ namespace ChiselDebug.Routing
                 } while (startRectRelative.Within(startGo));
             }
 
+            int closestFriendDistance = int.MaxValue;
+            Point closestFriend = new Point(int.MaxValue, int.MaxValue);
             foreach (var path in allPaths)
             {
                 MoveDirs wireType;
@@ -181,7 +183,7 @@ namespace ChiselDebug.Routing
                     wireType = MoveDirs.EnemyWire;
                 }
 
-                path.PlaceOnBoard(board, wireType);
+                path.PlaceOnBoard(board, wireType, relativeEnd, ref closestFriend, ref closestFriendDistance);
             }
 
             ref ScorePath startScore = ref board.GetCellScorePath(relativeEnd);
@@ -237,7 +239,9 @@ namespace ChiselDebug.Routing
                         if (neighborScoreFromCurrent.IsBetterScoreThan(neighborScore))
                         {
                             Point neighborPos = board.CellFromIndex(neighborIndex);
-                            int dist = Point.ManhattanDistance(in neighborPos, in relativeStart);
+                            int distToGoal = Point.ManhattanDistance(in neighborPos, in relativeStart);
+                            int distToClosestFriend = Point.ManhattanDistance(in neighborPos, in closestFriend);
+                            int dist = Math.Min(distToGoal, distToClosestFriend);
 
                             toSee.Enqueue(neighborIndex, neighborScoreFromCurrent.GetTotalScore() + dist);
                             neighborScore = neighborScoreFromCurrent;

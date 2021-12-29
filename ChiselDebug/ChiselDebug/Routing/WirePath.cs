@@ -29,15 +29,29 @@ namespace ChiselDebug.Routing
             (this.FromIO, this.ToIO) = GetConCondition();
         }
 
-        internal void PlaceOnBoard(RouterBoard board, MoveDirs move)
+        internal void PlaceOnBoard(RouterBoard board, MoveDirs move, Point startPos, ref Point closestFriend, ref int closestFriendDistance)
         {
-            foreach (var pos in BoardPositions)
+            if (move == MoveDirs.FriendWire)
             {
-                board.AddCellAllowedMoves(pos, move);
+                foreach (var posIndex in BoardPositions)
+                {
+                    board.AddCellAllowedMoves(posIndex, move);
+                    Point pos = board.CellFromIndex(posIndex);
+                    int distance = Point.ManhattanDistance(startPos, pos);
+                    if (distance < closestFriendDistance)
+                    {
+                        closestFriend = pos;
+                        closestFriendDistance = distance;
+                    }
+                }
             }
-
-            if (move == MoveDirs.EnemyWire)
+            else
             {
+                foreach (var posIndex in BoardPositions)
+                {
+                    board.AddCellAllowedMoves(posIndex, move);
+                }
+
                 foreach (var pos in BoardPosTurns)
                 {
                     board.AddCellAllowedMoves(pos, MoveDirs.WireCorner);
