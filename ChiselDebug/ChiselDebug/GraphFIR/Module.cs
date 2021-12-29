@@ -44,6 +44,22 @@ namespace ChiselDebug.GraphFIR
             }
         }
 
+        public void RemoveNode(FIRRTLNode node)
+        {
+            node.SetModResideIn(null);
+            if (!Nodes.Remove(node))
+            {
+                throw new ArgumentException("The node is not part of this module.");
+            }
+            foreach (var io in node.GetVisibleIO())
+            {
+                if (!io.IsAnonymous)
+                {
+                    NameToIO.Remove(io.Name);
+                }
+            }
+        }
+
         public void AddIORename(string name, FIRIO io)
         {
             NameToIO.Add(name, io);

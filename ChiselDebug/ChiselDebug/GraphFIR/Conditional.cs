@@ -20,6 +20,14 @@ namespace ChiselDebug.GraphFIR
             ConditionalModules.Add(mod);
         }
 
+        public void RemoveConditionalModule(Module mod)
+        {
+            if (!ConditionalModules.Remove(mod))
+            {
+                throw new ArgumentException(nameof(mod), "The module is not part of this conditional.");
+            }
+        }
+
         public override Input[] GetInputs()
         {
             List<Input> inputs = new List<Input>();

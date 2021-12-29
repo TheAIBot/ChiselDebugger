@@ -158,6 +158,25 @@ namespace ChiselDebug.GraphFIR.IO
             CondCons.Clear();
         }
 
+        public void DisconnectAllFrom(Output from)
+        {
+            if (Con == from)
+            {
+                Con.DisconnectOnlyOutputSide(this);
+                Con = null;
+            }
+
+            for (int i = 0; i < CondCons.Count; i++)
+            {
+                if (CondCons[i].From == from)
+                {
+                    CondCons[i].From.DisconnectOnlyOutputSide(this);
+                    CondCons.RemoveAt(i);
+                    break;
+                }
+            }
+        }
+
         public void Connect(Output con, Output condition)
         {
             if (condition != null)

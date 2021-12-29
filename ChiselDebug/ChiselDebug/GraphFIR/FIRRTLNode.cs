@@ -19,6 +19,19 @@ namespace ChiselDebug.GraphFIR
             ResideIn = mod;
         }
 
+        public void Disconnect()
+        {
+            foreach (var input in GetInputs())
+            {
+                input.DisconnectAll();
+            }
+
+            foreach (var output in GetOutputs())
+            {
+                output.DisconnectAll();
+            }
+        }
+
         public abstract Input[] GetInputs();
         public abstract Output[] GetOutputs();
 

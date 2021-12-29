@@ -82,6 +82,14 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
+        public void DisconnectAll()
+        {
+            foreach (var input in GetConnectedInputs().ToArray())
+            {
+                input.DisconnectAllFrom(this);
+            }
+        }
+
         internal void DisconnectOnlyOutputSide(Input input)
         {
             To.Remove(input);

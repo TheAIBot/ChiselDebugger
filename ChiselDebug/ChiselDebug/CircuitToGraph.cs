@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ChiselDebug.GraphFIR.Transformations;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -172,10 +173,29 @@ namespace ChiselDebug
                 throw new ChiselDebugException("Circuit does not contain a module with the circuits name.");
             }
             GraphFIR.Module mainModule = VisitModule(helper, null, mainModDef);
-            GraphFIR.IO.AggregateConnections.ConnectionAllAggregateIO(mainModule);
             foreach (var mod in mainModule.GetAllNestedNodesOfType<GraphFIR.Module>())
             {
-                CleanupModule(mod);
+                //In a truely stupid move, FIRRTL supports connecting
+                //Sinks to other sinks. In order to support that case
+                //a sink can pretend to be a source. It's important 
+                //that they stop pretending after the module graph
+                //has been made because this hack shouldn't be
+                //visible outside of graph creation. Everything else
+                //should still work on the assumption that only
+                //connections from a source to a sink are possible.
+                mod.RemoveAllDuplexWires();
+            }
+
+            FlattenConditionalStructure.Flatten(mainModule);
+
+            GraphFIR.IO.AggregateConnections.ConnectionAllAggregateIO(mainModule);
+
+            foreach (var mod in mainModule.GetAllNestedNodesOfType<GraphFIR.Module>())
+            {
+                if (!mod.IsConditional)
+                {
+                    GraphFIR.IO.IOHelper.BypassCondConnectionsThroughCondModules(mod);
+                }
             }
 
             return new CircuitGraph(circuit.Main, mainModule);
@@ -208,24 +228,6 @@ namespace ChiselDebug
             else
             {
                 throw new NotImplementedException();
-            }
-        }
-
-        private static void CleanupModule(GraphFIR.Module mod)
-        {
-            //In a truely stupid move, FIRRTL supports connecting
-            //Sinks to other sinks. In order to support that case
-            //a sink can pretend to be a source. It's important 
-            //that they stop pretending after the module graph
-            //has been made because this hack shouldn't be
-            //visible outside of graph creation. Everything else
-            //should still work on the assumption that only
-            //connections from a source to a sink are possible.
-            mod.RemoveAllDuplexWires();
-
-            if (!mod.IsConditional)
-            {
-                GraphFIR.IO.IOHelper.BypassCondConnectionsThroughCondModules(mod);
             }
         }
 
