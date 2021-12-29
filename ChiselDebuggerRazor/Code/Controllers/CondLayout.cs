@@ -133,5 +133,13 @@ namespace ChiselDebuggerRazor.Code
                 childLayout.UpdateLayoutDisplay(scaling);
             }
         }
+
+        public void StatehasChanged()
+        {
+            foreach (var uiNode in UINodes)
+            {
+                uiNode.PrepareForRender();
+            }
+        }
     }
 }

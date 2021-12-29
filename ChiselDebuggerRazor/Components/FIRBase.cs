@@ -11,10 +11,6 @@ using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Components
 {
-    public interface IFIRUINode
-    {
-        public abstract void PrepareForRender();
-    }
     public abstract class FIRBase<T> : ManualRenderBase, IFIRUINode where T : FIRRTLNode
     {
         [Inject]

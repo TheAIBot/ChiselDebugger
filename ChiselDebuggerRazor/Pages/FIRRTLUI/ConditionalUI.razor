@@ -11,6 +11,12 @@
     private List<Positioned<Module>> CondModules = new List<Positioned<Module>>();
     private CondLayout CurrLayout;
 
+    public new void StateHasChanged()
+    {
+        base.StateHasChanged();
+        CurrLayout.StatehasChanged();
+    }
+
     protected override void OnFirstParametersSetAsync()
     {
         base.OnFirstParametersSetAsync();
