@@ -2,14 +2,14 @@
 using System.Linq;
 using VCDReader;
 
-namespace ChiselDebug
+namespace ChiselDebug.Utilities
 {
     internal struct RefEnabledList<T>
     {
         private T[] Values;
         public int Count { get; private set; }
 
-        public readonly ref T this[int index] { get { return ref Values[index];} }
+        public readonly ref T this[int index] { get { return ref Values[index]; } }
 
         public RefEnabledList()
         {

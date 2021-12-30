@@ -1,4 +1,4 @@
-﻿using ChiselDebug;
+﻿using ChiselDebug.Utilities;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System;

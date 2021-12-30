@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using VCDReader;
 
-namespace ChiselDebug.GraphFIR
+namespace ChiselDebug.GraphFIR.Components
 {
     public sealed class Module : FIRRTLContainer
     {
@@ -17,12 +17,12 @@ namespace ChiselDebug.GraphFIR
         private readonly Dictionary<Input, Wire> DuplexOutputWires = new Dictionary<Input, Wire>();
         public Output EnableCon { get; private set; }
         public bool IsConditional => EnableCon != null;
-        
+
 
         public Module(string name, string instanceName, Module parentMod, FirrtlNode defNode) : base(defNode)
         {
-            this.Name = name;
-            this.InstanceName = instanceName;
+            Name = name;
+            InstanceName = instanceName;
             SetModResideIn(parentMod);
         }
 

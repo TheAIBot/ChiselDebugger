@@ -1,4 +1,5 @@
-﻿using ChiselDebug.GraphFIR;
+﻿using ChiselDebug.GraphFIR.Components;
+using ChiselDebug.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChiselDebug
+namespace ChiselDebug.Placing
 {
     public abstract class PlacingBase
     {
@@ -17,8 +18,8 @@ namespace ChiselDebug
 
         public PlacingBase(Module mod)
         {
-            this.Mod = mod;
-            this.MissingNodeDims = new HashSet<FIRRTLNode>(Mod.GetAllNodes());
+            Mod = mod;
+            MissingNodeDims = new HashSet<FIRRTLNode>(Mod.GetAllNodes());
             MissingNodeDims.RemoveWhere(x => x is INoPlaceAndRoute);
         }
 

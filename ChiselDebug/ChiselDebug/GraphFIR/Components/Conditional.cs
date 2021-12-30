@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChiselDebug.GraphFIR
+namespace ChiselDebug.GraphFIR.Components
 {
     public sealed class Conditional : FIRRTLNode, IContainerIO
     {

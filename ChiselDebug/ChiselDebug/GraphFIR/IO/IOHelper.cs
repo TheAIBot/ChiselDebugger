@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics;
+using ChiselDebug.GraphFIR.Components;
 
 namespace ChiselDebug.GraphFIR.IO
 {

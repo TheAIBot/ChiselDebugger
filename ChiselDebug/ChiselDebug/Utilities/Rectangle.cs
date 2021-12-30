@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ChiselDebug
+namespace ChiselDebug.Utilities
 {
     public readonly struct Rectangle
     {
@@ -26,9 +26,9 @@ namespace ChiselDebug
 
         public Rectangle(Point pos, int width, int height)
         {
-            this.Pos = pos;
-            this.Width = width;
-            this.Height = height;
+            Pos = pos;
+            Width = width;
+            Height = height;
         }
 
         public Rectangle(Point pos, Point size) : this(pos, size.X, size.Y)

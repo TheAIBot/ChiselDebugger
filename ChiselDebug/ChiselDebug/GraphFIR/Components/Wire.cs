@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace ChiselDebug.GraphFIR
+namespace ChiselDebug.GraphFIR.Components
 {
     public sealed class Wire : PairedIOFIRRTLNode
     {
@@ -20,9 +20,9 @@ namespace ChiselDebug.GraphFIR
                 throw new Exception("Wire input type must be a passive input type.");
             }
 
-            this.Name = name;
-            this.In = inputType.Copy(this);
-            this.Result = inputType.Flip(this);
+            Name = name;
+            In = inputType.Copy(this);
+            Result = inputType.Flip(this);
             AddPairedIO(In, Result);
 
             In.SetName(Name + "/in");

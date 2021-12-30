@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChiselDebug.GraphFIR
+namespace ChiselDebug.GraphFIR.Components
 {
     public sealed class Memory : FIRRTLNode, IContainerIO, IStatePreserving
     {
@@ -25,13 +25,13 @@ namespace ChiselDebug.GraphFIR
                 throw new Exception("Input type must be a passive input type.");
             }
 
-            this.Name = name;
-            this.InputType = inputType.Copy(this);
-            this.Size = size;
-            this.ReadLatency = readLatency;
-            this.WriteLatency = writeLatency;
-            this.RUW = ruw;
-            this.MemIO = new MemoryIO(this, name, new List<FIRIO>(), InputType, GetAddressWidth());
+            Name = name;
+            InputType = inputType.Copy(this);
+            Size = size;
+            ReadLatency = readLatency;
+            WriteLatency = writeLatency;
+            RUW = ruw;
+            MemIO = new MemoryIO(this, name, new List<FIRIO>(), InputType, GetAddressWidth());
         }
 
         internal MemReadPort AddReadPort(string portName)

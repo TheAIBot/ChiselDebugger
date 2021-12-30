@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using VCDReader;
 
-namespace ChiselDebug.GraphFIR
+namespace ChiselDebug.GraphFIR.Components
 {
     public sealed class ConstValue : FIRRTLNode, INoPlaceAndRoute
     {
@@ -15,8 +15,8 @@ namespace ChiselDebug.GraphFIR
 
         public ConstValue(Literal value) : base(value)
         {
-            this.Value = value;
-            this.Result = new Output(this, null, value.GetFIRType());
+            Value = value;
+            Result = new Output(this, null, value.GetFIRType());
         }
 
         public override Input[] GetInputs()

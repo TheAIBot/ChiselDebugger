@@ -1,13 +1,14 @@
-﻿using ChiselDebug.GraphFIR;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using ChiselDebug.Graphing;
 using System.Linq;
 using System.Diagnostics;
 using ChiselDebug.GraphFIR.IO;
+using ChiselDebug.GraphFIR.Components;
+using ChiselDebug.Utilities;
 
-namespace ChiselDebug
+namespace ChiselDebug.Placing
 {
     public class SimplePlacer : PlacingBase
     {

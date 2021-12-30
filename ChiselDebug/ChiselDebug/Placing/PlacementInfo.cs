@@ -1,11 +1,12 @@
-﻿using ChiselDebug.GraphFIR;
+﻿using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
 using ChiselDebug.Graphing;
+using ChiselDebug.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ChiselDebug
+namespace ChiselDebug.Placing
 {
     public class PlacementInfo
     {
@@ -18,9 +19,9 @@ namespace ChiselDebug
 
         public PlacementInfo(List<Positioned<FIRRTLNode>> nodePoses, Dictionary<FIRRTLNode, Rectangle> usedSpace, Point spaceNeeded)
         {
-            this.NodePositions = nodePoses;
-            this.UsedSpace = usedSpace;
-            this.SpaceNeeded = spaceNeeded;
+            NodePositions = nodePoses;
+            UsedSpace = usedSpace;
+            SpaceNeeded = spaceNeeded;
         }
 
         internal void AddNodePlacement(FIRRTLNode node, Rectangle shape)
@@ -116,7 +117,7 @@ namespace ChiselDebug
                     {
                         aggConnectionHasBeenHit[aggIO] = true;
                         spaceCounter++;
-                    }                    
+                    }
                 }
                 else
                 {
@@ -147,17 +148,17 @@ namespace ChiselDebug
 
             public RankWidth(FIRRTLNode node, Rectangle nodeRect)
             {
-                this.StartX = nodeRect.LeftX;
-                this.EndX = nodeRect.RightX;
+                StartX = nodeRect.LeftX;
+                EndX = nodeRect.RightX;
                 Nodes.Add(node);
             }
 
             public bool IsInSameRank(Rectangle rect)
             {
-                return (StartX <= rect.LeftX && rect.LeftX <= EndX) ||
-                       (StartX <= rect.RightX && rect.RightX <= EndX) ||
-                       (rect.LeftX <= StartX && StartX <= rect.RightX) ||
-                       (rect.LeftX <= EndX && EndX <= rect.RightX);
+                return StartX <= rect.LeftX && rect.LeftX <= EndX ||
+                       StartX <= rect.RightX && rect.RightX <= EndX ||
+                       rect.LeftX <= StartX && StartX <= rect.RightX ||
+                       rect.LeftX <= EndX && EndX <= rect.RightX;
             }
 
             public bool IsBeforeThisRank(Rectangle rect)

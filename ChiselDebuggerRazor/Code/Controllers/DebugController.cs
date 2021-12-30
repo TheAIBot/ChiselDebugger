@@ -1,9 +1,11 @@
 ﻿using ChiselDebug;
 using ChiselDebug.CombGraph;
-using ChiselDebug.GraphFIR;
+using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
+using ChiselDebug.Placing;
 using ChiselDebug.Routing;
 using ChiselDebug.Timeline;
+using ChiselDebug.Utilities;
 using ChiselDebuggerRazor.Code.Templates;
 using ChiselDebuggerRazor.Components;
 using ChiselDebuggerRazor.Pages.FIRRTLUI;

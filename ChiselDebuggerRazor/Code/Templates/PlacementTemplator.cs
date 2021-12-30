@@ -1,5 +1,5 @@
-﻿using ChiselDebug;
-using ChiselDebug.GraphFIR;
+﻿using ChiselDebug.GraphFIR.Components;
+using ChiselDebug.Placing;
 using ChiselDebuggerRazor.Pages.FIRRTLUI;
 using System;
 using System.Collections.Concurrent;

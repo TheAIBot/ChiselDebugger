@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using VCDReader;
 
-namespace ChiselDebug.GraphFIR
+namespace ChiselDebug.GraphFIR.Components
 {
     public sealed class FirStop : FIRRTLNode
     {
@@ -18,9 +18,9 @@ namespace ChiselDebug.GraphFIR
 
         public FirStop(Output clock, Output enable, int exitCode, FirrtlNode defNode) : base(defNode)
         {
-            this.Clock = new Input(this, new ClockType());
-            this.Enable = new Input(this, new UIntType(1));
-            this.ExitCode = exitCode;
+            Clock = new Input(this, new ClockType());
+            Enable = new Input(this, new UIntType(1));
+            ExitCode = exitCode;
 
             clock.ConnectToInput(Clock);
             enable.ConnectToInput(Enable);

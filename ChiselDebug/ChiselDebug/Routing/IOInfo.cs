@@ -1,6 +1,6 @@
-﻿using ChiselDebug.GraphFIR;
+﻿using ChiselDebug.GraphFIR.Components;
 
-namespace ChiselDebug
+namespace ChiselDebug.Routing
 {
     internal class IOInfo
     {
@@ -9,8 +9,8 @@ namespace ChiselDebug
 
         public IOInfo(FIRRTLNode node, DirectedIO dirIO)
         {
-            this.Node = node;
-            this.DirIO = dirIO;
+            Node = node;
+            DirIO = dirIO;
         }
     }
 }

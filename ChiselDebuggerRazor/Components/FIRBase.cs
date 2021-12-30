@@ -1,5 +1,6 @@
-﻿using ChiselDebug;
-using ChiselDebug.GraphFIR;
+﻿using ChiselDebug.GraphFIR.Components;
+using ChiselDebug.Routing;
+using ChiselDebug.Utilities;
 using ChiselDebuggerRazor.Code;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;

@@ -1,5 +1,6 @@
-﻿using ChiselDebug.GraphFIR;
+﻿using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
+using ChiselDebug.Utilities;
 using Rubjerg.Graphviz;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChiselDebug
+namespace ChiselDebug.Placing
 {
     public class GraphVizPlacer : PlacingBase
     {
@@ -93,7 +94,7 @@ namespace ChiselDebug
                         continue;
                     }
                     var to = inputToNode[input];
-                    var edge = graph.GetOrAddEdge(from, to, (edgeCounter++).ToString());
+                    var edge = graph.GetOrAddEdge(from, to, edgeCounter++.ToString());
                     edge.SafeSetAttribute("tailport", outputToPort[output], " ");
                     edge.SafeSetAttribute("headport", inputToPort[input], " ");
                 }
@@ -108,7 +109,7 @@ namespace ChiselDebug
                 var center = new Point((int)(centerF.X * dpi), (int)(centerF.Y * dpi)) / ppi;
 
                 var nodeSize = nodeSizes[firToVizNode.Key];
-                var topLeft = center - (nodeSize / 2);
+                var topLeft = center - nodeSize / 2;
 
                 firNodeRects.Add(firToVizNode.Key, new Rectangle(topLeft, nodeSize));
             }

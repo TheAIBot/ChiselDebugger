@@ -1,5 +1,5 @@
-﻿using ChiselDebug;
-using ChiselDebug.GraphFIR;
+﻿using ChiselDebug.GraphFIR.Components;
+using ChiselDebug.Utilities;
 using ChiselDebuggerRazor.Code;
 using System;
 using System.Collections.Generic;

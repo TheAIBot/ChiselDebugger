@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ChiselDebug
+namespace ChiselDebug.Utilities
 {
     public readonly struct Positioned<T>
     {
@@ -12,8 +12,8 @@ namespace ChiselDebug
 
         public Positioned(Point position, T value)
         {
-            this.Position = position;
-            this.Value = value;
+            Position = position;
+            Value = value;
         }
 
         public Positioned<U> Cast<U>()

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ChiselDebug.GraphFIR.Components;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace ChiselDebug
 {
     internal class VisitHelper
     {
-        public readonly GraphFIR.Module Mod;
+        public readonly Module Mod;
         private readonly CircuitGraph LowFirGraph;
         public readonly Dictionary<string, FIRRTL.DefModule> ModuleRoots;
         public readonly bool IsConditionalModule;
@@ -23,7 +24,7 @@ namespace ChiselDebug
             {
                 if (ScopeEnabledConditions.Count == 0)
                 {
-                    GraphFIR.ConstValue constEnabled = new GraphFIR.ConstValue(new FIRRTL.UIntLiteral(1, 1));
+                    ConstValue constEnabled = new ConstValue(new FIRRTL.UIntLiteral(1, 1));
                     AddNodeToModule(constEnabled);
 
                     ScopeEnabledConditions.Push(constEnabled.Result);
@@ -33,10 +34,10 @@ namespace ChiselDebug
             }
         }
 
-        public VisitHelper(GraphFIR.Module mod, CircuitGraph lowFirGraph) : this(mod, lowFirGraph, new Dictionary<string, FIRRTL.DefModule>(), null, false, null)
+        public VisitHelper(Module mod, CircuitGraph lowFirGraph) : this(mod, lowFirGraph, new Dictionary<string, FIRRTL.DefModule>(), null, false, null)
         { }
 
-        private VisitHelper(GraphFIR.Module mod, CircuitGraph lowFirGraph, Dictionary<string, FIRRTL.DefModule> roots, VisitHelper parentHelper, bool isConditional, VisitHelper rootHelper)
+        private VisitHelper(Module mod, CircuitGraph lowFirGraph, Dictionary<string, FIRRTL.DefModule> roots, VisitHelper parentHelper, bool isConditional, VisitHelper rootHelper)
         {
             this.Mod = mod;
             this.LowFirGraph = lowFirGraph;
@@ -48,15 +49,15 @@ namespace ChiselDebug
 
         public VisitHelper ForNewModule(string moduleName, string instanceName, FIRRTL.DefModule moduleDef)
         {
-            return new VisitHelper(new GraphFIR.Module(moduleName, instanceName, Mod, moduleDef), LowFirGraph, ModuleRoots, this, false, RootHelper ?? this);
+            return new VisitHelper(new GraphFIR.Components.Module(moduleName, instanceName, Mod, moduleDef), LowFirGraph, ModuleRoots, this, false, RootHelper ?? this);
         }
 
         public VisitHelper ForNewCondModule(string moduleName, FIRRTL.DefModule moduleDef)
         {
-            return new VisitHelper(new GraphFIR.Module(moduleName, null, Mod, moduleDef), LowFirGraph, ModuleRoots, this, true, RootHelper ?? this);
+            return new VisitHelper(new Module(moduleName, null, Mod, moduleDef), LowFirGraph, ModuleRoots, this, true, RootHelper ?? this);
         }
 
-        public void AddNodeToModule(GraphFIR.FIRRTLNode node)
+        public void AddNodeToModule(FIRRTLNode node)
         {
             Mod.AddNode(node);
         }
@@ -116,7 +117,7 @@ namespace ChiselDebug
 
         public FIRRTL.FirrtlNode GetDefNodeFromLowFirrtlGraph(string nodeName)
         {
-            GraphFIR.Module lowFirMod = LowFirGraph.MainModule;
+            Module lowFirMod = LowFirGraph.MainModule;
 
             string[] pathToModule = GetPathToCurrentActualModule();
 
@@ -124,14 +125,14 @@ namespace ChiselDebug
             //that we start with
             foreach (var pathModName in pathToModule.Skip(1))
             {
-                GraphFIR.FIRRTLNode[] lowModNodes = lowFirMod.GetAllNodes();
-                GraphFIR.FIRRTLNode childLowModNode = lowModNodes.FirstOrDefault(x => x is GraphFIR.Module mod && mod.Name == pathModName);
+                FIRRTLNode[] lowModNodes = lowFirMod.GetAllNodes();
+                FIRRTLNode childLowModNode = lowModNodes.FirstOrDefault(x => x is Module mod && mod.Name == pathModName);
                 if (childLowModNode == null)
                 {
                     throw new Exception("High level firrtl module path didn't match low level firrtl module path.");
                 }
 
-                lowFirMod = (GraphFIR.Module)childLowModNode;
+                lowFirMod = (Module)childLowModNode;
             }
 
             //This is a meh way of going about getting the correct node.
@@ -171,9 +172,9 @@ namespace ChiselDebug
             {
                 throw new ChiselDebugException("Circuit does not contain a module with the circuits name.");
             }
-            GraphFIR.Module mainModule = VisitModule(helper, null, mainModDef);
+            Module mainModule = VisitModule(helper, null, mainModDef);
             GraphFIR.IO.AggregateConnections.ConnectionAllAggregateIO(mainModule);
-            foreach (var mod in mainModule.GetAllNestedNodesOfType<GraphFIR.Module>())
+            foreach (var mod in mainModule.GetAllNestedNodesOfType<Module>())
             {
                 CleanupModule(mod);
             }
@@ -181,7 +182,7 @@ namespace ChiselDebug
             return new CircuitGraph(circuit.Main, mainModule);
         }
 
-        private static GraphFIR.Module VisitModule(VisitHelper parentHelper, string moduleInstanceName, FIRRTL.DefModule moduleDef)
+        private static Module VisitModule(VisitHelper parentHelper, string moduleInstanceName, FIRRTL.DefModule moduleDef)
         {
             if (moduleDef is FIRRTL.Module mod)
             {
@@ -211,7 +212,7 @@ namespace ChiselDebug
             }
         }
 
-        private static void CleanupModule(GraphFIR.Module mod)
+        private static void CleanupModule(Module mod)
         {
             //In a truely stupid move, FIRRTL supports connecting
             //Sinks to other sinks. In order to support that case
@@ -305,7 +306,7 @@ namespace ChiselDebug
                 var clock = (GraphFIR.IO.Output)VisitExp(helper, stop.Clk, GraphFIR.IO.FlowChange.Source);
                 var enable = (GraphFIR.IO.Output)VisitExp(helper, stop.Enabled, GraphFIR.IO.FlowChange.Source);
 
-                var firStop = new GraphFIR.FirStop(clock, enable, stop.Ret, stop);
+                var firStop = new FirStop(clock, enable, stop.Ret, stop);
                 helper.AddNodeToModule(firStop);
             }
             else if (statement is FIRRTL.Attach)
@@ -359,7 +360,7 @@ namespace ChiselDebug
                 else
                 {
                     GraphFIR.IO.FIRIO inputType = VisitTypeAsPassive(helper, FIRRTL.Dir.Input, null, cmem.Type);
-                    var memory = new GraphFIR.Memory(cmem.Name, inputType, cmem.Size, 0, 0, cmem.Ruw, cmem);
+                    var memory = new Memory(cmem.Name, inputType, cmem.Size, 0, 0, cmem.Ruw, cmem);
 
                     helper.AddNodeToModule(memory);
                 }
@@ -409,7 +410,7 @@ namespace ChiselDebug
             {
                 GraphFIR.IO.FIRIO inputType = VisitTypeAsPassive(helper, FIRRTL.Dir.Output, null, defWire.Type);
                 inputType = inputType.ToFlow(GraphFIR.IO.FlowChange.Sink, null);
-                GraphFIR.Wire wire = new GraphFIR.Wire(defWire.Name, inputType, defWire);
+                Wire wire = new Wire(defWire.Name, inputType, defWire);
 
                 helper.AddNodeToModule(wire);
             }
@@ -426,12 +427,12 @@ namespace ChiselDebug
                 }
 
                 GraphFIR.IO.FIRIO inputType = VisitTypeAsPassive(helper, FIRRTL.Dir.Input, null, reg.Type);
-                GraphFIR.Register register = new GraphFIR.Register(reg.Name, inputType, clock, reset, initValue, reg);
+                Register register = new Register(reg.Name, inputType, clock, reset, initValue, reg);
                 helper.AddNodeToModule(register);
             }
             else if (statement is FIRRTL.DefInstance instance)
             {
-                GraphFIR.Module mod = VisitModule(helper, instance.Name, helper.ModuleRoots[instance.Module]);
+                Module mod = VisitModule(helper, instance.Name, helper.ModuleRoots[instance.Module]);
                 helper.AddNodeToModule(mod);
             }
             else if (statement is FIRRTL.DefNode node)
@@ -448,7 +449,7 @@ namespace ChiselDebug
             else if (statement is FIRRTL.DefMemory mem)
             {
                 GraphFIR.IO.FIRIO inputType = VisitTypeAsPassive(helper, FIRRTL.Dir.Input, null, mem.Type);
-                var memory = new GraphFIR.Memory(mem.Name, inputType, mem.Depth, mem.ReadLatency, mem.WriteLatency, mem.Ruw, mem);
+                var memory = new Memory(mem.Name, inputType, mem.Depth, mem.ReadLatency, mem.WriteLatency, mem.Ruw, mem);
 
                 foreach (var portName in mem.Readers)
                 {
@@ -489,8 +490,8 @@ namespace ChiselDebug
 
         private static void ConnectIO(VisitHelper helper, GraphFIR.IO.FIRIO from, GraphFIR.IO.FIRIO to, bool isPartial, bool canBeConditional = true)
         {
-            GraphFIR.Module fromMod = from.GetModResideIn();
-            GraphFIR.Module toMod = to.GetModResideIn();
+            Module fromMod = from.GetModResideIn();
+            Module toMod = to.GetModResideIn();
 
             //If going from inside to outside or outside to outside
             //then add condition to that connection if currently in
@@ -523,14 +524,14 @@ namespace ChiselDebug
 
         private static void VisitConditional(VisitHelper parentHelper, FIRRTL.Conditionally conditional)
         {
-            GraphFIR.Conditional cond = new GraphFIR.Conditional(conditional);
+            Conditional cond = new Conditional(conditional);
 
             void AddCondModule(GraphFIR.IO.Output ena, FIRRTL.Statement body)
             {
                 VisitHelper helper = parentHelper.ForNewCondModule(parentHelper.GetUniqueName(), null);
 
-                var internalEnaDummy = new GraphFIR.DummyPassthrough(ena);
-                var internalUseEna = new GraphFIR.DummySink(internalEnaDummy.Result);
+                var internalEnaDummy = new DummyPassthrough(ena);
+                var internalUseEna = new DummySink(internalEnaDummy.Result);
                 helper.AddNodeToModule(internalEnaDummy);
                 helper.AddNodeToModule(internalUseEna);
                 helper.Mod.SetEnableCond(internalEnaDummy.Result);
@@ -554,7 +555,7 @@ namespace ChiselDebug
                 GraphFIR.IO.Output ifEnableCond = enableCond;
                 if (parentHelper.Mod.IsConditional)
                 {
-                    GraphFIR.FIRAnd chainConditions = new GraphFIR.FIRAnd(parentHelper.Mod.EnableCon, enableCond, new FIRRTL.UIntType(1), null);
+                    FIRAnd chainConditions = new FIRAnd(parentHelper.Mod.EnableCon, enableCond, new FIRRTL.UIntType(1), null);
                     parentHelper.AddNodeToModule(chainConditions);
 
                     ifEnableCond = chainConditions.Result;
@@ -564,13 +565,13 @@ namespace ChiselDebug
             }
             if (conditional.HasElse())
             {
-                GraphFIR.FIRNot notEnableComponent = new GraphFIR.FIRNot(enableCond, new FIRRTL.UIntType(1), null);
+                FIRNot notEnableComponent = new FIRNot(enableCond, new FIRRTL.UIntType(1), null);
                 parentHelper.AddNodeToModule(notEnableComponent);
 
                 GraphFIR.IO.Output elseEnableCond = notEnableComponent.Result;
                 if (parentHelper.Mod.IsConditional)
                 {
-                    GraphFIR.FIRAnd chainConditions = new GraphFIR.FIRAnd(parentHelper.Mod.EnableCon, elseEnableCond, new FIRRTL.UIntType(1), null);
+                    FIRAnd chainConditions = new FIRAnd(parentHelper.Mod.EnableCon, elseEnableCond, new FIRRTL.UIntType(1), null);
                     parentHelper.AddNodeToModule(chainConditions);
 
                     elseEnableCond = chainConditions.Result;
@@ -591,7 +592,7 @@ namespace ChiselDebug
 
             if (exp is FIRRTL.Literal lit)
             {
-                GraphFIR.ConstValue value = new GraphFIR.ConstValue(lit);
+                ConstValue value = new ConstValue(lit);
 
                 helper.AddNodeToModule(value);
                 return value.Result;
@@ -599,138 +600,138 @@ namespace ChiselDebug
             else if (exp is FIRRTL.DoPrim prim)
             {
                 var args = prim.Args.Select(x => VisitExp(helper, x, GraphFIR.IO.FlowChange.Source)).Cast<GraphFIR.IO.Output>().ToArray();
-                GraphFIR.FIRRTLPrimOP nodePrim;
+                FIRRTLPrimOP nodePrim;
                 if (prim.Op is FIRRTL.Add)
                 {
-                    nodePrim = new GraphFIR.FIRAdd(args[0], args[1], prim.Type, prim);
+                    nodePrim = new FIRAdd(args[0], args[1], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Sub)
                 {
-                    nodePrim = new GraphFIR.FIRSub(args[0], args[1], prim.Type, prim);
+                    nodePrim = new FIRSub(args[0], args[1], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Mul)
                 {
-                    nodePrim = new GraphFIR.FIRMul(args[0], args[1], prim.Type, prim);
+                    nodePrim = new FIRMul(args[0], args[1], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Div)
                 {
-                    nodePrim = new GraphFIR.FIRDiv(args[0], args[1], prim.Type, prim);
+                    nodePrim = new FIRDiv(args[0], args[1], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Rem)
                 {
-                    nodePrim = new GraphFIR.FIRRem(args[0], args[1], prim.Type, prim);
+                    nodePrim = new FIRRem(args[0], args[1], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Dshl)
                 {
-                    nodePrim = new GraphFIR.FIRDshl(args[0], args[1], prim.Type, prim);
+                    nodePrim = new FIRDshl(args[0], args[1], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Dshr)
                 {
-                    nodePrim = new GraphFIR.FIRDshr(args[0], args[1], prim.Type, prim);
+                    nodePrim = new FIRDshr(args[0], args[1], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Cat)
                 {
-                    nodePrim = new GraphFIR.FIRCat(args[0], args[1], prim.Type, prim);
+                    nodePrim = new FIRCat(args[0], args[1], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Eq)
                 {
-                    nodePrim = new GraphFIR.FIREq(args[0], args[1], prim.Type, prim);
+                    nodePrim = new FIREq(args[0], args[1], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Neq)
                 {
-                    nodePrim = new GraphFIR.FIRNeq(args[0], args[1], prim.Type, prim);
+                    nodePrim = new FIRNeq(args[0], args[1], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Geq)
                 {
-                    nodePrim = new GraphFIR.FIRGeq(args[0], args[1], prim.Type, prim);
+                    nodePrim = new FIRGeq(args[0], args[1], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Leq)
                 {
-                    nodePrim = new GraphFIR.FIRLeq(args[0], args[1], prim.Type, prim);
+                    nodePrim = new FIRLeq(args[0], args[1], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Gt)
                 {
-                    nodePrim = new GraphFIR.FIRGt(args[0], args[1], prim.Type, prim);
+                    nodePrim = new FIRGt(args[0], args[1], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Lt)
                 {
-                    nodePrim = new GraphFIR.FIRLt(args[0], args[1], prim.Type, prim);
+                    nodePrim = new FIRLt(args[0], args[1], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.And)
                 {
-                    nodePrim = new GraphFIR.FIRAnd(args[0], args[1], prim.Type, prim);
+                    nodePrim = new FIRAnd(args[0], args[1], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Or)
                 {
-                    nodePrim = new GraphFIR.FIROr(args[0], args[1], prim.Type, prim);
+                    nodePrim = new FIROr(args[0], args[1], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Xor)
                 {
-                    nodePrim = new GraphFIR.FIRXor(args[0], args[1], prim.Type, prim);
+                    nodePrim = new FIRXor(args[0], args[1], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Head)
                 {
-                    nodePrim = new GraphFIR.Head(args[0], prim.Type, (int)prim.Consts[0], prim);
+                    nodePrim = new Head(args[0], prim.Type, (int)prim.Consts[0], prim);
                 }
                 else if (prim.Op is FIRRTL.Tail)
                 {
-                    nodePrim = new GraphFIR.Tail(args[0], prim.Type, (int)prim.Consts[0], prim);
+                    nodePrim = new Tail(args[0], prim.Type, (int)prim.Consts[0], prim);
                 }
                 else if (prim.Op is FIRRTL.Bits)
                 {
-                    nodePrim = new GraphFIR.BitExtract(args[0], prim.Type, (int)prim.Consts[1], (int)prim.Consts[0], prim);
+                    nodePrim = new BitExtract(args[0], prim.Type, (int)prim.Consts[1], (int)prim.Consts[0], prim);
                 }
                 else if (prim.Op is FIRRTL.Pad)
                 {
-                    nodePrim = new GraphFIR.Pad(args[0], prim.Type, (int)prim.Consts[0], prim);
+                    nodePrim = new Pad(args[0], prim.Type, (int)prim.Consts[0], prim);
                 }
                 else if (prim.Op is FIRRTL.AsUInt)
                 {
-                    nodePrim = new GraphFIR.FIRAsUInt(args[0], prim.Type, prim);
+                    nodePrim = new FIRAsUInt(args[0], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.AsSInt)
                 {
-                    nodePrim = new GraphFIR.FIRAsSInt(args[0], prim.Type, prim);
+                    nodePrim = new FIRAsSInt(args[0], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.AsClock)
                 {
-                    nodePrim = new GraphFIR.FIRAsClock(args[0], prim.Type, prim);
+                    nodePrim = new FIRAsClock(args[0], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Cvt)
                 {
-                    nodePrim = new GraphFIR.FIRCvt(args[0], prim.Type, prim);
+                    nodePrim = new FIRCvt(args[0], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Neg)
                 {
-                    nodePrim = new GraphFIR.FIRNeg(args[0], prim.Type, prim);
+                    nodePrim = new FIRNeg(args[0], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Not)
                 {
-                    nodePrim = new GraphFIR.FIRNot(args[0], prim.Type, prim);
+                    nodePrim = new FIRNot(args[0], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Andr)
                 {
-                    nodePrim = new GraphFIR.FIRAndr(args[0], prim.Type, prim);
+                    nodePrim = new FIRAndr(args[0], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Orr)
                 {
-                    nodePrim = new GraphFIR.FIROrr(args[0], prim.Type, prim);
+                    nodePrim = new FIROrr(args[0], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Xorr)
                 {
-                    nodePrim = new GraphFIR.FIRXorr(args[0], prim.Type, prim);
+                    nodePrim = new FIRXorr(args[0], prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Shl)
                 {
                     var constLit = new FIRRTL.UIntLiteral(prim.Consts[0], (int)prim.Consts[0].GetBitLength());
                     var constOutput = (GraphFIR.IO.Output)VisitExp(helper, constLit, GraphFIR.IO.FlowChange.Source);
-                    nodePrim = new GraphFIR.FIRShl(args[0], constOutput, prim.Type, prim);
+                    nodePrim = new FIRShl(args[0], constOutput, prim.Type, prim);
                 }
                 else if (prim.Op is FIRRTL.Shr)
                 {
                     var constLit = new FIRRTL.UIntLiteral(prim.Consts[0], (int)prim.Consts[0].GetBitLength());
                     var constOutput = (GraphFIR.IO.Output)VisitExp(helper, constLit, GraphFIR.IO.FlowChange.Source);
-                    nodePrim = new GraphFIR.FIRShr(args[0], constOutput, prim.Type, prim);
+                    nodePrim = new FIRShr(args[0], constOutput, prim.Type, prim);
                 }
                 else
                 {
@@ -746,7 +747,7 @@ namespace ChiselDebug
                 var ifTrue = VisitExp(helper, mux.TrueValue, GraphFIR.IO.FlowChange.Source);
                 var ifFalse = VisitExp(helper, mux.FalseValue, GraphFIR.IO.FlowChange.Source);
 
-                GraphFIR.Mux node = new GraphFIR.Mux(new List<GraphFIR.IO.FIRIO>() { ifTrue, ifFalse }, cond, mux);
+                Mux node = new Mux(new List<GraphFIR.IO.FIRIO>() { ifTrue, ifFalse }, cond, mux);
 
                 helper.AddNodeToModule(node);
                 return node.Result;
@@ -756,7 +757,7 @@ namespace ChiselDebug
                 var cond = (GraphFIR.IO.Output)VisitExp(helper, validIf.Cond, GraphFIR.IO.FlowChange.Source);
                 var ifValid = VisitExp(helper, validIf.Value, GraphFIR.IO.FlowChange.Source);
 
-                GraphFIR.Mux node = new GraphFIR.Mux(new List<GraphFIR.IO.FIRIO>() { ifValid }, cond, validIf);
+                Mux node = new Mux(new List<GraphFIR.IO.FIRIO>() { ifValid }, cond, validIf);
 
                 helper.AddNodeToModule(node);
                 return node.Result;
@@ -794,14 +795,14 @@ namespace ChiselDebug
 
                 if (ioFlow == GraphFIR.IO.FlowChange.Source)
                 {
-                    GraphFIR.Mux node = new GraphFIR.Mux(vec.GetIOInOrder().ToList(), index, null, true);
+                    Mux node = new Mux(vec.GetIOInOrder().ToList(), index, null, true);
                     helper.AddNodeToModule(node);
 
                     refContainer = node.Result;
                 }
                 else
                 {
-                    GraphFIR.VectorAssign vecAssign = new GraphFIR.VectorAssign(vec, index, helper.Mod.EnableCon, null);
+                    VectorAssign vecAssign = new VectorAssign(vec, index, helper.Mod.EnableCon, null);
                     helper.AddNodeToModule(vecAssign);
 
                     refContainer = vecAssign.GetAssignIO();

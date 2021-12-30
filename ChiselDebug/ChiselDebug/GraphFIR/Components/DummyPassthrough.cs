@@ -1,17 +1,17 @@
 ﻿using ChiselDebug.GraphFIR.IO;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 
-namespace ChiselDebug.GraphFIR
+namespace ChiselDebug.GraphFIR.Components
 {
-    public sealed class DummySink : FIRRTLNode, INoPlaceAndRoute
+    public sealed class DummyPassthrough : FIRRTLNode, INoPlaceAndRoute
     {
         public readonly Input InIO;
+        public readonly Output Result;
 
-        public DummySink(Output outIO) : base(null)
+        public DummyPassthrough(Output outIO) : base(null)
         {
-            this.InIO = (Input)outIO.Flip(this);
+            InIO = (Input)outIO.Flip(this);
+            Result = (Output)outIO.Copy(this);
 
             outIO.ConnectToInput(InIO);
         }
@@ -23,22 +23,25 @@ namespace ChiselDebug.GraphFIR
 
         public override Output[] GetOutputs()
         {
-            return Array.Empty<Output>();
+            return new Output[] { Result };
         }
 
         public override IEnumerable<FIRIO> GetIO()
         {
             yield return InIO;
+            yield return Result;
         }
 
         public override void Compute()
         {
-            InIO.UpdateValueFromSource();
+            Result.Value.UpdateValue(ref InIO.UpdateValueFromSourceFast());
         }
 
         internal override void InferType()
         {
             InIO.InferType();
+
+            Result.SetType(InIO.Type);
         }
     }
 }

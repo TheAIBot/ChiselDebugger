@@ -1,10 +1,11 @@
 ﻿using ChiselDebug.GraphFIR;
 using ChiselDebug.GraphFIR.IO;
+using ChiselDebug.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ChiselDebug
+namespace ChiselDebug.Routing
 {
     public class DirectedIO
     {
@@ -14,9 +15,9 @@ namespace ChiselDebug
 
         public DirectedIO(FIRIO io, Point pos, MoveDirs initialDir)
         {
-            this.IO = io;
-            this.Position = pos;
-            this.InitialDir = initialDir;
+            IO = io;
+            Position = pos;
+            InitialDir = initialDir;
         }
 
         public DirectedIO WithOffsetPosition(Point offset)
@@ -26,7 +27,7 @@ namespace ChiselDebug
 
         public override bool Equals(object obj)
         {
-            return obj is DirectedIO dirIO && 
+            return obj is DirectedIO dirIO &&
                 IO == dirIO.IO &&
                 Position == dirIO.Position &&
                 InitialDir == dirIO.InitialDir;

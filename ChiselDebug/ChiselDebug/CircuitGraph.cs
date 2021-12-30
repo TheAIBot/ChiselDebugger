@@ -1,6 +1,6 @@
 ﻿using ChiselDebug.CombGraph;
 using ChiselDebug.CombGraph.CombGraphOptimizations;
-using ChiselDebug.GraphFIR;
+using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
 using System;
 using System.Collections.Generic;

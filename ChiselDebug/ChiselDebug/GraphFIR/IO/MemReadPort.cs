@@ -1,4 +1,5 @@
-﻿using ChiselDebug.GraphFIR.IO;
+﻿using ChiselDebug.GraphFIR.Components;
+using ChiselDebug.GraphFIR.IO;
 using FIRRTL;
 using System;
 using System.Collections.Generic;

@@ -1,6 +1,6 @@
-﻿using ChiselDebug;
-using ChiselDebug.GraphFIR;
+﻿using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
+using ChiselDebug.Placing;
 using ChiselDebug.Routing;
 using System;
 using System.Collections.Generic;

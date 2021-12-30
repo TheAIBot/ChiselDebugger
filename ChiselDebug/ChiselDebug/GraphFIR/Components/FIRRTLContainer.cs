@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using ChiselDebug.GraphFIR.IO;
 using System.Diagnostics;
 
-namespace ChiselDebug.GraphFIR
+namespace ChiselDebug.GraphFIR.Components
 {
     public abstract class FIRRTLContainer : PairedIOFIRRTLNode, IContainerIO
     {

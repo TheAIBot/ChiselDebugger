@@ -1,5 +1,6 @@
 ﻿#nullable enable
 
+using ChiselDebug;
 using ChiselDebug.GraphFIR.IO;
 using FIRRTL;
 using System;
@@ -8,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChiselDebug.GraphFIR
+namespace ChiselDebug.GraphFIR.Components
 {
     public sealed class Register : PairedIOFIRRTLNode, IStatePreserving
     {
@@ -26,19 +27,19 @@ namespace ChiselDebug.GraphFIR
                 throw new Exception("Register must be a passive input type.");
             }
 
-            this.Name = name;
-            this.In = inputType.Copy(this);
+            Name = name;
+            In = inputType.Copy(this);
             In.SetName(Name + "/in");
 
-            this.Result = In.Flip(this);
+            Result = In.Flip(this);
             Result.SetName(Name);
 
-            this.Clock = new Input(this, "clock", clock.Type);
+            Clock = new Input(this, "clock", clock.Type);
             clock.ConnectToInput(Clock);
 
             if (reset != null)
             {
-                this.Reset = new Input(this, "reset", reset.Type);
+                Reset = new Input(this, "reset", reset.Type);
                 reset.ConnectToInput(Reset);
             }
 
@@ -49,7 +50,7 @@ namespace ChiselDebug.GraphFIR
                     throw new Exception("Register init must be of a passive output type.");
                 }
 
-                this.Init = init.Flip(this);
+                Init = init.Flip(this);
                 Init.SetName("init");
                 init.ConnectToInput(Init);
             }

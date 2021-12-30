@@ -3,7 +3,7 @@ using FIRRTL;
 using System;
 using System.Collections.Generic;
 
-namespace ChiselDebug.GraphFIR
+namespace ChiselDebug.GraphFIR.Components
 {
     public abstract class FIRRTLPrimOP : FIRRTLNode
     {
@@ -11,7 +11,7 @@ namespace ChiselDebug.GraphFIR
 
         public FIRRTLPrimOP(IFIRType type, FirrtlNode defNode) : base(defNode)
         {
-            this.Result = new Output(this, null, type);
+            Result = new Output(this, null, type);
         }
 
         public override Output[] GetOutputs()

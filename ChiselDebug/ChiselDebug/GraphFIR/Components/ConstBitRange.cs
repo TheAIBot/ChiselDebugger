@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using VCDReader;
 
-namespace ChiselDebug.GraphFIR
+namespace ChiselDebug.GraphFIR.Components
 {
     public abstract class ConstBitRange : FIRRTLPrimOP
     {
@@ -17,8 +17,8 @@ namespace ChiselDebug.GraphFIR
 
         public ConstBitRange(string name, Output arg1, IFIRType outType, FirrtlNode defNode) : base(outType, defNode)
         {
-            this.OpName = name;
-            this.In = new Input(this, arg1.Type);
+            OpName = name;
+            In = new Input(this, arg1.Type);
             arg1.ConnectToInput(In);
         }
 
@@ -53,7 +53,7 @@ namespace ChiselDebug.GraphFIR
         public readonly int FromMSB;
         public Head(Output arg1, IFIRType outType, int fromMSB, FirrtlNode defNode) : base("head", arg1, outType, defNode)
         {
-            this.FromMSB = fromMSB;
+            FromMSB = fromMSB;
         }
 
         protected override void ConstBitRangeCompute(ref BinaryVarValue a, ref BinaryVarValue result)
@@ -85,7 +85,7 @@ namespace ChiselDebug.GraphFIR
         public readonly int FromLSB;
         public Tail(Output arg1, IFIRType outType, int fromLSB, FirrtlNode defNode) : base("tail", arg1, outType, defNode)
         {
-            this.FromLSB = fromLSB;
+            FromLSB = fromLSB;
         }
 
         protected override void ConstBitRangeCompute(ref BinaryVarValue a, ref BinaryVarValue result)
@@ -118,8 +118,8 @@ namespace ChiselDebug.GraphFIR
         public readonly int EndInclusive;
         public BitExtract(Output arg1, IFIRType outType, int startInclusive, int endInclusive, FirrtlNode defNode) : base("bits", arg1, outType, defNode)
         {
-            this.StartInclusive = startInclusive;
-            this.EndInclusive = endInclusive;
+            StartInclusive = startInclusive;
+            EndInclusive = endInclusive;
         }
 
         protected override void ConstBitRangeCompute(ref BinaryVarValue a, ref BinaryVarValue result)
@@ -151,7 +151,7 @@ namespace ChiselDebug.GraphFIR
         public readonly int WidthAfterPad;
         public Pad(Output arg1, IFIRType outType, int newWidth, FirrtlNode defNode) : base("pad", arg1, outType, defNode)
         {
-            this.WidthAfterPad = newWidth;
+            WidthAfterPad = newWidth;
         }
 
         protected override void ConstBitRangeCompute(ref BinaryVarValue a, ref BinaryVarValue result)

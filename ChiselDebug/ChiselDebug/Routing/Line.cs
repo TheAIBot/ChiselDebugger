@@ -1,9 +1,10 @@
-﻿using System;
+﻿using ChiselDebug.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ChiselDebug
+namespace ChiselDebug.Routing
 {
     public readonly struct Line
     {
@@ -12,8 +13,8 @@ namespace ChiselDebug
 
         public Line(Point start, Point end)
         {
-            this.Start = start;
-            this.End = end;
+            Start = start;
+            End = end;
         }
 
         public int GetManhattanDistance()

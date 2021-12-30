@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using VCDReader;
 
-namespace ChiselDebug.GraphFIR
+namespace ChiselDebug.GraphFIR.Components
 {
     public sealed class VectorAssign : FIRRTLNode
     {
@@ -26,14 +26,14 @@ namespace ChiselDebug.GraphFIR
                 throw new Exception("Vector assign input must be a passive input type.");
             }
 
-            this.VecIn = (Vector)input.Copy(this);
-            this.Index = (Input)index.Flip(this);
-            this.Value = VecIn.GetIndex(0).Copy(this);
-            this.VecOut = (Vector)input.Flip(this);
+            VecIn = (Vector)input.Copy(this);
+            Index = (Input)index.Flip(this);
+            Value = VecIn.GetIndex(0).Copy(this);
+            VecOut = (Vector)input.Flip(this);
 
-            this.VecInputs = VecIn.Flatten().Cast<Input>().ToArray();
-            this.VecOutputs = VecOut.Flatten().Cast<Output>().ToArray();
-            this.ValueInputs = Value.Flatten().Cast<Input>().ToArray();
+            VecInputs = VecIn.Flatten().Cast<Input>().ToArray();
+            VecOutputs = VecOut.Flatten().Cast<Output>().ToArray();
+            ValueInputs = Value.Flatten().Cast<Input>().ToArray();
 
             Input[] inputs = input.Flatten().Cast<Input>().ToArray();
             for (int i = 0; i < inputs.Length; i++)

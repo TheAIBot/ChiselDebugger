@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using VCDReader;
 
-namespace ChiselDebug.GraphFIR
+namespace ChiselDebug.GraphFIR.Components
 {
     public sealed class Mux : PairedIOFIRRTLNode
     {
@@ -29,10 +29,10 @@ namespace ChiselDebug.GraphFIR
                 throw new Exception("Inputs to mux must all be passive output types.");
             }
 
-            this.Choises = choises.Select(x => x.Flip(this)).ToArray();
-            this.Decider = new Input(this, decider.Type);
-            this.Result = choises.First().Copy(this);
-            this.IsVectorIndexer = isVectorIndexer;
+            Choises = choises.Select(x => x.Flip(this)).ToArray();
+            Decider = new Input(this, decider.Type);
+            Result = choises.First().Copy(this);
+            IsVectorIndexer = isVectorIndexer;
             foreach (var res in Result.Flatten())
             {
                 res.RemoveType();
@@ -50,9 +50,9 @@ namespace ChiselDebug.GraphFIR
 
             AddOneToManyPairedIO(Result, Choises.ToList());
 
-            this.ChoiseInputs = Choises.SelectMany(x => x.Flatten().Cast<Input>()).ToArray();
-            this.ResultOutputs = Result.Flatten().Cast<Output>().ToArray();
-            this.UnknownOutputs = new BinaryVarValue[ResultOutputs.Length];
+            ChoiseInputs = Choises.SelectMany(x => x.Flatten().Cast<Input>()).ToArray();
+            ResultOutputs = Result.Flatten().Cast<Output>().ToArray();
+            UnknownOutputs = new BinaryVarValue[ResultOutputs.Length];
         }
 
         public override Input[] GetInputs()

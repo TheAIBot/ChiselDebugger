@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Numerics;
 using VCDReader;
 
-namespace ChiselDebug.GraphFIR
+namespace ChiselDebug.GraphFIR.Components
 {
     public abstract class BiArgMonoResPrimOp : FIRRTLPrimOP
     {
@@ -16,9 +16,9 @@ namespace ChiselDebug.GraphFIR
 
         public BiArgMonoResPrimOp(string opName, Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base(outType, defNode)
         {
-            this.OpName = opName;
-            this.A = new Input(this, aIn.Type);
-            this.B = new Input(this, bIn.Type);
+            OpName = opName;
+            A = new Input(this, aIn.Type);
+            B = new Input(this, bIn.Type);
 
             aIn.ConnectToInput(A);
             bIn.ConnectToInput(B);
@@ -406,7 +406,7 @@ namespace ChiselDebug.GraphFIR
         public static BitState CompOpPropX(BitState a, BitState computed)
         {
             BitState isNotBinary = a & BitState.X;
-            return isNotBinary | ((BitState)(((int)isNotBinary >> 1) ^ 1) & computed);
+            return isNotBinary | (BitState)((int)isNotBinary >> 1 ^ 1) & computed;
         }
     }
 
@@ -517,7 +517,7 @@ namespace ChiselDebug.GraphFIR
         private readonly int ShiftBy;
         public FIRShl(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base("<<", aIn, bIn, outType, defNode)
         {
-            this.ShiftBy = (int)((ConstValue)bIn.Node).Value.Value;
+            ShiftBy = (int)((ConstValue)bIn.Node).Value.Value;
         }
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
@@ -547,7 +547,7 @@ namespace ChiselDebug.GraphFIR
         private readonly int ShiftBy;
         public FIRShr(Output aIn, Output bIn, IFIRType outType, FirrtlNode defNode) : base(">>", aIn, bIn, outType, defNode)
         {
-            this.ShiftBy = (int)((ConstValue)bIn.Node).Value.Value;
+            ShiftBy = (int)((ConstValue)bIn.Node).Value.Value;
         }
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)

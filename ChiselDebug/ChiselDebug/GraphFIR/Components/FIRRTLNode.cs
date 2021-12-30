@@ -2,7 +2,7 @@
 using FIRRTL;
 using System.Collections.Generic;
 
-namespace ChiselDebug.GraphFIR
+namespace ChiselDebug.GraphFIR.Components
 {
     public abstract class FIRRTLNode
     {
@@ -11,7 +11,7 @@ namespace ChiselDebug.GraphFIR
 
         public FIRRTLNode(FirrtlNode defNode)
         {
-            this.FirDefNode = defNode;
+            FirDefNode = defNode;
         }
 
         public void SetModResideIn(Module mod)

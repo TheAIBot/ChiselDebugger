@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Numerics;
 using VCDReader;
 
-namespace ChiselDebug.GraphFIR
+namespace ChiselDebug.GraphFIR.Components
 {
     public abstract class MonoArgMonoResPrimOp : FIRRTLPrimOP
     {
@@ -15,8 +15,8 @@ namespace ChiselDebug.GraphFIR
 
         public MonoArgMonoResPrimOp(string opName, Output aIn, IFIRType outType, FirrtlNode defNode) : base(outType, defNode)
         {
-            this.OpName = opName;
-            this.A = new Input(this, aIn.Type);
+            OpName = opName;
+            A = new Input(this, aIn.Type);
 
             aIn.ConnectToInput(A);
         }
@@ -179,7 +179,7 @@ namespace ChiselDebug.GraphFIR
         {
             for (int i = 0; i < a.Bits.Length; i++)
             {
-                result.Bits[i] = FIRBitwise.CompOpPropX(a.Bits[i], (BitState)(((int)a.Bits[i] & 1) ^ 1));
+                result.Bits[i] = FIRBitwise.CompOpPropX(a.Bits[i], (BitState)((int)a.Bits[i] & 1 ^ 1));
             }
 
             result.IsValidBinary = a.IsValidBinary;

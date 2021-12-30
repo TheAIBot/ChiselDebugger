@@ -1,4 +1,4 @@
-﻿namespace ChiselDebug.GraphFIR
+﻿namespace ChiselDebug.GraphFIR.Components
 {
     public interface IStatePreserving { }
 }

@@ -1,4 +1,5 @@
-﻿using ChiselDebug;
+﻿using ChiselDebug.Routing;
+using ChiselDebug.Utilities;
 
 namespace ChiselDebuggerRazor.Code
 {
