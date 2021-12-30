@@ -1,5 +1,4 @@
 ﻿using ChiselDebug;
-using ChiselDebug.CombGraph;
 using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
 using ChiselDebug.Placing;
@@ -7,14 +6,11 @@ using ChiselDebug.Routing;
 using ChiselDebug.Timeline;
 using ChiselDebug.Utilities;
 using ChiselDebuggerRazor.Code.Templates;
-using ChiselDebuggerRazor.Components;
-using ChiselDebuggerRazor.Pages.FIRRTLUI;
 using ChiselDebuggerRazor.Pages.FIRRTLUI.IOUI;
 using Microsoft.AspNetCore.Components.Web;
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks.Dataflow;
 using VCDReader;
 
 namespace ChiselDebuggerRazor.Code.Controllers

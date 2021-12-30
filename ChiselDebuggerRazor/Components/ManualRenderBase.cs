@@ -1,7 +1,4 @@
 ﻿using Microsoft.AspNetCore.Components;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Components
@@ -40,6 +37,6 @@ namespace ChiselDebuggerRazor.Components
             return base.OnParametersSetAsync();
         }
 
-        protected virtual void OnFirstParametersSetAsync(){ }
+        protected virtual void OnFirstParametersSetAsync() { }
     }
 }

@@ -1,8 +1,6 @@
 ﻿using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.Routing;
 using ChiselDebug.Utilities;
-using ChiselDebuggerRazor.Components;
-using ChiselDebuggerRazor.Pages.FIRRTLUI;
 using System.Collections.Generic;
 using System.Linq;
 

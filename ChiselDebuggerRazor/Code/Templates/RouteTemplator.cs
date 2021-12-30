@@ -3,12 +3,9 @@ using ChiselDebug.GraphFIR.IO;
 using ChiselDebug.Placing;
 using ChiselDebug.Routing;
 using ChiselDebuggerRazor.Code.Controllers;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Code.Templates
 {

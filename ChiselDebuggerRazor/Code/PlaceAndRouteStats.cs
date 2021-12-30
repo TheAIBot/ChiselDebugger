@@ -39,7 +39,7 @@ namespace ChiselDebuggerRazor.Code
             }
         }
 
-        public void  PlaceDone(ModuleLayout mod)
+        public void PlaceDone(ModuleLayout mod)
         {
             if (HasSeenPlacing.TryAdd(mod, true))
             {

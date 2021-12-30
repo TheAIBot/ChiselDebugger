@@ -1,9 +1,6 @@
 ﻿using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.Utilities;
 using ChiselDebuggerRazor.Code;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Components

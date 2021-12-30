@@ -1,5 +1,4 @@
-﻿using ChiselDebug;
-using ChiselDebuggerRazor.Components;
+﻿using ChiselDebuggerRazor.Components;
 using System.Collections.Generic;
 
 namespace ChiselDebuggerRazor.Code.Controllers
