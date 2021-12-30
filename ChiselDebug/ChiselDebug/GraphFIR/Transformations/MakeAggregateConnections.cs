@@ -1,13 +1,14 @@
 ﻿using ChiselDebug.GraphFIR.Components;
+using ChiselDebug.GraphFIR.IO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ChiselDebug.GraphFIR.IO
+namespace ChiselDebug.GraphFIR.Transformations
 {
-    internal static class AggregateConnections
+    internal static class MakeAggregateConnections
     {
-        internal static void ConnectionAllAggregateIO(Module mod)
+        internal static void Transform(Module mod)
         {
             List<ScalarIO> allScalarIO = mod.GetAllNestedNodesOfType<Module>()
                                             .SelectMany(x => x.GetAllNodesIncludeModule())

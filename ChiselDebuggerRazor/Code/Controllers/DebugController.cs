@@ -1,4 +1,4 @@
-﻿using ChiselDebug;
+﻿using ChiselDebug.GraphFIR.Circuit;
 using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
 using ChiselDebug.Placing;

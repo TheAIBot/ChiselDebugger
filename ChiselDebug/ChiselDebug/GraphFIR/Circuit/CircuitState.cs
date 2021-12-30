@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using VCDReader;
 
-namespace ChiselDebug
+namespace ChiselDebug.GraphFIR.Circuit
 {
     public class CircuitState
     {
@@ -12,8 +12,8 @@ namespace ChiselDebug
 
         private CircuitState(CircuitState copyFrom)
         {
-            this.VariableValues = new Dictionary<string, BinaryVarValue>(copyFrom.VariableValues);
-            this.Time = copyFrom.Time;
+            VariableValues = new Dictionary<string, BinaryVarValue>(copyFrom.VariableValues);
+            Time = copyFrom.Time;
         }
 
         public CircuitState(DumpVars initVarValues)
@@ -25,7 +25,7 @@ namespace ChiselDebug
                 VariableValues.Add(variable.ID, (BinaryVarValue)initValue);
             }
 
-            this.Time = 0;
+            Time = 0;
         }
 
         public CircuitState(List<List<VarDef>> varDefs)
@@ -40,7 +40,7 @@ namespace ChiselDebug
                 VariableValues.Add(variable.ID, new BinaryVarValue(bits, variables, true));
             }
 
-            this.Time = 0;
+            Time = 0;
         }
 
         internal void AddChanges(ReadOnlySpan<BinaryVarValue> changes, ulong time)

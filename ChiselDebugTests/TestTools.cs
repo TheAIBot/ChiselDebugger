@@ -1,4 +1,5 @@
-﻿using ChiselDebug;
+﻿using ChiselDebug.GraphFIR.Circuit;
+using ChiselDebug.GraphFIR.Circuit.Converter;
 using ChiselDebug.GraphFIR.IO;
 using ChiselDebug.Timeline;
 using FIRRTL;

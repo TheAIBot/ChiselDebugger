@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using VCDReader;
 
-namespace ChiselDebug
+namespace ChiselDebug.GraphFIR.Circuit
 {
 
     public class CircuitGraph
@@ -24,11 +24,11 @@ namespace ChiselDebug
 
         public CircuitGraph(string name, Module mainModule)
         {
-            this.Name = name;
-            this.MainModule = mainModule;
-            this.ComputeGraph = CombComputeOrder<Computable>.MakeMonoGraph(MainModule);
+            Name = name;
+            MainModule = mainModule;
+            ComputeGraph = CombComputeOrder<Computable>.MakeMonoGraph(MainModule);
             ComputeGraph.InferTypes();
-            this.OptimizedComputegraph = ComputeOptimizer.Optimize(ComputeGraph);
+            OptimizedComputegraph = ComputeOptimizer.Optimize(ComputeGraph);
 
             foreach (var rootStart in ComputeGraph.GetAllRootSources())
             {
