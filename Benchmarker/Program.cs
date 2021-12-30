@@ -37,7 +37,6 @@ namespace Benchmarker
             }
 
             Console.WriteLine((timer.ElapsedMilliseconds / 1000.0f).ToString("N2"));
-            Console.ReadLine();
         }
 
         internal static void VerifyComputeGraph(string moduleName, string extension, bool isVerilogVCD, string modulePath)
@@ -84,7 +83,7 @@ namespace Benchmarker
 
         internal static void VerifyCircuitState(CircuitGraph graph, VCDTimeline timeline, bool isVerilogVCD)
         {
-            graph.SetState(timeline.GetStateAtTime(timeline.TimeInterval.StartInclusive), isVerilogVCD);
+            graph.SetState(timeline.GetStateAtTime(timeline.TimeInterval.StartInclusive));
 
             Stopwatch timer = new Stopwatch();
             timer.Start();
@@ -95,7 +94,7 @@ namespace Benchmarker
                 {
                     break;
                 }
-                graph.SetState(state, isVerilogVCD);
+                graph.SetState(state);
                 graph.ComputeRemainingGraphFast();
 
 
