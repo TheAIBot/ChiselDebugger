@@ -2,7 +2,7 @@
 using ChiselDebuggerRazor.Components;
 using System.Collections.Generic;
 
-namespace ChiselDebuggerRazor.Code
+namespace ChiselDebuggerRazor.Code.Controllers
 {
     public abstract class FIRLayout
     {

@@ -2,6 +2,7 @@
 using ChiselDebug.GraphFIR.IO;
 using ChiselDebug.Placing;
 using ChiselDebug.Routing;
+using ChiselDebuggerRazor.Code.Controllers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

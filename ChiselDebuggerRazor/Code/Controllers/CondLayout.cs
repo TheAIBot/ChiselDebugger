@@ -6,7 +6,7 @@ using ChiselDebuggerRazor.Pages.FIRRTLUI;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ChiselDebuggerRazor.Code
+namespace ChiselDebuggerRazor.Code.Controllers
 {
     public class CondLayout : FIRLayout
     {
@@ -21,7 +21,7 @@ namespace ChiselDebuggerRazor.Code
 
         public CondLayout(Conditional cond)
         {
-            this.Cond = cond;
+            Cond = cond;
         }
 
         public bool IsReadyToRender()

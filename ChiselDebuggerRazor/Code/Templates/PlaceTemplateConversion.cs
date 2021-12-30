@@ -1,6 +1,7 @@
 ﻿using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.Placing;
 using ChiselDebug.Utilities;
+using ChiselDebuggerRazor.Code.Controllers;
 using System.Collections.Generic;
 
 namespace ChiselDebuggerRazor.Code.Templates

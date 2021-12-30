@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ChiselDebuggerRazor.Code
+namespace ChiselDebuggerRazor.Code.Controllers
 {
     public class ModuleLayout : FIRLayout
     {
@@ -31,25 +31,25 @@ namespace ChiselDebuggerRazor.Code
 
         public ModuleLayout(DebugController debugCtrl, Module mod, ModuleUI modUI)
         {
-            this.DebugCtrl = debugCtrl;
-            this.Mod = mod;
-            this.ModUI = modUI;
-            this.WireRouter = new SimpleRouter(Mod);
+            DebugCtrl = debugCtrl;
+            Mod = mod;
+            ModUI = modUI;
+            WireRouter = new SimpleRouter(Mod);
             if (OperatingSystem.IsWindows())
             {
-                this.NodePlacer = new GraphVizPlacer(Mod);
+                NodePlacer = new GraphVizPlacer(Mod);
             }
             else
             {
-                this.NodePlacer = new SimplePlacer(Mod);
+                NodePlacer = new SimplePlacer(Mod);
             }
-            this.ModuleNodes = Mod.GetAllNodes();
-            this.ModuleNodesWithModule = Mod.GetAllNodesIncludeModule();
+            ModuleNodes = Mod.GetAllNodes();
+            ModuleNodesWithModule = Mod.GetAllNodesIncludeModule();
 
             List<FIRIO> allShownIO = new List<FIRIO>();
             allShownIO.AddRange(Mod.GetAllIOOrdered());
             allShownIO.AddRange(allShownIO.Select(x => x.ParentIO).Where(x => x != null).Distinct().ToArray());
-            this.ModuleIO = allShownIO.ToArray();
+            ModuleIO = allShownIO.ToArray();
 
             DebugCtrl.AddModCtrl(Mod.Name, this, ModuleNodes, ModuleNodesWithModule, ModuleIO);
         }

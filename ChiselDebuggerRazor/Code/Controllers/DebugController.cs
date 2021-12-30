@@ -17,7 +17,7 @@ using System.Threading;
 using System.Threading.Tasks.Dataflow;
 using VCDReader;
 
-namespace ChiselDebuggerRazor.Code
+namespace ChiselDebuggerRazor.Code.Controllers
 {
     public class DebugController : IDisposable
     {
@@ -40,7 +40,7 @@ namespace ChiselDebuggerRazor.Code
 
         public DebugController(CircuitGraph graph)
         {
-            this.Graph = graph;
+            Graph = graph;
         }
 
         public void AddVCD(VCD vcd)
