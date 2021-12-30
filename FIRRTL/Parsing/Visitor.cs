@@ -29,20 +29,20 @@ namespace FIRRTL.Parsing
         {
             PrimOp[] allPrimOps = new PrimOp[]
             {
-                new Add(), new  Sub(), new  Mul(), 
-                new  Div(), new  Rem(), new  Lt(), 
-                new  Leq(), new  Gt(), new  Geq(), 
-                new  Eq(), new  Neq(), new  Pad(), 
-                new  AsUInt(), new  AsSInt(), 
-                new  AsInterval(), new  AsClock(), 
-                new AsAsyncReset(), new  Shl(), 
-                new  Shr(), new  Dshl(), new  Dshr(), 
-                new  Neg(), new  Cvt(), new  Not(), 
-                new  And(), new  Or(), new  Xor(), 
-                new  Andr(), new  Orr(), new  Xorr(), 
-                new  Cat(), new  Bits(), new Head(), 
-                new  Tail(), new  AsFixedPoint(), 
-                new  IncP(), new  DecP(), new  SetP(), 
+                new Add(), new  Sub(), new  Mul(),
+                new  Div(), new  Rem(), new  Lt(),
+                new  Leq(), new  Gt(), new  Geq(),
+                new  Eq(), new  Neq(), new  Pad(),
+                new  AsUInt(), new  AsSInt(),
+                new  AsInterval(), new  AsClock(),
+                new AsAsyncReset(), new  Shl(),
+                new  Shr(), new  Dshl(), new  Dshr(),
+                new  Neg(), new  Cvt(), new  Not(),
+                new  And(), new  Or(), new  Xor(),
+                new  Andr(), new  Orr(), new  Xorr(),
+                new  Cat(), new  Bits(), new Head(),
+                new  Tail(), new  AsFixedPoint(),
+                new  IncP(), new  DecP(), new  SetP(),
                 new  Wrap(), new  Clip(), new  Squeeze()
             };
 

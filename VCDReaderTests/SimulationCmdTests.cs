@@ -3,8 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VCDReader;
 
 namespace VCDReaderTests
@@ -131,8 +129,8 @@ b{expectedBits.BitsToString()} !";
         [TestMethod]
         public void ParseVectorBinarySize22ValueChange()
         {
-            BitState[] expectedBits = new BitState[] 
-            { 
+            BitState[] expectedBits = new BitState[]
+            {
                 BitState.One, BitState.One,
                 BitState.Zero, BitState.Zero,
                 BitState.Zero, BitState.One,

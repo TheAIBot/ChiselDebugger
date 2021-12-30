@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Numerics;
-using System.Text;
 
 namespace FIRRTL
 {
@@ -188,7 +187,7 @@ namespace FIRRTL
     public record Statement() : FirrtlNode;
     public record EmptyStmt() : Statement;
     public record Block(List<Statement> Statements) : Statement;
-    public record Conditionally(IInfo Info,  Expression Pred, Statement WhenTrue, Statement Alt) : Statement
+    public record Conditionally(IInfo Info, Expression Pred, Statement WhenTrue, Statement Alt) : Statement
     {
         public bool HasIf()
         {

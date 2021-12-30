@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -141,7 +140,7 @@ namespace VCDReader
             if (Bits.Length <= value.Bits.Length)
             {
                 value.Bits.Slice(0, Bits.Length).CopyTo(Bits);
-                
+
                 //Has shorted it now so need to check if it's valid binary again
                 if (!value.IsValidBinary)
                 {
@@ -345,7 +344,7 @@ namespace VCDReader
             return value;
         }
     }
-    public readonly struct RealVarValue: VarValue
+    public readonly struct RealVarValue : VarValue
     {
         public readonly double Value;
         private readonly List<VarDef>? Vars;
@@ -355,7 +354,7 @@ namespace VCDReader
         {
             this.Value = value;
             this.Vars = variables;
-        }        
+        }
 
         public bool SameValue(VarValue other)
         {

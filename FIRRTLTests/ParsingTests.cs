@@ -1,5 +1,5 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using FIRRTL;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace FIRRTLTests
 {

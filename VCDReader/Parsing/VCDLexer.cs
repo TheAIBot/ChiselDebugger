@@ -7,7 +7,7 @@ namespace VCDReader.Parsing
     internal class VCDLexer : IDisposable
     {
         private readonly BinaryReader Reader;
-        private byte[] Buffer; 
+        private byte[] Buffer;
         private bool ReachedEOF;
         private Memory<byte> AvailableChars;
         private const int DefaultBufferSize = 1024;
@@ -71,7 +71,7 @@ namespace VCDReader.Parsing
                 }
             }
 
-            skipStop:
+        skipStop:
             return AvailableChars.Slice(0, wordLength);
         }
 

@@ -1,7 +1,5 @@
 ﻿using Antlr4.Runtime;
 using FIRRTL.Parsing;
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
