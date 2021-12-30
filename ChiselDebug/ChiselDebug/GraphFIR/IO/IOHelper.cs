@@ -1,8 +1,8 @@
+using ChiselDebug.GraphFIR.Components;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Diagnostics;
-using ChiselDebug.GraphFIR.Components;
+using System.Linq;
 
 namespace ChiselDebug.GraphFIR.IO
 {
@@ -21,7 +21,7 @@ namespace ChiselDebug.GraphFIR.IO
                 Output to = bypassTo[i];
 
                 Connection[] connectFromCons = from.GetConnections();
-                Input[]  connectTo = to.GetConnectedInputs().ToArray();
+                Input[] connectTo = to.GetConnectedInputs().ToArray();
                 from.DisconnectAll();
 
                 foreach (var input in connectTo)
@@ -33,7 +33,7 @@ namespace ChiselDebug.GraphFIR.IO
                     }
                 }
             }
-            
+
             //After bypassing, the io shouldn't be connected to anything
             Debug.Assert(bypassFrom.All(x => !x.IsConnectedToAnything()));
             Debug.Assert(bypassTo.All(x => !x.IsConnectedToAnything()));

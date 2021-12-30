@@ -1,6 +1,5 @@
 ﻿using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
-using System;
 using VCDReader;
 
 namespace ChiselDebug.CombGraph
@@ -114,7 +113,7 @@ namespace ChiselDebug.CombGraph
 
         public override string ToString()
         {
-            if (Con!= null)
+            if (Con != null)
             {
                 return $"Con: {Con.Node}, Module: {Con.GetModResideIn().Name}, Name: {Con.GetFullName()}";
             }

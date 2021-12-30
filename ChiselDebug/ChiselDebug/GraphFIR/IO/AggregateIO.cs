@@ -6,7 +6,7 @@ using System.Linq;
 namespace ChiselDebug.GraphFIR.IO
 {
     public record AggregateConnection(AggregateIO To, Output Condition);
-    public abstract class AggregateIO : FIRIO 
+    public abstract class AggregateIO : FIRIO
     {
         private HashSet<AggregateConnection> Connections = null;
         public bool HasAggregateConnections => Connections?.Count > 0;

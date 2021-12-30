@@ -1,7 +1,4 @@
-﻿using ChiselDebug.GraphFIR;
-using ChiselDebug.GraphFIR.IO;
-using ChiselDebug.Timeline;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using VCDReader;

@@ -209,7 +209,7 @@ namespace ChiselDebug.CombGraph
             }
         }
 
-        protected override void  AddUnblockedToSearch(FIRRTLNode target, Action<Output> addSinkToSearch, List<Computable> computeOrder)
+        protected override void AddUnblockedToSearch(FIRRTLNode target, Action<Output> addSinkToSearch, List<Computable> computeOrder)
         {
             computeOrder.Add(new Computable(target));
 

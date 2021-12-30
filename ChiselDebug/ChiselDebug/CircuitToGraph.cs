@@ -1,9 +1,7 @@
 ﻿using ChiselDebug.GraphFIR.Components;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using static FIRRTL.Extensions;
 
 namespace ChiselDebug
@@ -18,8 +16,8 @@ namespace ChiselDebug
         private readonly VisitHelper RootHelper;
 
         private readonly Stack<GraphFIR.IO.Output> ScopeEnabledConditions = new Stack<GraphFIR.IO.Output>();
-        public GraphFIR.IO.Output ScopeEnabledCond 
-        { 
+        public GraphFIR.IO.Output ScopeEnabledCond
+        {
             get
             {
                 if (ScopeEnabledConditions.Count == 0)
@@ -104,7 +102,7 @@ namespace ChiselDebug
 
             return path.ToArray();
         }
-        
+
         public bool HasLowFirGraph()
         {
             return LowFirGraph != null;
@@ -509,7 +507,7 @@ namespace ChiselDebug
             //If writing to a memory ports data in high level firrtl, then
             //the mask also has to be set to true for the part of the port data
             //that was written to.
-            if (GraphFIR.IO.IOHelper.TryGetParentMemPort(to, out var memPort) && 
+            if (GraphFIR.IO.IOHelper.TryGetParentMemPort(to, out var memPort) &&
                 memPort.FromHighLevelFIRRTL &&
                 GraphFIR.IO.IOHelper.IsIOInMaskableMemPortData(to, memPort))
             {

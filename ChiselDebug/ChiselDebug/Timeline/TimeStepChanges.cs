@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using VCDReader;
 
 namespace ChiselDebug.Timeline

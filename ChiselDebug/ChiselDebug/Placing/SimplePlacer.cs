@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using ChiselDebug.Graphing;
-using System.Linq;
-using System.Diagnostics;
+﻿using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
-using ChiselDebug.GraphFIR.Components;
+using ChiselDebug.Graphing;
 using ChiselDebug.Utilities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ChiselDebug.Placing
 {

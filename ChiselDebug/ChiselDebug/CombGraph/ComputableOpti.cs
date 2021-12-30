@@ -20,7 +20,7 @@ namespace ChiselDebug.CombGraph
             this.Con = con;
         }
 
-        public ComputableOpti(ICompute comp) 
+        public ComputableOpti(ICompute comp)
         {
             this.Node = comp.GetNode();
             this.Con = comp.GetConnection();

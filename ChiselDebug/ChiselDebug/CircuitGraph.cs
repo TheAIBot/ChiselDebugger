@@ -4,7 +4,6 @@ using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;

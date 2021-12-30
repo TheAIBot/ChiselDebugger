@@ -1,9 +1,6 @@
-﻿using ChiselDebug.GraphFIR;
-using ChiselDebug.GraphFIR.IO;
+﻿using ChiselDebug.GraphFIR.IO;
 using ChiselDebug.Utilities;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ChiselDebug.Routing
 {

@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ChiselDebug.GraphFIR.IO
 {
@@ -30,7 +28,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         public Vector(FIRRTLNode node, string name, FIRIO[] ios) : base(node, name)
         {
-            if (!(ios.All(x => x.IsPassiveOfType<Input>()) || 
+            if (!(ios.All(x => x.IsPassiveOfType<Input>()) ||
                   ios.All(x => x.IsPassiveOfType<Output>())))
             {
                 throw new Exception("IO type of vector must be passive.");

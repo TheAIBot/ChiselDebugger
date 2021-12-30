@@ -6,9 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace ChiselDebug.Routing
 {
@@ -175,7 +173,7 @@ namespace ChiselDebug.Routing
             foreach (var path in allPaths)
             {
                 MoveDirs wireType;
-                if (path.StartIO.DirIO.Position == start.DirIO.Position || 
+                if (path.StartIO.DirIO.Position == start.DirIO.Position ||
                     path.EndIO.DirIO.Position == end.DirIO.Position)
                 {
                     wireType = MoveDirs.FriendWire;
@@ -194,7 +192,7 @@ namespace ChiselDebug.Routing
             PriorityQueue<int, int> toSee = new PriorityQueue<int, int>();
             toSee.Enqueue(board.CellIndex(relativeEnd), 0);
 
-            ReadOnlySpan<MoveData> moves = new MoveData[] 
+            ReadOnlySpan<MoveData> moves = new MoveData[]
             {
                 new MoveData(MoveDirs.Up),
                 new MoveData(MoveDirs.Left),

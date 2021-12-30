@@ -1,9 +1,9 @@
-﻿using FIRRTL;
+﻿using ChiselDebug.GraphFIR.IO;
+using FIRRTL;
 using System;
-using System.Linq;
 using System.Collections.Generic;
-using ChiselDebug.GraphFIR.IO;
 using System.Diagnostics;
+using System.Linq;
 
 namespace ChiselDebug.GraphFIR.Components
 {
