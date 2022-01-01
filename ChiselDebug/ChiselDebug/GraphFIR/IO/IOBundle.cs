@@ -109,6 +109,16 @@ namespace ChiselDebug.GraphFIR.IO
             return new IOBundle(node, Name, changedFlow);
         }
 
+        public override List<ScalarIO> Flatten(List<ScalarIO> list)
+        {
+            foreach (var io in OrderedIO)
+            {
+                io.Flatten(list);
+            }
+
+            return list;
+        }
+
         internal override void FlattenOnly<T>(ref Span<T> list)
         {
             foreach (var io in OrderedIO)
@@ -117,14 +127,12 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public override List<T> FlattenTo<T>(List<T> list)
+        internal override void FlattenTo<T>(ref Span<T> list)
         {
             foreach (var io in OrderedIO)
             {
-                io.FlattenTo(list);
+                io.FlattenTo(ref list);
             }
-
-            return list;
         }
 
         public override int GetScalarsCount()

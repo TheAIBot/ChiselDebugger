@@ -78,15 +78,15 @@ namespace ChiselDebug.GraphFIR.IO
                 throw new ArgumentException(nameof(replaceWith), "The io being replaced and what it's being replaced with must be ofthe same type.");
             }
 
-            List<Sink> currentScalars = FlattenTo<Sink>();
-            List<Source> replaceScalars = replace.FlattenTo<Source>();
-            List<Source> replaceWithScalars = replaceWith.FlattenTo<Source>();
-            if (replaceScalars.Count != replaceWithScalars.Count)
+            Sink[] currentScalars = FlattenTo<Sink>();
+            Source[] replaceScalars = replace.FlattenTo<Source>();
+            Source[] replaceWithScalars = replaceWith.FlattenTo<Source>();
+            if (replaceScalars.Length != replaceWithScalars.Length)
             {
                 throw new ArgumentException($"The size of {nameof(replace)} and {nameof(replaceWith)} must be the same when replacing");
             }
 
-            for (int i = 0; i < replaceScalars.Count; i++)
+            for (int i = 0; i < replaceScalars.Length; i++)
             {
                 var connection = currentScalars[i].GetConnection(replaceScalars[i], condition);
                 currentScalars[i].ReplaceConnection(connection, replaceWithScalars[i]);

@@ -61,7 +61,7 @@ namespace ChiselDebuggerRazor.Code
 
         private static bool MakeScopedIO(List<ScopedDirIO> inputIO, List<ScopedDirIO> outputIO, FIRIO[] io, int fixedX, ref int inputYOffset, ref int outputYOffset, int scopeDepth, bool ignoreDisconnectedIO, AggregateIO parentIO)
         {
-            FIRIO[] allIO = io.SelectMany(x => x.Flatten()).ToArray();
+            FIRIO[] allIO = io.FlattenMany().ToArray();
             if (allIO.Any(x => x is Sink) && allIO.Any(x => x is Source))
             {
                 inputYOffset = Math.Max(inputYOffset, outputYOffset);

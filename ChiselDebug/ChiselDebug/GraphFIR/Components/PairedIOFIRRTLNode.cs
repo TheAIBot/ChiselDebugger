@@ -32,14 +32,14 @@ namespace ChiselDebug.GraphFIR.Components
 
         internal void AddOneToManyPairedIO(FIRIO io, List<FIRIO> flippedIOs)
         {
-            List<ScalarIO> oneIO = io.Flatten();
-            List<ScalarIO>[] manyIOs = flippedIOs.Select(x => x.Flatten()).ToArray();
-            if (!manyIOs.All(x => x.Count == oneIO.Count))
+            ScalarIO[] oneIO = io.Flatten();
+            ScalarIO[][] manyIOs = flippedIOs.Select(x => x.Flatten()).ToArray();
+            if (!manyIOs.All(x => x.Length == oneIO.Length))
             {
                 throw new Exception($"IO must be of the same size.");
             }
 
-            for (int i = 0; i < oneIO.Count; i++)
+            for (int i = 0; i < oneIO.Length; i++)
             {
                 List<ScalarIO> pairs;
                 if (!OneToManyPairs.TryGetValue(oneIO[i], out pairs))

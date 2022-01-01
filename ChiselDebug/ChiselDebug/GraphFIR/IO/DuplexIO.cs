@@ -20,18 +20,24 @@ namespace ChiselDebug.GraphFIR.IO
             throw new Exception("Duplex can't be connected to anything.");
         }
 
+        public override List<ScalarIO> Flatten(List<ScalarIO> list)
+        {
+            InIO.Flatten(list);
+            OutIO.Flatten(list);
+
+            return list;
+        }
+
         internal override void FlattenOnly<T>(ref Span<T> list)
         {
             InIO.FlattenOnly(ref list);
             OutIO.FlattenOnly(ref list);
         }
 
-        public override List<T> FlattenTo<T>(List<T> list)
+        internal override void FlattenTo<T>(ref Span<T> list)
         {
-            InIO.FlattenTo(list);
-            OutIO.FlattenTo(list);
-
-            return list;
+            InIO.FlattenTo(ref list);
+            OutIO.FlattenTo(ref list);
         }
 
         public override int GetScalarsCount()

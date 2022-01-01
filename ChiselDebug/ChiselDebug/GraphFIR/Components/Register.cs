@@ -82,14 +82,14 @@ namespace ChiselDebug.GraphFIR.Components
 
         public override Sink[] GetSinks()
         {
-            return GetAllIO().SelectMany(x => x.Flatten())
+            return GetAllIO().FlattenMany()
                              .OfType<Sink>()
                              .ToArray();
         }
 
         public override Source[] GetSources()
         {
-            return GetAllIO().SelectMany(x => x.Flatten())
+            return GetAllIO().FlattenMany()
                              .OfType<Source>()
                              .ToArray();
         }

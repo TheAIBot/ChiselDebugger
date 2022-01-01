@@ -13,7 +13,7 @@ namespace ChiselDebug.GraphFIR.Transformations
             List<ScalarIO> allScalarIO = mod.GetAllNestedNodesOfType<Module>()
                                             .SelectMany(x => x.GetAllNodesIncludeModule())
                                             .SelectMany(x => x.GetIO())
-                                            .SelectMany(x => x.Flatten())
+                                            .FlattenMany()
                                             .ToList();
 
             HashSet<AggregateIO> allAggIO = IOHelper.GetAllAggregateIOs(allScalarIO);
@@ -41,7 +41,7 @@ namespace ChiselDebug.GraphFIR.Transformations
                 potentialEndpoints.IntersectWith(GetAllParentIOEndpoints(ioInOrder[i]));
             }
 
-            List<ScalarIO> flattenedIO = aggIO.Flatten();
+            ScalarIO[] flattenedIO = aggIO.Flatten();
             foreach (var potentialEndpoint in potentialEndpoints)
             {
                 if (potentialEndpoint.To.GetType() != aggIO.GetType())
@@ -49,14 +49,14 @@ namespace ChiselDebug.GraphFIR.Transformations
                     continue;
                 }
 
-                List<ScalarIO> potentialEndpointIOs = potentialEndpoint.To.Flatten();
-                if (potentialEndpointIOs.Count != flattenedIO.Count)
+                ScalarIO[] potentialEndpointIOs = potentialEndpoint.To.Flatten();
+                if (potentialEndpointIOs.Length != flattenedIO.Length)
                 {
                     continue;
                 }
 
                 bool hasConnectionsInOrder = true;
-                for (int i = 0; i < flattenedIO.Count; i++)
+                for (int i = 0; i < flattenedIO.Length; i++)
                 {
                     var fromTo = IOHelper.OrderIO(flattenedIO[i], potentialEndpointIOs[i]);
                     if (!fromTo.input.GetConnections().Any(x => x.From == fromTo.output && x.Condition == potentialEndpoint.Condition))

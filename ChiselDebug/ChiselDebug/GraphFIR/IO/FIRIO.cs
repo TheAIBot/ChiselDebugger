@@ -89,11 +89,10 @@ namespace ChiselDebug.GraphFIR.IO
         {
             return ToFlow(FlowChange.Preserve, node ?? Node);
         }
-        public List<ScalarIO> Flatten()
+        public ScalarIO[] Flatten()
         {
-            return FlattenTo(new List<ScalarIO>());
+            return FlattenTo<ScalarIO>();
         }
-
         public T[] FlattenOnly<T>() where T : ScalarIO
         {
             T[] arr = new T[GetScalarsCountOfType<T>()];
@@ -102,13 +101,17 @@ namespace ChiselDebug.GraphFIR.IO
 
             return arr;
         }
-        public List<T> FlattenTo<T>() where T : ScalarIO
+        public T[] FlattenTo<T>() where T : ScalarIO
         {
-            return FlattenTo(new List<T>());
+            T[] arr = new T[GetScalarsCount()];
+            Span<T> span = arr;
+            FlattenTo(ref span);
+
+            return arr;
         }
-        public List<ScalarIO> Flatten(List<ScalarIO> list) => FlattenTo(list);
+        public abstract List<ScalarIO> Flatten(List<ScalarIO> list);
         internal abstract void FlattenOnly<T>(ref Span<T> list) where T : ScalarIO;
-        public abstract List<T> FlattenTo<T>(List<T> list) where T : ScalarIO;
+        internal abstract void FlattenTo<T>(ref Span<T> list) where T : ScalarIO;
         public abstract int GetScalarsCount();
         public abstract int GetScalarsCountOfType<T>() where T : ScalarIO;
         public abstract bool IsPassiveOfType<T>();

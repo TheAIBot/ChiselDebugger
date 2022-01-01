@@ -23,8 +23,8 @@ namespace ChiselDebug.GraphFIR.IO
         protected void InitDataToMask()
         {
             DataToMask = new Dictionary<Sink, Sink>();
-            Sink[] dataIO = GetSink().FlattenTo<Sink>().ToArray();
-            Sink[] maskIO = GetMask().FlattenTo<Sink>().ToArray();
+            Sink[] dataIO = GetSink().FlattenTo<Sink>();
+            Sink[] maskIO = GetMask().FlattenTo<Sink>();
 
             for (int i = 0; i < dataIO.Length; i++)
             {

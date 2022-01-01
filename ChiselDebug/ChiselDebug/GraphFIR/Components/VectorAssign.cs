@@ -29,11 +29,11 @@ namespace ChiselDebug.GraphFIR.Components
             Value = VecIn.GetIndex(0).Copy(this);
             VecOut = (Vector)input.Flip(this);
 
-            VecInputs = VecIn.FlattenTo<Sink>().ToArray();
-            VecOutputs = VecOut.FlattenTo<Source>().ToArray();
-            ValueInputs = Value.FlattenTo<Sink>().ToArray();
+            VecInputs = VecIn.FlattenTo<Sink>();
+            VecOutputs = VecOut.FlattenTo<Source>();
+            ValueInputs = Value.FlattenTo<Sink>();
 
-            Sink[] inputs = input.FlattenTo<Sink>().ToArray();
+            Sink[] inputs = input.FlattenTo<Sink>();
             for (int i = 0; i < inputs.Length; i++)
             {
                 inputs[i].TransferConnectionsTo(VecInputs[i]);

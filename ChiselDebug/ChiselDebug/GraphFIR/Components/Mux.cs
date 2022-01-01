@@ -51,7 +51,7 @@ namespace ChiselDebug.GraphFIR.Components
             AddOneToManyPairedIO(Result, Choises.ToList());
 
             ChoiseInputs = Choises.SelectMany(x => x.FlattenTo<Sink>()).ToArray();
-            ResultOutputs = Result.FlattenTo<Source>().ToArray();
+            ResultOutputs = Result.FlattenTo<Source>();
             UnknownOutputs = new BinaryVarValue[ResultOutputs.Length];
         }
 
