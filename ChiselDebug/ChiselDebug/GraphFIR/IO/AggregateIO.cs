@@ -78,9 +78,9 @@ namespace ChiselDebug.GraphFIR.IO
                 throw new ArgumentException(nameof(replaceWith), "The io being replaced and what it's being replaced with must be ofthe same type.");
             }
 
-            List<Sink> currentScalars = Flatten().Cast<Sink>().ToList();
-            List<Source> replaceScalars = replace.Flatten().Cast<Source>().ToList();
-            List<Source> replaceWithScalars = replaceWith.Flatten().Cast<Source>().ToList();
+            List<Sink> currentScalars = FlattenTo<Sink>();
+            List<Source> replaceScalars = replace.FlattenTo<Source>();
+            List<Source> replaceWithScalars = replaceWith.FlattenTo<Source>();
             if (replaceScalars.Count != replaceWithScalars.Count)
             {
                 throw new ArgumentException($"The size of {nameof(replace)} and {nameof(replaceWith)} must be the same when replacing");

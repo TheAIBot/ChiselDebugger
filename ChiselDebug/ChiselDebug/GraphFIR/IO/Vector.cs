@@ -86,14 +86,34 @@ namespace ChiselDebug.GraphFIR.IO
             return new Vector(node, Name, Length, IO[0].ToFlow(flow, node));
         }
 
-        public override List<ScalarIO> Flatten(List<ScalarIO> list)
+        public override List<T> FlattenOnly<T>(List<T> list)
         {
             for (int i = 0; i < IO.Length; i++)
             {
-                IO[i].Flatten(list);
+                IO[i].FlattenOnly(list);
             }
 
             return list;
+        }
+
+        public override List<T> FlattenTo<T>(List<T> list)
+        {
+            for (int i = 0; i < IO.Length; i++)
+            {
+                IO[i].FlattenTo(list);
+            }
+
+            return list;
+        }
+
+        public override int GetScalarsCount()
+        {
+            if (IO.Length == 0)
+            {
+                return 0;
+            }
+
+            return IO[0].GetScalarsCount() * IO.Length;
         }
 
         public override bool IsPassiveOfType<T>()

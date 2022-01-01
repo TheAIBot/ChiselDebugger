@@ -95,7 +95,7 @@ namespace ChiselDebug.Placing
         {
             Dictionary<AggregateIO, bool> aggConnectionHasBeenHit = new Dictionary<AggregateIO, bool>();
             Dictionary<ScalarIO, AggregateIO> scalarToAggregateIO = new Dictionary<ScalarIO, AggregateIO>();
-            foreach (var aggIO in IOHelper.GetAllAggregateIOs(io).OrderByDescending(x => x.Flatten().Count))
+            foreach (var aggIO in IOHelper.GetAllAggregateIOs(io).OrderByDescending(x => x.GetScalarsCount()))
             {
                 if (aggIO.IsPassive() && aggIO.OnlyConnectedWithAggregateConnections())
                 {

@@ -109,14 +109,35 @@ namespace ChiselDebug.GraphFIR.IO
             return new IOBundle(node, Name, changedFlow);
         }
 
-        public override List<ScalarIO> Flatten(List<ScalarIO> list)
+        public override List<T> FlattenOnly<T>(List<T> list)
         {
             foreach (var io in OrderedIO)
             {
-                io.Flatten(list);
+                io.FlattenOnly(list);
             }
 
             return list;
+        }
+
+        public override List<T> FlattenTo<T>(List<T> list)
+        {
+            foreach (var io in OrderedIO)
+            {
+                io.FlattenTo(list);
+            }
+
+            return list;
+        }
+
+        public override int GetScalarsCount()
+        {
+            int scalars = 0;
+            foreach (var io in OrderedIO)
+            {
+                scalars += io.GetScalarsCount();
+            }
+
+            return scalars;
         }
 
         public override bool IsPassiveOfType<T>()

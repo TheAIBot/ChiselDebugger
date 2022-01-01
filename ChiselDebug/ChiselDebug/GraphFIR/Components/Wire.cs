@@ -43,12 +43,12 @@ namespace ChiselDebug.GraphFIR.Components
 
         public override Sink[] GetSinks()
         {
-            return In.Flatten().Cast<Sink>().ToArray();
+            return In.FlattenTo<Sink>().ToArray();
         }
 
         public override Source[] GetSources()
         {
-            return Result.Flatten().Cast<Source>().ToArray();
+            return Result.FlattenTo<Source>().ToArray();
         }
 
         public override IEnumerable<FIRIO> GetIO()
