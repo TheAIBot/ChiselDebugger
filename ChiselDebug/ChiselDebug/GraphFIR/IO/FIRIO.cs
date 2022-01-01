@@ -94,18 +94,23 @@ namespace ChiselDebug.GraphFIR.IO
             return FlattenTo(new List<ScalarIO>());
         }
 
-        public List<T> FlattenOnly<T>() where T : ScalarIO
+        public T[] FlattenOnly<T>() where T : ScalarIO
         {
-            return FlattenOnly(new List<T>());
+            T[] arr = new T[GetScalarsCountOfType<T>()];
+            Span<T> span = arr;
+            FlattenOnly(ref span);
+
+            return arr;
         }
         public List<T> FlattenTo<T>() where T : ScalarIO
         {
             return FlattenTo(new List<T>());
         }
         public List<ScalarIO> Flatten(List<ScalarIO> list) => FlattenTo(list);
-        public abstract List<T> FlattenOnly<T>(List<T> list) where T : ScalarIO;
+        internal abstract void FlattenOnly<T>(ref Span<T> list) where T : ScalarIO;
         public abstract List<T> FlattenTo<T>(List<T> list) where T : ScalarIO;
         public abstract int GetScalarsCount();
+        public abstract int GetScalarsCountOfType<T>() where T : ScalarIO;
         public abstract bool IsPassiveOfType<T>();
         public bool IsPassive()
         {

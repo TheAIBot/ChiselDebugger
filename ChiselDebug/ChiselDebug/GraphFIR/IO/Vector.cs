@@ -86,14 +86,12 @@ namespace ChiselDebug.GraphFIR.IO
             return new Vector(node, Name, Length, IO[0].ToFlow(flow, node));
         }
 
-        public override List<T> FlattenOnly<T>(List<T> list)
+        internal override void FlattenOnly<T>(ref Span<T> list)
         {
             for (int i = 0; i < IO.Length; i++)
             {
-                IO[i].FlattenOnly(list);
+                IO[i].FlattenOnly(ref list);
             }
-
-            return list;
         }
 
         public override List<T> FlattenTo<T>(List<T> list)
@@ -114,6 +112,16 @@ namespace ChiselDebug.GraphFIR.IO
             }
 
             return IO[0].GetScalarsCount() * IO.Length;
+        }
+
+        public override int GetScalarsCountOfType<T>()
+        {
+            if (IO.Length == 0)
+            {
+                return 0;
+            }
+
+            return IO[0].GetScalarsCountOfType<T>() * IO.Length;
         }
 
         public override bool IsPassiveOfType<T>()
