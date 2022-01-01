@@ -4,16 +4,16 @@ namespace ChiselDebug.GraphFIR.IO
 {
     public readonly struct Connection
     {
-        public readonly Output From;
-        public readonly Output Condition;
+        public readonly Source From;
+        public readonly Source Condition;
 
-        public Connection(Output from)
+        public Connection(Source from)
         {
             this.From = from;
             this.Condition = null;
         }
 
-        public Connection(Output from, Output condition)
+        public Connection(Source from, Source condition)
         {
             this.From = from;
             this.Condition = condition;

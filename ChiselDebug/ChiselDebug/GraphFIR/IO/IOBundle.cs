@@ -44,7 +44,7 @@ namespace ChiselDebug.GraphFIR.IO
             return OrderedIO.ToArray();
         }
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Output condition = null)
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source condition = null)
         {
             if (input is not IOBundle)
             {
@@ -52,12 +52,12 @@ namespace ChiselDebug.GraphFIR.IO
             }
             IOBundle bundle = (IOBundle)input;
 
-            if (asPassive && !IsPassiveOfType<Output>())
+            if (asPassive && !IsPassiveOfType<Source>())
             {
                 throw new Exception("Bundle must be a passive output bundle but it was not.");
             }
 
-            if (asPassive && !bundle.IsPassiveOfType<Input>())
+            if (asPassive && !bundle.IsPassiveOfType<Sink>())
             {
                 throw new Exception("Bundle must connect to a passive input bundle.");
             }
@@ -78,11 +78,11 @@ namespace ChiselDebug.GraphFIR.IO
                 var a = GetIO(ioName);
                 var b = bundle.GetIO(ioName);
 
-                if (a is Output aOut && b is Input bIn)
+                if (a is Source aOut && b is Sink bIn)
                 {
                     aOut.ConnectToInput(bIn, allowPartial, asPassive, condition);
                 }
-                else if (a is Input aIn && b is Output bOut)
+                else if (a is Sink aIn && b is Source bOut)
                 {
                     bOut.ConnectToInput(aIn, allowPartial, asPassive, condition);
                 }

@@ -26,10 +26,10 @@ namespace ChiselDebug.Placing
 
             //Add nodes to graph
             Dictionary<FIRRTLNode, Node> firNodeToNode = new Dictionary<FIRRTLNode, Node>();
-            Dictionary<Input, string> inputToPort = new Dictionary<Input, string>();
-            Dictionary<Output, string> outputToPort = new Dictionary<Output, string>();
-            Dictionary<Input, Node> inputToNode = new Dictionary<Input, Node>();
-            Dictionary<Output, Node> outputToNode = new Dictionary<Output, Node>();
+            Dictionary<Sink, string> inputToPort = new Dictionary<Sink, string>();
+            Dictionary<Source, string> outputToPort = new Dictionary<Source, string>();
+            Dictionary<Sink, Node> inputToNode = new Dictionary<Sink, Node>();
+            Dictionary<Source, Node> outputToNode = new Dictionary<Source, Node>();
             int nodeCounter = 0;
             int portName = 0;
             foreach (var firNode in nodeSizes)
@@ -45,8 +45,8 @@ namespace ChiselDebug.Placing
                 node.SafeSetAttribute("width", ((double)firNode.Value.X / dpi).ToString(), "0.75");
                 node.SafeSetAttribute("height", ((double)firNode.Value.Y / dpi).ToString(), "0.5");
 
-                Input[] nodeInputs = firNode.Key.GetInputs();
-                Output[] nodeOutputs = firNode.Key.GetOutputs();
+                Sink[] nodeInputs = firNode.Key.GetSinks();
+                Source[] nodeOutputs = firNode.Key.GetSources();
 
                 MakeIntoRecord(node, nodeInputs, nodeOutputs, inputToPort, outputToPort, ref portName);
 
@@ -63,16 +63,16 @@ namespace ChiselDebug.Placing
             }
 
             Node modInputNode = graph.GetOrAddNode("modInput");
-            MakeIntoRecord(modInputNode, mod.GetInputs(), Array.Empty<Output>(), inputToPort, outputToPort, ref portName);
+            MakeIntoRecord(modInputNode, mod.GetSinks(), Array.Empty<Source>(), inputToPort, outputToPort, ref portName);
             modInputNode.SafeSetAttribute("rank", "sink", "sink");
 
             Node modOutputNode = graph.GetOrAddNode("modOutput");
-            MakeIntoRecord(modInputNode, Array.Empty<Input>(), mod.GetOutputs(), inputToPort, outputToPort, ref portName);
+            MakeIntoRecord(modInputNode, Array.Empty<Sink>(), mod.GetSources(), inputToPort, outputToPort, ref portName);
             modOutputNode.SafeSetAttribute("rank", "source", "source");
 
             //Make edges
             int edgeCounter = 0;
-            foreach (Output output in outputToNode.Keys)
+            foreach (Source output in outputToNode.Keys)
             {
                 if (!output.IsConnectedToAnythingPlaceable())
                 {
@@ -130,7 +130,7 @@ namespace ChiselDebug.Placing
             return placments;
         }
 
-        private void MakeIntoRecord(Node node, Input[] inputs, Output[] outputs, Dictionary<Input, string> inputToPort, Dictionary<Output, string> outputToPort, ref int portName)
+        private void MakeIntoRecord(Node node, Sink[] inputs, Source[] outputs, Dictionary<Sink, string> inputToPort, Dictionary<Source, string> outputToPort, ref int portName)
         {
             Array.Reverse(inputs);
             Array.Reverse(outputs);

@@ -38,23 +38,23 @@ namespace ChiselDebug.GraphFIR.IO
             AsMaskType(mask);
 
             List<FIRIO> io = new List<FIRIO>();
-            io.Add(new Input(node, "wmode", new UIntType(1)));
+            io.Add(new Sink(node, "wmode", new UIntType(1)));
             io.Add(dataOut);
             io.Add(dataIn);
             io.Add(mask);
-            io.Add(new Input(node, "addr", new UIntType(addressWidth)));
-            io.Add(new Input(node, "en", new UIntType(1)));
-            io.Add(new Input(node, "clk", new ClockType()));
+            io.Add(new Sink(node, "addr", new UIntType(addressWidth)));
+            io.Add(new Sink(node, "en", new UIntType(1)));
+            io.Add(new Sink(node, "clk", new ClockType()));
 
             return io;
         }
 
-        public override FIRIO GetInput()
+        public override FIRIO GetSink()
         {
             return DataIn;
         }
 
-        public override FIRIO GetOutput()
+        public override FIRIO GetSource()
         {
             return DataOut;
         }

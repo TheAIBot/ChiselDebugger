@@ -190,7 +190,7 @@ namespace ChiselDebugTests
                     ref var expected = ref CollectionsMarshal.GetValueRefOrNullRef(state.VariableValues, varsToCheck[z].VariableDef.ID);
                     ScalarIO varCon = varsToCheck[z].IO;
 
-                    ref BinaryVarValue actual = ref (varCon is Input input ? ref input.UpdateValueFromSourceFast() : ref varCon.GetValue());
+                    ref BinaryVarValue actual = ref (varCon is Sink input ? ref input.UpdateValueFromSourceFast() : ref varCon.GetValue());
                     if (expected.IsValidBinary && actual.IsValidBinary)
                     {
                         if (!expected.SameValue(ref actual))

@@ -38,7 +38,7 @@
         DotPosition = ScopedIO.DirIO.Position - new Point(DOT_RADIUS, DOT_RADIUS);
         NamePosition = new Point(ScopedIO.ScopeXOffset, 0);
 
-        RightToLeft = ScopedIO.DirIO.IO.IsPassiveOfType<Output>();
+        RightToLeft = ScopedIO.DirIO.IO.IsPassiveOfType<Source>();
 
         return base.OnParametersSetAsync();
     }

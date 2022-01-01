@@ -18,7 +18,7 @@ namespace ChiselDebug.GraphFIR.Components
 
         public Memory(string name, FIRIO inputType, ulong size, int readLatency, int writeLatency, ReadUnderWrite ruw, FirrtlNode defNode) : base(defNode)
         {
-            if (!inputType.IsPassiveOfType<Input>())
+            if (!inputType.IsPassiveOfType<Sink>())
             {
                 throw new Exception("Input type must be a passive input type.");
             }
@@ -61,14 +61,14 @@ namespace ChiselDebug.GraphFIR.Components
             return MemIO;
         }
 
-        public override Input[] GetInputs()
+        public override Sink[] GetSinks()
         {
-            return MemIO.Flatten().OfType<Input>().ToArray();
+            return MemIO.Flatten().OfType<Sink>().ToArray();
         }
 
-        public override Output[] GetOutputs()
+        public override Source[] GetSources()
         {
-            return MemIO.Flatten().OfType<Output>().ToArray();
+            return MemIO.Flatten().OfType<Source>().ToArray();
         }
 
         public override IEnumerable<FIRIO> GetIO()
@@ -88,11 +88,11 @@ namespace ChiselDebug.GraphFIR.Components
 
         internal override void InferType()
         {
-            foreach (var input in GetInputs())
+            foreach (var input in GetSinks())
             {
                 input.InferType();
             }
-            foreach (var output in GetOutputs())
+            foreach (var output in GetSources())
             {
                 output.InferType();
             }

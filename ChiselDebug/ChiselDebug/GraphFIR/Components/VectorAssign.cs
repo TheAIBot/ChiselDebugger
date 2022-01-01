@@ -10,30 +10,30 @@ namespace ChiselDebug.GraphFIR.Components
     public sealed class VectorAssign : FIRRTLNode
     {
         private readonly Vector VecIn;
-        private readonly Input Index;
+        private readonly Sink Index;
         private readonly FIRIO Value;
         private readonly Vector VecOut;
-        private readonly Input[] VecInputs;
-        private readonly Output[] VecOutputs;
-        private readonly Input[] ValueInputs;
+        private readonly Sink[] VecInputs;
+        private readonly Source[] VecOutputs;
+        private readonly Sink[] ValueInputs;
 
-        public VectorAssign(Vector input, Output index, Output condition, FirrtlNode defNode) : base(defNode)
+        public VectorAssign(Vector input, Source index, Source condition, FirrtlNode defNode) : base(defNode)
         {
-            if (!input.IsPassiveOfType<Input>())
+            if (!input.IsPassiveOfType<Sink>())
             {
                 throw new Exception("Vector assign input must be a passive input type.");
             }
 
             VecIn = (Vector)input.Copy(this);
-            Index = (Input)index.Flip(this);
+            Index = (Sink)index.Flip(this);
             Value = VecIn.GetIndex(0).Copy(this);
             VecOut = (Vector)input.Flip(this);
 
-            VecInputs = VecIn.Flatten().Cast<Input>().ToArray();
-            VecOutputs = VecOut.Flatten().Cast<Output>().ToArray();
-            ValueInputs = Value.Flatten().Cast<Input>().ToArray();
+            VecInputs = VecIn.Flatten().Cast<Sink>().ToArray();
+            VecOutputs = VecOut.Flatten().Cast<Source>().ToArray();
+            ValueInputs = Value.Flatten().Cast<Sink>().ToArray();
 
-            Input[] inputs = input.Flatten().Cast<Input>().ToArray();
+            Sink[] inputs = input.Flatten().Cast<Sink>().ToArray();
             for (int i = 0; i < inputs.Length; i++)
             {
                 inputs[i].TransferConnectionsTo(VecInputs[i]);
@@ -92,9 +92,9 @@ namespace ChiselDebug.GraphFIR.Components
             return Value;
         }
 
-        public override Input[] GetInputs()
+        public override Sink[] GetSinks()
         {
-            List<Input> inputs = new List<Input>();
+            List<Sink> inputs = new List<Sink>();
             inputs.AddRange(VecInputs);
             inputs.Add(Index);
             inputs.AddRange(ValueInputs);
@@ -110,18 +110,18 @@ namespace ChiselDebug.GraphFIR.Components
             yield return VecOut;
         }
 
-        public override Output[] GetOutputs()
+        public override Source[] GetSources()
         {
             return VecOutputs.ToArray();
         }
 
         internal override void InferType()
         {
-            foreach (var input in GetInputs())
+            foreach (var input in GetSinks())
             {
                 input.InferType();
             }
-            foreach (var output in GetOutputs())
+            foreach (var output in GetSources())
             {
                 output.InferType();
             }

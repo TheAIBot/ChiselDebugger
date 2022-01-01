@@ -28,8 +28,8 @@ namespace ChiselDebug.GraphFIR.IO
 
         public Vector(FIRRTLNode node, string name, FIRIO[] ios) : base(node, name)
         {
-            if (!(ios.All(x => x.IsPassiveOfType<Input>()) ||
-                  ios.All(x => x.IsPassiveOfType<Output>())))
+            if (!(ios.All(x => x.IsPassiveOfType<Sink>()) ||
+                  ios.All(x => x.IsPassiveOfType<Source>())))
             {
                 throw new Exception("IO type of vector must be passive.");
             }
@@ -47,7 +47,7 @@ namespace ChiselDebug.GraphFIR.IO
             return IO.ToArray();
         }
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Output condition = null)
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source condition = null)
         {
             if (input is not Vector)
             {

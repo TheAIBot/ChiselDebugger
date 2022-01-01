@@ -16,8 +16,8 @@ namespace ChiselDebug.Routing
         private readonly List<int> BoardPositions;
         internal readonly List<int> BoardPosTurns;
         public readonly bool StartsFromWire;
-        private readonly Output FromIO;
-        private readonly Input ToIO;
+        private readonly Source FromIO;
+        private readonly Sink ToIO;
 
         internal WirePath(IOInfo startIO, IOInfo endIO, List<Point> path, List<int> boardPositions, List<int> boardPosTurns, bool startsFromWire)
         {
@@ -185,19 +185,19 @@ namespace ChiselDebug.Routing
             return EndIO.Node;
         }
 
-        public Output[] GetConnections()
+        public Source[] GetConnections()
         {
-            List<Output> outputCons = new List<Output>();
+            List<Source> outputCons = new List<Source>();
             foreach (var io in StartIO.DirIO.IO.Flatten())
             {
-                if (io is Output output)
+                if (io is Source output)
                 {
                     outputCons.Add(output);
                 }
             }
             foreach (var io in EndIO.DirIO.IO.Flatten())
             {
-                if (io is Output output)
+                if (io is Source output)
                 {
                     outputCons.Add(output);
                 }
@@ -206,15 +206,15 @@ namespace ChiselDebug.Routing
             return outputCons.ToArray();
         }
 
-        private (Output, Input) GetConCondition()
+        private (Source, Sink) GetConCondition()
         {
             ScalarIO startScalar = StartIO.DirIO.IO.Flatten().First();
             ScalarIO endScalar = EndIO.DirIO.IO.Flatten().First();
-            if (startScalar is Output startOut && endScalar is Input endInput)
+            if (startScalar is Source startOut && endScalar is Sink endInput)
             {
                 return (startOut, endInput);
             }
-            else if (startScalar is Input startInput && endScalar is Output endOutput)
+            else if (startScalar is Sink startInput && endScalar is Source endOutput)
             {
                 return (endOutput, startInput);
             }

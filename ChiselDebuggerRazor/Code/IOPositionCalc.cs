@@ -62,7 +62,7 @@ namespace ChiselDebuggerRazor.Code
         private static bool MakeScopedIO(List<ScopedDirIO> inputIO, List<ScopedDirIO> outputIO, FIRIO[] io, int fixedX, ref int inputYOffset, ref int outputYOffset, int scopeDepth, bool ignoreDisconnectedIO, AggregateIO parentIO)
         {
             FIRIO[] allIO = io.SelectMany(x => x.Flatten()).ToArray();
-            if (allIO.Any(x => x is Input) && allIO.Any(x => x is Output))
+            if (allIO.Any(x => x is Sink) && allIO.Any(x => x is Source))
             {
                 inputYOffset = Math.Max(inputYOffset, outputYOffset);
                 outputYOffset = Math.Max(inputYOffset, outputYOffset);
@@ -115,7 +115,7 @@ namespace ChiselDebuggerRazor.Code
         private static bool MakeNoScopeIO(List<ScopedDirIO> inputIO, List<ScopedDirIO> outputIO, FIRIO io, int fixedX, ref int inputYOffset, ref int outputYOffset, int scopeDepth, bool ignoreDisconnectedIO)
         {
             scopeDepth = Math.Max(0, scopeDepth);
-            if (io.IsPassiveOfType<Input>())
+            if (io.IsPassiveOfType<Sink>())
             {
                 int scopeOffset = (scopeDepth + 1) * ScopeWidth;
                 Point inputPos = new Point(0, inputYOffset);
@@ -125,7 +125,7 @@ namespace ChiselDebuggerRazor.Code
                 inputYOffset += MinSpaceBetweenIO;
                 return true;
             }
-            else if (io.IsPassiveOfType<Output>())
+            else if (io.IsPassiveOfType<Source>())
             {
                 int scopeOffset = -(scopeDepth + 1) * ScopeWidth;
                 Point outputPos = new Point(fixedX, outputYOffset);

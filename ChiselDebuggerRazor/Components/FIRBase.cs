@@ -30,8 +30,8 @@ namespace ChiselDebuggerRazor.Components
         private Point PreviousSize = Point.Zero;
         private int RenderCounter = 0;
         protected readonly string SizeWatcherID = UniqueID.UniqueHTMLID();
-        protected DirectedIO[] InputOffsets = Array.Empty<DirectedIO>();
-        protected DirectedIO[] OutputOffsets = Array.Empty<DirectedIO>();
+        protected DirectedIO[] SinkOffsets = Array.Empty<DirectedIO>();
+        protected DirectedIO[] SourceOffsets = Array.Empty<DirectedIO>();
 
         protected Point GetCurrentSize()
         {
@@ -83,10 +83,10 @@ namespace ChiselDebuggerRazor.Components
 
         protected virtual void OnResize(int width, int height)
         {
-            InputOffsets = OnMakeInputs(width, height);
-            OutputOffsets = OnMakeOutputs(width, height);
+            SinkOffsets = OnMakeSinks(width, height);
+            SourceOffsets = OnMakeSources(width, height);
 
-            ParentLayoutCtrl?.UpdateComponentInfo(new FIRComponentUpdate(Operation, GetCurrentSize(), InputOffsets, OutputOffsets));
+            ParentLayoutCtrl?.UpdateComponentInfo(new FIRComponentUpdate(Operation, GetCurrentSize(), SinkOffsets, SourceOffsets));
         }
 
         protected virtual bool OnMove(Point newPos)
@@ -94,7 +94,7 @@ namespace ChiselDebuggerRazor.Components
             return true;
         }
 
-        protected abstract DirectedIO[] OnMakeInputs(int width, int height);
-        protected abstract DirectedIO[] OnMakeOutputs(int width, int height);
+        protected abstract DirectedIO[] OnMakeSinks(int width, int height);
+        protected abstract DirectedIO[] OnMakeSources(int width, int height);
     }
 }

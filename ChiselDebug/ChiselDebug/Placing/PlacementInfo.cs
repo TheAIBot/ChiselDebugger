@@ -40,8 +40,8 @@ namespace ChiselDebug.Placing
         {
             List<RankWidth> ranks = GetNodeRanks();
 
-            int modOutputCount = SpaceForWire(mod.GetInternalOutputs());
-            int modInputCount = SpaceForWire(mod.GetInternalInputs());
+            int modOutputCount = SpaceForWire(mod.GetInternalSources());
+            int modInputCount = SpaceForWire(mod.GetInternalSinks());
 
             int[] xSpacing = new int[ranks.Count + 1];
 
@@ -51,8 +51,8 @@ namespace ChiselDebug.Placing
 
             for (int i = 0; i < ranks.Count; i++)
             {
-                xSpacing[i] += ranks[i].Nodes.Sum(x => SpaceForWire(x.GetInputs())) * spaceForWire;
-                xSpacing[i + 1] += ranks[i].Nodes.Sum(x => SpaceForWire(x.GetOutputs())) * spaceForWire;
+                xSpacing[i] += ranks[i].Nodes.Sum(x => SpaceForWire(x.GetSinks())) * spaceForWire;
+                xSpacing[i + 1] += ranks[i].Nodes.Sum(x => SpaceForWire(x.GetSources())) * spaceForWire;
             }
 
             int xOffset = xSpacing[0];

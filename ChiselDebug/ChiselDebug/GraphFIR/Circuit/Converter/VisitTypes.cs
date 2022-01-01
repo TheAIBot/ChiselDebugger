@@ -21,8 +21,8 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
         {
             (_, BundleType bundle) => VisitBundle(helper, direction, name, bundle, forcePassive),
             (_, VectorType vec) => VisitVector(helper, direction, name, vec, forcePassive),
-            (Dir.Input, _) => new IO.Input(null, name, type),
-            (Dir.Output, _) => new IO.Output(null, name, type),
+            (Dir.Input, _) => new IO.Sink(null, name, type),
+            (Dir.Output, _) => new IO.Source(null, name, type),
             _ => throw new NotImplementedException()
         };
 

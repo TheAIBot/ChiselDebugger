@@ -60,26 +60,26 @@ namespace ChiselDebug.GraphFIR.IO
             return string.Join('.', pathToRoot);
         }
 
-        public virtual FIRIO GetInput()
+        public virtual FIRIO GetSink()
         {
-            throw new Exception("Can't get input from this IO.");
+            throw new Exception("Can't get sink from this IO.");
         }
-        public virtual FIRIO GetOutput()
+        public virtual FIRIO GetSource()
         {
-            throw new Exception("Can't get output from this IO.");
+            throw new Exception("Can't get source from this IO.");
         }
 
         internal FIRIO GetAsFlow(FlowChange flow)
         {
             return flow switch
             {
-                FlowChange.Source => GetOutput(),
-                FlowChange.Sink => GetInput(),
+                FlowChange.Source => GetSource(),
+                FlowChange.Sink => GetSink(),
                 var error => throw new Exception($"Flow must either be source or sink. Flow: {error}")
             };
         }
 
-        public abstract void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Output condition = null);
+        public abstract void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source condition = null);
         public abstract FIRIO ToFlow(FlowChange flow, FIRRTLNode node);
         public FIRIO Flip(FIRRTLNode node = null)
         {
@@ -97,7 +97,7 @@ namespace ChiselDebug.GraphFIR.IO
         public abstract bool IsPassiveOfType<T>();
         public bool IsPassive()
         {
-            return IsPassiveOfType<Input>() || IsPassiveOfType<Output>();
+            return IsPassiveOfType<Sink>() || IsPassiveOfType<Source>();
         }
         public abstract bool TryGetIO(string ioName, out IContainerIO container);
 

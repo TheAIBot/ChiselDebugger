@@ -19,8 +19,8 @@ namespace ChiselDebug.GraphFIR.Components
             ResideIn = mod;
         }
 
-        public abstract Input[] GetInputs();
-        public abstract Output[] GetOutputs();
+        public abstract Sink[] GetSinks();
+        public abstract Source[] GetSources();
 
         public abstract IEnumerable<FIRIO> GetIO();
 

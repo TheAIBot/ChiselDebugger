@@ -9,7 +9,7 @@ namespace ChiselDebug.GraphFIR
 {
     internal static class TypeHelper
     {
-        public static GroundType InferMaxWidthType(Output output, PairedIOFIRRTLNode pairNode)
+        public static GroundType InferMaxWidthType(Source output, PairedIOFIRRTLNode pairNode)
         {
             return InferMaxWidthType(pairNode.GetAllPairedIO(output));
         }

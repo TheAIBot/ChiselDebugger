@@ -10,8 +10,8 @@ namespace ChiselDebuggerRazor.Code
 {
     public class ScopedNodeIO
     {
-        internal readonly List<ScopedDirIO> InputOffsets;
-        internal readonly List<ScopedDirIO> OutputOffsets;
+        internal readonly List<ScopedDirIO> SinkOffsets;
+        internal readonly List<ScopedDirIO> SourceOffsets;
         internal int HeightNeeded { get; private set; }
         private int YStartPadding;
         private int YEndPadding;
@@ -33,15 +33,15 @@ namespace ChiselDebuggerRazor.Code
         };
 
 
-        public ScopedNodeIO(List<ScopedDirIO> inputs, List<ScopedDirIO> outputs, int yStartPad, int yEndPad)
+        public ScopedNodeIO(List<ScopedDirIO> sinks, List<ScopedDirIO> sources, int yStartPad, int yEndPad)
         {
-            this.InputOffsets = inputs;
-            this.OutputOffsets = outputs;
+            this.SinkOffsets = sinks;
+            this.SourceOffsets = sources;
             this.YStartPadding = yStartPad;
             this.YEndPadding = yEndPad;
 
-            int inputHeight = inputs.Count > 0 ? inputs.Max(x => x.DirIO.Position.Y) : 0;
-            int outputHeight = outputs.Count > 0 ? outputs.Max(x => x.DirIO.Position.Y) : 0;
+            int inputHeight = sinks.Count > 0 ? sinks.Max(x => x.DirIO.Position.Y) : 0;
+            int outputHeight = sources.Count > 0 ? sources.Max(x => x.DirIO.Position.Y) : 0;
             this.HeightNeeded = Math.Max(inputHeight, outputHeight) + yEndPad;
 
             RemakeScopes();
@@ -50,8 +50,8 @@ namespace ChiselDebuggerRazor.Code
         private void RemakeScopes()
         {
             Scopes.Clear();
-            Scopes.AddRange(MakeScopes(InputOffsets, false));
-            Scopes.AddRange(MakeScopes(OutputOffsets, true));
+            Scopes.AddRange(MakeScopes(SinkOffsets, false));
+            Scopes.AddRange(MakeScopes(SourceOffsets, true));
         }
 
         private static List<IOScope> MakeScopes(List<ScopedDirIO> io, bool isOutputIO)
@@ -94,19 +94,19 @@ namespace ChiselDebuggerRazor.Code
             return scopes;
         }
 
-        public DirectedIO[] GetInputDirIO()
+        public DirectedIO[] GetSinkDirIO()
         {
-            return InputOffsets.Select(x => x.DirIO).ToArray();
+            return SinkOffsets.Select(x => x.DirIO).ToArray();
         }
 
-        public DirectedIO[] GetOutputDirIO()
+        public DirectedIO[] GetSourceDirIO()
         {
-            return OutputOffsets.Select(x => x.DirIO).ToArray();
+            return SourceOffsets.Select(x => x.DirIO).ToArray();
         }
 
         public void UpdateOutputX(int newX)
         {
-            foreach (var offset in OutputOffsets)
+            foreach (var offset in SourceOffsets)
             {
                 offset.SetX(newX);
             }
@@ -116,11 +116,11 @@ namespace ChiselDebuggerRazor.Code
 
         public void UpdateIOX(int inputX, int outputX)
         {
-            foreach (var offset in InputOffsets)
+            foreach (var offset in SinkOffsets)
             {
                 offset.SetX(inputX);
             }
-            foreach (var offset in OutputOffsets)
+            foreach (var offset in SourceOffsets)
             {
                 offset.SetX(outputX);
             }
@@ -140,12 +140,12 @@ namespace ChiselDebuggerRazor.Code
         public float ScaleFillY(int height, float maxAllowedScaling)
         {
             float scaleFactor = GetMaxScaling(height, maxAllowedScaling);
-            foreach (var offset in InputOffsets)
+            foreach (var offset in SinkOffsets)
             {
                 int currY = offset.DirIO.Position.Y;
                 offset.SetY((int)(currY * scaleFactor));
             }
-            foreach (var offset in OutputOffsets)
+            foreach (var offset in SourceOffsets)
             {
                 int currY = offset.DirIO.Position.Y;
                 offset.SetY((int)(currY * scaleFactor));
@@ -175,12 +175,12 @@ namespace ChiselDebuggerRazor.Code
             int remainingSpace = heightAvailWithoutPad - heightNeededWithoutPad;
             int startPad = remainingSpace / 2;
 
-            foreach (var offset in InputOffsets)
+            foreach (var offset in SinkOffsets)
             {
                 int currY = offset.DirIO.Position.Y;
                 offset.SetY(currY + startPad);
             }
-            foreach (var offset in OutputOffsets)
+            foreach (var offset in SourceOffsets)
             {
                 int currY = offset.DirIO.Position.Y;
                 offset.SetY(currY + startPad);
@@ -191,8 +191,8 @@ namespace ChiselDebuggerRazor.Code
 
         public ScopedNodeIO Copy()
         {
-            var inputCopies = InputOffsets.Select(x => x.Copy()).ToList();
-            var outputCopies = OutputOffsets.Select(x => x.Copy()).ToList();
+            var inputCopies = SinkOffsets.Select(x => x.Copy()).ToList();
+            var outputCopies = SourceOffsets.Select(x => x.Copy()).ToList();
 
             return new ScopedNodeIO(inputCopies, outputCopies, YStartPadding, YEndPadding);
         }

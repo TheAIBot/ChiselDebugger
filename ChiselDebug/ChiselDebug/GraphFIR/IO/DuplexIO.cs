@@ -15,7 +15,7 @@ namespace ChiselDebug.GraphFIR.IO
             this.OutIO = outIO;
         }
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Output condition = null)
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source condition = null)
         {
             throw new Exception("Duplex can't be connected to anything.");
         }
@@ -28,12 +28,12 @@ namespace ChiselDebug.GraphFIR.IO
             return list;
         }
 
-        public override FIRIO GetInput()
+        public override FIRIO GetSink()
         {
             return InIO;
         }
 
-        public override FIRIO GetOutput()
+        public override FIRIO GetSource()
         {
             return OutIO;
         }

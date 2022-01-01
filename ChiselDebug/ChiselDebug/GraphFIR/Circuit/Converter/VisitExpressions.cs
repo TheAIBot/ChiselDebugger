@@ -23,19 +23,19 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             }
             else if (exp is FIRRTL.DoPrim prim)
             {
-                var args = prim.Args.Select(x => VisitExp(helper, x, IO.FlowChange.Source)).Cast<IO.Output>().ToArray();
+                var args = prim.Args.Select(x => VisitExp(helper, x, IO.FlowChange.Source)).Cast<IO.Source>().ToArray();
                 FIRRTLPrimOP RemainingPrimOps(FIRRTL.PrimOp op)
                 {
                     if (prim.Op is FIRRTL.Shl)
                     {
                         var constLit = new FIRRTL.UIntLiteral(prim.Consts[0], (int)prim.Consts[0].GetBitLength());
-                        var constOutput = (IO.Output)VisitExp(helper, constLit, IO.FlowChange.Source);
+                        var constOutput = (IO.Source)VisitExp(helper, constLit, IO.FlowChange.Source);
                         return new FIRShl(args[0], constOutput, prim.Type, prim);
                     }
                     else if (prim.Op is FIRRTL.Shr)
                     {
                         var constLit = new FIRRTL.UIntLiteral(prim.Consts[0], (int)prim.Consts[0].GetBitLength());
-                        var constOutput = (IO.Output)VisitExp(helper, constLit, IO.FlowChange.Source);
+                        var constOutput = (IO.Source)VisitExp(helper, constLit, IO.FlowChange.Source);
                         return new FIRShr(args[0], constOutput, prim.Type, prim);
                     }
                     else
@@ -83,7 +83,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             }
             else if (exp is FIRRTL.Mux mux)
             {
-                var cond = (IO.Output)VisitExp(helper, mux.Cond, IO.FlowChange.Source);
+                var cond = (IO.Source)VisitExp(helper, mux.Cond, IO.FlowChange.Source);
                 var ifTrue = VisitExp(helper, mux.TrueValue, IO.FlowChange.Source);
                 var ifFalse = VisitExp(helper, mux.FalseValue, IO.FlowChange.Source);
 
@@ -94,7 +94,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             }
             else if (exp is FIRRTL.ValidIf validIf)
             {
-                var cond = (IO.Output)VisitExp(helper, validIf.Cond, IO.FlowChange.Source);
+                var cond = (IO.Source)VisitExp(helper, validIf.Cond, IO.FlowChange.Source);
                 var ifValid = VisitExp(helper, validIf.Value, IO.FlowChange.Source);
 
                 Mux node = new Mux(new List<IO.FIRIO>() { ifValid }, cond, validIf);
@@ -131,7 +131,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             {
                 var subVec = VisitExp(helper, subAccess.Expr, ioFlow);
                 var vec = (IO.Vector)subVec;
-                var index = (IO.Output)VisitExp(helper, subAccess.Index, IO.FlowChange.Source);
+                var index = (IO.Source)VisitExp(helper, subAccess.Index, IO.FlowChange.Source);
 
                 if (ioFlow == IO.FlowChange.Source)
                 {
@@ -181,14 +181,14 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
 
         private static IO.FIRIO GetIOGender(VisitHelper helper, IO.FIRIO io, IO.FlowChange ioFlow)
         {
-            if (io is IO.Input input && ioFlow == IO.FlowChange.Source)
+            if (io is IO.Sink input && ioFlow == IO.FlowChange.Source)
             {
                 string duplexOutputName = helper.Mod.GetDuplexOutputName(input);
 
                 //Try see if it was already created
                 if (input.GetModResideIn().TryGetIO(duplexOutputName, out var wireOut))
                 {
-                    return (IO.Output)wireOut;
+                    return (IO.Source)wireOut;
                 }
 
                 //Duplex output for this input wasn't created before so make it now.

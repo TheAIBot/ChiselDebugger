@@ -8,7 +8,7 @@ namespace ChiselDebug.GraphFIR.IO
 {
     public static class IOHelper
     {
-        public static void BypassWire(Input[] bypassFrom, Output[] bypassTo)
+        public static void BypassWire(Sink[] bypassFrom, Source[] bypassTo)
         {
             if (bypassFrom.Length != bypassTo.Length)
             {
@@ -17,11 +17,11 @@ namespace ChiselDebug.GraphFIR.IO
 
             for (int i = 0; i < bypassFrom.Length; i++)
             {
-                Input from = bypassFrom[i];
-                Output to = bypassTo[i];
+                Sink from = bypassFrom[i];
+                Source to = bypassTo[i];
 
                 Connection[] connectFromCons = from.GetConnections();
-                Input[] connectTo = to.GetConnectedInputs().ToArray();
+                Sink[] connectTo = to.GetConnectedInputs().ToArray();
                 from.DisconnectAll();
 
                 foreach (var input in connectTo)
@@ -39,10 +39,10 @@ namespace ChiselDebug.GraphFIR.IO
             Debug.Assert(bypassTo.All(x => !x.IsConnectedToAnything()));
         }
 
-        public static (Output output, Input input) OrderIO(ScalarIO a, ScalarIO b) => (a, b) switch
+        public static (Source output, Sink input) OrderIO(ScalarIO a, ScalarIO b) => (a, b) switch
         {
-            (Output aOut, Input bIn) => (aOut, bIn),
-            (Input aIn, Output bOut) => (bOut, aIn),
+            (Source aOut, Sink bIn) => (aOut, bIn),
+            (Sink aIn, Source bOut) => (bOut, aIn),
             _ => throw new Exception()
         };
 
@@ -92,7 +92,7 @@ namespace ChiselDebug.GraphFIR.IO
                 return false;
             }
 
-            FIRIO dataInput = port.GetInput();
+            FIRIO dataInput = port.GetSink();
 
             FIRIO node = io;
             while (node.IsPartOfAggregateIO)

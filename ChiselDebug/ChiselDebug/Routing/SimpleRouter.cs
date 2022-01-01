@@ -200,7 +200,7 @@ namespace ChiselDebug.Routing
                 new MoveData(MoveDirs.Down)
             };
 
-            bool canEndEarly = end.DirIO.IO is Input endInput && endInput.GetConnections().Length == 1;
+            bool canEndEarly = end.DirIO.IO is Sink endInput && endInput.GetConnections().Length == 1;
             while (toSee.Count > 0)
             {
                 int currentIndex = toSee.Dequeue();

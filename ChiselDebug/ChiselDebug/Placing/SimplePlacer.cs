@@ -20,25 +20,25 @@ namespace ChiselDebug.Placing
             Graph<FIRRTLNode> graph = new Graph<FIRRTLNode>();
 
             //Add nodes to graph
-            Dictionary<Input, Node<FIRRTLNode>> inputToNode = new Dictionary<Input, Node<FIRRTLNode>>();
-            Dictionary<Output, Node<FIRRTLNode>> outputToNode = new Dictionary<Output, Node<FIRRTLNode>>();
+            Dictionary<Sink, Node<FIRRTLNode>> inputToNode = new Dictionary<Sink, Node<FIRRTLNode>>();
+            Dictionary<Source, Node<FIRRTLNode>> outputToNode = new Dictionary<Source, Node<FIRRTLNode>>();
             foreach (var firNode in nodeSizes.Keys)
             {
                 var node = new Node<FIRRTLNode>(firNode);
                 graph.AddNode(node);
 
-                foreach (var input in firNode.GetInputs())
+                foreach (var input in firNode.GetSinks())
                 {
                     inputToNode.Add(input, node);
                 }
-                foreach (var output in firNode.GetOutputs())
+                foreach (var output in firNode.GetSources())
                 {
                     outputToNode.Add(output, node);
                 }
             }
 
             List<Node<FIRRTLNode>> modInputNodes = new List<Node<FIRRTLNode>>();
-            foreach (var input in mod.GetInternalInputs())
+            foreach (var input in mod.GetInternalSinks())
             {
                 if (!input.IsConnectedToAnything())
                 {
@@ -50,7 +50,7 @@ namespace ChiselDebug.Placing
                 modInputNodes.Add(modInputNode);
             }
             List<Node<FIRRTLNode>> modOutputNodes = new List<Node<FIRRTLNode>>();
-            foreach (var output in mod.GetInternalOutputs())
+            foreach (var output in mod.GetInternalSources())
             {
                 if (!output.IsConnectedToAnything())
                 {
@@ -64,7 +64,7 @@ namespace ChiselDebug.Placing
 
 
             //Make edges
-            foreach (Output output in outputToNode.Keys)
+            foreach (Source output in outputToNode.Keys)
             {
                 if (!output.IsConnectedToAnything())
                 {

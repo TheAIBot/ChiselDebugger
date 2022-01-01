@@ -10,18 +10,18 @@ namespace ChiselDebug.GraphFIR.Components
     public abstract class ConstBitRange : FIRRTLPrimOP
     {
         public readonly string OpName;
-        public readonly Input In;
+        public readonly Sink In;
 
-        public ConstBitRange(string name, Output arg1, IFIRType outType, FirrtlNode defNode) : base(outType, defNode)
+        public ConstBitRange(string name, Source arg1, IFIRType outType, FirrtlNode defNode) : base(outType, defNode)
         {
             OpName = name;
-            In = new Input(this, arg1.Type);
+            In = new Sink(this, arg1.Type);
             arg1.ConnectToInput(In);
         }
 
-        public override Input[] GetInputs()
+        public override Sink[] GetSinks()
         {
-            return new Input[] { In };
+            return new Sink[] { In };
         }
 
         public override IEnumerable<FIRIO> GetIO()
@@ -48,7 +48,7 @@ namespace ChiselDebug.GraphFIR.Components
     public sealed class Head : ConstBitRange
     {
         public readonly int FromMSB;
-        public Head(Output arg1, IFIRType outType, int fromMSB, FirrtlNode defNode) : base("head", arg1, outType, defNode)
+        public Head(Source arg1, IFIRType outType, int fromMSB, FirrtlNode defNode) : base("head", arg1, outType, defNode)
         {
             FromMSB = fromMSB;
         }
@@ -80,7 +80,7 @@ namespace ChiselDebug.GraphFIR.Components
     public sealed class Tail : ConstBitRange
     {
         public readonly int FromLSB;
-        public Tail(Output arg1, IFIRType outType, int fromLSB, FirrtlNode defNode) : base("tail", arg1, outType, defNode)
+        public Tail(Source arg1, IFIRType outType, int fromLSB, FirrtlNode defNode) : base("tail", arg1, outType, defNode)
         {
             FromLSB = fromLSB;
         }
@@ -113,7 +113,7 @@ namespace ChiselDebug.GraphFIR.Components
     {
         public readonly int StartInclusive;
         public readonly int EndInclusive;
-        public BitExtract(Output arg1, IFIRType outType, int startInclusive, int endInclusive, FirrtlNode defNode) : base("bits", arg1, outType, defNode)
+        public BitExtract(Source arg1, IFIRType outType, int startInclusive, int endInclusive, FirrtlNode defNode) : base("bits", arg1, outType, defNode)
         {
             StartInclusive = startInclusive;
             EndInclusive = endInclusive;
@@ -146,7 +146,7 @@ namespace ChiselDebug.GraphFIR.Components
     public sealed class Pad : ConstBitRange
     {
         public readonly int WidthAfterPad;
-        public Pad(Output arg1, IFIRType outType, int newWidth, FirrtlNode defNode) : base("pad", arg1, outType, defNode)
+        public Pad(Source arg1, IFIRType outType, int newWidth, FirrtlNode defNode) : base("pad", arg1, outType, defNode)
         {
             WidthAfterPad = newWidth;
         }

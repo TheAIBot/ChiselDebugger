@@ -7,7 +7,7 @@ namespace ChiselDebug.CombGraph
     public struct Computable : ICompute
     {
         private readonly FIRRTLNode Node;
-        private readonly Output Con;
+        private readonly Source Con;
         public readonly bool IsBorderIO;
         private BinaryVarValue OldValue;
 
@@ -19,7 +19,7 @@ namespace ChiselDebug.CombGraph
             this.OldValue = new BinaryVarValue();
         }
 
-        public Computable(Output con)
+        public Computable(Source con)
         {
             this.Node = null;
             this.Con = con;
@@ -37,7 +37,7 @@ namespace ChiselDebug.CombGraph
             //Copy value from other side of module
             if (IsBorderIO)
             {
-                Input input = Con.GetPaired();
+                Sink input = Con.GetPaired();
                 if (input.IsConnectedToAnything())
                 {
                     Con.Value.OverrideValue(ref input.UpdateValueFromSourceFast());
@@ -45,7 +45,7 @@ namespace ChiselDebug.CombGraph
             }
         }
 
-        public Output ComputeGetIfChanged()
+        public Source ComputeGetIfChanged()
         {
             if (Node != null)
             {
@@ -106,7 +106,7 @@ namespace ChiselDebug.CombGraph
             return Node;
         }
 
-        public Output GetConnection()
+        public Source GetConnection()
         {
             return Con;
         }

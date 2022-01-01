@@ -8,13 +8,13 @@ using VCDReader;
 
 namespace ChiselDebug.GraphFIR.IO
 {
-    public sealed class Output : ScalarIO
+    public sealed class Source : ScalarIO
     {
-        private List<Input> To = null;
-        private Input Paired = null;
+        private List<Sink> To = null;
+        private Sink Paired = null;
 
 
-        public Output(FIRRTLNode node, string name, IFIRType type) : base(node, name, type)
+        public Source(FIRRTLNode node, string name, IFIRType type) : base(node, name, type)
         { }
 
         public override bool IsConnectedToAnything()
@@ -27,14 +27,14 @@ namespace ChiselDebug.GraphFIR.IO
             return IsConnectedToAnything() && To.Any(x => x.Node is not INoPlaceAndRoute);
         }
 
-        public override FIRIO GetOutput()
+        public override FIRIO GetSource()
         {
             return this;
         }
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Output condition = null)
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source condition = null)
         {
-            if (input is Input ioIn)
+            if (input is Sink ioIn)
             {
                 ioIn.Connect(this, condition);
                 ConnectOnlyOutputSide(ioIn);
@@ -49,10 +49,10 @@ namespace ChiselDebug.GraphFIR.IO
         {
             return flow switch
             {
-                FlowChange.Source => new Output(node, Name, Type),
-                FlowChange.Sink => new Input(node, Name, Type),
-                FlowChange.Flipped => new Input(node, Name, Type),
-                FlowChange.Preserve => new Output(node, Name, Type),
+                FlowChange.Source => new Source(node, Name, Type),
+                FlowChange.Sink => new Sink(node, Name, Type),
+                FlowChange.Flipped => new Sink(node, Name, Type),
+                FlowChange.Preserve => new Source(node, Name, Type),
                 var error => throw new Exception($"Unknown flow. Flow: {flow}")
             };
         }
@@ -83,23 +83,23 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        internal void DisconnectOnlyOutputSide(Input input)
+        internal void DisconnectOnlyOutputSide(Sink input)
         {
             To.Remove(input);
         }
 
-        internal void ConnectOnlyOutputSide(Input input)
+        internal void ConnectOnlyOutputSide(Sink input)
         {
             if (To == null)
             {
-                To = new List<Input>();
+                To = new List<Sink>();
             }
             To.Add(input);
         }
 
-        public IEnumerable<Input> GetConnectedInputs()
+        public IEnumerable<Sink> GetConnectedInputs()
         {
-            return To?.Distinct() ?? Enumerable.Empty<Input>();
+            return To?.Distinct() ?? Enumerable.Empty<Sink>();
         }
 
         public override ref BinaryVarValue FetchValue()
@@ -112,14 +112,14 @@ namespace ChiselDebug.GraphFIR.IO
             Value.SetFromBigInt(in newValue);
         }
 
-        public override Input GetPaired()
+        public override Sink GetPaired()
         {
             return Paired;
         }
 
         public override void SetPaired(ScalarIO paired)
         {
-            Paired = (Input)paired;
+            Paired = (Sink)paired;
         }
     }
 }

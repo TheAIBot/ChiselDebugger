@@ -13,8 +13,8 @@ namespace ChiselDebug.GraphFIR.Components
         public readonly string InstanceName;
         private readonly List<FIRRTLNode> Nodes = new List<FIRRTLNode>();
         private readonly Dictionary<string, FIRIO> NameToIO = new Dictionary<string, FIRIO>();
-        private readonly Dictionary<Input, Wire> DuplexOutputWires = new Dictionary<Input, Wire>();
-        public Output EnableCon { get; private set; }
+        private readonly Dictionary<Sink, Wire> DuplexOutputWires = new Dictionary<Sink, Wire>();
+        public Source EnableCon { get; private set; }
         public bool IsConditional => EnableCon != null;
 
 
@@ -25,7 +25,7 @@ namespace ChiselDebug.GraphFIR.Components
             SetModResideIn(parentMod);
         }
 
-        public void SetEnableCond(Output enable)
+        public void SetEnableCond(Source enable)
         {
             EnableCon = enable;
         }
@@ -60,19 +60,19 @@ namespace ChiselDebug.GraphFIR.Components
             }
         }
 
-        public Output AddDuplexOuputWire(Input input)
+        public Source AddDuplexOuputWire(Sink input)
         {
             Wire wire = new Wire(GetDuplexOutputName(input), input, null);
             wire.SetModResideIn(this);
 
             DuplexIO wireIO = wire.GetAsDuplex();
-            NameToIO.Add(wireIO.Name, wireIO.GetOutput());
+            NameToIO.Add(wireIO.Name, wireIO.GetSource());
             DuplexOutputWires.Add(input, wire);
 
-            return (Output)wireIO.GetOutput();
+            return (Source)wireIO.GetSource();
         }
 
-        public string GetDuplexOutputName(Input input)
+        public string GetDuplexOutputName(Sink input)
         {
             //Full name of io may collide with name of some other io, so
             //a string is added to the end which isn't a legal firrtl name
@@ -126,10 +126,10 @@ namespace ChiselDebug.GraphFIR.Components
             yield return new ModuleIO(this, InstanceName, ExternalIO.Values.ToList());
         }
 
-        public List<Output> GetAllModuleConnections()
+        public List<Source> GetAllModuleConnections()
         {
-            List<Output> connestions = new List<Output>();
-            foreach (Output output in GetInternalOutputs())
+            List<Source> connestions = new List<Source>();
+            foreach (Source output in GetInternalSources())
             {
                 if (output.IsConnectedToAnything())
                 {
@@ -139,7 +139,7 @@ namespace ChiselDebug.GraphFIR.Components
 
             foreach (var node in Nodes)
             {
-                foreach (Output output in node.GetOutputs())
+                foreach (Source output in node.GetSources())
                 {
                     if (output.IsConnectedToAnything())
                     {
@@ -151,10 +151,10 @@ namespace ChiselDebug.GraphFIR.Components
             return connestions;
         }
 
-        public List<Input> GetAllModuleInputs()
+        public List<Sink> GetAllModuleInputs()
         {
-            List<Input> connestions = new List<Input>();
-            foreach (Input input in GetInternalInputs())
+            List<Sink> connestions = new List<Sink>();
+            foreach (Sink input in GetInternalSinks())
             {
                 if (input.IsConnectedToAnything())
                 {
@@ -164,7 +164,7 @@ namespace ChiselDebug.GraphFIR.Components
 
             foreach (var node in Nodes)
             {
-                foreach (Input input in node.GetInputs())
+                foreach (Sink input in node.GetSinks())
                 {
                     if (input.IsConnectedToAnything())
                     {
@@ -209,7 +209,7 @@ namespace ChiselDebug.GraphFIR.Components
         {
             foreach (var keyValue in DuplexOutputWires)
             {
-                Output wireOut = (Output)keyValue.Value.Result;
+                Source wireOut = (Source)keyValue.Value.Result;
                 if (wireOut.IsConnectedToAnything())
                 {
                     if (!keyValue.Key.IsConnectedToAnything())
@@ -219,7 +219,7 @@ namespace ChiselDebug.GraphFIR.Components
 
                     //Everything connected to duplex input is now being connected to the
                     //wires input
-                    Input wireIn = (Input)keyValue.Value.In;
+                    Sink wireIn = (Sink)keyValue.Value.In;
                     foreach (var con in keyValue.Key.GetConnections())
                     {
                         con.From.ConnectToInput(wireIn, false, false, con.Condition);

@@ -13,13 +13,13 @@ namespace ChiselDebug.GraphFIR.Components
         public readonly string Name;
         public readonly FIRIO In;
         public readonly FIRIO Result;
-        public readonly Input Clock;
-        public readonly Input? Reset;
+        public readonly Sink Clock;
+        public readonly Sink? Reset;
         public readonly FIRIO? Init;
 
-        public Register(string name, FIRIO inputType, Output clock, Output? reset, FIRIO? init, FirrtlNode defNode) : base(defNode)
+        public Register(string name, FIRIO inputType, Source clock, Source? reset, FIRIO? init, FirrtlNode defNode) : base(defNode)
         {
-            if (!inputType.IsPassiveOfType<Input>())
+            if (!inputType.IsPassiveOfType<Sink>())
             {
                 throw new Exception("Register must be a passive input type.");
             }
@@ -31,18 +31,18 @@ namespace ChiselDebug.GraphFIR.Components
             Result = In.Flip(this);
             Result.SetName(Name);
 
-            Clock = new Input(this, "clock", clock.Type);
+            Clock = new Sink(this, "clock", clock.Type);
             clock.ConnectToInput(Clock);
 
             if (reset != null)
             {
-                Reset = new Input(this, "reset", reset.Type);
+                Reset = new Sink(this, "reset", reset.Type);
                 reset.ConnectToInput(Reset);
             }
 
             if (init != null)
             {
-                if (!init.IsPassiveOfType<Output>())
+                if (!init.IsPassiveOfType<Source>())
                 {
                     throw new Exception("Register init must be of a passive output type.");
                 }
@@ -80,17 +80,17 @@ namespace ChiselDebug.GraphFIR.Components
             }
         }
 
-        public override Input[] GetInputs()
+        public override Sink[] GetSinks()
         {
             return GetAllIO().SelectMany(x => x.Flatten())
-                             .OfType<Input>()
+                             .OfType<Sink>()
                              .ToArray();
         }
 
-        public override Output[] GetOutputs()
+        public override Source[] GetSources()
         {
             return GetAllIO().SelectMany(x => x.Flatten())
-                             .OfType<Output>()
+                             .OfType<Source>()
                              .ToArray();
         }
 
@@ -115,11 +115,11 @@ namespace ChiselDebug.GraphFIR.Components
 
         internal override void InferType()
         {
-            foreach (var input in GetInputs())
+            foreach (var input in GetSinks())
             {
                 input.InferType();
             }
-            foreach (var output in GetOutputs())
+            foreach (var output in GetSources())
             {
                 output.InferType();
             }

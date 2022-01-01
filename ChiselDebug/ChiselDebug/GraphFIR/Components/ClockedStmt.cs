@@ -8,15 +8,15 @@ namespace ChiselDebug.GraphFIR.Components
 {
     public sealed class FirStop : FIRRTLNode
     {
-        public readonly Input Clock;
-        public readonly Input Enable;
+        public readonly Sink Clock;
+        public readonly Sink Enable;
         public readonly int ExitCode;
         public bool SignalStop { get; private set; }
 
-        public FirStop(Output clock, Output enable, int exitCode, FirrtlNode defNode) : base(defNode)
+        public FirStop(Source clock, Source enable, int exitCode, FirrtlNode defNode) : base(defNode)
         {
-            Clock = new Input(this, new ClockType());
-            Enable = new Input(this, new UIntType(1));
+            Clock = new Sink(this, new ClockType());
+            Enable = new Sink(this, new UIntType(1));
             ExitCode = exitCode;
 
             clock.ConnectToInput(Clock);
@@ -31,14 +31,14 @@ namespace ChiselDebug.GraphFIR.Components
             SignalStop = clockVal.Bits[0] == BitState.One && enableVal.Bits[0] == BitState.One;
         }
 
-        public override Input[] GetInputs()
+        public override Sink[] GetSinks()
         {
-            return new Input[] { Clock, Enable };
+            return new Sink[] { Clock, Enable };
         }
 
-        public override Output[] GetOutputs()
+        public override Source[] GetSources()
         {
-            return Array.Empty<Output>();
+            return Array.Empty<Source>();
         }
 
         public override IEnumerable<FIRIO> GetIO()

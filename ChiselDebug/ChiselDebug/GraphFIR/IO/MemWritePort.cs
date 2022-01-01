@@ -34,19 +34,19 @@ namespace ChiselDebug.GraphFIR.IO
             List<FIRIO> io = new List<FIRIO>();
             io.Add(dataIn);
             io.Add(mask);
-            io.Add(new Input(node, "addr", new UIntType(addressWidth)));
-            io.Add(new Input(node, "en", new UIntType(1)));
-            io.Add(new Input(node, "clk", new ClockType()));
+            io.Add(new Sink(node, "addr", new UIntType(addressWidth)));
+            io.Add(new Sink(node, "en", new UIntType(1)));
+            io.Add(new Sink(node, "clk", new ClockType()));
 
             return io;
         }
 
-        public override FIRIO GetInput()
+        public override FIRIO GetSink()
         {
             return DataIn;
         }
 
-        public override FIRIO GetOutput()
+        public override FIRIO GetSource()
         {
             throw new Exception("Can't get output from this IO.");
         }

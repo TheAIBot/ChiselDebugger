@@ -8,21 +8,21 @@ namespace ChiselDebug.CombGraph
 {
     public class CombComputeOrder<T> where T : ICompute
     {
-        private readonly Output[] StartOutputs;
+        private readonly Source[] StartOutputs;
         private T[] ComputeOrder;
 
-        internal CombComputeOrder(Output[] startOutputs, T[] computeOrder)
+        internal CombComputeOrder(Source[] startOutputs, T[] computeOrder)
         {
             this.StartOutputs = startOutputs;
             this.ComputeOrder = computeOrder;
         }
 
-        public List<Output> ComputeAndGetChanged()
+        public List<Source> ComputeAndGetChanged()
         {
-            List<Output> updatedConnections = new List<Output>();
+            List<Source> updatedConnections = new List<Source>();
             for (int i = 0; i < ComputeOrder.Length; i++)
             {
-                Output updated = ComputeOrder[i].ComputeGetIfChanged();
+                Source updated = ComputeOrder[i].ComputeGetIfChanged();
                 if (updated != null)
                 {
                     updatedConnections.Add(updated);
@@ -48,7 +48,7 @@ namespace ChiselDebug.CombGraph
             }
         }
 
-        public ReadOnlySpan<Output> GetAllRootSources()
+        public ReadOnlySpan<Source> GetAllRootSources()
         {
             return StartOutputs;
         }

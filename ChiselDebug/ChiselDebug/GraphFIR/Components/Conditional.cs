@@ -17,23 +17,23 @@ namespace ChiselDebug.GraphFIR.Components
             ConditionalModules.Add(mod);
         }
 
-        public override Input[] GetInputs()
+        public override Sink[] GetSinks()
         {
-            List<Input> inputs = new List<Input>();
+            List<Sink> inputs = new List<Sink>();
             foreach (var condMod in ConditionalModules)
             {
-                inputs.AddRange(condMod.GetInputs());
+                inputs.AddRange(condMod.GetSinks());
             }
 
             return inputs.ToArray();
         }
 
-        public override Output[] GetOutputs()
+        public override Source[] GetSources()
         {
-            List<Output> outputs = new List<Output>();
+            List<Source> outputs = new List<Source>();
             foreach (var condMod in ConditionalModules)
             {
-                outputs.AddRange(condMod.GetOutputs());
+                outputs.AddRange(condMod.GetSources());
             }
 
             return outputs.ToArray();

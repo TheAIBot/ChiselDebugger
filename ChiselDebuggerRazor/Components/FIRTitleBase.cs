@@ -15,10 +15,10 @@ namespace ChiselDebuggerRazor.Components
         {
             if (IsTitleHeightKnown)
             {
-                InputOffsets = OnMakeInputs(width, height);
-                OutputOffsets = OnMakeOutputs(width, height);
+                SinkOffsets = OnMakeSinks(width, height);
+                SourceOffsets = OnMakeSources(width, height);
 
-                ParentLayoutCtrl?.UpdateComponentInfo(new FIRComponentUpdate(Operation, GetCurrentSize(), InputOffsets, OutputOffsets));
+                ParentLayoutCtrl?.UpdateComponentInfo(new FIRComponentUpdate(Operation, GetCurrentSize(), SinkOffsets, SourceOffsets));
             }
         }
 

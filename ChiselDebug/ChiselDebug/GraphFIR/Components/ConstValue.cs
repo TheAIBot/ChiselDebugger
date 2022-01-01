@@ -9,23 +9,23 @@ namespace ChiselDebug.GraphFIR.Components
     public sealed class ConstValue : FIRRTLNode, INoPlaceAndRoute
     {
         public readonly Literal Value;
-        public readonly Output Result;
+        public readonly Source Result;
         private bool FirstCompute = true;
 
         public ConstValue(Literal value) : base(value)
         {
             Value = value;
-            Result = new Output(this, null, value.GetFIRType());
+            Result = new Source(this, null, value.GetFIRType());
         }
 
-        public override Input[] GetInputs()
+        public override Sink[] GetSinks()
         {
-            return Array.Empty<Input>();
+            return Array.Empty<Sink>();
         }
 
-        public override Output[] GetOutputs()
+        public override Source[] GetSources()
         {
-            return new Output[] { Result };
+            return new Source[] { Result };
         }
 
         public override IEnumerable<FIRIO> GetIO()

@@ -15,7 +15,7 @@
     }
 
 
-    @foreach (var input in InputOffsets)
+    @foreach (var input in SinkOffsets)
     {
         <IOPortUI Position="@input.Position" IO="@input.IO"></IOPortUI>
     }
@@ -31,11 +31,11 @@
         base.OnFirstParametersSetAsync();
     }
 
-    protected override DirectedIO[] OnMakeInputs(int width, int height)
+    protected override DirectedIO[] OnMakeSinks(int width, int height)
     {
         int spacing = height / 3;
         int y = spacing;
-        Input[] inputs = Operation.GetInputs();
+        Sink[] inputs = Operation.GetSinks();
         DirectedIO[] dirInputs = new DirectedIO[inputs.Length];
         for (int i = 0; i < inputs.Length; i++)
         {
@@ -46,7 +46,7 @@
         return dirInputs;
     }
 
-    protected override DirectedIO[] OnMakeOutputs(int width, int height)
+    protected override DirectedIO[] OnMakeSources(int width, int height)
     {
         return Array.Empty<DirectedIO>();
     }

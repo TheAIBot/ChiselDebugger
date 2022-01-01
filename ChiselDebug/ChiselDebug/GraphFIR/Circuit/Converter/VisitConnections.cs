@@ -13,8 +13,8 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             //aggregate type then try convert both to scalar io and connect them.
             if (from is not IO.AggregateIO || to is not IO.AggregateIO)
             {
-                from = from.GetOutput();
-                to = to.GetInput();
+                from = from.GetSource();
+                to = to.GetSink();
             }
 
             ConnectIO(helper, from, to, isPartial);
@@ -28,7 +28,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             //If going from inside to outside or outside to outside
             //then add condition to that connection if currently in
             //conditional module.
-            IO.Output condition = null;
+            IO.Source condition = null;
             if (canBeConditional &&
                 (fromMod == helper.Mod && toMod != helper.Mod ||
                  fromMod != helper.Mod && toMod != helper.Mod))
@@ -46,7 +46,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
                 IO.IOHelper.IsIOInMaskableMemPortData(to, memPort))
             {
                 var scopeEnableCond = helper.ScopeEnabledCond;
-                foreach (IO.Input dataInputWrittenTo in to.Flatten())
+                foreach (IO.Sink dataInputWrittenTo in to.Flatten())
                 {
                     var dataInputMask = memPort.GetMaskFromDataInput(dataInputWrittenTo);
                     scopeEnableCond.ConnectToInput(dataInputMask, false, false, scopeEnableCond);

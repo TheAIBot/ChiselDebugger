@@ -9,19 +9,19 @@ using VCDReader;
 
 namespace ChiselDebug.GraphFIR.IO
 {
-    public sealed class Input : ScalarIO
+    public sealed class Sink : ScalarIO
     {
-        private Output Con;
+        private Source Con;
         private RefEnabledList<Connection> CondCons = new RefEnabledList<Connection>();
-        private Output Paired = null;
+        private Source Paired = null;
 
-        public Input(FIRRTLNode node, IFIRType type) : this(node, null, type)
+        public Sink(FIRRTLNode node, IFIRType type) : this(node, null, type)
         { }
 
-        public Input(FIRRTLNode node, string name, IFIRType type) : base(node, name, type)
+        public Sink(FIRRTLNode node, string name, IFIRType type) : base(node, name, type)
         { }
 
-        public void ReplaceConnection(Connection replace, Output replaceWith)
+        public void ReplaceConnection(Connection replace, Source replaceWith)
         {
             if (replace.Condition == null)
             {
@@ -78,7 +78,7 @@ namespace ChiselDebug.GraphFIR.IO
             return cons.ToArray();
         }
 
-        public Connection GetConnection(Output from, Output condition)
+        public Connection GetConnection(Source from, Source condition)
         {
             if (condition == null && Con == from)
             {
@@ -98,12 +98,12 @@ namespace ChiselDebug.GraphFIR.IO
             throw new Exception("Input is not connected to the given output.");
         }
 
-        public override FIRIO GetInput()
+        public override FIRIO GetSink()
         {
             return this;
         }
 
-        internal void TransferConnectionsTo(Input input)
+        internal void TransferConnectionsTo(Sink input)
         {
             if (Con != null)
             {
@@ -160,7 +160,7 @@ namespace ChiselDebug.GraphFIR.IO
             CondCons.Clear();
         }
 
-        public void Connect(Output con, Output condition)
+        public void Connect(Source con, Source condition)
         {
             if (condition != null)
             {
@@ -194,7 +194,7 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Output condition = null)
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source condition = null)
         {
             throw new Exception("Input can't be connected to output. Flow is reversed.");
         }
@@ -203,10 +203,10 @@ namespace ChiselDebug.GraphFIR.IO
         {
             return flow switch
             {
-                FlowChange.Source => new Output(node, Name, Type),
-                FlowChange.Sink => new Input(node, Name, Type),
-                FlowChange.Flipped => new Output(node, Name, Type),
-                FlowChange.Preserve => new Input(node, Name, Type),
+                FlowChange.Source => new Source(node, Name, Type),
+                FlowChange.Sink => new Sink(node, Name, Type),
+                FlowChange.Flipped => new Source(node, Name, Type),
+                FlowChange.Preserve => new Sink(node, Name, Type),
                 var error => throw new Exception($"Unknown flow. Flow: {flow}")
             };
         }
@@ -216,7 +216,7 @@ namespace ChiselDebug.GraphFIR.IO
             return this is T;
         }
 
-        public Output GetEnabledSource()
+        public Source GetEnabledSource()
         {
             for (int i = CondCons.Count - 1; i >= 0; i--)
             {
@@ -288,7 +288,7 @@ namespace ChiselDebug.GraphFIR.IO
                 return;
             }
 
-            List<Output> endPoints = new List<Output>();
+            List<Source> endPoints = new List<Source>();
             if (Con != null)
             {
                 endPoints.Add(Con);
@@ -306,14 +306,14 @@ namespace ChiselDebug.GraphFIR.IO
             return ref UpdateValueFromSourceFast();
         }
 
-        public override Output GetPaired()
+        public override Source GetPaired()
         {
             return Paired;
         }
 
         public override void SetPaired(ScalarIO paired)
         {
-            Paired = (Output)paired;
+            Paired = (Source)paired;
         }
     }
 }

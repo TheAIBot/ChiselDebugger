@@ -91,7 +91,7 @@ namespace ChiselDebug.GraphFIR.Transformations
 
         private static IEnumerable<AggregateConnection> GetAllEndpointConnections(ScalarIO scalar)
         {
-            if (scalar is Input input)
+            if (scalar is Sink input)
             {
                 foreach (var connection in input.GetConnections())
                 {
@@ -103,7 +103,7 @@ namespace ChiselDebug.GraphFIR.Transformations
                     yield return new AggregateConnection(connection.From.ParentIO, connection.Condition);
                 }
             }
-            else if (scalar is Output output)
+            else if (scalar is Source output)
             {
                 foreach (var conInputs in output.GetConnectedInputs())
                 {

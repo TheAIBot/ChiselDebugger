@@ -5,33 +5,33 @@ using System.Linq;
 
 namespace ChiselDebug.GraphFIR.IO
 {
-    public record AggregateConnection(AggregateIO To, Output Condition);
+    public record AggregateConnection(AggregateIO To, Source Condition);
     public abstract class AggregateIO : FIRIO
     {
         private HashSet<AggregateConnection> Connections = null;
         public bool HasAggregateConnections => Connections?.Count > 0;
         public AggregateIO(FIRRTLNode node, string name) : base(node, name) { }
 
-        public override FIRIO GetInput()
+        public override FIRIO GetSink()
         {
             return this;
         }
 
-        public override FIRIO GetOutput()
+        public override FIRIO GetSource()
         {
             return this;
         }
 
         public abstract FIRIO[] GetIOInOrder();
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Output condition = null)
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source condition = null)
         {
             var aggIO = input as AggregateIO;
             AddConnection(aggIO, condition);
             aggIO.AddConnection(this, condition);
         }
 
-        public void AddConnection(AggregateIO aggIO, Output condition)
+        public void AddConnection(AggregateIO aggIO, Source condition)
         {
             if (Connections == null)
             {
@@ -41,7 +41,7 @@ namespace ChiselDebug.GraphFIR.IO
             Connections.Add(new AggregateConnection(aggIO, condition));
         }
 
-        public void RemoveConnection(AggregateIO aggIO, Output condition)
+        public void RemoveConnection(AggregateIO aggIO, Source condition)
         {
             if (Connections == null)
             {
@@ -51,14 +51,14 @@ namespace ChiselDebug.GraphFIR.IO
             Connections.Remove(new AggregateConnection(aggIO, condition));
         }
 
-        public void ReplaceConnection(AggregateIO replace, AggregateIO replaceWith, Output condition)
+        public void ReplaceConnection(AggregateIO replace, AggregateIO replaceWith, Source condition)
         {
-            if (!replace.IsPassiveOfType<Output>())
+            if (!replace.IsPassiveOfType<Source>())
             {
                 throw new ArgumentException(nameof(replace), "IO to replace must be passive of type output");
             }
 
-            if (!replaceWith.IsPassiveOfType<Output>())
+            if (!replaceWith.IsPassiveOfType<Source>())
             {
                 throw new ArgumentException(nameof(replaceWith), "IO to replace with must be passive of type output");
             }
@@ -78,9 +78,9 @@ namespace ChiselDebug.GraphFIR.IO
                 throw new ArgumentException(nameof(replaceWith), "The io being replaced and what it's being replaced with must be ofthe same type.");
             }
 
-            List<Input> currentScalars = Flatten().Cast<Input>().ToList();
-            List<Output> replaceScalars = replace.Flatten().Cast<Output>().ToList();
-            List<Output> replaceWithScalars = replaceWith.Flatten().Cast<Output>().ToList();
+            List<Sink> currentScalars = Flatten().Cast<Sink>().ToList();
+            List<Source> replaceScalars = replace.Flatten().Cast<Source>().ToList();
+            List<Source> replaceWithScalars = replaceWith.Flatten().Cast<Source>().ToList();
             if (replaceScalars.Count != replaceWithScalars.Count)
             {
                 throw new ArgumentException($"The size of {nameof(replace)} and {nameof(replaceWith)} must be the same when replacing");
@@ -123,11 +123,11 @@ namespace ChiselDebug.GraphFIR.IO
                     continue;
                 }
 
-                if (scalar is Input input && input.GetConnections().Length != connectionCount)
+                if (scalar is Sink input && input.GetConnections().Length != connectionCount)
                 {
                     return false;
                 }
-                else if (scalar is Output output && output.GetConnectedInputs().Count() != connectionCount)
+                else if (scalar is Source output && output.GetConnectedInputs().Count() != connectionCount)
                 {
                     return false;
                 }

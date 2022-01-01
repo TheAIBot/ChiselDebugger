@@ -66,14 +66,14 @@ namespace ChiselDebug.GraphFIR.Components
             return io.Name.StartsWith("~$");
         }
 
-        public override Input[] GetInputs()
+        public override Sink[] GetSinks()
         {
-            return FlattenAndFilterIOPaired<Output, Input>(AllIOInOrder);
+            return FlattenAndFilterIOPaired<Source, Sink>(AllIOInOrder);
         }
 
-        public override Output[] GetOutputs()
+        public override Source[] GetSources()
         {
-            return FlattenAndFilterIOPaired<Input, Output>(AllIOInOrder);
+            return FlattenAndFilterIOPaired<Sink, Source>(AllIOInOrder);
         }
 
         public override Dictionary<string, FIRIO>.ValueCollection GetIO()
@@ -86,7 +86,7 @@ namespace ChiselDebug.GraphFIR.Components
             return InternalIO.Values.ToArray();
         }
 
-        public IEnumerable<Input> GetInternalInputs()
+        public IEnumerable<Sink> GetInternalSinks()
         {
             List<ScalarIO> scalars = new List<ScalarIO>();
             foreach (var intIO in InternalIO.Values)
@@ -94,7 +94,7 @@ namespace ChiselDebug.GraphFIR.Components
                 scalars.Clear();
                 foreach (var flat in intIO.Flatten(scalars))
                 {
-                    if (flat is Input inT)
+                    if (flat is Sink inT)
                     {
                         yield return inT;
                     }
@@ -102,7 +102,7 @@ namespace ChiselDebug.GraphFIR.Components
             }
         }
 
-        public IEnumerable<Output> GetInternalOutputs()
+        public IEnumerable<Source> GetInternalSources()
         {
             List<ScalarIO> scalars = new List<ScalarIO>();
             foreach (var intIO in InternalIO.Values)
@@ -110,7 +110,7 @@ namespace ChiselDebug.GraphFIR.Components
                 scalars.Clear();
                 foreach (var flat in intIO.Flatten(scalars))
                 {
-                    if (flat is Output outT)
+                    if (flat is Source outT)
                     {
                         yield return outT;
                     }

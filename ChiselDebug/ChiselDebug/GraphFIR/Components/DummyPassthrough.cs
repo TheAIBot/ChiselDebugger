@@ -5,25 +5,25 @@ namespace ChiselDebug.GraphFIR.Components
 {
     public sealed class DummyPassthrough : FIRRTLNode, INoPlaceAndRoute
     {
-        public readonly Input InIO;
-        public readonly Output Result;
+        public readonly Sink InIO;
+        public readonly Source Result;
 
-        public DummyPassthrough(Output outIO) : base(null)
+        public DummyPassthrough(Source outIO) : base(null)
         {
-            InIO = (Input)outIO.Flip(this);
-            Result = (Output)outIO.Copy(this);
+            InIO = (Sink)outIO.Flip(this);
+            Result = (Source)outIO.Copy(this);
 
             outIO.ConnectToInput(InIO);
         }
 
-        public override Input[] GetInputs()
+        public override Sink[] GetSinks()
         {
-            return new Input[] { InIO };
+            return new Sink[] { InIO };
         }
 
-        public override Output[] GetOutputs()
+        public override Source[] GetSources()
         {
-            return new Output[] { Result };
+            return new Source[] { Result };
         }
 
         public override IEnumerable<FIRIO> GetIO()

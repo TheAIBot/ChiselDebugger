@@ -15,7 +15,7 @@ namespace ChiselDebug.GraphFIR.Components
 
         public Wire(string name, FIRIO inputType, FirrtlNode defNode) : base(defNode)
         {
-            if (!inputType.IsPassiveOfType<Input>())
+            if (!inputType.IsPassiveOfType<Sink>())
             {
                 throw new Exception("Wire input type must be a passive input type.");
             }
@@ -31,7 +31,7 @@ namespace ChiselDebug.GraphFIR.Components
 
         internal void BypassWireIO()
         {
-            IOHelper.BypassWire(GetInputs(), GetOutputs());
+            IOHelper.BypassWire(GetSinks(), GetSources());
             Debug.Assert(In.Flatten().All(x => !x.IsConnectedToAnything()));
             Debug.Assert(Result.Flatten().All(x => !x.IsConnectedToAnything()));
         }
@@ -41,14 +41,14 @@ namespace ChiselDebug.GraphFIR.Components
             return new DuplexIO(this, Name, In, Result);
         }
 
-        public override Input[] GetInputs()
+        public override Sink[] GetSinks()
         {
-            return In.Flatten().Cast<Input>().ToArray();
+            return In.Flatten().Cast<Sink>().ToArray();
         }
 
-        public override Output[] GetOutputs()
+        public override Source[] GetSources()
         {
-            return Result.Flatten().Cast<Output>().ToArray();
+            return Result.Flatten().Cast<Source>().ToArray();
         }
 
         public override IEnumerable<FIRIO> GetIO()
@@ -69,7 +69,7 @@ namespace ChiselDebug.GraphFIR.Components
 
         internal override void InferType()
         {
-            foreach (Input input in GetInputs())
+            foreach (Sink input in GetSinks())
             {
                 input.InferType();
             }

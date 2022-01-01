@@ -24,8 +24,8 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             }
             else if (statement is FIRRTL.Stop stop)
             {
-                var clock = (IO.Output)VisitExp(helper, stop.Clk, IO.FlowChange.Source);
-                var enable = (IO.Output)VisitExp(helper, stop.Enabled, IO.FlowChange.Source);
+                var clock = (IO.Source)VisitExp(helper, stop.Clk, IO.FlowChange.Source);
+                var enable = (IO.Source)VisitExp(helper, stop.Enabled, IO.FlowChange.Source);
 
                 var firStop = new FirStop(clock, enable, stop.Ret, stop);
                 helper.AddNodeToModule(firStop);
@@ -120,7 +120,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
                 if (port.HasMask())
                 {
                     IO.FIRIO mask = port.GetMask();
-                    IO.Output const1 = (IO.Output)VisitExp(helper, new FIRRTL.UIntLiteral(0, 1), IO.FlowChange.Source);
+                    IO.Source const1 = (IO.Source)VisitExp(helper, new FIRRTL.UIntLiteral(0, 1), IO.FlowChange.Source);
                     foreach (var maskInput in mask.Flatten())
                     {
                         ConnectIO(helper, const1, maskInput, false);
@@ -137,13 +137,13 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             }
             else if (statement is FIRRTL.DefRegister reg)
             {
-                IO.Output clock = (IO.Output)VisitExp(helper, reg.Clock, IO.FlowChange.Source);
-                IO.Output reset = null;
+                IO.Source clock = (IO.Source)VisitExp(helper, reg.Clock, IO.FlowChange.Source);
+                IO.Source reset = null;
                 IO.FIRIO initValue = null;
 
                 if (reg.HasResetAndInit())
                 {
-                    reset = (IO.Output)VisitExp(helper, reg.Reset, IO.FlowChange.Source);
+                    reset = (IO.Source)VisitExp(helper, reg.Reset, IO.FlowChange.Source);
                     initValue = VisitExp(helper, reg.Init, IO.FlowChange.Source);
                 }
 
@@ -197,7 +197,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
         {
             Conditional cond = new Conditional(conditional);
 
-            void AddCondModule(IO.Output ena, FIRRTL.Statement body)
+            void AddCondModule(IO.Source ena, FIRRTL.Statement body)
             {
                 VisitHelper helper = parentHelper.ForNewCondModule(parentHelper.GetUniqueName(), null);
 
@@ -219,11 +219,11 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
                 helper.ExitEnabledScope();
             }
 
-            IO.Output enableCond = (IO.Output)VisitExp(parentHelper, conditional.Pred, IO.FlowChange.Source);
+            IO.Source enableCond = (IO.Source)VisitExp(parentHelper, conditional.Pred, IO.FlowChange.Source);
 
             if (conditional.HasIf())
             {
-                IO.Output ifEnableCond = enableCond;
+                IO.Source ifEnableCond = enableCond;
                 if (parentHelper.Mod.IsConditional)
                 {
                     FIRAnd chainConditions = new FIRAnd(parentHelper.Mod.EnableCon, enableCond, new FIRRTL.UIntType(1), null);
@@ -239,7 +239,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
                 FIRNot notEnableComponent = new FIRNot(enableCond, new FIRRTL.UIntType(1), null);
                 parentHelper.AddNodeToModule(notEnableComponent);
 
-                IO.Output elseEnableCond = notEnableComponent.Result;
+                IO.Source elseEnableCond = notEnableComponent.Result;
                 if (parentHelper.Mod.IsConditional)
                 {
                     FIRAnd chainConditions = new FIRAnd(parentHelper.Mod.EnableCon, elseEnableCond, new FIRRTL.UIntType(1), null);

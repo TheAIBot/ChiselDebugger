@@ -30,7 +30,7 @@ namespace ChiselDebug.GraphFIR.Transformations
             //module because both the source and sink didn't reside in a conditional
             //module. Fix this by rerouting the connection so it goes through the
             //conditional module.
-            Dictionary<(Output, Output), Output> sourceToCondSource = new Dictionary<(Output, Output), Output>();
+            Dictionary<(Source, Source), Source> sourceToCondSource = new Dictionary<(Source, Source), Source>();
             foreach (var input in mod.GetAllModuleInputs())
             {
                 foreach (var connection in input.GetConnections())
@@ -52,12 +52,12 @@ namespace ChiselDebug.GraphFIR.Transformations
                     else
                     {
                         Module condMod = connection.Condition.GetModResideIn();
-                        Input extIn = (Input)input.Copy(condMod);
-                        Input intIn = (Input)input.Copy(condMod);
+                        Sink extIn = (Sink)input.Copy(condMod);
+                        Sink intIn = (Sink)input.Copy(condMod);
                         condMod.AddAnonymousExternalIO(extIn);
                         condMod.AddAnonymousInternalIO(intIn);
-                        Output extOut = intIn.GetPaired();
-                        Output intOut = extIn.GetPaired();
+                        Source extOut = intIn.GetPaired();
+                        Source intOut = extIn.GetPaired();
 
                         connection.From.ConnectToInput(extIn);
                         intOut.ConnectToInput(intIn);
@@ -89,7 +89,7 @@ namespace ChiselDebug.GraphFIR.Transformations
                 return;
             }
 
-            Dictionary<Connection, Output> bypasses = new Dictionary<Connection, Output>();
+            Dictionary<Connection, Source> bypasses = new Dictionary<Connection, Source>();
             foreach (var node in mod.GetAllNodes())
             {
                 foreach (var io in node.GetIO().ToArray())
@@ -101,7 +101,7 @@ namespace ChiselDebug.GraphFIR.Transformations
 
                     foreach (var scalar in io.Flatten())
                     {
-                        if (scalar is Output output)
+                        if (scalar is Source output)
                         {
                             foreach (var input in output.GetConnectedInputs().ToArray())
                             {
@@ -124,9 +124,9 @@ namespace ChiselDebug.GraphFIR.Transformations
                                             continue;
                                         }
 
-                                        Input flipped = (Input)connection.From.Flip(mod);
+                                        Sink flipped = (Sink)connection.From.Flip(mod);
                                         mod.AddAnonymousInternalIO(flipped);
-                                        Output extOutput = flipped.GetPaired();
+                                        Source extOutput = flipped.GetPaired();
 
                                         connection.From.ConnectToInput(flipped, false, false, connection.Condition);
                                         input.ReplaceConnection(connection, extOutput);
@@ -135,7 +135,7 @@ namespace ChiselDebug.GraphFIR.Transformations
                                 }
                             }
                         }
-                        else if (scalar is Input input)
+                        else if (scalar is Sink input)
                         {
                             foreach (var connection in input.GetConnections())
                             {
@@ -152,9 +152,9 @@ namespace ChiselDebug.GraphFIR.Transformations
                                         continue;
                                     }
 
-                                    Input flipped = (Input)connection.From.Flip(mod);
+                                    Sink flipped = (Sink)connection.From.Flip(mod);
                                     mod.AddAnonymousExternalIO(flipped);
-                                    Output intOutput = flipped.GetPaired();
+                                    Source intOutput = flipped.GetPaired();
 
                                     connection.From.ConnectToInput(flipped, false, false, connection.Condition);
                                     input.ReplaceConnection(connection, intOutput);
@@ -176,7 +176,7 @@ namespace ChiselDebug.GraphFIR.Transformations
             foreach (var endpointConnection in endpointConnections)
             {
                 var ioConnections = GetScalarConnections(io, endpointConnection.To).ToList();
-                if (io.IsPassiveOfType<Output>())
+                if (io.IsPassiveOfType<Source>())
                 {
                     bool needToBypass = true;
                     foreach (var ioConnection in ioConnections)
@@ -200,7 +200,7 @@ namespace ChiselDebug.GraphFIR.Transformations
                     io.ConnectToInput(flipped, false, false, endpointConnection.Condition);
                     endpointConnection.To.ReplaceConnection(io, extAggIO, endpointConnection.Condition);
                 }
-                else if (io.IsPassiveOfType<Input>())
+                else if (io.IsPassiveOfType<Sink>())
                 {
                     bool needToBypass = true;
                     foreach (var ioConnection in ioConnections)
@@ -255,7 +255,7 @@ namespace ChiselDebug.GraphFIR.Transformations
             return true;
         }
 
-        private static IEnumerable<(Output output, Input input)> GetScalarConnections(AggregateIO a, AggregateIO b)
+        private static IEnumerable<(Source output, Sink input)> GetScalarConnections(AggregateIO a, AggregateIO b)
         {
             return a.Flatten()
                     .Zip(b.Flatten())

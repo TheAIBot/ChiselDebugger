@@ -11,26 +11,26 @@ namespace ChiselDebug.GraphFIR.Components
     public sealed class Mux : PairedIOFIRRTLNode
     {
         public readonly FIRIO[] Choises;
-        public readonly Input Decider;
+        public readonly Sink Decider;
         public readonly FIRIO Result;
         public readonly bool IsVectorIndexer;
         public readonly Vector ChoisesVec;
 
-        private readonly Input[] ChoiseInputs;
-        private readonly Output[] ResultOutputs;
+        private readonly Sink[] ChoiseInputs;
+        private readonly Source[] ResultOutputs;
         private readonly BinaryVarValue[] UnknownOutputs;
         private bool CanOverrideResult = false;
 
-        public Mux(List<FIRIO> choises, Output decider, FirrtlNode defNode, bool isVectorIndexer = false) : base(defNode)
+        public Mux(List<FIRIO> choises, Source decider, FirrtlNode defNode, bool isVectorIndexer = false) : base(defNode)
         {
-            choises = choises.Select(x => x.GetOutput()).ToList();
-            if (!choises.All(x => x.IsPassiveOfType<Output>()))
+            choises = choises.Select(x => x.GetSource()).ToList();
+            if (!choises.All(x => x.IsPassiveOfType<Source>()))
             {
                 throw new Exception("Inputs to mux must all be passive output types.");
             }
 
             Choises = choises.Select(x => x.Flip(this)).ToArray();
-            Decider = new Input(this, decider.Type);
+            Decider = new Sink(this, decider.Type);
             Result = choises.First().Copy(this);
             IsVectorIndexer = isVectorIndexer;
             foreach (var res in Result.Flatten())
@@ -50,20 +50,20 @@ namespace ChiselDebug.GraphFIR.Components
 
             AddOneToManyPairedIO(Result, Choises.ToList());
 
-            ChoiseInputs = Choises.SelectMany(x => x.Flatten().Cast<Input>()).ToArray();
-            ResultOutputs = Result.Flatten().Cast<Output>().ToArray();
+            ChoiseInputs = Choises.SelectMany(x => x.Flatten().Cast<Sink>()).ToArray();
+            ResultOutputs = Result.Flatten().Cast<Source>().ToArray();
             UnknownOutputs = new BinaryVarValue[ResultOutputs.Length];
         }
 
-        public override Input[] GetInputs()
+        public override Sink[] GetSinks()
         {
-            List<Input> inputs = new List<Input>();
+            List<Sink> inputs = new List<Sink>();
             inputs.Add(Decider);
             inputs.AddRange(ChoiseInputs);
             return inputs.ToArray();
         }
 
-        public override Output[] GetOutputs()
+        public override Source[] GetSources()
         {
             return ResultOutputs.ToArray();
         }
@@ -89,7 +89,7 @@ namespace ChiselDebug.GraphFIR.Components
 
 
 
-            ReadOnlySpan<Input> ChosenInputs;
+            ReadOnlySpan<Sink> ChosenInputs;
             if (!IsVectorIndexer)
             {
                 Debug.Assert(Choises.Length <= 2, "Only support multiplexer with two choises");
@@ -146,7 +146,7 @@ namespace ChiselDebug.GraphFIR.Components
             }
             else
             {
-                foreach (Output output in ResultOutputs)
+                foreach (Source output in ResultOutputs)
                 {
                     output.GetValue().SetAllUnknown();
                 }
@@ -155,11 +155,11 @@ namespace ChiselDebug.GraphFIR.Components
 
         internal override void InferType()
         {
-            foreach (Input input in GetInputs())
+            foreach (Sink input in GetSinks())
             {
                 input.InferType();
             }
-            foreach (Output output in GetOutputs())
+            foreach (Source output in GetSources())
             {
                 output.InferType();
             }

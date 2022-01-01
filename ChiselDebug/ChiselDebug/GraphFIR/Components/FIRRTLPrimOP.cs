@@ -5,16 +5,16 @@ namespace ChiselDebug.GraphFIR.Components
 {
     public abstract class FIRRTLPrimOP : FIRRTLNode
     {
-        public readonly Output Result;
+        public readonly Source Result;
 
         public FIRRTLPrimOP(IFIRType type, FirrtlNode defNode) : base(defNode)
         {
-            Result = new Output(this, null, type);
+            Result = new Source(this, null, type);
         }
 
-        public override Output[] GetOutputs()
+        public override Source[] GetSources()
         {
-            return new Output[] { Result };
+            return new Source[] { Result };
         }
     }
 }

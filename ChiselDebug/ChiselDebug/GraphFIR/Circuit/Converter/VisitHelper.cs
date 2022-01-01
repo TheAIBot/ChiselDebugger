@@ -14,8 +14,8 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
         private readonly VisitHelper ParentHelper;
         private readonly VisitHelper RootHelper;
 
-        private readonly Stack<IO.Output> ScopeEnabledConditions = new Stack<IO.Output>();
-        public IO.Output ScopeEnabledCond
+        private readonly Stack<IO.Source> ScopeEnabledConditions = new Stack<IO.Source>();
+        public IO.Source ScopeEnabledCond
         {
             get
             {
@@ -59,7 +59,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             Mod.AddNode(node);
         }
 
-        public void EnterEnabledScope(IO.Output enableCond)
+        public void EnterEnabledScope(IO.Source enableCond)
         {
             ScopeEnabledConditions.Push(enableCond);
         }

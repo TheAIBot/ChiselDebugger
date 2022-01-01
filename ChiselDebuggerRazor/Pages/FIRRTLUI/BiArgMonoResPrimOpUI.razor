@@ -16,12 +16,12 @@
         </table>
     </div>
 
-    @foreach (var input in InputOffsets)
+    @foreach (var input in SinkOffsets)
     {
         <IOPortUI Position="@input.Position" IO="@input.IO"></IOPortUI>
     }
 
-    @foreach (var output in OutputOffsets)
+    @foreach (var output in SourceOffsets)
     {
         <IOPortUI Position="@output.Position" IO="@output.IO"></IOPortUI>
     }
@@ -31,7 +31,7 @@
 {
     private const int ContentPadding = 5;
 
-    protected override DirectedIO[] OnMakeInputs(int width, int height)
+    protected override DirectedIO[] OnMakeSinks(int width, int height)
     {
         int contentHeight = height - ContentPadding * 2;
         int ioYStart = (contentHeight / 6) + ContentPadding;
@@ -47,7 +47,7 @@
         };
     }
 
-    protected override DirectedIO[] OnMakeOutputs(int width, int height)
+    protected override DirectedIO[] OnMakeSources(int width, int height)
     {
         int contentHeight = height - ContentPadding * 2;
         int ioYStart = (contentHeight / 6) + ContentPadding;

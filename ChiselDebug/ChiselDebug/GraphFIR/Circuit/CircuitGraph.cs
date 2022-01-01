@@ -19,8 +19,8 @@ namespace ChiselDebug.GraphFIR.Circuit
         public readonly CombComputeOrder<Computable> ComputeGraph;
         public readonly CombComputeOrder<ComputableOpti> OptimizedComputegraph;
         private readonly Dictionary<VarDef, ScalarIO> VarDefToCon = new Dictionary<VarDef, ScalarIO>();
-        private readonly HashSet<Output> ComputeAllowsUpdate = new HashSet<Output>();
-        private readonly Dictionary<string, List<Output>> VarDefIDToCon = new Dictionary<string, List<Output>>();
+        private readonly HashSet<Source> ComputeAllowsUpdate = new HashSet<Source>();
+        private readonly Dictionary<string, List<Source>> VarDefIDToCon = new Dictionary<string, List<Source>>();
 
         public CircuitGraph(string name, Module mainModule)
         {
@@ -122,12 +122,12 @@ namespace ChiselDebug.GraphFIR.Circuit
                     {
                         if (remainingName.EndsWith("/in"))
                         {
-                            container = duplex.GetInput();
+                            container = duplex.GetSink();
                             remainingName = remainingName.Substring(0, remainingName.Length - "/in".Length);
                         }
                         else
                         {
-                            container = duplex.GetOutput();
+                            container = duplex.GetSource();
                         }
                     }
 
@@ -265,7 +265,7 @@ namespace ChiselDebug.GraphFIR.Circuit
                 {
                     foreach (var variable in varValue.Variables)
                     {
-                        Output con = GetConnection(variable) as Output;
+                        Source con = GetConnection(variable) as Source;
                         if (con == null)
                         {
                             continue;
@@ -284,10 +284,10 @@ namespace ChiselDebug.GraphFIR.Circuit
                         var varCopy = varValue;
                         con.Value.UpdateValue(ref varCopy);
 
-                        List<Output> idToScalars;
+                        List<Source> idToScalars;
                         if (!VarDefIDToCon.TryGetValue(variable.ID, out idToScalars))
                         {
-                            idToScalars = new List<Output>();
+                            idToScalars = new List<Source>();
                             VarDefIDToCon.Add(variable.ID, idToScalars);
                         }
 
@@ -308,7 +308,7 @@ namespace ChiselDebug.GraphFIR.Circuit
             }
         }
 
-        public List<Output> ComputeRemainingGraph()
+        public List<Source> ComputeRemainingGraph()
         {
             return ComputeGraph.ComputeAndGetChanged();
         }
