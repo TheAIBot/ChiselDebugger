@@ -24,143 +24,59 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             else if (exp is FIRRTL.DoPrim prim)
             {
                 var args = prim.Args.Select(x => VisitExp(helper, x, IO.FlowChange.Source)).Cast<IO.Output>().ToArray();
-                FIRRTLPrimOP nodePrim;
-                if (prim.Op is FIRRTL.Add)
+                FIRRTLPrimOP RemainingPrimOps(FIRRTL.PrimOp op)
                 {
-                    nodePrim = new FIRAdd(args[0], args[1], prim.Type, prim);
+                    if (prim.Op is FIRRTL.Shl)
+                    {
+                        var constLit = new FIRRTL.UIntLiteral(prim.Consts[0], (int)prim.Consts[0].GetBitLength());
+                        var constOutput = (IO.Output)VisitExp(helper, constLit, IO.FlowChange.Source);
+                        return new FIRShl(args[0], constOutput, prim.Type, prim);
+                    }
+                    else if (prim.Op is FIRRTL.Shr)
+                    {
+                        var constLit = new FIRRTL.UIntLiteral(prim.Consts[0], (int)prim.Consts[0].GetBitLength());
+                        var constOutput = (IO.Output)VisitExp(helper, constLit, IO.FlowChange.Source);
+                        return new FIRShr(args[0], constOutput, prim.Type, prim);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
                 }
-                else if (prim.Op is FIRRTL.Sub)
+                FIRRTLPrimOP nodePrim = prim.Op switch
                 {
-                    nodePrim = new FIRSub(args[0], args[1], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.Mul)
-                {
-                    nodePrim = new FIRMul(args[0], args[1], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.Div)
-                {
-                    nodePrim = new FIRDiv(args[0], args[1], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.Rem)
-                {
-                    nodePrim = new FIRRem(args[0], args[1], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.Dshl)
-                {
-                    nodePrim = new FIRDshl(args[0], args[1], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.Dshr)
-                {
-                    nodePrim = new FIRDshr(args[0], args[1], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.Cat)
-                {
-                    nodePrim = new FIRCat(args[0], args[1], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.Eq)
-                {
-                    nodePrim = new FIREq(args[0], args[1], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.Neq)
-                {
-                    nodePrim = new FIRNeq(args[0], args[1], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.Geq)
-                {
-                    nodePrim = new FIRGeq(args[0], args[1], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.Leq)
-                {
-                    nodePrim = new FIRLeq(args[0], args[1], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.Gt)
-                {
-                    nodePrim = new FIRGt(args[0], args[1], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.Lt)
-                {
-                    nodePrim = new FIRLt(args[0], args[1], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.And)
-                {
-                    nodePrim = new FIRAnd(args[0], args[1], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.Or)
-                {
-                    nodePrim = new FIROr(args[0], args[1], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.Xor)
-                {
-                    nodePrim = new FIRXor(args[0], args[1], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.Head)
-                {
-                    nodePrim = new Head(args[0], prim.Type, (int)prim.Consts[0], prim);
-                }
-                else if (prim.Op is FIRRTL.Tail)
-                {
-                    nodePrim = new Tail(args[0], prim.Type, (int)prim.Consts[0], prim);
-                }
-                else if (prim.Op is FIRRTL.Bits)
-                {
-                    nodePrim = new BitExtract(args[0], prim.Type, (int)prim.Consts[1], (int)prim.Consts[0], prim);
-                }
-                else if (prim.Op is FIRRTL.Pad)
-                {
-                    nodePrim = new Pad(args[0], prim.Type, (int)prim.Consts[0], prim);
-                }
-                else if (prim.Op is FIRRTL.AsUInt)
-                {
-                    nodePrim = new FIRAsUInt(args[0], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.AsSInt)
-                {
-                    nodePrim = new FIRAsSInt(args[0], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.AsClock)
-                {
-                    nodePrim = new FIRAsClock(args[0], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.Cvt)
-                {
-                    nodePrim = new FIRCvt(args[0], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.Neg)
-                {
-                    nodePrim = new FIRNeg(args[0], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.Not)
-                {
-                    nodePrim = new FIRNot(args[0], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.Andr)
-                {
-                    nodePrim = new FIRAndr(args[0], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.Orr)
-                {
-                    nodePrim = new FIROrr(args[0], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.Xorr)
-                {
-                    nodePrim = new FIRXorr(args[0], prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.Shl)
-                {
-                    var constLit = new FIRRTL.UIntLiteral(prim.Consts[0], (int)prim.Consts[0].GetBitLength());
-                    var constOutput = (IO.Output)VisitExp(helper, constLit, IO.FlowChange.Source);
-                    nodePrim = new FIRShl(args[0], constOutput, prim.Type, prim);
-                }
-                else if (prim.Op is FIRRTL.Shr)
-                {
-                    var constLit = new FIRRTL.UIntLiteral(prim.Consts[0], (int)prim.Consts[0].GetBitLength());
-                    var constOutput = (IO.Output)VisitExp(helper, constLit, IO.FlowChange.Source);
-                    nodePrim = new FIRShr(args[0], constOutput, prim.Type, prim);
-                }
-                else
-                {
-                    throw new NotImplementedException();
-                }
+                    FIRRTL.Add => new FIRAdd(args[0], args[1], prim.Type, prim),
+                    FIRRTL.Sub => new FIRSub(args[0], args[1], prim.Type, prim),
+                    FIRRTL.Mul => new FIRMul(args[0], args[1], prim.Type, prim),
+                    FIRRTL.Div => new FIRDiv(args[0], args[1], prim.Type, prim),
+                    FIRRTL.Rem => new FIRRem(args[0], args[1], prim.Type, prim),
+                    FIRRTL.Dshl => new FIRDshl(args[0], args[1], prim.Type, prim),
+                    FIRRTL.Dshr => new FIRDshr(args[0], args[1], prim.Type, prim),
+                    FIRRTL.Cat => new FIRCat(args[0], args[1], prim.Type, prim),
+                    FIRRTL.Eq => new FIREq(args[0], args[1], prim.Type, prim),
+                    FIRRTL.Neq => new FIRNeq(args[0], args[1], prim.Type, prim),
+                    FIRRTL.Geq => new FIRGeq(args[0], args[1], prim.Type, prim),
+                    FIRRTL.Leq => new FIRLeq(args[0], args[1], prim.Type, prim),
+                    FIRRTL.Gt => new FIRGt(args[0], args[1], prim.Type, prim),
+                    FIRRTL.Lt => new FIRLt(args[0], args[1], prim.Type, prim),
+                    FIRRTL.And => new FIRAnd(args[0], args[1], prim.Type, prim),
+                    FIRRTL.Or => new FIROr(args[0], args[1], prim.Type, prim),
+                    FIRRTL.Xor => new FIRXor(args[0], args[1], prim.Type, prim),
+                    FIRRTL.Head => new Head(args[0], prim.Type, (int)prim.Consts[0], prim),
+                    FIRRTL.Tail => new Tail(args[0], prim.Type, (int)prim.Consts[0], prim),
+                    FIRRTL.Bits => new BitExtract(args[0], prim.Type, (int)prim.Consts[1], (int)prim.Consts[0], prim),
+                    FIRRTL.Pad => new Pad(args[0], prim.Type, (int)prim.Consts[0], prim),
+                    FIRRTL.AsUInt => new FIRAsUInt(args[0], prim.Type, prim),
+                    FIRRTL.AsSInt => new FIRAsSInt(args[0], prim.Type, prim),
+                    FIRRTL.AsClock => new FIRAsClock(args[0], prim.Type, prim),
+                    FIRRTL.Cvt => new FIRCvt(args[0], prim.Type, prim),
+                    FIRRTL.Neg => new FIRNeg(args[0], prim.Type, prim),
+                    FIRRTL.Not => new FIRNot(args[0], prim.Type, prim),
+                    FIRRTL.Andr => new FIRAndr(args[0], prim.Type, prim),
+                    FIRRTL.Orr => new FIROrr(args[0], prim.Type, prim),
+                    FIRRTL.Xorr => new FIRXorr(args[0], prim.Type, prim),
+                    _ => RemainingPrimOps(prim.Op)
+                };
 
                 helper.AddNodeToModule(nodePrim);
                 return nodePrim.Result;
