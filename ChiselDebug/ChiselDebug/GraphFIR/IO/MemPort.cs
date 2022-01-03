@@ -1,4 +1,4 @@
-﻿using ChiselDebug.GraphFIR.IO;
+﻿using ChiselDebug.GraphFIR.Components;
 using FIRRTL;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +11,7 @@ namespace ChiselDebug.GraphFIR.IO
         internal readonly FIRIO Enabled;
         internal readonly FIRIO Clock;
         internal bool FromHighLevelFIRRTL = false;
-        private Dictionary<Input, Input> DataToMask;
+        private Dictionary<Sink, Sink> DataToMask;
 
         public MemPort(FIRRTLNode node, string name, List<FIRIO> io) : base(node, name, io)
         {
@@ -22,9 +22,9 @@ namespace ChiselDebug.GraphFIR.IO
 
         protected void InitDataToMask()
         {
-            DataToMask = new Dictionary<Input, Input>();
-            Input[] dataIO = GetInput().Flatten().Cast<Input>().ToArray();
-            Input[] maskIO = GetMask().Flatten().Cast<Input>().ToArray();
+            DataToMask = new Dictionary<Sink, Sink>();
+            Sink[] dataIO = GetSink().FlattenTo<Sink>();
+            Sink[] maskIO = GetMask().FlattenTo<Sink>();
 
             for (int i = 0; i < dataIO.Length; i++)
             {
@@ -43,7 +43,7 @@ namespace ChiselDebug.GraphFIR.IO
         internal abstract bool HasMask();
         internal abstract FIRIO GetMask();
 
-        internal Input GetMaskFromDataInput(Input input)
+        internal Sink GetMaskFromDataInput(Sink input)
         {
             return DataToMask[input];
         }

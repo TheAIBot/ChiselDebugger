@@ -180,7 +180,7 @@ namespace VCDReader.Parsing
             }
             else if (declWord.SequenceEqual(commentToken))
             {
-                
+
                 string text = lexer.NextUntil(endToken).ToCharString();
 
                 lexer.ExpectNextWord(endToken);
@@ -436,7 +436,7 @@ namespace VCDReader.Parsing
             ReadOnlySpan<byte> text = lexer.NextInteger();
             Span<char> chars = stackalloc char[text.Length];
             text.CopyToCharArray(chars);
-            
+
             if (chars.SequenceEqual("1"))
             {
                 return 1;

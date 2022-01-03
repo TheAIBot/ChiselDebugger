@@ -145,7 +145,7 @@
 
         internalIO.VerticalRecenter(height);
 
-        CurrModLayout.UpdateIOFromNode(Operation, internalIO.GetInputDirIO(), internalIO.GetOutputDirIO());
+        CurrModLayout.UpdateIOFromNode(Operation, internalIO.GetSinkDirIO(), internalIO.GetSourceDirIO());
     }
 
     private Point UpdateParentAboutExteriorIO(Point moduleSize)
@@ -183,7 +183,7 @@
         }
         else
         {
-            ParentLayoutCtrl.UpdateComponentInfo(new FIRComponentUpdate(Operation, moduleSize, ExternalIO.GetInputDirIO(), ExternalIO.GetOutputDirIO()));
+            ParentLayoutCtrl.UpdateComponentInfo(new FIRComponentUpdate(Operation, moduleSize, ExternalIO.GetSinkDirIO(), ExternalIO.GetSourceDirIO()));
         }
 
         return moduleSize;
@@ -218,24 +218,14 @@
         StateHasChanged();
     }
 
-    protected override DirectedIO[] OnMakeInputs(int width, int height)
+    protected override DirectedIO[] OnMakeSinks(int width, int height)
     {
-        return IOPositionCalc.EvenVertical(height, Operation.GetInternalInputs().ToArray(), width + ContentPadding, MarginForIO);
+        return IOPositionCalc.EvenVertical(height, Operation.GetInternalSinks().ToArray(), width + ContentPadding, MarginForIO);
     }
 
-    protected override DirectedIO[] OnMakeOutputs(int width, int height)
+    protected override DirectedIO[] OnMakeSources(int width, int height)
     {
-        return IOPositionCalc.EvenVertical(height, Operation.GetInternalOutputs().ToArray(), -ContentPadding, MarginForIO);
-    }
-
-    private DirectedIO[] MakeExternalInputs(int width, int height)
-    {
-        return IOPositionCalc.EvenVertical(height, Operation.GetInputs(), -ContentPadding, MarginForIO);
-    }
-
-    private DirectedIO[] MakeExternalOutputs(int width, int height)
-    {
-        return IOPositionCalc.EvenVertical(height, Operation.GetOutputs(), width + ContentPadding, MarginForIO);
+        return IOPositionCalc.EvenVertical(height, Operation.GetInternalSources().ToArray(), -ContentPadding, MarginForIO);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

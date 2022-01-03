@@ -1,11 +1,10 @@
-﻿using ChiselDebug;
-using ChiselDebug.GraphFIR;
-using ChiselDebuggerRazor.Components;
-using ChiselDebuggerRazor.Pages.FIRRTLUI;
+﻿using ChiselDebug.GraphFIR.Components;
+using ChiselDebug.Routing;
+using ChiselDebug.Utilities;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ChiselDebuggerRazor.Code
+namespace ChiselDebuggerRazor.Code.Controllers
 {
     public class CondLayout : FIRLayout
     {
@@ -20,7 +19,7 @@ namespace ChiselDebuggerRazor.Code
 
         public CondLayout(Conditional cond)
         {
-            this.Cond = cond;
+            Cond = cond;
         }
 
         public bool IsReadyToRender()

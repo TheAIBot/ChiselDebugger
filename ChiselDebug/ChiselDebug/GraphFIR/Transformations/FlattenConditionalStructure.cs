@@ -1,9 +1,8 @@
-﻿using ChiselDebug.GraphFIR.IO;
+﻿using ChiselDebug.GraphFIR.Components;
+using ChiselDebug.GraphFIR.IO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ChiselDebug.GraphFIR.Transformations
 {
@@ -90,7 +89,7 @@ namespace ChiselDebug.GraphFIR.Transformations
         {
             HashSet<Module> currentAndNestedMods = new HashSet<Module>(mod.GetAllNestedNodesOfType<Module>());
             List<FIRRTLNode> modNode = mod.GetAllNodes().Where(x => x is not Conditional).ToList();
-            List<Output> allNodeOutputs = modNode.SelectMany(x => x.GetOutputs()).ToList();
+            List<Source> allNodeOutputs = modNode.SelectMany(x => x.GetSources()).ToList();
             foreach (var output in allNodeOutputs)
             {
                 foreach (var input in output.GetConnectedInputs())

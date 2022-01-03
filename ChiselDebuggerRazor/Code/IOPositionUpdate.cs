@@ -1,20 +1,17 @@
-﻿using ChiselDebug;
-using ChiselDebug.GraphFIR;
+﻿using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
-using System;
+using ChiselDebug.Utilities;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Code
 {
     public class IOPositionUpdate
     {
         public readonly FIRRTLNode Node;
-        public readonly List<Positioned<Input>> Inputs;
-        public readonly List<Positioned<Output>> Outputs;
+        public readonly List<Positioned<Sink>> Inputs;
+        public readonly List<Positioned<Source>> Outputs;
 
-        public IOPositionUpdate(FIRRTLNode node, List<Positioned<Input>> inputs, List<Positioned<Output>> outputs)
+        public IOPositionUpdate(FIRRTLNode node, List<Positioned<Sink>> inputs, List<Positioned<Source>> outputs)
         {
             this.Node = node;
             this.Inputs = inputs;

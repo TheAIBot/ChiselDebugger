@@ -1,10 +1,10 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 
+using Antlr4.Runtime;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Antlr4.Runtime;
 
 namespace FIRRTL.Parsing
 {

@@ -1,10 +1,7 @@
-﻿using ChiselDebug.GraphFIR;
+﻿using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ChiselDebug.CombGraph.CombGraphOptimizations
 {
@@ -12,7 +9,7 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
     {
         public static void Optimize(CombComputeOrder<Computable> compOrder)
         {
-            HashSet<Output> constOutput = new HashSet<Output>();
+            HashSet<Source> constOutput = new HashSet<Source>();
             ReadOnlySpan<Computable> oldOrder = compOrder.GetComputeOrder();
             List<Computable> newOrder = new List<Computable>();
 
@@ -30,7 +27,7 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
                     else
                     {
                         bool allConstInputs = true;
-                        foreach (var nodeInput in firNode.GetInputs())
+                        foreach (var nodeInput in firNode.GetSinks())
                         {
                             foreach (var inputCon in nodeInput.GetConnections())
                             {
@@ -54,7 +51,7 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
 
                         if (allConstInputs)
                         {
-                            foreach (var nodeOutput in firNode.GetOutputs())
+                            foreach (var nodeOutput in firNode.GetSources())
                             {
                                 constOutput.Add(nodeOutput);
                             }

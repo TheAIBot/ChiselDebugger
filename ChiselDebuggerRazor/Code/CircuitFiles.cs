@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Components.Forms;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,7 +19,7 @@ namespace ChiselDebuggerRazor.Code
         public event CircuitData OnViewCircuit;
 
         public Stream GetHiFirrtlStream()
-        { 
+        {
             return HiFirrtlStream;
         }
         public Stream GetLoFirrtlStream()

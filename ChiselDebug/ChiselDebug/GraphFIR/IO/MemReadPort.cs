@@ -1,4 +1,4 @@
-﻿using ChiselDebug.GraphFIR.IO;
+﻿using ChiselDebug.GraphFIR.Components;
 using FIRRTL;
 using System;
 using System.Collections.Generic;
@@ -25,19 +25,19 @@ namespace ChiselDebug.GraphFIR.IO
 
             List<FIRIO> io = new List<FIRIO>();
             io.Add(dataOut);
-            io.Add(new Input(node, "addr", new UIntType(addressWidth)));
-            io.Add(new Input(node, "en", new UIntType(1)));
-            io.Add(new Input(node, "clk", new ClockType()));
+            io.Add(new Sink(node, "addr", new UIntType(addressWidth)));
+            io.Add(new Sink(node, "en", new UIntType(1)));
+            io.Add(new Sink(node, "clk", new ClockType()));
 
             return io;
         }
 
-        public override FIRIO GetInput()
+        public override FIRIO GetSink()
         {
             throw new Exception("Can't get input from this IO.");
         }
 
-        public override FIRIO GetOutput()
+        public override FIRIO GetSource()
         {
             return DataOut;
         }

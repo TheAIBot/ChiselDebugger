@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ChiselDebug.Graphing
 {
@@ -66,7 +63,7 @@ namespace ChiselDebug.Graphing
                     (Node<T> node, int depth) = path.Peek();
                     nodeOrders[node] = depth;
 
-                    
+
 
                     bool newChild = false;
                     foreach (var child in node.Incomming)

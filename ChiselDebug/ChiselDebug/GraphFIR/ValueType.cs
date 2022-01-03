@@ -1,5 +1,4 @@
 ﻿using FIRRTL;
-using System;
 using System.Diagnostics;
 using System.Numerics;
 using VCDReader;
@@ -51,7 +50,7 @@ namespace ChiselDebug.GraphFIR
         {
             return Value.SameValue(ref other.Value, IsSigned);
         }
-        
+
         public BigInteger GetAsBigInt()
         {
             return Value.AsBigInteger(IsSigned);

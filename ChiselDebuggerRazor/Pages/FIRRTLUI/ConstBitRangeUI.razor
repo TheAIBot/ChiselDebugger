@@ -3,12 +3,12 @@
 <div id="@SizeWatcherID" class="bitRange" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();min-width:@HEIGHT.ToPixels();min-height;@WIDTH.ToPixels();">
     <div style="padding:5px;">@Operation.OpName</div>
 
-    @foreach (var input in InputOffsets)
+    @foreach (var input in SinkOffsets)
     {
         <IOPortUI Position="@input.Position" IO="@input.IO"></IOPortUI>
     }
 
-    @foreach (var output in OutputOffsets)
+    @foreach (var output in SourceOffsets)
     {
         <IOPortUI Position="@output.Position" IO="@output.IO"></IOPortUI>
     }
@@ -18,7 +18,7 @@
     private const int HEIGHT = 20;
     private const int WIDTH = 40;
 
-    protected override DirectedIO[] OnMakeInputs(int width, int height)
+    protected override DirectedIO[] OnMakeSinks(int width, int height)
     {
         Point inputOffset = new Point(0, height / 2);
 
@@ -28,7 +28,7 @@
         };
     }
 
-    protected override DirectedIO[] OnMakeOutputs(int width, int height)
+    protected override DirectedIO[] OnMakeSources(int width, int height)
     {
         Point outputOffset = new Point(width, height / 2);
 

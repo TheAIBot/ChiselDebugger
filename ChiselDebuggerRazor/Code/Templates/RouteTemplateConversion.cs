@@ -1,6 +1,7 @@
-﻿using ChiselDebug.GraphFIR;
+﻿using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
 using ChiselDebug.Routing;
+using ChiselDebuggerRazor.Code.Controllers;
 using System.Collections.Generic;
 
 namespace ChiselDebuggerRazor.Code.Templates

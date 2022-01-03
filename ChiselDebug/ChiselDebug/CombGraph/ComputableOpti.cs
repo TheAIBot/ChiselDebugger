@@ -1,4 +1,4 @@
-﻿using ChiselDebug.GraphFIR;
+﻿using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
 
 namespace ChiselDebug.CombGraph
@@ -6,7 +6,7 @@ namespace ChiselDebug.CombGraph
     public struct ComputableOpti : ICompute
     {
         private readonly FIRRTLNode Node;
-        private readonly Output Con;
+        private readonly Source Con;
 
         public ComputableOpti(FIRRTLNode node)
         {
@@ -14,13 +14,13 @@ namespace ChiselDebug.CombGraph
             this.Con = null;
         }
 
-        public ComputableOpti(Output con)
+        public ComputableOpti(Source con)
         {
             this.Node = null;
             this.Con = con;
         }
 
-        public ComputableOpti(ICompute comp) 
+        public ComputableOpti(ICompute comp)
         {
             this.Node = comp.GetNode();
             this.Con = comp.GetConnection();
@@ -33,11 +33,11 @@ namespace ChiselDebug.CombGraph
 
         private void ComputeCon()
         {
-            Input input = Con.GetPaired();
+            Sink input = Con.GetPaired();
             Con.Value.OverrideValue(ref input.UpdateValueFromSourceFast());
         }
 
-        public Output ComputeGetIfChanged()
+        public Source ComputeGetIfChanged()
         {
             return null;
         }
@@ -63,7 +63,7 @@ namespace ChiselDebug.CombGraph
             return Node;
         }
 
-        public Output GetConnection()
+        public Source GetConnection()
         {
             return Con;
         }

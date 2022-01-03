@@ -1,10 +1,7 @@
-﻿using ChiselDebug.GraphFIR;
+﻿using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ChiselDebug.CombGraph.CombGraphOptimizations
 {
@@ -36,19 +33,19 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
 
         private static void MergeNodeSinks(FIRRTLNode node)
         {
-            foreach (var input in node.GetInputs())
+            foreach (var input in node.GetSinks())
             {
-                if (CanMergeSourceAndSink(input, out Output source))
+                if (CanMergeSourceAndSink(input, out Source source))
                 {
                     input.Value = source.Value;
                 }
             }
         }
 
-        private static bool TryMergeBorderPass(Output passSource)
+        private static bool TryMergeBorderPass(Source passSource)
         {
-            Input paired = passSource.GetPaired();
-            if (CanMergeSourceAndSink(paired, out Output source))
+            Sink paired = passSource.GetPaired();
+            if (CanMergeSourceAndSink(paired, out Source source))
             {
                 paired.Value = source.Value;
                 passSource.Value = source.Value;
@@ -58,7 +55,7 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
             return false;
         }
 
-        private static bool CanMergeSourceAndSink(Input input, out Output source)
+        private static bool CanMergeSourceAndSink(Sink input, out Source source)
         {
             Connection[] cons = input.GetConnections();
             if (cons.Length != 1)
@@ -74,7 +71,7 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
                 return false;
             }
 
-            Output conSource = con.From;
+            Source conSource = con.From;
             if (conSource.Type.Width != input.Type.Width)
             {
                 source = null;

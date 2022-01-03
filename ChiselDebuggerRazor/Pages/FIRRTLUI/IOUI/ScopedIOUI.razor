@@ -1,11 +1,11 @@
 ﻿@if (NodeIO != null)
 {
-    @foreach (var input in NodeIO.InputOffsets)
+    @foreach (var input in NodeIO.SinkOffsets)
     {
         <ScopedIOPortUI ScopedIO="@input" AlwaysShowName="@AlwaysShowName"></ScopedIOPortUI>
     }
 
-    @foreach (var output in NodeIO.OutputOffsets)
+    @foreach (var output in NodeIO.SourceOffsets)
     {
         <ScopedIOPortUI ScopedIO="@output" AlwaysShowName="@AlwaysShowName"></ScopedIOPortUI>
     }

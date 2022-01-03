@@ -1,13 +1,9 @@
-﻿using ChiselDebug;
-using ChiselDebug.GraphFIR;
-using ChiselDebuggerRazor.Pages.FIRRTLUI;
-using System;
-using System.Collections.Concurrent;
+﻿using ChiselDebug.GraphFIR.Components;
+using ChiselDebug.Placing;
+using ChiselDebuggerRazor.Code.Controllers;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Code.Templates
 {

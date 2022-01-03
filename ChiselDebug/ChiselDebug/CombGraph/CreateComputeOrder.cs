@@ -1,4 +1,4 @@
-﻿using ChiselDebug.GraphFIR;
+﻿using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
 using System;
 using System.Collections.Generic;
@@ -10,20 +10,20 @@ namespace ChiselDebug.CombGraph
     {
         public static CombComputeOrder<Computable> MakeMonoGraph(Module module)
         {
-            List<Output> startingPoints = new List<Output>();
+            List<Source> startingPoints = new List<Source>();
             foreach (var childMod in module.GetAllNestedNodesOfType<Module>())
             {
-                foreach (var output in childMod.GetInternalOutputs())
+                foreach (var output in childMod.GetInternalSources())
                 {
-                    Input paired = output.GetPaired();
+                    Sink paired = output.GetPaired();
                     if (output.IsConnectedToAnything() && !paired.IsConnectedToAnything())
                     {
                         startingPoints.Add(output);
                     }
                 }
-                foreach (var input in childMod.GetInternalInputs())
+                foreach (var input in childMod.GetInternalSinks())
                 {
-                    Output paired = input.GetPaired();
+                    Source paired = input.GetPaired();
                     if (paired.IsConnectedToAnything() && !input.IsConnectedToAnything())
                     {
                         startingPoints.Add(paired);
@@ -32,16 +32,16 @@ namespace ChiselDebug.CombGraph
             }
             foreach (var wire in module.GetAllNestedNodesOfType<Wire>())
             {
-                foreach (var output in wire.GetOutputs())
+                foreach (var output in wire.GetSources())
                 {
-                    Input paired = output.GetPaired();
+                    Sink paired = output.GetPaired();
                     if (!paired.IsConnectedToAnything())
                     {
                         startingPoints.Add(output);
                     }
                 }
             }
-            foreach (var output in module.GetInternalOutputs())
+            foreach (var output in module.GetInternalSources())
             {
                 if (!startingPoints.Contains(output))
                 {
@@ -50,19 +50,19 @@ namespace ChiselDebug.CombGraph
             }
             foreach (var constVal in module.GetAllNestedNodesOfType<ConstValue>())
             {
-                startingPoints.AddRange(constVal.GetOutputs());
+                startingPoints.AddRange(constVal.GetSources());
             }
             foreach (var statePres in module.GetAllNestedNodesOfType<IStatePreserving>())
             {
-                startingPoints.AddRange(((FIRRTLNode)(statePres)).GetOutputs());
+                startingPoints.AddRange(((FIRRTLNode)(statePres)).GetSources());
             }
 
             return MakeCombComputeNode(startingPoints.ToArray());
         }
 
-        private static CombComputeOrder<Computable> MakeCombComputeNode(Output[] outputs)
+        private static CombComputeOrder<Computable> MakeCombComputeNode(Source[] outputs)
         {
-            HashSet<Output> seenCons = new HashSet<Output>();
+            HashSet<Source> seenCons = new HashSet<Source>();
             HashSet<SourceSinkCon> seenSourceSinkCons = new HashSet<SourceSinkCon>();
             List<Computable> computeOrder = new List<Computable>();
 
@@ -76,7 +76,7 @@ namespace ChiselDebug.CombGraph
 
             Stack<SourceSinkCon> toTraverse = new Stack<SourceSinkCon>();
 
-            void AddSinkToSearch(Output output)
+            void AddSinkToSearch(Source output)
             {
                 seenCons.Add(output);
                 computeOrder.Add(new Computable(output));
@@ -125,24 +125,24 @@ namespace ChiselDebug.CombGraph
 
     internal abstract class BaseBlockers<T>
     {
-        protected readonly Dictionary<T, HashSet<Output>> SeenButMissingSources = new Dictionary<T, HashSet<Output>>();
-        protected readonly Dictionary<Output, List<T>> InputBlockers = new Dictionary<Output, List<T>>();
+        protected readonly Dictionary<T, HashSet<Source>> SeenButMissingSources = new Dictionary<T, HashSet<Source>>();
+        protected readonly Dictionary<Source, List<T>> InputBlockers = new Dictionary<Source, List<T>>();
 
-        public void BlockIfAllInputsNotFound(Output source, T target, HashSet<Output> seenCons, Action<Output> addSinkToSearch, List<Computable> computeOrder)
+        public void BlockIfAllInputsNotFound(Source source, T target, HashSet<Source> seenCons, Action<Source> addSinkToSearch, List<Computable> computeOrder)
         {
-            HashSet<Output> missingCons = GetMissingSources(seenCons, target);
+            HashSet<Source> missingCons = GetMissingSources(seenCons, target);
             if (HasFoundAllDeps(source, target, missingCons))
             {
                 AddUnblockedToSearch(target, addSinkToSearch, computeOrder);
             }
         }
 
-        private HashSet<Output> GetMissingSources(HashSet<Output> seenCons, T target)
+        private HashSet<Source> GetMissingSources(HashSet<Source> seenCons, T target)
         {
-            HashSet<Output> missingCons;
+            HashSet<Source> missingCons;
             if (!SeenButMissingSources.TryGetValue(target, out missingCons))
             {
-                missingCons = new HashSet<Output>();
+                missingCons = new HashSet<Source>();
                 SeenButMissingSources.Add(target, missingCons);
 
                 AddMissingCons(seenCons, missingCons, InputBlockers, target);
@@ -151,8 +151,8 @@ namespace ChiselDebug.CombGraph
             return missingCons;
         }
 
-        protected abstract void AddMissingCons(HashSet<Output> seenCons, HashSet<Output> missingCons, Dictionary<Output, List<T>> blocker, T blocked);
-        protected static void AddMissingConnections(HashSet<Output> seenCons, HashSet<Output> missingCons, Input input, Dictionary<Output, List<T>> blocker, T blocked)
+        protected abstract void AddMissingCons(HashSet<Source> seenCons, HashSet<Source> missingCons, Dictionary<Source, List<T>> blocker, T blocked);
+        protected static void AddMissingConnections(HashSet<Source> seenCons, HashSet<Source> missingCons, Sink input, Dictionary<Source, List<T>> blocker, T blocked)
         {
             foreach (var con in input.GetConnections())
             {
@@ -169,7 +169,7 @@ namespace ChiselDebug.CombGraph
             }
         }
 
-        private bool HasFoundAllDeps(Output con, T target, HashSet<Output> missingCons)
+        private bool HasFoundAllDeps(Source con, T target, HashSet<Source> missingCons)
         {
             missingCons.Remove(con);
 
@@ -182,7 +182,7 @@ namespace ChiselDebug.CombGraph
             return false;
         }
 
-        public void TryUnblockWithSource(Output source, Action<Output> addSinkToSearch, List<Computable> computeOrder)
+        public void TryUnblockWithSource(Source source, Action<Source> addSinkToSearch, List<Computable> computeOrder)
         {
             if (InputBlockers.TryGetValue(source, out var blockedInputs))
             {
@@ -196,38 +196,38 @@ namespace ChiselDebug.CombGraph
                 InputBlockers.Remove(source);
             }
         }
-        protected abstract void AddUnblockedToSearch(T target, Action<Output> addSinkToSearch, List<Computable> computeOrder);
+        protected abstract void AddUnblockedToSearch(T target, Action<Source> addSinkToSearch, List<Computable> computeOrder);
     }
 
     internal class NodeBlockers : BaseBlockers<FIRRTLNode>
     {
-        protected override void AddMissingCons(HashSet<Output> seenCons, HashSet<Output> missingCons, Dictionary<Output, List<FIRRTLNode>> blocker, FIRRTLNode blocked)
+        protected override void AddMissingCons(HashSet<Source> seenCons, HashSet<Source> missingCons, Dictionary<Source, List<FIRRTLNode>> blocker, FIRRTLNode blocked)
         {
-            foreach (Input input in blocked.GetInputs())
+            foreach (Sink input in blocked.GetSinks())
             {
                 AddMissingConnections(seenCons, missingCons, input, blocker, blocked);
             }
         }
 
-        protected override void  AddUnblockedToSearch(FIRRTLNode target, Action<Output> addSinkToSearch, List<Computable> computeOrder)
+        protected override void AddUnblockedToSearch(FIRRTLNode target, Action<Source> addSinkToSearch, List<Computable> computeOrder)
         {
             computeOrder.Add(new Computable(target));
 
-            foreach (var nodeOutput in target.GetOutputs())
+            foreach (var nodeOutput in target.GetSources())
             {
                 addSinkToSearch(nodeOutput);
             }
         }
     }
 
-    internal class BorderBlockers : BaseBlockers<Input>
+    internal class BorderBlockers : BaseBlockers<Sink>
     {
-        protected override void AddMissingCons(HashSet<Output> seenCons, HashSet<Output> missingCons, Dictionary<Output, List<Input>> blocker, Input blocked)
+        protected override void AddMissingCons(HashSet<Source> seenCons, HashSet<Source> missingCons, Dictionary<Source, List<Sink>> blocker, Sink blocked)
         {
             AddMissingConnections(seenCons, missingCons, blocked, blocker, blocked);
         }
 
-        protected override void AddUnblockedToSearch(Input target, Action<Output> addSinkToSearch, List<Computable> computeOrder)
+        protected override void AddUnblockedToSearch(Sink target, Action<Source> addSinkToSearch, List<Computable> computeOrder)
         {
             addSinkToSearch(target.GetPaired());
         }
@@ -235,10 +235,10 @@ namespace ChiselDebug.CombGraph
 
     internal readonly struct SourceSinkCon
     {
-        public readonly Output Source;
-        public readonly Input Sink;
+        public readonly Source Source;
+        public readonly Sink Sink;
 
-        public SourceSinkCon(Output source, Input sink)
+        public SourceSinkCon(Source source, Sink sink)
         {
             this.Source = source;
             this.Sink = sink;

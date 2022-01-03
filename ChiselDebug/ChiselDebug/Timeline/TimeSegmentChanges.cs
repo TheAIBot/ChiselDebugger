@@ -1,6 +1,6 @@
-﻿using System;
+﻿using ChiselDebug.GraphFIR.Circuit;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using VCDReader;
 
 namespace ChiselDebug.Timeline

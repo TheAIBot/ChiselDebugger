@@ -1,11 +1,11 @@
-﻿using ChiselDebug.GraphFIR;
+﻿using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
-using ChiselDebug.Graphing;
+using ChiselDebug.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ChiselDebug
+namespace ChiselDebug.Placing
 {
     public class PlacementInfo
     {
@@ -18,9 +18,9 @@ namespace ChiselDebug
 
         public PlacementInfo(List<Positioned<FIRRTLNode>> nodePoses, Dictionary<FIRRTLNode, Rectangle> usedSpace, Point spaceNeeded)
         {
-            this.NodePositions = nodePoses;
-            this.UsedSpace = usedSpace;
-            this.SpaceNeeded = spaceNeeded;
+            NodePositions = nodePoses;
+            UsedSpace = usedSpace;
+            SpaceNeeded = spaceNeeded;
         }
 
         internal void AddNodePlacement(FIRRTLNode node, Rectangle shape)
@@ -40,8 +40,8 @@ namespace ChiselDebug
         {
             List<RankWidth> ranks = GetNodeRanks();
 
-            int modOutputCount = SpaceForWire(mod.GetInternalOutputs());
-            int modInputCount = SpaceForWire(mod.GetInternalInputs());
+            int modOutputCount = SpaceForWire(mod.GetInternalSources());
+            int modInputCount = SpaceForWire(mod.GetInternalSinks());
 
             int[] xSpacing = new int[ranks.Count + 1];
 
@@ -51,8 +51,8 @@ namespace ChiselDebug
 
             for (int i = 0; i < ranks.Count; i++)
             {
-                xSpacing[i] += ranks[i].Nodes.Sum(x => SpaceForWire(x.GetInputs())) * spaceForWire;
-                xSpacing[i + 1] += ranks[i].Nodes.Sum(x => SpaceForWire(x.GetOutputs())) * spaceForWire;
+                xSpacing[i] += ranks[i].Nodes.Sum(x => SpaceForWire(x.GetSinks())) * spaceForWire;
+                xSpacing[i + 1] += ranks[i].Nodes.Sum(x => SpaceForWire(x.GetSources())) * spaceForWire;
             }
 
             int xOffset = xSpacing[0];
@@ -95,7 +95,7 @@ namespace ChiselDebug
         {
             Dictionary<AggregateIO, bool> aggConnectionHasBeenHit = new Dictionary<AggregateIO, bool>();
             Dictionary<ScalarIO, AggregateIO> scalarToAggregateIO = new Dictionary<ScalarIO, AggregateIO>();
-            foreach (var aggIO in IOHelper.GetAllAggregateIOs(io).OrderByDescending(x => x.Flatten().Count))
+            foreach (var aggIO in IOHelper.GetAllAggregateIOs(io).OrderByDescending(x => x.GetScalarsCount()))
             {
                 if (aggIO.IsPassive() && aggIO.OnlyConnectedWithAggregateConnections())
                 {
@@ -116,7 +116,7 @@ namespace ChiselDebug
                     {
                         aggConnectionHasBeenHit[aggIO] = true;
                         spaceCounter++;
-                    }                    
+                    }
                 }
                 else
                 {
@@ -147,17 +147,17 @@ namespace ChiselDebug
 
             public RankWidth(FIRRTLNode node, Rectangle nodeRect)
             {
-                this.StartX = nodeRect.LeftX;
-                this.EndX = nodeRect.RightX;
+                StartX = nodeRect.LeftX;
+                EndX = nodeRect.RightX;
                 Nodes.Add(node);
             }
 
             public bool IsInSameRank(Rectangle rect)
             {
-                return (StartX <= rect.LeftX && rect.LeftX <= EndX) ||
-                       (StartX <= rect.RightX && rect.RightX <= EndX) ||
-                       (rect.LeftX <= StartX && StartX <= rect.RightX) ||
-                       (rect.LeftX <= EndX && EndX <= rect.RightX);
+                return StartX <= rect.LeftX && rect.LeftX <= EndX ||
+                       StartX <= rect.RightX && rect.RightX <= EndX ||
+                       rect.LeftX <= StartX && StartX <= rect.RightX ||
+                       rect.LeftX <= EndX && EndX <= rect.RightX;
             }
 
             public bool IsBeforeThisRank(Rectangle rect)

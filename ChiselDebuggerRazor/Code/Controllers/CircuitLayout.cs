@@ -1,4 +1,4 @@
-﻿namespace ChiselDebuggerRazor.Code
+﻿namespace ChiselDebuggerRazor.Code.Controllers
 {
     public class CircuitLayout : FIRLayout
     {

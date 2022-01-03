@@ -1,10 +1,6 @@
-﻿using ChiselDebug.GraphFIR;
-using ChiselDebug.GraphFIR.IO;
+﻿using ChiselDebug.GraphFIR.IO;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ChiselDebug.CombGraph.CombGraphOptimizations
 {
@@ -19,7 +15,7 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
             {
                 ref readonly var comp = ref oldOrder[i];
 
-                Output con = comp.GetConnection();
+                Source con = comp.GetConnection();
                 if (con != null)
                 {
                     if (!comp.IsBorderIO)

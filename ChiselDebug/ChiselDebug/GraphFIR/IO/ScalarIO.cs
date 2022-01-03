@@ -1,7 +1,7 @@
-﻿using FIRRTL;
+﻿using ChiselDebug.GraphFIR.Components;
+using FIRRTL;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using VCDReader;
 
 namespace ChiselDebug.GraphFIR.IO
@@ -27,8 +27,32 @@ namespace ChiselDebug.GraphFIR.IO
         public override List<ScalarIO> Flatten(List<ScalarIO> list)
         {
             list.Add(this);
-
             return list;
+        }
+
+        internal override void FlattenOnly<T>(ref Span<T> list)
+        {
+            if (this is T thisT)
+            {
+                list[0] = thisT;
+                list = list.Slice(1);
+            }
+        }
+
+        internal override void FlattenTo<T>(ref Span<T> list)
+        {
+            list[0] = (T)this;
+            list = list.Slice(1);
+        }
+
+        public override int GetScalarsCount()
+        {
+            return 1;
+        }
+
+        public override int GetScalarsCountOfType<T>()
+        {
+            return this is T ? 1 : 0;
         }
 
         public override bool TryGetIO(string ioName, out IContainerIO container)

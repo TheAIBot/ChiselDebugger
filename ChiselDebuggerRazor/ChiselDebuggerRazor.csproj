@@ -18,10 +18,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Data\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\ChiselDebug\ChiselDebug\ChiselDebug.csproj" />
     <ProjectReference Include="..\FIRRTL\FIRRTL.csproj" />
     <ProjectReference Include="..\VCDReader\VCDReader.csproj" />

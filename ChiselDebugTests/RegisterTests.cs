@@ -1,6 +1,4 @@
-﻿using ChiselDebug;
-using FIRRTL;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace ChiselDebugTests
 {

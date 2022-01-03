@@ -1,6 +1,6 @@
-﻿using System;
+﻿using ChiselDebug.GraphFIR.Components;
+using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace ChiselDebug.GraphFIR.IO
 {
@@ -60,26 +60,26 @@ namespace ChiselDebug.GraphFIR.IO
             return string.Join('.', pathToRoot);
         }
 
-        public virtual FIRIO GetInput()
+        public virtual FIRIO GetSink()
         {
-            throw new Exception("Can't get input from this IO.");
+            throw new Exception("Can't get sink from this IO.");
         }
-        public virtual FIRIO GetOutput()
+        public virtual FIRIO GetSource()
         {
-            throw new Exception("Can't get output from this IO.");
+            throw new Exception("Can't get source from this IO.");
         }
 
         internal FIRIO GetAsFlow(FlowChange flow)
         {
             return flow switch
             {
-                FlowChange.Source => GetOutput(),
-                FlowChange.Sink => GetInput(),
+                FlowChange.Source => GetSource(),
+                FlowChange.Sink => GetSink(),
                 var error => throw new Exception($"Flow must either be source or sink. Flow: {error}")
             };
         }
 
-        public abstract void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Output condition = null);
+        public abstract void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source condition = null);
         public abstract FIRIO ToFlow(FlowChange flow, FIRRTLNode node);
         public FIRIO Flip(FIRRTLNode node = null)
         {
@@ -89,15 +89,35 @@ namespace ChiselDebug.GraphFIR.IO
         {
             return ToFlow(FlowChange.Preserve, node ?? Node);
         }
-        public List<ScalarIO> Flatten()
+        public ScalarIO[] Flatten()
         {
-            return Flatten(new List<ScalarIO>());
+            return FlattenTo<ScalarIO>();
+        }
+        public T[] FlattenOnly<T>() where T : ScalarIO
+        {
+            T[] arr = new T[GetScalarsCountOfType<T>()];
+            Span<T> span = arr;
+            FlattenOnly(ref span);
+
+            return arr;
+        }
+        public T[] FlattenTo<T>() where T : ScalarIO
+        {
+            T[] arr = new T[GetScalarsCount()];
+            Span<T> span = arr;
+            FlattenTo(ref span);
+
+            return arr;
         }
         public abstract List<ScalarIO> Flatten(List<ScalarIO> list);
+        internal abstract void FlattenOnly<T>(ref Span<T> list) where T : ScalarIO;
+        internal abstract void FlattenTo<T>(ref Span<T> list) where T : ScalarIO;
+        public abstract int GetScalarsCount();
+        public abstract int GetScalarsCountOfType<T>() where T : ScalarIO;
         public abstract bool IsPassiveOfType<T>();
         public bool IsPassive()
         {
-            return IsPassiveOfType<Input>() || IsPassiveOfType<Output>();
+            return IsPassiveOfType<Sink>() || IsPassiveOfType<Source>();
         }
         public abstract bool TryGetIO(string ioName, out IContainerIO container);
 

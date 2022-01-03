@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ChiselDebug.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -312,7 +313,7 @@ namespace ChiselDebug.Routing
         }
 
         internal string BoardAllowedMovesToString(Point start, Point end)
-        {   
+        {
             //Right Left Down Right
             string[] mas = new string[((int)MoveDirs.All) + 1];
             mas[0b0000] = " ";

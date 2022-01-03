@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ChiselDebug.GraphFIR.Components;
+using System;
 using System.Collections.Generic;
 
 namespace ChiselDebug.GraphFIR.IO
@@ -14,7 +15,7 @@ namespace ChiselDebug.GraphFIR.IO
             this.OutIO = outIO;
         }
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Output condition = null)
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source condition = null)
         {
             throw new Exception("Duplex can't be connected to anything.");
         }
@@ -27,12 +28,34 @@ namespace ChiselDebug.GraphFIR.IO
             return list;
         }
 
-        public override FIRIO GetInput()
+        internal override void FlattenOnly<T>(ref Span<T> list)
+        {
+            InIO.FlattenOnly(ref list);
+            OutIO.FlattenOnly(ref list);
+        }
+
+        internal override void FlattenTo<T>(ref Span<T> list)
+        {
+            InIO.FlattenTo(ref list);
+            OutIO.FlattenTo(ref list);
+        }
+
+        public override int GetScalarsCount()
+        {
+            return InIO.GetScalarsCount() + OutIO.GetScalarsCount();
+        }
+
+        public override int GetScalarsCountOfType<T>()
+        {
+            return InIO.GetScalarsCountOfType<T>() + OutIO.GetScalarsCountOfType<T>();
+        }
+
+        public override FIRIO GetSink()
         {
             return InIO;
         }
 
-        public override FIRIO GetOutput()
+        public override FIRIO GetSource()
         {
             return OutIO;
         }

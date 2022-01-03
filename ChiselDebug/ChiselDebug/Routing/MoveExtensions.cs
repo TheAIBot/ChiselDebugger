@@ -1,9 +1,20 @@
-﻿using System;
+﻿using ChiselDebug.Utilities;
+using System;
 
 namespace ChiselDebug.Routing
 {
     internal static class MoveExtensions
     {
+        internal static bool IsVertical(this MoveDirs dir)
+        {
+            return dir.HasFlag(MoveDirs.Up) || dir.HasFlag(MoveDirs.Down);
+        }
+
+        internal static bool IsHorizontal(this MoveDirs dir)
+        {
+            return dir.HasFlag(MoveDirs.Left) || dir.HasFlag(MoveDirs.Right);
+        }
+
         internal static Point MovePoint(this MoveDirs dir, Point pos)
         {
             return dir switch

@@ -1,8 +1,7 @@
-﻿using System;
+﻿using ChiselDebug.GraphFIR.Components;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ChiselDebug.GraphFIR.IO
 {
@@ -29,8 +28,8 @@ namespace ChiselDebug.GraphFIR.IO
 
         public Vector(FIRRTLNode node, string name, FIRIO[] ios) : base(node, name)
         {
-            if (!(ios.All(x => x.IsPassiveOfType<Input>()) || 
-                  ios.All(x => x.IsPassiveOfType<Output>())))
+            if (!(ios.All(x => x.IsPassiveOfType<Sink>()) ||
+                  ios.All(x => x.IsPassiveOfType<Source>())))
             {
                 throw new Exception("IO type of vector must be passive.");
             }
@@ -48,7 +47,7 @@ namespace ChiselDebug.GraphFIR.IO
             return IO.ToArray();
         }
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Output condition = null)
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source condition = null)
         {
             if (input is not Vector)
             {
@@ -95,6 +94,42 @@ namespace ChiselDebug.GraphFIR.IO
             }
 
             return list;
+        }
+
+        internal override void FlattenOnly<T>(ref Span<T> list)
+        {
+            for (int i = 0; i < IO.Length; i++)
+            {
+                IO[i].FlattenOnly(ref list);
+            }
+        }
+
+        internal override void FlattenTo<T>(ref Span<T> list)
+        {
+            for (int i = 0; i < IO.Length; i++)
+            {
+                IO[i].FlattenTo(ref list);
+            }
+        }
+
+        public override int GetScalarsCount()
+        {
+            if (IO.Length == 0)
+            {
+                return 0;
+            }
+
+            return IO[0].GetScalarsCount() * IO.Length;
+        }
+
+        public override int GetScalarsCountOfType<T>()
+        {
+            if (IO.Length == 0)
+            {
+                return 0;
+            }
+
+            return IO[0].GetScalarsCountOfType<T>() * IO.Length;
         }
 
         public override bool IsPassiveOfType<T>()

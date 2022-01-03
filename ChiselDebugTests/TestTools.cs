@@ -1,5 +1,5 @@
-﻿using ChiselDebug;
-using ChiselDebug.GraphFIR;
+﻿using ChiselDebug.GraphFIR.Circuit;
+using ChiselDebug.GraphFIR.Circuit.Converter;
 using ChiselDebug.GraphFIR.IO;
 using ChiselDebug.Timeline;
 using FIRRTL;
@@ -7,10 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using VCDReader;
 
 [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
@@ -96,7 +93,7 @@ namespace ChiselDebugTests
                         continue;
                     }
 
-                    ref BinaryVarValue  actual = ref varCon.GetValue();
+                    ref BinaryVarValue actual = ref varCon.GetValue();
                     if (!varCon.HasValue())
                     {
                         continue;
@@ -193,7 +190,7 @@ namespace ChiselDebugTests
                     ref var expected = ref CollectionsMarshal.GetValueRefOrNullRef(state.VariableValues, varsToCheck[z].VariableDef.ID);
                     ScalarIO varCon = varsToCheck[z].IO;
 
-                    ref BinaryVarValue actual = ref (varCon is Input input ? ref input.UpdateValueFromSourceFast() : ref varCon.GetValue());
+                    ref BinaryVarValue actual = ref (varCon is Sink input ? ref input.UpdateValueFromSourceFast() : ref varCon.GetValue());
                     if (expected.IsValidBinary && actual.IsValidBinary)
                     {
                         if (!expected.SameValue(ref actual))

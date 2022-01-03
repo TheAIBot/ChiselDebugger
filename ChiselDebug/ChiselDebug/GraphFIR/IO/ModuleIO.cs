@@ -1,8 +1,6 @@
-﻿using System;
+﻿using ChiselDebug.GraphFIR.Components;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ChiselDebug.GraphFIR.IO
 {

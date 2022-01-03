@@ -1,5 +1,7 @@
-﻿using ChiselDebug.GraphFIR;
+﻿using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
+using ChiselDebug.Placing;
+using ChiselDebug.Utilities;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,7 +11,7 @@ namespace ChiselDebug.Routing
     {
 
         private readonly Module Mod;
-        private readonly List<Output> UsedModuleConnections;
+        private readonly List<Source> UsedModuleConnections;
         private readonly Dictionary<FIRIO, IOInfo> IOInfos = new Dictionary<FIRIO, IOInfo>();
 
         public ConnectionsHandler(Module mod)
@@ -49,12 +51,12 @@ namespace ChiselDebug.Routing
             }
         }
 
-        private List<(IOInfo start, IOInfo end)> MakeAggregateLines(Dictionary<FIRRTLNode, Point> nodePoses, out Dictionary<Output, HashSet<Input>> disallowedConnections)
+        private List<(IOInfo start, IOInfo end)> MakeAggregateLines(Dictionary<FIRRTLNode, Point> nodePoses, out Dictionary<Source, HashSet<Sink>> disallowedConnections)
         {
-            disallowedConnections = new Dictionary<Output, HashSet<Input>>();
+            disallowedConnections = new Dictionary<Source, HashSet<Sink>>();
             List<(IOInfo start, IOInfo end)> lines = new List<(IOInfo start, IOInfo end)>();
             Dictionary<AggregateIO, HashSet<AggregateIO>> alreadyMade = new Dictionary<AggregateIO, HashSet<AggregateIO>>();
-            foreach (var aggregateOutput in IOInfos.Keys.OfType<AggregateIO>().Where(x => x.IsPassiveOfType<Output>()))
+            foreach (var aggregateOutput in IOInfos.Keys.OfType<AggregateIO>().Where(x => x.IsPassiveOfType<Source>()))
             {
                 foreach (var endPoint in aggregateOutput.GetConnections().Select(x => x.To))
                 {
@@ -67,7 +69,7 @@ namespace ChiselDebug.Routing
                     var connections = aggregateOutput.Flatten().Zip(endPoint.Flatten()).Select(x => IOHelper.OrderIO(x.First, x.Second));
                     foreach (var connection in connections)
                     {
-                        disallowedConnections.TryAdd(connection.output, new HashSet<Input>());
+                        disallowedConnections.TryAdd(connection.output, new HashSet<Sink>());
                         disallowedConnections[connection.output].Add(connection.input);
                     }
 
@@ -80,13 +82,13 @@ namespace ChiselDebug.Routing
             return lines;
         }
 
-        private List<(IOInfo start, IOInfo end)> MakeScalarLines(Dictionary<FIRRTLNode, Point> nodePoses, Dictionary<Output, HashSet<Input>> disallowedConnections)
+        private List<(IOInfo start, IOInfo end)> MakeScalarLines(Dictionary<FIRRTLNode, Point> nodePoses, Dictionary<Source, HashSet<Sink>> disallowedConnections)
         {
             List<(IOInfo start, IOInfo end)> lines = new List<(IOInfo start, IOInfo end)>();
-            HashSet<Input> allAllowed = new HashSet<Input>();
+            HashSet<Sink> allAllowed = new HashSet<Sink>();
             foreach (var connection in UsedModuleConnections)
             {
-                HashSet<Input> notAllowedInputs = disallowedConnections.GetValueOrDefault(connection) ?? allAllowed;
+                HashSet<Sink> notAllowedInputs = disallowedConnections.GetValueOrDefault(connection) ?? allAllowed;
                 if (IOInfos.TryGetValue(connection, out IOInfo outputInfo))
                 {
                     foreach (var input in connection.GetConnectedInputs())

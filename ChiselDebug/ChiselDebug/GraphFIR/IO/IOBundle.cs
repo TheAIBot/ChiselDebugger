@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ChiselDebug.GraphFIR.Components;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -43,7 +44,7 @@ namespace ChiselDebug.GraphFIR.IO
             return OrderedIO.ToArray();
         }
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Output condition = null)
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source condition = null)
         {
             if (input is not IOBundle)
             {
@@ -51,12 +52,12 @@ namespace ChiselDebug.GraphFIR.IO
             }
             IOBundle bundle = (IOBundle)input;
 
-            if (asPassive && !IsPassiveOfType<Output>())
+            if (asPassive && !IsPassiveOfType<Source>())
             {
                 throw new Exception("Bundle must be a passive output bundle but it was not.");
             }
 
-            if (asPassive && !bundle.IsPassiveOfType<Input>())
+            if (asPassive && !bundle.IsPassiveOfType<Sink>())
             {
                 throw new Exception("Bundle must connect to a passive input bundle.");
             }
@@ -77,11 +78,11 @@ namespace ChiselDebug.GraphFIR.IO
                 var a = GetIO(ioName);
                 var b = bundle.GetIO(ioName);
 
-                if (a is Output aOut && b is Input bIn)
+                if (a is Source aOut && b is Sink bIn)
                 {
                     aOut.ConnectToInput(bIn, allowPartial, asPassive, condition);
                 }
-                else if (a is Input aIn && b is Output bOut)
+                else if (a is Sink aIn && b is Source bOut)
                 {
                     bOut.ConnectToInput(aIn, allowPartial, asPassive, condition);
                 }
@@ -116,6 +117,44 @@ namespace ChiselDebug.GraphFIR.IO
             }
 
             return list;
+        }
+
+        internal override void FlattenOnly<T>(ref Span<T> list)
+        {
+            foreach (var io in OrderedIO)
+            {
+                io.FlattenOnly(ref list);
+            }
+        }
+
+        internal override void FlattenTo<T>(ref Span<T> list)
+        {
+            foreach (var io in OrderedIO)
+            {
+                io.FlattenTo(ref list);
+            }
+        }
+
+        public override int GetScalarsCount()
+        {
+            int scalars = 0;
+            foreach (var io in OrderedIO)
+            {
+                scalars += io.GetScalarsCount();
+            }
+
+            return scalars;
+        }
+
+        public override int GetScalarsCountOfType<T>()
+        {
+            int scalars = 0;
+            foreach (var io in OrderedIO)
+            {
+                scalars += io.GetScalarsCountOfType<T>();
+            }
+
+            return scalars;
         }
 
         public override bool IsPassiveOfType<T>()

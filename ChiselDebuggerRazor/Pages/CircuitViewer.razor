@@ -4,6 +4,9 @@
 @using VCDReader
 @using ChiselDebug.Timeline;
 @using System.IO;
+@using ChiselDebug.GraphFIR.Circuit.Converter;
+@using ChiselDebug.GraphFIR.Circuit;
+@using ChiselDebug.Utilities;
 
 @inject IJSRuntime JS
 @inject CircuitFiles Files
@@ -52,7 +55,7 @@ else if (ThrownException is Exception)
 @code
 {
     private DebugController DebugCtrl = null;
-    private Positioned<ChiselDebug.GraphFIR.Module> ModulePosition;
+    private Positioned<ChiselDebug.GraphFIR.Components.Module> ModulePosition;
     private CircuitLayout RootModLayout = null;
     private float CircuitScale = 1.0f;
     private Point CircuitOffset = Point.Zero;
@@ -109,7 +112,7 @@ else if (ThrownException is Exception)
         Circuit circuit = FIRRTL.Parse.FromStream(hiFirStream);
         CircuitGraph graph = CircuitToGraph.GetAsGraph(circuit, loGraph);
 
-        ModulePosition = new Positioned<ChiselDebug.GraphFIR.Module>(Point.Zero, graph.MainModule);
+        ModulePosition = new Positioned<ChiselDebug.GraphFIR.Components.Module>(Point.Zero, graph.MainModule);
         RootModLayout = new CircuitLayout();
         DebugCtrl = new DebugController(graph);
         DebugCtrl.OnCircuitSizeChanged += CircuitSizeChanged;
