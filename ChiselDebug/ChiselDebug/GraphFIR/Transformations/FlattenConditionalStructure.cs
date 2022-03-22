@@ -25,6 +25,14 @@ namespace ChiselDebug.GraphFIR.Transformations
                         break;
                     }
 
+                    /*
+                     * ###
+                     * TODO
+                     * Still need to fix connections from DummyPassthrough source to anything that depends on it
+                     * ###
+                     */
+
+
                     // Remove dummy nodes and any conditional chaining
                     var allCandidateNodes = candidate.GetAllNodes();
                     //DummyPassthrough dummyPassthrough = allCandidateNodes.OfType<DummyPassthrough>().Single();
