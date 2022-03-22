@@ -24,8 +24,9 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
 
             RemoveDuplexWires.Transform(mainModule);
             MakeAggregateConnections.Transform(mainModule);
-            BypassCondModBorderConnections.Transform(mainModule);
             FlattenConditionalStructure.Transform(mainModule);
+            BypassCondModBorderConnections.Transform(mainModule);
+
 
             return new CircuitGraph(circuit.Main, mainModule);
         }
