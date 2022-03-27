@@ -1,6 +1,5 @@
 ﻿using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 

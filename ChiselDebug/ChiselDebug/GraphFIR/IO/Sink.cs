@@ -3,6 +3,7 @@ using ChiselDebug.Utilities;
 using FIRRTL;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using VCDReader;
@@ -23,6 +24,11 @@ namespace ChiselDebug.GraphFIR.IO
 
         public void ReplaceConnection(Connection replace, Source replaceWith)
         {
+            ReplaceConnection(replace, new Connection(replaceWith, replace.Condition));
+        }
+
+        public void ReplaceConnection(Connection replace, Connection replaceWith)
+        {
             if (replace.Condition == null)
             {
                 if (Con != replace.From)
@@ -31,8 +37,8 @@ namespace ChiselDebug.GraphFIR.IO
                 }
 
                 replace.From.DisconnectOnlyOutputSide(this);
-                replaceWith.ConnectOnlyOutputSide(this);
-                Con = replaceWith;
+                replaceWith.From.ConnectOnlyOutputSide(this);
+                Con = replaceWith.From;
             }
             else
             {
@@ -41,8 +47,8 @@ namespace ChiselDebug.GraphFIR.IO
                     if (CondCons[i] == replace)
                     {
                         replace.From.DisconnectOnlyOutputSide(this);
-                        replaceWith.ConnectOnlyOutputSide(this);
-                        CondCons[i] = new Connection(replaceWith, replace.Condition);
+                        replaceWith.From.ConnectOnlyOutputSide(this);
+                        CondCons[i] = replaceWith;
                         return;
                     }
                 }
@@ -80,9 +86,20 @@ namespace ChiselDebug.GraphFIR.IO
 
         public Connection GetConnection(Source from, Source condition)
         {
+            if (!TryGetConnection(from, condition, out var connection))
+            {
+                throw new Exception("Input is not connected to the given output.");
+            }
+
+            return connection.Value;
+        }
+
+        public bool TryGetConnection(Source from, Source condition, [NotNullWhen(true)] out Connection? connection)
+        {
             if (condition == null && Con == from)
             {
-                return new Connection(from);
+                connection = new Connection(from);
+                return true;
             }
             else
             {
@@ -90,12 +107,14 @@ namespace ChiselDebug.GraphFIR.IO
                 {
                     if (CondCons[i].From == from && CondCons[i].Condition == condition)
                     {
-                        return CondCons[i];
+                        connection = CondCons[i];
+                        return true;
                     }
                 }
             }
 
-            throw new Exception("Input is not connected to the given output.");
+            connection = null;
+            return false;
         }
 
         public override FIRIO GetSink()

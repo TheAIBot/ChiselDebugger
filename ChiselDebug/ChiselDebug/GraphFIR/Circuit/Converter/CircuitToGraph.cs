@@ -25,6 +25,9 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             RemoveDuplexWires.Transform(mainModule);
             MakeAggregateConnections.Transform(mainModule);
             FlattenConditionalStructure.Transform(mainModule);
+
+            //Must be done last
+            //RemoveDummyNodes.Transform(mainModule);
             BypassCondModBorderConnections.Transform(mainModule);
 
 
