@@ -107,7 +107,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         public IEnumerable<Sink> GetConnectedInputs()
         {
-            return To?.Distinct() ?? Enumerable.Empty<Sink>();
+            return To ?? Enumerable.Empty<Sink>();
         }
 
         public override ref BinaryVarValue FetchValue()
