@@ -18,7 +18,7 @@ namespace ChiselDebug.Routing
         {
             this.Mod = mod;
             this.UsedModuleConnections = Mod.GetAllModuleConnections();
-            UsedModuleConnections.RemoveAll(x => x is INoPlaceAndRoute);
+            UsedModuleConnections.RemoveAll(x => x.Node is INoPlaceAndRoute);
         }
 
         public void UpdateIOFromNode(FIRRTLNode node, DirectedIO[] inputOffsets, DirectedIO[] outputOffsets)

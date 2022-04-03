@@ -28,7 +28,7 @@ namespace ChiselDebuggerRazor.Components
         protected T Operation => PosOp.Value;
 
         private Point PreviousSize = Point.Zero;
-        private int RenderCounter = 0;
+        //private int RenderCounter = 0;
         protected readonly string SizeWatcherID = UniqueID.UniqueHTMLID();
         protected DirectedIO[] SinkOffsets = Array.Empty<DirectedIO>();
         protected DirectedIO[] SourceOffsets = Array.Empty<DirectedIO>();
