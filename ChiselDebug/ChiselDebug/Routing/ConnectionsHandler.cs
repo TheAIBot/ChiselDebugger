@@ -36,14 +36,14 @@ namespace ChiselDebug.Routing
             }
         }
 
-        internal List<(IOInfo start, IOInfo end)> GetAllConnectionLines(PlacementInfo placements)
+        internal List<LineInfo> GetAllConnectionLines(PlacementInfo placements)
         {
             lock (this)
             {
                 Dictionary<FIRRTLNode, Point> nodePoses = placements.NodePositions.ToDictionary(x => x.Value, x => x.Position);
                 nodePoses.Add(Mod, Point.Zero);
 
-                List<(IOInfo start, IOInfo end)> lines = new List<(IOInfo start, IOInfo end)>();
+                List<LineInfo> lines = new List<LineInfo>();
                 lines.AddRange(MakeAggregateLines(nodePoses, out var disallowedConnections));
                 lines.AddRange(MakeScalarLines(nodePoses, disallowedConnections));
 
@@ -51,10 +51,10 @@ namespace ChiselDebug.Routing
             }
         }
 
-        private List<(IOInfo start, IOInfo end)> MakeAggregateLines(Dictionary<FIRRTLNode, Point> nodePoses, out Dictionary<Source, HashSet<Sink>> disallowedConnections)
+        private List<LineInfo> MakeAggregateLines(Dictionary<FIRRTLNode, Point> nodePoses, out Dictionary<Source, HashSet<Sink>> disallowedConnections)
         {
             disallowedConnections = new Dictionary<Source, HashSet<Sink>>();
-            List<(IOInfo start, IOInfo end)> lines = new List<(IOInfo start, IOInfo end)>();
+            List<LineInfo> lines = new List<LineInfo>();
             Dictionary<AggregateIO, HashSet<AggregateIO>> alreadyMade = new Dictionary<AggregateIO, HashSet<AggregateIO>>();
             foreach (var aggregateOutput in IOInfos.Keys.OfType<AggregateIO>().Where(x => x.IsPassiveOfType<Source>()))
             {
@@ -82,9 +82,9 @@ namespace ChiselDebug.Routing
             return lines;
         }
 
-        private List<(IOInfo start, IOInfo end)> MakeScalarLines(Dictionary<FIRRTLNode, Point> nodePoses, Dictionary<Source, HashSet<Sink>> disallowedConnections)
+        private List<LineInfo> MakeScalarLines(Dictionary<FIRRTLNode, Point> nodePoses, Dictionary<Source, HashSet<Sink>> disallowedConnections)
         {
-            List<(IOInfo start, IOInfo end)> lines = new List<(IOInfo start, IOInfo end)>();
+            List<LineInfo> lines = new List<LineInfo>();
             HashSet<Sink> allAllowed = new HashSet<Sink>();
             foreach (var connection in UsedModuleConnections)
             {
@@ -109,7 +109,7 @@ namespace ChiselDebug.Routing
             return lines;
         }
 
-        private (IOInfo start, IOInfo end) MakeLine(Dictionary<FIRRTLNode, Point> nodePoses, IOInfo outputInfo, IOInfo inputInfo)
+        private LineInfo MakeLine(Dictionary<FIRRTLNode, Point> nodePoses, IOInfo outputInfo, IOInfo inputInfo)
         {
             Point startOffset = nodePoses[outputInfo.Node];
             Point endOffset = nodePoses[inputInfo.Node];
@@ -117,7 +117,7 @@ namespace ChiselDebug.Routing
             IOInfo offsetStartIO = new IOInfo(outputInfo.Node, outputInfo.DirIO.WithOffsetPosition(startOffset));
             IOInfo offsetEndIO = new IOInfo(inputInfo.Node, inputInfo.DirIO.WithOffsetPosition(endOffset));
 
-            return (offsetStartIO, offsetEndIO);
+            return new LineInfo(offsetStartIO, offsetEndIO);
         }
     }
 }

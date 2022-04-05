@@ -42,9 +42,8 @@ namespace ChiselDebug.Routing
             Dictionary<Line, int> repathCounter = new Dictionary<Line, int>();
 
             List<LineInfo> sortedLines = new List<LineInfo>();
-            foreach ((IOInfo start, IOInfo end) in Connections.GetAllConnectionLines(placements))
+            foreach (LineInfo line in Connections.GetAllConnectionLines(placements))
             {
-                LineInfo line = new LineInfo(start, end);
                 sortedLines.Add(line);
                 repathCounter.Add(line.GetLine(), 0);
             }
@@ -64,28 +63,28 @@ namespace ChiselDebug.Routing
                     return false;
                 }
 
-                (IOInfo start, IOInfo end) = linesPriority.Dequeue();
+                LineInfo line = linesPriority.Dequeue();
 
                 Rectangle? startRect = null;
                 Rectangle? endRect = null;
-                if (placements.UsedSpace.ContainsKey(start.Node))
+                if (placements.UsedSpace.ContainsKey(line.Start.Node))
                 {
-                    startRect = placements.UsedSpace[start.Node];
+                    startRect = placements.UsedSpace[line.Start.Node];
                 }
-                if (placements.UsedSpace.ContainsKey(end.Node))
+                if (placements.UsedSpace.ContainsKey(line.End.Node))
                 {
-                    endRect = placements.UsedSpace[end.Node];
+                    endRect = placements.UsedSpace[line.End.Node];
                 }
 
                 WirePath path;
-                if (!TryPathLine(board, start, end, startRect, endRect, paths, out path))
+                if (!TryPathLine(board, line.Start, line.End, startRect, endRect, paths, out path))
                 {
                     Debug.WriteLine("Failed to find a path:");
                     wiresPaths = null;
                     return false;
                 }
 
-                Debug.Assert(path.StartIO == start && path.EndIO == end);
+                Debug.Assert(path.StartIO == line.Start && path.EndIO == line.End);
                 List<WirePath> needsRepathing = new List<WirePath>();
                 foreach (var oldPath in paths)
                 {
@@ -96,15 +95,15 @@ namespace ChiselDebug.Routing
                 }
                 foreach (var repath in needsRepathing)
                 {
-                    LineInfo line = new LineInfo(repath.StartIO, repath.EndIO);
-                    if (repathCounter[line.GetLine()]++ >= 20)
+                    LineInfo repathline = new LineInfo(repath.StartIO, repath.EndIO);
+                    if (repathCounter[repathline.GetLine()]++ >= 20)
                     {
                         continue;
                     }
 
                     paths.Remove(repath);
 
-                    linesPriority.Enqueue(line);
+                    linesPriority.Enqueue(repathline);
                 }
                 paths.Add(path);
             }
