@@ -94,12 +94,9 @@ namespace ChiselDebuggerRazor.Code
 
                 //Only so much data can be sent to/from js at a time
                 //which is why the work is split up here
-                for (int i = 0; i < ids.Length; i += 500)
+                foreach (var idChunk in ids.Chunk(500))
                 {
-                    string[] slice = new string[ids.Length - i];
-                    Array.Copy(ids, i, slice, 0, slice.Length);
-
-                    await jsGroup.Key.InvokeVoidAsync("JSUtils.addResizeListeners", new string[][] { slice });
+                    await jsGroup.Key.InvokeVoidAsync("JSUtils.addResizeListeners", new string[][] { idChunk });
                 }
             }
         }
