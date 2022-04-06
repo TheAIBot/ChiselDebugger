@@ -12,6 +12,12 @@ namespace ChiselDebuggerRazor.Code.Templates
         private readonly Dictionary<string, PlaceTemplate> Templates = new Dictionary<string, PlaceTemplate>();
         private readonly Dictionary<string, List<PlaceTemplateConversion>> Converters = new Dictionary<string, List<PlaceTemplateConversion>>();
         private readonly HashSet<string> TemplateGenerating = new HashSet<string>();
+        private readonly WorkLimiter WorkLimiter;
+
+        public PlacementTemplator(WorkLimiter workLimiter)
+        {
+            WorkLimiter = workLimiter;
+        }
 
         public void SubscribeToTemplate(string moduleName, ModuleLayout ctrl, FIRRTLNode[] nodeOrder)
         {

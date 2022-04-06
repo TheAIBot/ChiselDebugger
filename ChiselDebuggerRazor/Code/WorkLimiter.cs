@@ -4,7 +4,7 @@ using System.Threading.Tasks.Dataflow;
 
 namespace ChiselDebuggerRazor.Code
 {
-    public static class WorkLimiter
+    public sealed class WorkLimiter
     {
         private static readonly ActionBlock<Action> Worker = new ActionBlock<Action>(x =>
         {
@@ -23,7 +23,7 @@ namespace ChiselDebuggerRazor.Code
             MaxMessagesPerTask = 1
         });
 
-        public static void AddWork(Action work)
+        public void AddWork(Action work)
         {
             Worker.Post(work);
         }

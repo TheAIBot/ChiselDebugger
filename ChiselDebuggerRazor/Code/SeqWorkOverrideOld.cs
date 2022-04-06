@@ -7,6 +7,12 @@ namespace ChiselDebuggerRazor.Code
         private T WorkItem;
         private readonly object Locker = new object();
         private bool QueuedWork = false;
+        private readonly WorkLimiter WorkLimiter;
+
+        public SeqWorkOverrideOld(WorkLimiter workLimiter)
+        {
+            WorkLimiter = workLimiter;
+        }
 
 
         public void AddWork(T workItem, Action<T> work)

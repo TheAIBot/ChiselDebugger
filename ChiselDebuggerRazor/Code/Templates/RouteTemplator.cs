@@ -14,6 +14,12 @@ namespace ChiselDebuggerRazor.Code.Templates
         private readonly Dictionary<string, RouteTemplate> Templates = new Dictionary<string, RouteTemplate>();
         private readonly Dictionary<string, List<RouteTemplateConversion>> Converters = new Dictionary<string, List<RouteTemplateConversion>>();
         private readonly HashSet<string> TemplateGenerating = new HashSet<string>();
+        private readonly WorkLimiter WorkLimiter;
+
+        public RouteTemplator(WorkLimiter workLimiter)
+        {
+            WorkLimiter = workLimiter;
+        }
 
         public void SubscribeToTemplate(string moduleName, ModuleLayout ctrl, FIRRTLNode[] nodeOrder, FIRIO[] ioOrder)
         {

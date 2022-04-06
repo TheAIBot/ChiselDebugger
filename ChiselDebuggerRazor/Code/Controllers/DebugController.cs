@@ -21,9 +21,9 @@ namespace ChiselDebuggerRazor.Code.Controllers
         public VCDTimeline Timeline { get; set; } = null;
         private readonly Dictionary<FIRRTLNode, ModuleLayout> FIRNodeToModCtrl = new Dictionary<FIRRTLNode, ModuleLayout>();
         private readonly List<ModuleLayout> ModControllers = new List<ModuleLayout>();
-        private readonly PlacementTemplator PlacementTemplates = new PlacementTemplator();
-        private readonly RouteTemplator RouteTemplates = new RouteTemplator();
-        private readonly SeqWorkOverrideOld<ulong> StateLimiter = new SeqWorkOverrideOld<ulong>();
+        private readonly PlacementTemplator PlacementTemplates;
+        private readonly RouteTemplator RouteTemplates;
+        private readonly SeqWorkOverrideOld<ulong> StateLimiter;
         private readonly CancellationTokenSource CancelSource = new CancellationTokenSource();
         internal readonly PlaceAndRouteStats PlaceRouteStats = new PlaceAndRouteStats();
         private ModuleLayout RootModCtrl = null;
@@ -34,9 +34,12 @@ namespace ChiselDebuggerRazor.Code.Controllers
         public delegate void CircuitSizeChangedHandler(Point circuitSize);
         public event CircuitSizeChangedHandler OnCircuitSizeChanged;
 
-        public DebugController(CircuitGraph graph)
+        public DebugController(CircuitGraph graph, PlacementTemplator placementTemplates, RouteTemplator routeTemplates, WorkLimiter workLimiter)
         {
             Graph = graph;
+            PlacementTemplates = placementTemplates;
+            RouteTemplates = routeTemplates;
+            StateLimiter = new SeqWorkOverrideOld<ulong>(workLimiter);
         }
 
         public void AddVCD(VCD vcd)

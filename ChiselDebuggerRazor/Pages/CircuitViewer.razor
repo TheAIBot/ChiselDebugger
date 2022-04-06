@@ -54,6 +54,9 @@ else if (ThrownException is Exception)
 
 @code
 {
+    [Inject]
+    private IServiceProvider ScopedServices { get; set; }
+
     private DebugController DebugCtrl = null;
     private Positioned<ChiselDebug.GraphFIR.Components.Module> ModulePosition;
     private CircuitLayout RootModLayout = null;
@@ -114,7 +117,7 @@ else if (ThrownException is Exception)
 
         ModulePosition = new Positioned<ChiselDebug.GraphFIR.Components.Module>(Point.Zero, graph.MainModule);
         RootModLayout = new CircuitLayout();
-        DebugCtrl = new DebugController(graph);
+        DebugCtrl = new DebugController(graph, ScopedServices.GetRequiredService<PlacementTemplator>(), ScopedServices.GetRequiredService<RouteTemplator>(), ScopedServices.GetRequiredService<WorkLimiter>());
         DebugCtrl.OnCircuitSizeChanged += CircuitSizeChanged;
 
         JustLoadedCircuit = true;
