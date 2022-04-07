@@ -10,6 +10,7 @@ namespace ChiselDebuggerRazor.Code
         {
             services.AddSingleton<WorkLimiter>();
             services.AddSingleton<DebugControllerFactory>();
+            services.AddScoped<PageWideEvents>();
         }
     }
 }

@@ -6,29 +6,26 @@
     </div>
 
     <div class="main">
-        <CascadingValue Value="@this" Name="DocEvents" IsFixed="true">
-            <div class="content px-4">
-                <CircuitViewer @key=CircuitFiles CircuitFiles=CircuitFiles></CircuitViewer>
-            </div>
-        </CascadingValue>
+        <div class="content px-4">
+            <CircuitViewer @key=CircuitFiles CircuitFiles=CircuitFiles></CircuitViewer>
+        </div>
     </div>
 </div>
 
 @code {
-    public delegate void MouseEventHandler(MouseEventArgs args);
-    public event MouseEventHandler OnMouseUp;
-    public event MouseEventHandler OnMouseMove;
+    [Inject]
+    public PageWideEvents PageWideEvents { get; set; }
 
     private CircuitFiles CircuitFiles;
 
     private void MouseUp(MouseEventArgs args)
     {
-        OnMouseUp?.Invoke(args);
+        PageWideEvents.InvokeOnMouseUp(args);
     }
 
     private void MouseMove(MouseEventArgs args)
     {
-        OnMouseMove?.Invoke(args);
+        PageWideEvents.InvokeOnMouseMove(args);
     }
 
     private void ShowCircuitFiles(CircuitFiles files)

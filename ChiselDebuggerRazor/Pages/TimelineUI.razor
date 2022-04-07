@@ -43,8 +43,8 @@
     [CascadingParameter(Name = "DebugCtrl")]
     protected DebugController DebugCtrl { get; set; }
 
-    [CascadingParameter(Name = "DocEvents")]
-    protected MainLayout DocEvents { get; set; }
+    [Inject]
+    public PageWideEvents PageWideEvents { get; set; }
 
 
     private double RangeParentStartX;
@@ -251,15 +251,15 @@
         StartRangeSelect = GetClosestTime(timeFromPos);
         EndRangeSelect = StartRangeSelect;
 
-        DocEvents.OnMouseUp += RangeSelectEnded;
-        DocEvents.OnMouseMove += RangeSelectMove;
+        PageWideEvents.OnMouseUp += RangeSelectEnded;
+        PageWideEvents.OnMouseMove += RangeSelectMove;
 
         StateHasChanged();
     }
     private void RangeSelectEnded(MouseEventArgs args)
     {
-        DocEvents.OnMouseUp -= RangeSelectEnded;
-        DocEvents.OnMouseMove -= RangeSelectMove;
+        PageWideEvents.OnMouseUp -= RangeSelectEnded;
+        PageWideEvents.OnMouseMove -= RangeSelectMove;
 
         double relXPos = Math.Max(0.0, args.ClientX - RangeParentStartX);
         ulong timeFromPos = GetTimeFromPos(relXPos);
