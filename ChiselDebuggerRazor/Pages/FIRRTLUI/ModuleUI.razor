@@ -51,7 +51,7 @@
             }
             else if (posOp.Value is Module)
             {
-                <ModuleUI @key=posOp.Value PosOp="@(posOp.Cast<Module>())" ParentLayoutCtrl="CurrModLayout"></ModuleUI>
+                <ModuleUI @key=posOp.Value PosOp="@(posOp.Cast<Module>())" DebugCtrl=DebugCtrl ParentLayoutCtrl="CurrModLayout"></ModuleUI>
             }
             else if (posOp.Value is Memory)
             {
@@ -59,7 +59,7 @@
             }
             else if (posOp.Value is Conditional)
             {
-                <ConditionalUI @key=posOp.Value PosOp="@(posOp.Cast<Conditional>())" ParentLayoutCtrl="CurrModLayout"></ConditionalUI>
+                <ConditionalUI @key=posOp.Value PosOp="@(posOp.Cast<Conditional>())" DebugCtrl=DebugCtrl ParentLayoutCtrl="CurrModLayout"></ConditionalUI>
             }
             else if (posOp.Value is VectorAssign)
             {
@@ -98,6 +98,9 @@
     private float ModNameScale = 1.0f;
     private Point ModNameSize = Point.Zero;
     private bool HasLayout = false;
+
+    [Parameter]
+    public DebugController DebugCtrl { get; set; }
 
     [Parameter]
     public bool IgnoreUnusedIO { get; set; } = false;

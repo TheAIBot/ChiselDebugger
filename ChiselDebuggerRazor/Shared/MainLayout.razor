@@ -7,7 +7,10 @@
 
     <div class="main">
         <div class="content px-4">
-            <CircuitViewer @key=CircuitFiles CircuitFiles=CircuitFiles></CircuitViewer>
+            @if (CircuitFiles != null)
+            {
+                <CircuitViewer @key=CircuitFiles CircuitFiles=CircuitFiles></CircuitViewer>   
+            }
         </div>
     </div>
 </div>

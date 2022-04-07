@@ -28,7 +28,7 @@
             overflow: hidden;
             user-select: none;">
                 <div class="Circuit" style="transform: translate( @CircuitOffset.X.ToPixels(), @CircuitOffset.Y.ToPixels() ) scale( @CircuitScale.ToHtmlNumber() );" @onwheel="HandleScroll">
-                    <ModuleUI @key="ModulePosition.Value" PosOp="@ModulePosition" ParentLayoutCtrl="RootModLayout" />
+                    <ModuleUI @key="ModulePosition.Value" PosOp="@ModulePosition" DebugCtrl=DebugCtrl ParentLayoutCtrl="RootModLayout" />
                 </div>
             </div>
         </div>
@@ -76,11 +76,6 @@ else if (ThrownException is Exception)
 
     protected override Task OnInitializedAsync()
     {
-        if (CircuitFiles == null)
-        {        
-            return base.OnInitializedAsync(); 
-        }
-
         try
         {
             using var loFir = CircuitFiles.GetLoFirrtlStream();

@@ -3,11 +3,14 @@
 <div id="@SizeWatcherID" class="conditional" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();width:@GetCurrentSize().X.ToPixels();height:@GetCurrentSize().Y.ToPixels();">
     @foreach (var modPos in CondModules)
     {
-        <ModuleUI @key=modPos.Value PosOp="modPos" ParentLayoutCtrl="CurrLayout" IgnoreUnusedIO="true"></ModuleUI>
+        <ModuleUI @key=modPos.Value PosOp="modPos" ParentLayoutCtrl="CurrLayout" DebugCtrl=DebugCtrl IgnoreUnusedIO="true"></ModuleUI>
     }
 </div>
 
 @code {
+    [Parameter]
+    public DebugController DebugCtrl { get; set; }
+
     private List<Positioned<Module>> CondModules = new List<Positioned<Module>>();
     private CondLayout CurrLayout;
 

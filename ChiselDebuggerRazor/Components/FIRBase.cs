@@ -21,9 +21,6 @@ namespace ChiselDebuggerRazor.Components
         [Parameter]
         public FIRLayout ParentLayoutCtrl { get; set; }
 
-        [CascadingParameter(Name = "DebugCtrl")]
-        protected DebugController DebugCtrl { get; set; }
-
         protected Point Position => PosOp.Position;
         protected T Operation => PosOp.Value;
 
