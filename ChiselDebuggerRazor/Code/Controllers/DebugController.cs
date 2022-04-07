@@ -17,7 +17,7 @@ namespace ChiselDebuggerRazor.Code.Controllers
 {
     public class DebugController : IDisposable
     {
-        private readonly CircuitGraph Graph;
+        public readonly CircuitGraph Graph;
         public VCDTimeline Timeline { get; set; } = null;
         private readonly Dictionary<FIRRTLNode, ModuleLayout> FIRNodeToModCtrl = new Dictionary<FIRRTLNode, ModuleLayout>();
         private readonly List<ModuleLayout> ModControllers = new List<ModuleLayout>();
@@ -34,12 +34,12 @@ namespace ChiselDebuggerRazor.Code.Controllers
         public delegate void CircuitSizeChangedHandler(Point circuitSize);
         public event CircuitSizeChangedHandler OnCircuitSizeChanged;
 
-        public DebugController(CircuitGraph graph, PlacementTemplator placementTemplates, RouteTemplator routeTemplates, WorkLimiter workLimiter)
+        public DebugController(CircuitGraph graph, PlacementTemplator placementTemplates, RouteTemplator routeTemplates, SeqWorkOverrideOld<ulong> stateLimiter)
         {
             Graph = graph;
             PlacementTemplates = placementTemplates;
             RouteTemplates = routeTemplates;
-            StateLimiter = new SeqWorkOverrideOld<ulong>(workLimiter);
+            StateLimiter = stateLimiter;
         }
 
         public void AddVCD(VCD vcd)
