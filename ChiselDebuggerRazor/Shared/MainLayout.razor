@@ -2,13 +2,13 @@
 
 <div class="page" @onmouseup="MouseUp" @onmousemove="MouseMove">
     <div class="sidebar">
-        <NavMenu />
+        <NavMenu OnNewCircuitFiles=ShowCircuitFiles/>
     </div>
 
     <div class="main">
         <CascadingValue Value="@this" Name="DocEvents" IsFixed="true">
             <div class="content px-4">
-                @Body
+                <CircuitViewer @key=CircuitFiles CircuitFiles=CircuitFiles></CircuitViewer>
             </div>
         </CascadingValue>
     </div>
@@ -19,6 +19,8 @@
     public event MouseEventHandler OnMouseUp;
     public event MouseEventHandler OnMouseMove;
 
+    private CircuitFiles CircuitFiles;
+
     private void MouseUp(MouseEventArgs args)
     {
         OnMouseUp?.Invoke(args);
@@ -27,5 +29,11 @@
     private void MouseMove(MouseEventArgs args)
     {
         OnMouseMove?.Invoke(args);
+    }
+
+    private void ShowCircuitFiles(CircuitFiles files)
+    {
+        CircuitFiles = files;
+        StateHasChanged();
     }
 }

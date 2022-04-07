@@ -1,5 +1,4 @@
 ﻿@using System.IO;
-@inject CircuitFiles Files
 
 <div class="top-row pl-4 navbar navbar-dark">
     <a class="navbar-brand" href="">ChiselDebuggerWebUI</a>
@@ -30,6 +29,9 @@
 </div>
 
 @code {
+    [Parameter]
+    public Action<CircuitFiles> OnNewCircuitFiles { get; set; }
+
     private bool collapseNavMenu = true;
 
     private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
@@ -67,13 +69,19 @@
         string filenameNoExtension = firrtlFilename.Split('.').First();
         string vcdPath = System.IO.Path.Combine(ExamplesFolder, $"{filenameNoExtension}.vcd");
 
-        Files.UpdateFromPath(hiFirPath, loFirPath, vcdPath);
+        CircuitFiles circuitFiles = new CircuitFiles();
+        circuitFiles.UpdateFromPath(hiFirPath, loFirPath, vcdPath);
+        OnNewCircuitFiles.Invoke(circuitFiles);
     }
 
     private async void LoadFiles(InputFileChangeEventArgs e)
     {
         var files = e.GetMultipleFiles();
 
-        await Files.UpdateFromFiles(e.GetMultipleFiles());
+        CircuitFiles circuitFiles = new CircuitFiles();
+        if (await circuitFiles.UpdateFromFiles(e.GetMultipleFiles()))
+        {
+            OnNewCircuitFiles.Invoke(circuitFiles);
+        }
     }
 }

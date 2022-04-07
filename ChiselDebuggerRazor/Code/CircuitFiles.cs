@@ -8,15 +8,9 @@ namespace ChiselDebuggerRazor.Code
 {
     public class CircuitFiles
     {
-        private bool Ready = false;
-
         private Stream HiFirrtlStream;
         private Stream LoFirrtlStream;
         private Stream VCDStream;
-        public bool IsReady => Ready;
-
-        public delegate void CircuitData();
-        public event CircuitData OnViewCircuit;
 
         public Stream GetHiFirrtlStream()
         {
@@ -33,8 +27,6 @@ namespace ChiselDebuggerRazor.Code
 
         public void UpdateFromPath(string hiFirrtlPath, string loFirrtlPath, string vcdPath)
         {
-            Clear();
-
             if (File.Exists(hiFirrtlPath))
             {
                 HiFirrtlStream = File.OpenRead(hiFirrtlPath);
@@ -47,9 +39,6 @@ namespace ChiselDebuggerRazor.Code
             {
                 VCDStream = File.OpenRead(vcdPath);
             }
-
-            Ready = true;
-            OnViewCircuit?.Invoke();
         }
 
         private async Task<Stream> CopyBrowserFileToMemory(IBrowserFile file)
@@ -69,8 +58,6 @@ namespace ChiselDebuggerRazor.Code
 
         public async Task<bool> UpdateFromFiles(IReadOnlyList<IBrowserFile> files)
         {
-            Clear();
-
             var firFiles = files.Where(x => x.Name.EndsWith(".fir")).ToList();
             if (firFiles.Count == 0)
             {
@@ -105,22 +92,7 @@ namespace ChiselDebuggerRazor.Code
             LoFirrtlStream = loFirrtlPath.Result;
             VCDStream = vcdPath.Result;
 
-            Ready = true;
-            OnViewCircuit?.Invoke();
             return true;
-        }
-
-        private void Clear()
-        {
-            Ready = false;
-
-            HiFirrtlStream?.Dispose();
-            LoFirrtlStream?.Dispose();
-            VCDStream?.Dispose();
-
-            HiFirrtlStream = null;
-            LoFirrtlStream = null;
-            VCDStream = null;
         }
     }
 }

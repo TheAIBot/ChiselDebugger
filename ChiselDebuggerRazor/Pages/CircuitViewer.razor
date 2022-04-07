@@ -9,7 +9,6 @@
 @using ChiselDebug.Utilities;
 
 @inject IJSRuntime JS
-@inject CircuitFiles Files
 @inherits ManualRenderBase
 @implements IDisposable
 
@@ -57,50 +56,45 @@ else if (ThrownException is Exception)
     [Inject]
     private IServiceProvider ScopedServices { get; set; }
 
+    [Parameter]
+    public CircuitFiles CircuitFiles { get; set; }
+
     private DebugController DebugCtrl = null;
     private Positioned<ChiselDebug.GraphFIR.Components.Module> ModulePosition;
     private CircuitLayout RootModLayout = null;
+
     private float CircuitScale = 1.0f;
     private Point CircuitOffset = Point.Zero;
-    private bool JustLoadedCircuit = false;
 
     private ElementReference CircuitContainer;
-    private string DragEventID = UniqueID.UniqueHTMLID();
+    private readonly string DragEventID = UniqueID.UniqueHTMLID();
 
     private Point CircuitTopLeftParent = Point.Zero;
     private Point CircuitContainerSize = Point.Zero;
-    private string CircuitContainerID = UniqueID.UniqueHTMLID();
+    private readonly string CircuitContainerID = UniqueID.UniqueHTMLID();
     private Exception ThrownException = null;
 
     protected override Task OnInitializedAsync()
     {
-        Files.OnViewCircuit += CircuitChanged;
-        return base.OnInitializedAsync();
-    }
+        if (CircuitFiles == null)
+        {        
+            return base.OnInitializedAsync(); 
+        }
 
-    private async void CircuitChanged()
-    {
-        await Task.Run(() =>
+        try
         {
-            try
-            {
-                DragEventID = UniqueID.UniqueHTMLID();
-                CircuitContainerID = UniqueID.UniqueHTMLID();
-                DebugCtrl?.Dispose();
-                DebugCtrl = null;
+            using var loFir = CircuitFiles.GetLoFirrtlStream();
+            using var hiFir = CircuitFiles.GetHiFirrtlStream();
+            using var vcd = CircuitFiles.GetVCDStream();
 
-                using var loFir = Files.GetLoFirrtlStream();
-                using var hiFir = Files.GetHiFirrtlStream();
-                using var vcd = Files.GetVCDStream();
-
-                LoadFirData(loFir, hiFir, vcd);
-            }
-            catch (Exception e)
-            {
-                ThrownException = e;
-                InvokestateHasChanged();
-            }
-        });
+            LoadFirData(loFir, hiFir, vcd);
+        }
+        catch (Exception e)
+        {
+            ThrownException = e;
+            InvokestateHasChanged();
+        }
+        return base.OnInitializedAsync();
     }
 
     private void LoadFirData(Stream loFirStream, Stream hiFirStream, Stream vcdStream)
@@ -119,8 +113,6 @@ else if (ThrownException is Exception)
         RootModLayout = new CircuitLayout();
         DebugCtrl = new DebugController(graph, ScopedServices.GetRequiredService<PlacementTemplator>(), ScopedServices.GetRequiredService<RouteTemplator>(), ScopedServices.GetRequiredService<WorkLimiter>());
         DebugCtrl.OnCircuitSizeChanged += CircuitSizeChanged;
-
-        JustLoadedCircuit = true;
         InvokestateHasChanged();
 
         if (vcdStream != null)
@@ -136,11 +128,6 @@ else if (ThrownException is Exception)
     {
         if (firstRender)
         {
-
-        }
-        if (JustLoadedCircuit)
-        {
-            JustLoadedCircuit = false;
             await JSEvents.AddDragListener(JS, DragEventID, x => InvokeAsync(() => HandleDrag(x)));
             await JSEvents.AddResizeListener(JS, CircuitContainerID, PageResized);
             await JSEvents.AddResizeListener(JS, DragEventID, CircuitContainerResized);
