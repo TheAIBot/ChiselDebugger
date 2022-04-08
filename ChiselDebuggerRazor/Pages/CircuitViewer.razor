@@ -14,26 +14,24 @@
 
 @if (DebugCtrl != null)
 {
-    <CascadingValue @key="DebugCtrl" Value="@DebugCtrl" Name="DebugCtrl" IsFixed="true">
-        <div id="@CircuitContainerID">
-            @if (DebugCtrl.Timeline != null)
-            {
-                <TimelineUI @key="DebugCtrl.Timeline" />
-            }
+    <div id="@CircuitContainerID">
+        @if (DebugCtrl.Timeline != null)
+        {
+            <TimelineUI @key="DebugCtrl.Timeline" DebugCtrl=DebugCtrl />
+        }
 
-            <div style="height:20px;" />
-            <div id="@DragEventID" @ref="CircuitContainer" style="
-            width: calc(100vw - @CircuitTopLeftParent.X.ToPixels());
-            height: calc(100vh - @CircuitTopLeftParent.Y.ToPixels());
-            overflow: hidden;
-            user-select: none;">
-                <div class="Circuit" style="transform: translate( @CircuitOffset.X.ToPixels(), @CircuitOffset.Y.ToPixels() ) scale( @CircuitScale.ToHtmlNumber() );" @onwheel="HandleScroll">
-                    <ModuleUI @key="ModulePosition.Value" PosOp="@ModulePosition" DebugCtrl=DebugCtrl ParentLayoutCtrl="RootModLayout" />
-                </div>
+        <div style="height:20px;" />
+        <div id="@DragEventID" @ref="CircuitContainer" style="
+        width: calc(100vw - @CircuitTopLeftParent.X.ToPixels());
+        height: calc(100vh - @CircuitTopLeftParent.Y.ToPixels());
+        overflow: hidden;
+        user-select: none;">
+            <div class="Circuit" style="transform: translate( @CircuitOffset.X.ToPixels(), @CircuitOffset.Y.ToPixels() ) scale( @CircuitScale.ToHtmlNumber() );" @onwheel="HandleScroll">
+                <ModuleUI @key="ModulePosition.Value" PosOp="@ModulePosition" DebugCtrl=DebugCtrl ParentLayoutCtrl="RootModLayout" />
             </div>
         </div>
-        <IOWindowUI></IOWindowUI>
-    </CascadingValue>
+    </div>
+    <IOWindowUI></IOWindowUI>
 }
 @if (ThrownException is ChiselDebugException)
 {

@@ -40,8 +40,8 @@
 </div>
 
 @code {
-    [CascadingParameter(Name = "DebugCtrl")]
-    protected DebugController DebugCtrl { get; set; }
+    [Parameter]
+    public DebugController DebugCtrl { get; set; }
 
     [Inject]
     public PageWideEvents PageWideEvents { get; set; }

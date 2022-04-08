@@ -17,14 +17,14 @@
 }
 
 @code {
-    [CascadingParameter(Name = "DebugCtrl")]
-    protected DebugController DebugCtrl { get; set; }
+    [Inject]
+    public IOWindowEvents WindowEvents { get; set; }
 
     private readonly Dictionary<FIRIO, IOwindowData> Windows = new Dictionary<FIRIO, IOwindowData>();
 
     protected override Task OnInitializedAsync()
     {
-        DebugCtrl.SetIOWindow(this);
+        WindowEvents.SetIOWindow(this);
 
         return base.OnInitializedAsync();
     }

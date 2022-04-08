@@ -1,5 +1,4 @@
 ﻿using ChiselDebuggerRazor.Code.Controllers;
-using ChiselDebuggerRazor.Code.Templates;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ChiselDebuggerRazor.Code
@@ -11,6 +10,7 @@ namespace ChiselDebuggerRazor.Code
             services.AddSingleton<WorkLimiter>();
             services.AddSingleton<DebugControllerFactory>();
             services.AddScoped<PageWideEvents>();
+            services.AddScoped<IOWindowEvents>();
         }
     }
 }

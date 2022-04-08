@@ -3,7 +3,7 @@
 <svg class="wiresContainer">
     @foreach (var wireGroup in WirePaths.GroupBy(x => x.GetStartIO()))
     {
-        <g class="wireGroup"  @onmouseover="x => DebugCtrl.MouseEntersIO(wireGroup.Key, x)" @onmouseout="x => DebugCtrl.MouseExitIO(wireGroup.Key, x)">
+        <g class="wireGroup"  @onmouseover="x => WindowEvents.MouseEntersIO(wireGroup.Key, x)" @onmouseout="x => WindowEvents.MouseExitIO(wireGroup.Key, x)">
             @foreach (var wire in wireGroup)
             {
                 @if (wire.IsEnabled())
@@ -31,8 +31,8 @@
     [Parameter]
     public ModuleLayout ModLayout { get; set; }
 
-    [CascadingParameter(Name = "DebugCtrl")]
-    protected DebugController DebugCtrl { get; set; }
+    [Inject]
+    public IOWindowEvents WindowEvents { get; set; }
 
     private List<WirePath> WirePaths = new List<WirePath>();
 

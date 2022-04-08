@@ -27,7 +27,6 @@ namespace ChiselDebuggerRazor.Code.Controllers
         private readonly CancellationTokenSource CancelSource = new CancellationTokenSource();
         internal readonly PlaceAndRouteStats PlaceRouteStats = new PlaceAndRouteStats();
         private ModuleLayout RootModCtrl = null;
-        private IOWindowUI IOWindow = null;
 
         public Point CircuitSize { get; private set; } = Point.Zero;
 
@@ -113,21 +112,6 @@ namespace ChiselDebuggerRazor.Code.Controllers
                     RootModCtrl.Render();
                 }
             });
-        }
-
-        public void SetIOWindow(IOWindowUI window)
-        {
-            IOWindow = window;
-        }
-
-        public void MouseEntersIO(FIRIO io, MouseEventArgs args)
-        {
-            IOWindow?.MouseEnter(io, args);
-        }
-
-        public void MouseExitIO(FIRIO io, MouseEventArgs args)
-        {
-            IOWindow?.MouseExit(io, args);
         }
 
         public void Dispose()

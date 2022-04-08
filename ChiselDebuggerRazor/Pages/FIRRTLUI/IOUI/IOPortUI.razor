@@ -1,4 +1,4 @@
-﻿<div class="ioDot" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();" @onmouseover="x => DebugCtrl.MouseEntersIO(IO, x)" @onmouseout="x => DebugCtrl.MouseExitIO(IO, x)"></div>
+﻿<div class="ioDot" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();" @onmouseover="x => WindowEvents.MouseEntersIO(IO, x)" @onmouseout="x => WindowEvents.MouseExitIO(IO, x)"></div>
 
 @code {
     [Parameter]
@@ -7,8 +7,8 @@
     [Parameter]
     public FIRIO IO { get; set; }
 
-    [CascadingParameter(Name = "DebugCtrl")]
-    protected DebugController DebugCtrl { get; set; }
+    [Inject]
+    public IOWindowEvents WindowEvents { get; set; }
 
     private const int DOT_RADIUS = 3;
 
