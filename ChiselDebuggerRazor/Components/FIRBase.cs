@@ -68,10 +68,11 @@ namespace ChiselDebuggerRazor.Components
             JSEvents.BatchAddResizeListener(JS, componentID, onResize);
         }
 
-        private void JSOnResize(ElemWH size)
+        private Task JSOnResize(ElemWH size)
         {
             PreviousSize = size.ToPoint();
             OnResize(PreviousSize.X, PreviousSize.Y);
+            return Task.CompletedTask;
         }
 
         public void PrepareForRender()

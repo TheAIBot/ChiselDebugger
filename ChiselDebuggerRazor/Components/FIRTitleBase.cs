@@ -32,7 +32,7 @@ namespace ChiselDebuggerRazor.Components
             return base.OnAfterRenderAsync(firstRender);
         }
 
-        private void UpdateTitleSize(ElemWH size)
+        private Task UpdateTitleSize(ElemWH size)
         {
             Point newSize = size.ToPoint();
             if (TitleSize != newSize)
@@ -43,6 +43,8 @@ namespace ChiselDebuggerRazor.Components
                 Point firSize = GetCurrentSize();
                 OnResize(firSize.X, firSize.Y);
             }
+
+            return Task.CompletedTask;
         }
 
         protected int GetPaddedTitleHeight()

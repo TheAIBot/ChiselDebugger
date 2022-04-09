@@ -127,16 +127,18 @@ else if (ThrownException is Exception)
         StateHasChanged();
     }
 
-    private async void PageResized(ElemWH size)
+    private async Task PageResized(ElemWH size)
     {
         CircuitTopLeftParent = (await JS.InvokeAsync<ElemWH>("JSUtils.getElementPosition", CircuitContainer)).ToPoint();
         StateHasChanged();
     }
 
-    private void CircuitContainerResized(ElemWH size)
+    private Task CircuitContainerResized(ElemWH size)
     {
         CircuitContainerSize = size.ToPoint();
         CircuitSizeChanged(Point.Zero);
+
+        return Task.CompletedTask;
     }
 
     private void CircuitSizeChanged(Point _)

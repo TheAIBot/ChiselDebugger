@@ -13,7 +13,7 @@ namespace ChiselDebuggerRazor.Code.Events
         public delegate void DragHandler(Point dragged);
         private static readonly Dictionary<string, DragHandler> DragListeners = new Dictionary<string, DragHandler>();
 
-        public delegate void ResizeHandler(ElemWH size);
+        public delegate Task ResizeHandler(ElemWH size);
         private static readonly ConcurrentDictionary<string, ResizeHandler> ResizeListeners = new ConcurrentDictionary<string, ResizeHandler>();
 
         private static readonly ConcurrentQueue<(IJSRuntime js, string id)> ToAddResizeIDs = new ConcurrentQueue<(IJSRuntime js, string id)>();
@@ -40,7 +40,7 @@ namespace ChiselDebuggerRazor.Code.Events
         }
 
         [JSInvokable]
-        public static void ResizeEventsAsync(ElemResizes resizes)
+        public static async Task ResizeEventsAsync(ElemResizes resizes)
         {
             for (int i = 0; i < resizes.IDs.Length; i++)
             {
@@ -49,7 +49,7 @@ namespace ChiselDebuggerRazor.Code.Events
 
                 if (ResizeListeners.TryGetValue(elementID, out var handler))
                 {
-                    handler.Invoke(size);
+                    await handler.Invoke(size);
                 }
                 else
                 {

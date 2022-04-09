@@ -45,7 +45,7 @@
         StateHasChanged();
     }
 
-    public async void MouseExit(FIRIO io, MouseEventArgs args, bool externalFocus = true)
+    public async Task MouseExit(FIRIO io, MouseEventArgs args, bool externalFocus = true)
     {
         IOwindowData window;
         if (!Windows.TryGetValue(io, out window))

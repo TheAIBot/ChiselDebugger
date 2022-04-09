@@ -113,7 +113,7 @@ JSUtils.addDragListener = function (elementID) {
             if (!isDragQueued) {
                 isDragQueued = true;
 
-                window.requestAnimationFrame(function () {
+                window.requestAnimationFrame(async function () {
                     isDragQueued = false;
 
                     let movedX = draggedX;
@@ -122,7 +122,7 @@ JSUtils.addDragListener = function (elementID) {
                     draggedX = 0;
                     draggedY = 0;
 
-                    DotNet.invokeMethodAsync("ChiselDebuggerRazor", "DragEventAsync", elementID, movedX, movedY);
+                    await DotNet.invokeMethodAsync("ChiselDebuggerRazor", "DragEventAsync", elementID, movedX, movedY);
                 });
             }
         }

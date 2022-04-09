@@ -240,11 +240,16 @@
 
         if (firstRender)
         {
-            AddSizeWatcher(ModNameID, x => ModNameSize = x.ToPoint());
+            AddSizeWatcher(ModNameID, SetModNameSize);
             await JSEvents.DoBatchedResizeJS();
         }
+    }
 
+    private Task SetModNameSize(ElemWH size)
+    {
+        ModNameSize = size.ToPoint();
 
+        return Task.CompletedTask;
     }
 
     private void UpdateModNameScale()

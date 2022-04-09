@@ -74,7 +74,7 @@
         OnNewCircuitFiles.Invoke(circuitFiles);
     }
 
-    private async void LoadFiles(InputFileChangeEventArgs e)
+    private async Task LoadFiles(InputFileChangeEventArgs e)
     {
         var files = e.GetMultipleFiles();
 

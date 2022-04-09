@@ -1,6 +1,7 @@
 ﻿using ChiselDebug.GraphFIR.IO;
 using ChiselDebuggerRazor.Pages.FIRRTLUI.IOUI;
 using Microsoft.AspNetCore.Components.Web;
+using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Code.Events
 {
@@ -18,9 +19,9 @@ namespace ChiselDebuggerRazor.Code.Events
             IOWindow?.MouseEnter(io, args);
         }
 
-        public void MouseExitIO(FIRIO io, MouseEventArgs args)
+        public Task MouseExitIO(FIRIO io, MouseEventArgs args)
         {
-            IOWindow?.MouseExit(io, args);
+            return IOWindow?.MouseExit(io, args);
         }
     }
 }
