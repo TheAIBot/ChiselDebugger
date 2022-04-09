@@ -19,7 +19,7 @@ namespace ChiselDebuggerRazor.Code.Events
         private static readonly ConcurrentQueue<(IJSRuntime js, string id)> ToAddResizeIDs = new ConcurrentQueue<(IJSRuntime js, string id)>();
 
         [JSInvokable]
-        public static void DragEventAsync(string elementID, int draggedX, int draggedY)
+        public static ValueTask DragEventAsync(string elementID, int draggedX, int draggedY)
         {
             if (DragListeners.TryGetValue(elementID, out var handler))
             {
@@ -29,6 +29,8 @@ namespace ChiselDebuggerRazor.Code.Events
             {
                 throw new Exception($"No handler for element exists. Element id: {elementID}");
             }
+
+            return ValueTask.CompletedTask;
         }
 
         public static ValueTask AddDragListener(IJSRuntime js, string elementID, DragHandler dragHandler)

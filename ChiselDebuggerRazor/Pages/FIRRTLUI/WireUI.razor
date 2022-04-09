@@ -12,11 +12,11 @@
 @code {
     private ScopedNodeIO NodeIO = null;
 
-    protected override void OnFirstParametersSetAsync()
+    protected override Task OnFirstParametersSetAsync()
     {
         SetCurrentSize(new Point(120, 10));
 
-        base.OnFirstParametersSetAsync();
+        return base.OnFirstParametersSetAsync();
     }
 
     protected override DirectedIO[] OnMakeSinks(int width, int height)

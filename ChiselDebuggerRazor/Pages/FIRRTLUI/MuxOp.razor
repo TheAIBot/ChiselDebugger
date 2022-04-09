@@ -24,13 +24,13 @@
     private ScopedNodeIO ChoiseIO = null;
     private ScopedNodeIO ResultIO = null;
 
-    protected override void OnFirstParametersSetAsync()
+    protected override Task OnFirstParametersSetAsync()
     {
         int heightForSlope = INDENT * 2;
         int heightForIO = Operation.Choises.Length * IOPositionCalc.MinSpaceBetweenIO;
         SetCurrentSize(new Point(WIDTH, heightForSlope + heightForIO));
 
-        base.OnFirstParametersSetAsync();
+        return base.OnFirstParametersSetAsync();
     }
 
     protected override DirectedIO[] OnMakeSinks(int width, int height)

@@ -22,11 +22,11 @@
 </div>
 
 @code {
-    protected override void OnFirstParametersSetAsync()
+    protected override Task OnFirstParametersSetAsync()
     {
         SetCurrentSize(new Point(120, 30));
 
-        base.OnFirstParametersSetAsync();
+        return base.OnFirstParametersSetAsync();
     }
 
     protected override DirectedIO[] OnMakeSinks(int width, int height)

@@ -1,6 +1,7 @@
 using ChiselDebug.Placing;
 using ChiselDebug.Placing.GraphViz;
 using ChiselDebuggerRazor.Code;
+using ChiselDebuggerWebUI.Code;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -24,7 +25,7 @@ namespace ChiselDebuggerWebUI
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
-            services.AddSingleton<CircuitFiles>();
+            services.AddSingleton<IWorkLimiter, WorkLimiter>();
             ChiselDebuggerServices.AddServices(services);
             services.AddSingleton<INodePlacerFactory, GraphVizPlacerFactory>();
         }

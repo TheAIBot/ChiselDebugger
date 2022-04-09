@@ -3,6 +3,7 @@ using ChiselDebug.Routing;
 using ChiselDebug.Utilities;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Code.Controllers
 {
@@ -14,7 +15,7 @@ namespace ChiselDebuggerRazor.Code.Controllers
         private readonly Dictionary<FIRRTLNode, DirectedIO[]> OutputOffsets = new Dictionary<FIRRTLNode, DirectedIO[]>();
         private Point CondSize = Point.Zero;
 
-        public delegate void LayoutHandler(List<Positioned<Module>> positions, FIRComponentUpdate componentInfo);
+        public delegate Task LayoutHandler(List<Positioned<Module>> positions, FIRComponentUpdate componentInfo);
         public event LayoutHandler OnLayoutUpdate;
 
         public CondLayout(Conditional cond)
@@ -104,7 +105,7 @@ namespace ChiselDebuggerRazor.Code.Controllers
             return (positions, inputOffsets.ToArray(), outputOffsets.ToArray());
         }
 
-        public override void UpdateComponentInfo(FIRComponentUpdate updateData)
+        public override Task UpdateComponentInfo(FIRComponentUpdate updateData)
         {
             lock (ModuleSizes)
             {
@@ -120,9 +121,11 @@ namespace ChiselDebuggerRazor.Code.Controllers
                 {
                     var layoutData = UpdateAndGetModPositions();
                     FIRComponentUpdate componentUpdate = new FIRComponentUpdate(Cond, CondSize, layoutData.inOffsets, layoutData.outOffsets);
-                    OnLayoutUpdate?.Invoke(layoutData.modPoses, componentUpdate);
+                    return OnLayoutUpdate?.Invoke(layoutData.modPoses, componentUpdate);
                 }
             }
+
+            return Task.CompletedTask;
         }
 
         public override void UpdateLayoutDisplay(float scaling)

@@ -32,11 +32,14 @@ namespace ChiselDebuggerRazor.Components
             {
                 IsFirstSetParametersEvent = false;
 
-                OnFirstParametersSetAsync();
+                return OnFirstParametersSetAsync();
             }
-            return base.OnParametersSetAsync();
+            return Task.CompletedTask;
         }
 
-        protected virtual void OnFirstParametersSetAsync() { }
+        protected virtual Task OnFirstParametersSetAsync() 
+        {
+            return Task.CompletedTask;
+        }
     }
 }

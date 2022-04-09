@@ -1,9 +1,13 @@
-﻿namespace ChiselDebuggerRazor.Code.Controllers
+﻿using System.Threading.Tasks;
+
+namespace ChiselDebuggerRazor.Code.Controllers
 {
     public class CircuitLayout : FIRLayout
     {
-        public override void UpdateComponentInfo(FIRComponentUpdate updateData)
-        { }
+        public override Task UpdateComponentInfo(FIRComponentUpdate updateData)
+        { 
+            return Task.CompletedTask;
+        }
 
         public override void UpdateLayoutDisplay(float scaling)
         {

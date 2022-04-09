@@ -36,10 +36,10 @@
 
     private List<WirePath> WirePaths = new List<WirePath>();
 
-    protected override void OnFirstParametersSetAsync()
+    protected override Task OnFirstParametersSetAsync()
     {
         ModLayout.SetWireUI(this);
-        ModLayout.SubscribeToRouteTemplate(x => InvokeAsync(() => UpdateWires(x)));
+        return ModLayout.SubscribeToRouteTemplate(x => InvokeAsync(() => UpdateWires(x)));
     }
 
     private void UpdateWires(List<WirePath> wirePaths)

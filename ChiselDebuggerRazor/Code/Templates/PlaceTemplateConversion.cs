@@ -3,6 +3,7 @@ using ChiselDebug.Placing;
 using ChiselDebug.Utilities;
 using ChiselDebuggerRazor.Code.Controllers;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Code.Templates
 {
@@ -17,9 +18,9 @@ namespace ChiselDebuggerRazor.Code.Templates
             this.NodeOrder = nodeOrder;
         }
 
-        public void TemplateUpdated(PlaceTemplate template)
+        public Task TemplateUpdated(PlaceTemplate template)
         {
-            Ctrl.PlaceNodes(Convert(template));
+            return Ctrl.PlaceNodes(Convert(template));
         }
 
         public PlacementInfo Convert(PlaceTemplate template)

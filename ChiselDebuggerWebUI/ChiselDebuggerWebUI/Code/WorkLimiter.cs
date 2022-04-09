@@ -1,12 +1,14 @@
-﻿using System;
+﻿using ChiselDebuggerRazor.Code;
+using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
-namespace ChiselDebuggerRazor.Code
+namespace ChiselDebuggerWebUI.Code
 {
-    public sealed class WorkLimiter
+    public sealed class WorkLimiter : IWorkLimiter
     {
-        private static readonly ActionBlock<Action> Worker = new ActionBlock<Action>(x =>
+        private static readonly ActionBlock<Func<Task>> Worker = new ActionBlock<Func<Task>>(x =>
         {
             try
             {
@@ -23,9 +25,9 @@ namespace ChiselDebuggerRazor.Code
             MaxMessagesPerTask = 1
         });
 
-        public void AddWork(Action work)
+        public Task AddWork(Func<Task> work)
         {
-            Worker.Post(work);
+            return Worker.SendAsync(work);
         }
     }
 }

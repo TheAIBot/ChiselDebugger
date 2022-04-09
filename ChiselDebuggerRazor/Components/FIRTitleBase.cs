@@ -11,15 +11,17 @@ namespace ChiselDebuggerRazor.Components
         private bool IsTitleHeightKnown = false;
         private Point TitleSize = Point.Zero;
 
-        protected override void OnResize(int width, int height)
+        protected override Task OnResize(int width, int height)
         {
             if (IsTitleHeightKnown)
             {
                 SinkOffsets = OnMakeSinks(width, height);
                 SourceOffsets = OnMakeSources(width, height);
 
-                ParentLayoutCtrl?.UpdateComponentInfo(new FIRComponentUpdate(Operation, GetCurrentSize(), SinkOffsets, SourceOffsets));
+                return ParentLayoutCtrl?.UpdateComponentInfo(new FIRComponentUpdate(Operation, GetCurrentSize(), SinkOffsets, SourceOffsets));
             }
+
+            return Task.CompletedTask;
         }
 
         protected override Task OnAfterRenderAsync(bool firstRender)
@@ -41,7 +43,7 @@ namespace ChiselDebuggerRazor.Components
                 IsTitleHeightKnown = true;
 
                 Point firSize = GetCurrentSize();
-                OnResize(firSize.X, firSize.Y);
+                return OnResize(firSize.X, firSize.Y);
             }
 
             return Task.CompletedTask;

@@ -21,14 +21,14 @@
 
     private CircuitFiles CircuitFiles;
 
-    private void MouseUp(MouseEventArgs args)
+    private Task MouseUp(MouseEventArgs args)
     {
-        PageWideEvents.InvokeOnMouseUp(args);
+        return PageWideEvents.InvokeOnMouseUp(args);
     }
 
-    private void MouseMove(MouseEventArgs args)
+    private Task MouseMove(MouseEventArgs args)
     {
-        PageWideEvents.InvokeOnMouseMove(args);
+        return PageWideEvents.InvokeOnMouseMove(args);
     }
 
     private void ShowCircuitFiles(CircuitFiles files)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Code
 {
@@ -7,26 +8,30 @@ namespace ChiselDebuggerRazor.Code
         private T WorkItem;
         private readonly object Locker = new object();
         private bool QueuedWork = false;
-        private readonly WorkLimiter WorkLimiter;
+        private readonly IWorkLimiter WorkLimiter;
 
-        public SeqWorkOverrideOld(WorkLimiter workLimiter)
+        public SeqWorkOverrideOld(IWorkLimiter workLimiter)
         {
             WorkLimiter = workLimiter;
         }
 
 
-        public void AddWork(T workItem, Action<T> work)
+        public Task AddWork(T workItem, Action<T> work)
         {
             lock (Locker)
             {
                 WorkItem = workItem;
                 if (QueuedWork)
                 {
-                    return;
+                    return Task.CompletedTask;
                 }
 
                 QueuedWork = true;
-                WorkLimiter.AddWork(() => ExecuteWork(work));
+                return WorkLimiter.AddWork(() =>
+                {
+                    ExecuteWork(work);
+                    return Task.CompletedTask;
+                });
             }
         }
 

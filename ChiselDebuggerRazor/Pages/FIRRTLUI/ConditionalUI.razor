@@ -20,16 +20,15 @@
         CurrLayout.StatehasChanged();
     }
 
-    protected override void OnFirstParametersSetAsync()
+    protected override Task OnFirstParametersSetAsync()
     {
-        base.OnFirstParametersSetAsync();
-
         CondModules = Operation.CondMods.Select(x => new Positioned<Module>(Point.Zero, x)).ToList();
 
         CurrLayout = new CondLayout(Operation);
         CurrLayout.OnLayoutUpdate += (x, y) => InvokeAsync(() => UpdateLayout(x, y));
         ParentLayoutCtrl?.AddChildLayout(CurrLayout);
 
+        return base.OnFirstParametersSetAsync();
     }
 
     private void UpdateLayout(List<Positioned<Module>> positions, FIRComponentUpdate componentInfo)
@@ -41,9 +40,9 @@
         StateHasChanged();
     }
 
-    protected override void OnResize(int width, int height)
+    protected override Task OnResize(int width, int height)
     {
-
+        return Task.CompletedTask;
     }
 
     protected override DirectedIO[] OnMakeSinks(int width, int height)

@@ -1,21 +1,22 @@
 ﻿using Microsoft.AspNetCore.Components.Web;
+using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Code.Events
 {
     public sealed class PageWideEvents
     {
-        public delegate void MouseEventHandler(MouseEventArgs args);
+        public delegate Task MouseEventHandler(MouseEventArgs args);
         public event MouseEventHandler OnMouseUp;
         public event MouseEventHandler OnMouseMove;
 
-        public void InvokeOnMouseUp(MouseEventArgs args)
+        public Task InvokeOnMouseUp(MouseEventArgs args)
         {
-            OnMouseUp?.Invoke(args);
+            return OnMouseUp?.Invoke(args);
         }
 
-        public void InvokeOnMouseMove(MouseEventArgs args)
+        public Task InvokeOnMouseMove(MouseEventArgs args)
         {
-            OnMouseMove?.Invoke(args);
+            return OnMouseMove?.Invoke(args);
         }
     }
 }

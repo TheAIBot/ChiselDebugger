@@ -1,5 +1,6 @@
 ﻿using ChiselDebuggerRazor.Components;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Code.Controllers
 {
@@ -32,7 +33,7 @@ namespace ChiselDebuggerRazor.Code.Controllers
             }
         }
 
-        public abstract void UpdateComponentInfo(FIRComponentUpdate updateData);
+        public abstract Task UpdateComponentInfo(FIRComponentUpdate updateData);
         public abstract void UpdateLayoutDisplay(float scaling);
     }
 }

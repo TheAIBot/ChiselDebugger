@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Components.Web;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using VCDReader;
 
 namespace ChiselDebuggerRazor.Code.Controllers
@@ -41,14 +42,14 @@ namespace ChiselDebuggerRazor.Code.Controllers
             StateLimiter = stateLimiter;
         }
 
-        public void AddVCD(VCD vcd)
+        public Task AddVCD(VCD vcd)
         {
             Timeline = new VCDTimeline(vcd);
 
-            SetCircuitState(Timeline.TimeInterval.StartInclusive);
+            return SetCircuitState(Timeline.TimeInterval.StartInclusive);
         }
 
-        public void AddModCtrl(string moduleName, ModuleLayout modCtrl, FIRRTLNode[] modNodes, FIRRTLNode[] modNodesIncludeMod, FIRIO[] modIO)
+        public async Task AddModCtrl(string moduleName, ModuleLayout modCtrl, FIRRTLNode[] modNodes, FIRRTLNode[] modNodesIncludeMod, FIRIO[] modIO)
         {
             lock (FIRNodeToModCtrl)
             {
@@ -59,18 +60,18 @@ namespace ChiselDebuggerRazor.Code.Controllers
                 }
             }
 
-            PlacementTemplates.SubscribeToTemplate(moduleName, modCtrl, modNodes);
-            RouteTemplates.SubscribeToTemplate(moduleName, modCtrl, modNodesIncludeMod, modIO);
+            await PlacementTemplates.SubscribeToTemplate(moduleName, modCtrl, modNodes);
+            await RouteTemplates.SubscribeToTemplate(moduleName, modCtrl, modNodesIncludeMod, modIO);
         }
 
-        internal void AddPlaceTemplateParameters(string moduleName, INodePlacer placer, FIRRTLNode[] nodeOrder)
+        internal Task AddPlaceTemplateParameters(string moduleName, INodePlacer placer, FIRRTLNode[] nodeOrder)
         {
-            PlacementTemplates.AddTemplateParameters(moduleName, placer, nodeOrder, CancelSource.Token);
+            return PlacementTemplates.AddTemplateParameters(moduleName, placer, nodeOrder, CancelSource.Token);
         }
 
-        internal void AddRouteTemplateParameters(string moduleName, SimpleRouter router, PlacementInfo placeInfo, FIRRTLNode[] nodeOrder, FIRIO[] ioOrder)
+        internal Task AddRouteTemplateParameters(string moduleName, SimpleRouter router, PlacementInfo placeInfo, FIRRTLNode[] nodeOrder, FIRIO[] ioOrder)
         {
-            RouteTemplates.AddTemplateParameters(moduleName, router, placeInfo, nodeOrder, ioOrder, CancelSource.Token);
+            return RouteTemplates.AddTemplateParameters(moduleName, router, placeInfo, nodeOrder, ioOrder, CancelSource.Token);
         }
 
         internal bool TryGetPlaceTemplate(string moduleName, ModuleLayout modLayout, out PlacementInfo placement)
@@ -90,10 +91,10 @@ namespace ChiselDebuggerRazor.Code.Controllers
             OnCircuitSizeChanged?.Invoke(CircuitSize);
         }
 
-        public void SetCircuitState(ulong time)
+        public Task SetCircuitState(ulong time)
         {
             CancellationToken cancelToken = CancelSource.Token;
-            StateLimiter.AddWork(time, stateTime =>
+            return StateLimiter.AddWork(time, stateTime =>
             {
                 Graph.SetState(Timeline.GetStateAtTime(stateTime));
                 Graph.ComputeRemainingGraph();

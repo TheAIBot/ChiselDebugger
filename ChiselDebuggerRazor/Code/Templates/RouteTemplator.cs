@@ -6,6 +6,7 @@ using ChiselDebuggerRazor.Code.Controllers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Code.Templates
 {
@@ -14,14 +15,14 @@ namespace ChiselDebuggerRazor.Code.Templates
         private readonly Dictionary<string, RouteTemplate> Templates = new Dictionary<string, RouteTemplate>();
         private readonly Dictionary<string, List<RouteTemplateConversion>> Converters = new Dictionary<string, List<RouteTemplateConversion>>();
         private readonly HashSet<string> TemplateGenerating = new HashSet<string>();
-        private readonly WorkLimiter WorkLimiter;
+        private readonly IWorkLimiter WorkLimiter;
 
-        public RouteTemplator(WorkLimiter workLimiter)
+        public RouteTemplator(IWorkLimiter workLimiter)
         {
             WorkLimiter = workLimiter;
         }
 
-        public void SubscribeToTemplate(string moduleName, ModuleLayout ctrl, FIRRTLNode[] nodeOrder, FIRIO[] ioOrder)
+        public Task SubscribeToTemplate(string moduleName, ModuleLayout ctrl, FIRRTLNode[] nodeOrder, FIRIO[] ioOrder)
         {
             RouteTemplateConversion conversion = new RouteTemplateConversion(ctrl, nodeOrder, ioOrder);
             lock (Converters)
@@ -40,12 +41,14 @@ namespace ChiselDebuggerRazor.Code.Templates
             {
                 if (Templates.TryGetValue(moduleName, out var template))
                 {
-                    conversion.TemplateUpdated(template);
+                    return conversion.TemplateUpdated(template);
                 }
             }
+
+            return Task.CompletedTask;
         }
 
-        public void AddTemplateParameters(string moduleName, SimpleRouter router, PlacementInfo placeInfo, FIRRTLNode[] nodeOrder, FIRIO[] ioOrder, CancellationToken cancelToken)
+        public Task AddTemplateParameters(string moduleName, SimpleRouter router, PlacementInfo placeInfo, FIRRTLNode[] nodeOrder, FIRIO[] ioOrder, CancellationToken cancelToken)
         {
             lock (TemplateGenerating)
             {
@@ -53,27 +56,27 @@ namespace ChiselDebuggerRazor.Code.Templates
                 //no need to generate again
                 if (!TemplateGenerating.Add(moduleName))
                 {
-                    return;
+                    return Task.CompletedTask;
                 }
             }
 
-            WorkLimiter.AddWork(() =>
+            return WorkLimiter.AddWork(() =>
             {
                 List<WirePath> wires;
                 if (!router.TryPathLines(placeInfo, cancelToken, out wires))
                 {
-                    return;
+                    return Task.CompletedTask;
                 }
                 if (cancelToken.IsCancellationRequested)
                 {
-                    return;
+                    return Task.CompletedTask;
                 }
 
-                AddTemplate(moduleName, wires, nodeOrder, ioOrder);
+                return AddTemplate(moduleName, wires, nodeOrder, ioOrder);
             });
         }
 
-        private void AddTemplate(string moduleName, List<WirePath> wires, FIRRTLNode[] nodeOrder, FIRIO[] ioOrder)
+        private Task AddTemplate(string moduleName, List<WirePath> wires, FIRRTLNode[] nodeOrder, FIRIO[] ioOrder)
         {
             RouteTemplate template = new RouteTemplate(wires, nodeOrder, ioOrder);
             lock (Templates)
@@ -85,12 +88,11 @@ namespace ChiselDebuggerRazor.Code.Templates
             {
                 if (Converters.TryGetValue(moduleName, out var convs))
                 {
-                    foreach (var conv in convs)
-                    {
-                        conv.TemplateUpdated(template);
-                    }
+                    return Task.WhenAll(convs.Select(x => x.TemplateUpdated(template)));
                 }
             }
+
+            return Task.CompletedTask;
         }
 
         public bool TryGetTemplate(string moduleName, ModuleLayout modLayout, out List<WirePath> wires)

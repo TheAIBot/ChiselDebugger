@@ -108,15 +108,16 @@
     [Inject]
     public INodePlacerFactory NodePlacerFactory { get; set; }
 
-    protected override void OnFirstParametersSetAsync()
+    protected override async Task OnFirstParametersSetAsync()
     {
-        base.OnFirstParametersSetAsync();
+        await base.OnFirstParametersSetAsync();
 
         MinContentSize = GetMinSizeForIO();
 
         ModuleOpPoses = Operation.GetAllNodes().Select(x => new Positioned<FIRRTLNode>(Point.Zero, x)).ToList();
         CurrModLayout = new ModuleLayout(DebugCtrl, Operation, this, NodePlacerFactory.Create(Operation));
-        CurrModLayout.SubscribeToPlaceTemplate(x => InvokeAsync(() => UpdatePlacement(x)));
+        await CurrModLayout.ConnectToDebugController();
+        await CurrModLayout.SubscribeToPlaceTemplate(x => InvokeAsync(() => UpdatePlacement(x)));
         ParentLayoutCtrl?.AddChildLayout(CurrModLayout);
 
         //If the module contain no nodes then the module will never
@@ -126,7 +127,7 @@
         //doesn't contain any nodes.
         if (CurrModLayout.IsEmpty())
         {
-            CurrModLayout.PlaceNodes(new PlacementInfo());
+            await CurrModLayout.PlaceNodes(new PlacementInfo());
         }
     }
 
@@ -137,7 +138,7 @@
         return Math.Min(maxScalingX, maxScalingY);
     }
 
-    protected override void OnResize(int width, int height)
+    protected override Task OnResize(int width, int height)
     {
         //Update this module with its internal io positions
         ScopedNodeIO internalIO = IOPositionCalc.VerticalScopedIO(Operation.GetInternalIO(), width, MarginForIO, MarginForIO, IgnoreUnusedIO);
@@ -152,6 +153,8 @@
         internalIO.VerticalRecenter(height);
 
         CurrModLayout.UpdateIOFromNode(Operation, internalIO.GetSinkDirIO(), internalIO.GetSourceDirIO());
+
+        return Task.CompletedTask;
     }
 
     private Point UpdateParentAboutExteriorIO(Point moduleSize)
@@ -203,7 +206,7 @@
         return new Point(requiredWidth, requiredHeight);
     }
 
-    private void UpdatePlacement(PlacementInfo placements)
+    private async Task UpdatePlacement(PlacementInfo placements)
     {
         ModuleOpPoses = placements.NodePositions;
 
@@ -212,10 +215,10 @@
         placements.SetSpaceNeeded(moduleSize);
 
         //With new module size, the io positions need to be updated
-        OnResize(moduleSize.X, moduleSize.Y);
+        await OnResize(moduleSize.X, moduleSize.Y);
         moduleSize = UpdateParentAboutExteriorIO(moduleSize);
 
-        CurrModLayout.RouteWires(placements);
+        await CurrModLayout.RouteWires(placements);
 
         CurrModLayout.PrepareToRerenderLayout();
         SetCurrentSize(moduleSize);

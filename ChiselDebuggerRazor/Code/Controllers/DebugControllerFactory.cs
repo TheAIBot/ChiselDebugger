@@ -8,9 +8,9 @@ namespace ChiselDebuggerRazor.Code.Controllers
 {
     public sealed class DebugControllerFactory
     {
-        WorkLimiter WorkLimiter;
+        IWorkLimiter WorkLimiter;
 
-        public DebugControllerFactory(WorkLimiter workLimiter)
+        public DebugControllerFactory(IWorkLimiter workLimiter)
         {
             WorkLimiter = workLimiter;
         }

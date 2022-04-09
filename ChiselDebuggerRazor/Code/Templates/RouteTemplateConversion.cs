@@ -3,6 +3,7 @@ using ChiselDebug.GraphFIR.IO;
 using ChiselDebug.Routing;
 using ChiselDebuggerRazor.Code.Controllers;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Code.Templates
 {
@@ -19,9 +20,9 @@ namespace ChiselDebuggerRazor.Code.Templates
             this.IOOrder = ioOrder;
         }
 
-        public void TemplateUpdated(RouteTemplate template)
+        public Task TemplateUpdated(RouteTemplate template)
         {
-            Ctrl.PlaceWires(Convert(template));
+            return Ctrl.PlaceWires(Convert(template));
         }
 
         public List<WirePath> Convert(RouteTemplate template)

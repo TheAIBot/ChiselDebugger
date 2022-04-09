@@ -81,17 +81,18 @@ else if (ThrownException is Exception)
             using var hiFir = CircuitFiles.GetHiFirrtlStream();
             using var vcd = CircuitFiles.GetVCDStream();
 
-            LoadFirData(loFir, hiFir, vcd);
+            return LoadFirData(loFir, hiFir, vcd);
         }
         catch (Exception e)
         {
             ThrownException = e;
             InvokestateHasChanged();
         }
-        return base.OnInitializedAsync();
+
+        return Task.CompletedTask;
     }
 
-    private void LoadFirData(Stream loFirStream, Stream hiFirStream, Stream vcdStream)
+    private async Task LoadFirData(Stream loFirStream, Stream hiFirStream, Stream vcdStream)
     {
         DebugCtrl = DebugControllerFactory.Create(loFirStream, hiFirStream);
         ModulePosition = new Positioned<ChiselDebug.GraphFIR.Components.Module>(Point.Zero, DebugCtrl.Graph.MainModule);
@@ -103,7 +104,7 @@ else if (ThrownException is Exception)
         if (vcdStream != null)
         {
             using VCD vcd = VCDReader.Parse.FromStream(vcdStream);
-            DebugCtrl.AddVCD(vcd);
+            await DebugCtrl.AddVCD(vcd);
 
             InvokestateHasChanged();
         }

@@ -79,7 +79,7 @@
         return Math.Clamp(utime, StartTime, EndTime);
     }
 
-    protected override void OnFirstParametersSetAsync()
+    protected override Task OnFirstParametersSetAsync()
     {
         VCDTimeline timeline = DebugCtrl.Timeline;
         StartTime = timeline.TimeInterval.StartInclusive;
@@ -88,6 +88,7 @@
         AllTimes = timeline.GetAllSimTimes().ToArray();
 
         MakeTimeTicks();
+        return Task.CompletedTask;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -157,7 +158,7 @@
         EndRangeSelect = EndTime;
     }
 
-    private void TimeChanged(ChangeEventArgs args)
+    private Task TimeChanged(ChangeEventArgs args)
     {
         if (ulong.TryParse((string)args.Value, out ulong time) &&
             time != CurrTime)
@@ -165,31 +166,37 @@
             //Limit to range of timeline
             time = Math.Clamp(time, AllTimes.First(), AllTimes.Last());
 
-            MoveCurrTime(GetClosestTime(time));
+            return MoveCurrTime(GetClosestTime(time));
         }
+
+        return Task.CompletedTask;
     }
 
-    private void NextTime(MouseEventArgs args)
+    private Task NextTime(MouseEventArgs args)
     {
         int index = Array.BinarySearch(AllTimes, CurrTime) + 1;
         index = Math.Clamp(index, 0, AllTimes.Length - 1);
         if (CurrTime != AllTimes[index])
         {
-            MoveCurrTime(AllTimes[index]);
+            return MoveCurrTime(AllTimes[index]);
         }
+
+        return Task.CompletedTask;
     }
 
-    private void PreviousTime(MouseEventArgs args)
+    private Task PreviousTime(MouseEventArgs args)
     {
         int index = Array.BinarySearch(AllTimes, CurrTime) - 1;
         index = Math.Clamp(index, 0, AllTimes.Length - 1);
         if (CurrTime != AllTimes[index])
         {
-            MoveCurrTime(AllTimes[index]);
+            return MoveCurrTime(AllTimes[index]);
         }
+
+        return Task.CompletedTask;
     }
 
-    private void MoveCurrTime(ulong inTimeline)
+    private async Task MoveCurrTime(ulong inTimeline)
     {
         //changed time may lie outside the timeline range.
         //in that case set resize the range to include the
@@ -204,7 +211,7 @@
         if (CurrTime != inTimeline)
         {
             CurrTime = inTimeline;
-            DebugCtrl.SetCircuitState(CurrTime);
+            await DebugCtrl.SetCircuitState(CurrTime);
         }
 
         StateHasChanged();
@@ -256,7 +263,7 @@
 
         StateHasChanged();
     }
-    private void RangeSelectEnded(MouseEventArgs args)
+    private async Task RangeSelectEnded(MouseEventArgs args)
     {
         PageWideEvents.OnMouseUp -= RangeSelectEnded;
         PageWideEvents.OnMouseMove -= RangeSelectMove;
@@ -282,19 +289,21 @@
         if (CurrTime != inTimeRange)
         {
             CurrTime = inTimeRange;
-            DebugCtrl.SetCircuitState(CurrTime);
+            await DebugCtrl.SetCircuitState(CurrTime);
         }
 
         MakeTimeTicks();
         StateHasChanged();
     }
-    private void RangeSelectMove(MouseEventArgs args)
+    private Task RangeSelectMove(MouseEventArgs args)
     {
         double relXPos = Math.Max(0.0, args.ClientX - RangeParentStartX);
         ulong timeFromPos = GetTimeFromPos(relXPos);
         EndRangeSelect = GetClosestTime(timeFromPos);
 
         StateHasChanged();
+
+        return Task.CompletedTask;
     }
     private void ResetRange(MouseEventArgs args)
     {

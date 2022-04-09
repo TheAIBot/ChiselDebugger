@@ -4,6 +4,7 @@ using ChiselDebuggerRazor.Code.Controllers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Code.Templates
 {
@@ -12,14 +13,14 @@ namespace ChiselDebuggerRazor.Code.Templates
         private readonly Dictionary<string, PlaceTemplate> Templates = new Dictionary<string, PlaceTemplate>();
         private readonly Dictionary<string, List<PlaceTemplateConversion>> Converters = new Dictionary<string, List<PlaceTemplateConversion>>();
         private readonly HashSet<string> TemplateGenerating = new HashSet<string>();
-        private readonly WorkLimiter WorkLimiter;
+        private readonly IWorkLimiter WorkLimiter;
 
-        public PlacementTemplator(WorkLimiter workLimiter)
+        public PlacementTemplator(IWorkLimiter workLimiter)
         {
             WorkLimiter = workLimiter;
         }
 
-        public void SubscribeToTemplate(string moduleName, ModuleLayout ctrl, FIRRTLNode[] nodeOrder)
+        public Task SubscribeToTemplate(string moduleName, ModuleLayout ctrl, FIRRTLNode[] nodeOrder)
         {
             PlaceTemplateConversion conversion = new PlaceTemplateConversion(ctrl, nodeOrder);
             lock (Converters)
@@ -38,12 +39,14 @@ namespace ChiselDebuggerRazor.Code.Templates
             {
                 if (Templates.TryGetValue(moduleName, out var template))
                 {
-                    conversion.TemplateUpdated(template);
+                    return conversion.TemplateUpdated(template);
                 }
             }
+
+            return Task.CompletedTask;
         }
 
-        public void AddTemplateParameters(string moduleName, INodePlacer placer, FIRRTLNode[] nodeOrder, CancellationToken cancelToken)
+        public Task AddTemplateParameters(string moduleName, INodePlacer placer, FIRRTLNode[] nodeOrder, CancellationToken cancelToken)
         {
             lock (TemplateGenerating)
             {
@@ -51,23 +54,23 @@ namespace ChiselDebuggerRazor.Code.Templates
                 //no need to generate again
                 if (!TemplateGenerating.Add(moduleName))
                 {
-                    return;
+                    return Task.CompletedTask;
                 }
             }
 
-            WorkLimiter.AddWork(() =>
+            return WorkLimiter.AddWork(() =>
             {
                 var placeInfo = placer.PositionModuleComponents();
                 if (cancelToken.IsCancellationRequested)
                 {
-                    return;
+                    return Task.CompletedTask;
                 }
 
-                AddTemplate(moduleName, placeInfo, nodeOrder);
+                return AddTemplate(moduleName, placeInfo, nodeOrder);
             });
         }
 
-        private void AddTemplate(string moduleName, PlacementInfo placeInfo, FIRRTLNode[] nodeOrder)
+        private Task AddTemplate(string moduleName, PlacementInfo placeInfo, FIRRTLNode[] nodeOrder)
         {
             PlaceTemplate template = new PlaceTemplate(placeInfo, nodeOrder);
             lock (Templates)
@@ -79,12 +82,11 @@ namespace ChiselDebuggerRazor.Code.Templates
             {
                 if (Converters.TryGetValue(moduleName, out var convs))
                 {
-                    foreach (var conv in convs)
-                    {
-                        conv.TemplateUpdated(template);
-                    }
+                    return Task.WhenAll(convs.Select(x => x.TemplateUpdated(template)));
                 }
             }
+
+            return Task.CompletedTask;
         }
 
         public bool TryGetTemplate(string moduleName, ModuleLayout modLayout, out PlacementInfo placement)
