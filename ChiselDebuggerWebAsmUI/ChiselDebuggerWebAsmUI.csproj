@@ -4,9 +4,10 @@
     <TargetFramework>net6.0</TargetFramework>
 	<RunAOTCompilation>true</RunAOTCompilation>
 	<PublishTrimmed>true</PublishTrimmed>
-	<TrimMode>link</TrimMode>
 	<BlazorEnableCompression>false</BlazorEnableCompression>
 	<BlazorCacheBootResources>false</BlazorCacheBootResources>
+	<BlazorEnableTimeZoneSupport>false</BlazorEnableTimeZoneSupport>
+	<InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
   <ItemGroup>
