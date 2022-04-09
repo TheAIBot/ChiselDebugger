@@ -118,6 +118,7 @@ namespace ChiselDebuggerRazor.Code.Controllers
         public void Dispose()
         {
             CancelSource.Cancel();
+            CancelSource.Dispose();
         }
     }
 }

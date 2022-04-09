@@ -71,7 +71,7 @@ namespace ChiselDebuggerRazor.Code.Controllers
 
         public bool IsEmpty()
         {
-            return ModuleNodes.Where(x => x is not INoPlaceAndRoute).Count() == 0;
+            return !ModuleNodes.Where(x => x is not INoPlaceAndRoute).Any();
         }
 
         public Task SubscribeToPlaceTemplate(PlacedHandler onPlaced)
