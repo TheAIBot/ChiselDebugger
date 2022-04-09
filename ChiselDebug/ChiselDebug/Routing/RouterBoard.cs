@@ -139,93 +139,14 @@ namespace ChiselDebug.Routing
             Array.Copy(CheckpointScoreAndPath, CellScoreAndPath, CellScoreAndPath.Length);
         }
 
-        internal void SetAllOutgoingMoves(Point pos)
-        {
-            int cellPosX = pos.X;
-            int cellPosY = pos.Y;
-
-            //Not allowed to make move that goes
-            //outside the bounds of the board
-            MoveDirs allowedMoved = MoveDirs.None;
-            if (cellPosX - 1 >= 0)
-            {
-                allowedMoved |= MoveDirs.Left;
-            }
-            if (cellPosX + 1 < CellsWide)
-            {
-                allowedMoved |= MoveDirs.Right;
-            }
-            if (cellPosY - 1 >= 0)
-            {
-                allowedMoved |= MoveDirs.Up;
-            }
-            if (cellPosY + 1 < CellsHigh)
-            {
-                allowedMoved |= MoveDirs.Down;
-            }
-
-            CellAllowedDirs[CellIndex(cellPosX, cellPosY)] = allowedMoved;
-        }
-
         internal void SetCellAllowedMoves(Point pos, MoveDirs moves)
         {
             CellAllowedDirs[CellIndex(pos)] = moves;
         }
 
-        internal void AddCellAllowedMoves(Point pos, MoveDirs moves)
-        {
-            AddCellAllowedMoves(CellIndex(pos), moves);
-        }
-
         internal void AddCellAllowedMoves(int posIndex, MoveDirs moves)
         {
             CellAllowedDirs[posIndex] |= moves;
-        }
-
-        internal void SetAllIncommingMoves(Point pos)
-        {
-            int cellPosX = pos.X;
-            int cellPosY = pos.Y;
-
-            if (cellPosX - 1 >= 0)
-            {
-                CellAllowedDirs[CellIndex(cellPosX - 1, cellPosY)] |= MoveDirs.Right;
-            }
-            if (cellPosX + 1 < CellsWide)
-            {
-                CellAllowedDirs[CellIndex(cellPosX + 1, cellPosY)] |= MoveDirs.Left;
-            }
-            if (cellPosY - 1 >= 0)
-            {
-                CellAllowedDirs[CellIndex(cellPosX, cellPosY - 1)] |= MoveDirs.Down;
-            }
-            if (cellPosY + 1 < CellsHigh)
-            {
-                CellAllowedDirs[CellIndex(cellPosX, cellPosY + 1)] |= MoveDirs.Up;
-            }
-        }
-
-        internal void RemoveAllIncommingMoves(Point pos)
-        {
-            int cellPosX = pos.X;
-            int cellPosY = pos.Y;
-
-            if (cellPosX - 1 >= 0)
-            {
-                CellAllowedDirs[CellIndex(cellPosX - 1, cellPosY)] &= MoveDirs.ExceptRight;
-            }
-            if (cellPosX + 1 < CellsWide)
-            {
-                CellAllowedDirs[CellIndex(cellPosX + 1, cellPosY)] &= MoveDirs.ExceptLeft;
-            }
-            if (cellPosY - 1 >= 0)
-            {
-                CellAllowedDirs[CellIndex(cellPosX, cellPosY - 1)] &= MoveDirs.ExceptDown;
-            }
-            if (cellPosY + 1 < CellsHigh)
-            {
-                CellAllowedDirs[CellIndex(cellPosX, cellPosY + 1)] &= MoveDirs.ExceptUp;
-            }
         }
 
         internal WirePath GetPath(Point start, Point end, IOInfo startIO, IOInfo endIO, bool pathToWire)

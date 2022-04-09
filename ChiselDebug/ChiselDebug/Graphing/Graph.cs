@@ -31,14 +31,6 @@ namespace ChiselDebug.Graphing
             }
         }
 
-        public void InvertAllEdges()
-        {
-            foreach (var node in Nodes)
-            {
-                node.InvertEdges();
-            }
-        }
-
         /// <summary>
         /// Able to sort cyclic graphs
         /// </summary>

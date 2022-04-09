@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Numerics;
 using VCDReader;
 
 namespace ChiselDebug.GraphFIR.IO
@@ -312,11 +311,6 @@ namespace ChiselDebug.GraphFIR.IO
             }
 
             return ref enabledValue.Value;
-        }
-
-        public BigInteger GetValueAsBigInt()
-        {
-            return FetchValueFromSourceFast().GetAsBigInt();
         }
 
         public override void InferGroundType()

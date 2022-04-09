@@ -69,17 +69,6 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             ScopeEnabledConditions.Pop();
         }
 
-        private string GetActualModuleName()
-        {
-            VisitHelper helper = this;
-            while (helper.IsConditionalModule)
-            {
-                helper = helper.ParentHelper;
-            }
-
-            return helper.Mod.Name;
-        }
-
         private string[] GetPathToCurrentActualModule()
         {
             List<string> path = new List<string>();
@@ -105,11 +94,6 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
         public bool HasLowFirGraph()
         {
             return LowFirGraph != null;
-        }
-
-        public bool IsHighFirGrapth()
-        {
-            return HasLowFirGraph();
         }
 
         public FIRRTL.FirrtlNode GetDefNodeFromLowFirrtlGraph(string nodeName)

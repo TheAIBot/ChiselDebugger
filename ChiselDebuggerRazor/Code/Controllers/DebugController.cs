@@ -6,8 +6,6 @@ using ChiselDebug.Routing;
 using ChiselDebug.Timeline;
 using ChiselDebug.Utilities;
 using ChiselDebuggerRazor.Code.Templates;
-using ChiselDebuggerRazor.Pages.FIRRTLUI.IOUI;
-using Microsoft.AspNetCore.Components.Web;
 using System;
 using System.Collections.Generic;
 using System.Threading;

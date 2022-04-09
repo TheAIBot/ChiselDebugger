@@ -185,27 +185,6 @@ namespace ChiselDebug.Routing
             return EndIO.Node;
         }
 
-        public Source[] GetConnections()
-        {
-            List<Source> outputCons = new List<Source>();
-            foreach (var io in StartIO.DirIO.IO.Flatten())
-            {
-                if (io is Source output)
-                {
-                    outputCons.Add(output);
-                }
-            }
-            foreach (var io in EndIO.DirIO.IO.Flatten())
-            {
-                if (io is Source output)
-                {
-                    outputCons.Add(output);
-                }
-            }
-
-            return outputCons.ToArray();
-        }
-
         private (Source, Sink) GetConCondition()
         {
             ScalarIO startScalar = StartIO.DirIO.IO.Flatten().First();

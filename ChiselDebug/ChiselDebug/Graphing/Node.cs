@@ -24,12 +24,5 @@ namespace ChiselDebug.Graphing
             Outgoing.Remove(node);
             node.Incomming.Remove(this);
         }
-
-        public void InvertEdges()
-        {
-            var tmp = Incomming;
-            Incomming = Outgoing;
-            Outgoing = tmp;
-        }
     }
 }
