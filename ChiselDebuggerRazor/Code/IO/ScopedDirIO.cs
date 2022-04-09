@@ -1,7 +1,7 @@
 ﻿using ChiselDebug.Routing;
 using ChiselDebug.Utilities;
 
-namespace ChiselDebuggerRazor.Code
+namespace ChiselDebuggerRazor.Code.IO
 {
     public class ScopedDirIO
     {
@@ -10,8 +10,8 @@ namespace ChiselDebuggerRazor.Code
 
         public ScopedDirIO(DirectedIO dirIO, int scopeXOffset)
         {
-            this.DirIO = dirIO;
-            this.ScopeXOffset = scopeXOffset;
+            DirIO = dirIO;
+            ScopeXOffset = scopeXOffset;
         }
 
         public void SetX(int newX)

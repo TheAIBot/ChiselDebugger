@@ -1,4 +1,4 @@
-﻿namespace ChiselDebuggerRazor.Code
+﻿namespace ChiselDebuggerRazor.Code.IO
 {
     internal class IOScope
     {
@@ -10,10 +10,10 @@
 
         public IOScope(string color, int xStart, int yStart, int yEnd)
         {
-            this.ScopeColor = color;
-            this.XStart = xStart;
-            this.YStart = yStart - IOPositionCalc.ScopeExtraY;
-            this.Height = (yEnd + IOPositionCalc.ScopeExtraY) - YStart;
+            ScopeColor = color;
+            XStart = xStart;
+            YStart = yStart - IOPositionCalc.ScopeExtraY;
+            Height = yEnd + IOPositionCalc.ScopeExtraY - YStart;
         }
     }
 }

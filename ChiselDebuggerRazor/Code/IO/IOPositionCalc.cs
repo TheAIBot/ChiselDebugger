@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ChiselDebuggerRazor.Code
+namespace ChiselDebuggerRazor.Code.IO
 {
     internal static class IOPositionCalc
     {

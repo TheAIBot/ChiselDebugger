@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace ChiselDebuggerRazor.Code
+namespace ChiselDebuggerRazor.Code.IO
 {
     public class ScopedNodeIO
     {
@@ -35,14 +35,14 @@ namespace ChiselDebuggerRazor.Code
 
         public ScopedNodeIO(List<ScopedDirIO> sinks, List<ScopedDirIO> sources, int yStartPad, int yEndPad)
         {
-            this.SinkOffsets = sinks;
-            this.SourceOffsets = sources;
-            this.YStartPadding = yStartPad;
-            this.YEndPadding = yEndPad;
+            SinkOffsets = sinks;
+            SourceOffsets = sources;
+            YStartPadding = yStartPad;
+            YEndPadding = yEndPad;
 
             int inputHeight = sinks.Count > 0 ? sinks.Max(x => x.DirIO.Position.Y) : 0;
             int outputHeight = sources.Count > 0 ? sources.Max(x => x.DirIO.Position.Y) : 0;
-            this.HeightNeeded = Math.Max(inputHeight, outputHeight) + yEndPad;
+            HeightNeeded = Math.Max(inputHeight, outputHeight) + yEndPad;
 
             RemakeScopes();
         }

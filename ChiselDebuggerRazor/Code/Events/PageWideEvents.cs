@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components.Web;
 
-namespace ChiselDebuggerRazor.Code
+namespace ChiselDebuggerRazor.Code.Events
 {
     public sealed class PageWideEvents
     {

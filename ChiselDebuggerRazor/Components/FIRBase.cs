@@ -3,6 +3,7 @@ using ChiselDebug.Routing;
 using ChiselDebug.Utilities;
 using ChiselDebuggerRazor.Code;
 using ChiselDebuggerRazor.Code.Controllers;
+using ChiselDebuggerRazor.Code.Events;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System;
