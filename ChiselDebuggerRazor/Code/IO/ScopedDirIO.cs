@@ -31,10 +31,5 @@ namespace ChiselDebuggerRazor.Code.IO
 
             DirIO = DirIO.WithOffsetPosition(offset);
         }
-
-        public ScopedDirIO Copy()
-        {
-            return new ScopedDirIO(DirIO.WithOffsetPosition(Point.Zero), ScopeXOffset);
-        }
     }
 }

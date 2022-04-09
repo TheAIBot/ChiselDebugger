@@ -188,13 +188,5 @@ namespace ChiselDebuggerRazor.Code.IO
 
             RemakeScopes();
         }
-
-        public ScopedNodeIO Copy()
-        {
-            var inputCopies = SinkOffsets.Select(x => x.Copy()).ToList();
-            var outputCopies = SourceOffsets.Select(x => x.Copy()).ToList();
-
-            return new ScopedNodeIO(inputCopies, outputCopies, YStartPadding, YEndPadding);
-        }
     }
 }

@@ -20,11 +20,11 @@ namespace ChiselDebuggerRazor.Code.Controllers
             CircuitGraph loGraph = null;
             if (loFirStream != null)
             {
-                Circuit locircuit = FIRRTL.Parse.FromStream(loFirStream);
+                Circuit locircuit = Parse.FromStream(loFirStream);
                 loGraph = CircuitToGraph.GetAsGraph(locircuit);
             }
 
-            Circuit circuit = FIRRTL.Parse.FromStream(hiFirStream);
+            Circuit circuit = Parse.FromStream(hiFirStream);
             CircuitGraph graph = CircuitToGraph.GetAsGraph(circuit, loGraph);
 
             return new DebugController(graph, new PlacementTemplator(WorkLimiter), new RouteTemplator(WorkLimiter), new SeqWorkOverrideOld<ulong>(WorkLimiter));
