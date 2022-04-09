@@ -31,7 +31,7 @@ namespace ChiselDebuggerRazor.Code
                 {
                     ExecuteWork(work);
                     return Task.CompletedTask;
-                });
+                }, 3);
             }
         }
 

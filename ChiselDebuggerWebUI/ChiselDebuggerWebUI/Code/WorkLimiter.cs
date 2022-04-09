@@ -25,7 +25,7 @@ namespace ChiselDebuggerWebUI.Code
             MaxMessagesPerTask = 1
         });
 
-        public Task AddWork(Func<Task> work)
+        public Task AddWork(Func<Task> work, int priority)
         {
             return Worker.SendAsync(work);
         }

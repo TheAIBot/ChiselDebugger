@@ -2,7 +2,9 @@
 using Microsoft.JSInterop;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace ChiselDebuggerWebAsmUI.Code
@@ -16,20 +18,22 @@ namespace ChiselDebuggerWebAsmUI.Code
             JSRuntime = jSRuntime;
         }
 
-
-        private static readonly ConcurrentQueue<Func<Task>> WorkQueue = new ConcurrentQueue<Func<Task>>();
+        private static int TotalWork = 0;
+        private static readonly SortedDictionary<int, Queue<Func<Task>>> WorkQueue = new ();
 
         [JSInvokable]
         public static async Task FrameHasBeenAnimated()
         {
-            Func<Task> work;
-            if (!WorkQueue.TryDequeue(out work))
+            if (WorkQueue.Sum(x => x.Value.Count) == 0)
             {
                 return;
             }
 
+            var work = WorkQueue.First(x => x.Value.Count > 0).Value.Dequeue();
+
             try
             {
+                TotalWork--;
                 await work();
             }
             catch (Exception e)
@@ -40,11 +44,19 @@ namespace ChiselDebuggerWebAsmUI.Code
             await JSRuntime.InvokeVoidAsync("WorkPacing.WaitForAnimationFrame").AsTask();
         }
 
-        public Task AddWork(Func<Task> work)
+        public Task AddWork(Func<Task> work, int priority)
         {
-            WorkQueue.Enqueue(work);
+            Queue<Func<Task>> queue;
+            if (!WorkQueue.TryGetValue(priority, out queue))
+            {
+                queue = new Queue<Func<Task>>();
+                WorkQueue.Add(priority, queue);
+            }
 
-            if (WorkQueue.Count == 1)
+            queue.Enqueue(work);
+            TotalWork++;
+
+            if (TotalWork == 1)
             {
                 return JSRuntime.InvokeVoidAsync("WorkPacing.WaitForAnimationFrame").AsTask();
             }

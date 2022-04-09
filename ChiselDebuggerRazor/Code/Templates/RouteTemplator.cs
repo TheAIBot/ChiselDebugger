@@ -73,7 +73,7 @@ namespace ChiselDebuggerRazor.Code.Templates
                 }
 
                 return AddTemplate(moduleName, wires, nodeOrder, ioOrder);
-            });
+            }, 2);
         }
 
         private Task AddTemplate(string moduleName, List<WirePath> wires, FIRRTLNode[] nodeOrder, FIRIO[] ioOrder)

@@ -67,7 +67,7 @@ namespace ChiselDebuggerRazor.Code.Templates
                 }
 
                 return AddTemplate(moduleName, placeInfo, nodeOrder);
-            });
+            }, 1);
         }
 
         private Task AddTemplate(string moduleName, PlacementInfo placeInfo, FIRRTLNode[] nodeOrder)
