@@ -23,7 +23,7 @@ namespace ChiselDebug.Placing
             SpaceNeeded = spaceNeeded;
         }
 
-        internal void AddNodePlacement(FIRRTLNode node, Rectangle shape)
+        public void AddNodePlacement(FIRRTLNode node, Rectangle shape)
         {
             NodePositions.Add(new Positioned<FIRRTLNode>(shape.Pos, node));
             SpaceNeeded = Point.Max(SpaceNeeded, new Point(shape.RightX, shape.BottomY));
@@ -36,7 +36,7 @@ namespace ChiselDebug.Placing
             SpaceNeeded = spaceNeeded;
         }
 
-        internal void AutoSpacePlacementRanks(Module mod)
+        public void AutoSpacePlacementRanks(Module mod)
         {
             List<RankWidth> ranks = GetNodeRanks();
 

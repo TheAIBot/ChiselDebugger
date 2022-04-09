@@ -1,15 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
 	<PlatformTarget>x64</PlatformTarget>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Graphviz.NetWrapper\Rubjerg.Graphviz\Rubjerg.Graphviz.csproj" />
     <ProjectReference Include="..\ChiselDebug\ChiselDebug\ChiselDebug.csproj" />
-    <ProjectReference Include="..\FIRRTL\FIRRTL.csproj" />
-    <ProjectReference Include="..\VCDReader\VCDReader.csproj" />
   </ItemGroup>
 
 </Project>

@@ -25,6 +25,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChiselDebuggerWebAsmUI", ".
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rubjerg.Graphviz", "..\..\Graphviz.NetWrapper\Rubjerg.Graphviz\Rubjerg.Graphviz.csproj", "{AE26DDDD-FECC-4697-80C7-D5155F281930}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChiselDebug.Placing.GraphViz", "..\ChiselDebug.Placing.GraphViz\ChiselDebug.Placing.GraphViz.csproj", "{FC97A904-3518-447A-8005-2C684F91AAFB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -119,6 +121,14 @@ Global
 		{AE26DDDD-FECC-4697-80C7-D5155F281930}.Release|Any CPU.ActiveCfg = Release|x64
 		{AE26DDDD-FECC-4697-80C7-D5155F281930}.Release|x64.ActiveCfg = Release|x64
 		{AE26DDDD-FECC-4697-80C7-D5155F281930}.Release|x64.Build.0 = Release|x64
+		{FC97A904-3518-447A-8005-2C684F91AAFB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC97A904-3518-447A-8005-2C684F91AAFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC97A904-3518-447A-8005-2C684F91AAFB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FC97A904-3518-447A-8005-2C684F91AAFB}.Debug|x64.Build.0 = Debug|Any CPU
+		{FC97A904-3518-447A-8005-2C684F91AAFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC97A904-3518-447A-8005-2C684F91AAFB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC97A904-3518-447A-8005-2C684F91AAFB}.Release|x64.ActiveCfg = Release|Any CPU
+		{FC97A904-3518-447A-8005-2C684F91AAFB}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

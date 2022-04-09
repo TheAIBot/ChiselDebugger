@@ -63,7 +63,7 @@ namespace ChiselDebuggerRazor.Code.Controllers
             RouteTemplates.SubscribeToTemplate(moduleName, modCtrl, modNodesIncludeMod, modIO);
         }
 
-        internal void AddPlaceTemplateParameters(string moduleName, PlacingBase placer, FIRRTLNode[] nodeOrder)
+        internal void AddPlaceTemplateParameters(string moduleName, INodePlacer placer, FIRRTLNode[] nodeOrder)
         {
             PlacementTemplates.AddTemplateParameters(moduleName, placer, nodeOrder, CancelSource.Token);
         }

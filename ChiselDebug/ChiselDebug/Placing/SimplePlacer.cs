@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace ChiselDebug.Placing
 {
-    public class SimplePlacer : PlacingBase
+    internal class SimplePlacer : PlacingBase
     {
         public SimplePlacer(Module mod) : base(mod)
         { }

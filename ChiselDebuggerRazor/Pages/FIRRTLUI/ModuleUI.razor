@@ -105,6 +105,9 @@
     [Parameter]
     public bool IgnoreUnusedIO { get; set; } = false;
 
+    [Inject]
+    public INodePlacerFactory NodePlacerFactory { get; set; }
+
     protected override void OnFirstParametersSetAsync()
     {
         base.OnFirstParametersSetAsync();
@@ -112,7 +115,7 @@
         MinContentSize = GetMinSizeForIO();
 
         ModuleOpPoses = Operation.GetAllNodes().Select(x => new Positioned<FIRRTLNode>(Point.Zero, x)).ToList();
-        CurrModLayout = new ModuleLayout(DebugCtrl, Operation, this);
+        CurrModLayout = new ModuleLayout(DebugCtrl, Operation, this, NodePlacerFactory.Create(Operation));
         CurrModLayout.SubscribeToPlaceTemplate(x => InvokeAsync(() => UpdatePlacement(x)));
         ParentLayoutCtrl?.AddChildLayout(CurrModLayout);
 

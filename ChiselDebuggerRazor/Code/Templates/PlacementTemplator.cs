@@ -43,7 +43,7 @@ namespace ChiselDebuggerRazor.Code.Templates
             }
         }
 
-        public void AddTemplateParameters(string moduleName, PlacingBase placer, FIRRTLNode[] nodeOrder, CancellationToken cancelToken)
+        public void AddTemplateParameters(string moduleName, INodePlacer placer, FIRRTLNode[] nodeOrder, CancellationToken cancelToken)
         {
             lock (TemplateGenerating)
             {

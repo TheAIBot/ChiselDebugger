@@ -1,4 +1,5 @@
-﻿using ChiselDebuggerRazor.Code.Controllers;
+﻿using ChiselDebug.Placing;
+using ChiselDebuggerRazor.Code.Controllers;
 using ChiselDebuggerRazor.Code.Events;
 using Microsoft.Extensions.DependencyInjection;
 

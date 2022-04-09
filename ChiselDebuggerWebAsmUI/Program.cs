@@ -1,3 +1,4 @@
+using ChiselDebug.Placing;
 using ChiselDebuggerRazor.Code;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +17,7 @@ namespace ChiselDebuggerWebAsmUI
 
             builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
             ChiselDebuggerServices.AddServices(builder.Services);
+            builder.Services.AddSingleton<INodePlacerFactory, SimplePlacerFactory>();
 
             await builder.Build().RunAsync();
         }

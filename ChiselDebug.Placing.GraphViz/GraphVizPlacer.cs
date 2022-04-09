@@ -2,12 +2,10 @@
 using ChiselDebug.GraphFIR.IO;
 using ChiselDebug.Utilities;
 using Rubjerg.Graphviz;
-using System;
-using System.Collections.Generic;
 
-namespace ChiselDebug.Placing
+namespace ChiselDebug.Placing.GraphViz
 {
-    public class GraphVizPlacer : PlacingBase
+    internal class GraphVizPlacer : PlacingBase
     {
         public GraphVizPlacer(Module mod) : base(mod)
         { }

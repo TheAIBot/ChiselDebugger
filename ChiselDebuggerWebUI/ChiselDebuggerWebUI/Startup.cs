@@ -1,3 +1,5 @@
+using ChiselDebug.Placing;
+using ChiselDebug.Placing.GraphViz;
 using ChiselDebuggerRazor.Code;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -24,6 +26,7 @@ namespace ChiselDebuggerWebUI
             services.AddServerSideBlazor();
             services.AddSingleton<CircuitFiles>();
             ChiselDebuggerServices.AddServices(services);
+            services.AddSingleton<INodePlacerFactory, GraphVizPlacerFactory>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

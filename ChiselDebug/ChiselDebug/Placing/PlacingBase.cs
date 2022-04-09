@@ -6,7 +6,7 @@ using System.Diagnostics;
 
 namespace ChiselDebug.Placing
 {
-    public abstract class PlacingBase
+    public abstract class PlacingBase : INodePlacer
     {
         private readonly Module Mod;
         private readonly HashSet<FIRRTLNode> MissingNodeDims;

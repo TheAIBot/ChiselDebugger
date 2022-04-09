@@ -15,8 +15,8 @@ namespace ChiselDebuggerRazor.Code.Controllers
         private readonly DebugController DebugCtrl;
         private readonly Module Mod;
         private readonly ModuleUI ModUI;
+        private readonly INodePlacer NodePlacer;
         private readonly SimpleRouter WireRouter;
-        private readonly PlacingBase NodePlacer;
         private WiresUI WireUI;
 
         private readonly FIRRTLNode[] ModuleNodes;
@@ -29,20 +29,13 @@ namespace ChiselDebuggerRazor.Code.Controllers
         public delegate void RoutedHandler(List<WirePath> wirePaths);
         private event RoutedHandler OnWiresRouted;
 
-        public ModuleLayout(DebugController debugCtrl, Module mod, ModuleUI modUI)
+        public ModuleLayout(DebugController debugCtrl, Module mod, ModuleUI modUI, INodePlacer nodePlacer)
         {
             DebugCtrl = debugCtrl;
             Mod = mod;
             ModUI = modUI;
+            NodePlacer = nodePlacer;
             WireRouter = new SimpleRouter(Mod);
-            if (OperatingSystem.IsWindows())
-            {
-                NodePlacer = new GraphVizPlacer(Mod);
-            }
-            else
-            {
-                NodePlacer = new SimplePlacer(Mod);
-            }
             ModuleNodes = Mod.GetAllNodes();
             ModuleNodesWithModule = Mod.GetAllNodesIncludeModule();
 
