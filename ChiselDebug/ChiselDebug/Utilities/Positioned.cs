@@ -2,17 +2,8 @@
 
 namespace ChiselDebug.Utilities
 {
-    public readonly struct Positioned<T>
+    public readonly record struct Positioned<T>(Point Position, T Value)
     {
-        public readonly Point Position;
-        public readonly T Value;
-
-        public Positioned(Point position, T value)
-        {
-            Position = position;
-            Value = value;
-        }
-
         public Positioned<U> Cast<U>()
         {
             if (Value is U casted)

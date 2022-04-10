@@ -2,40 +2,14 @@
 
 namespace ChiselDebug.Utilities
 {
-    public struct Point
+    public record struct Point(int X, int Y)
     {
-        public int X;
-        public int Y;
-
         public static readonly Point Zero = new Point(0, 0);
-
-        public Point(int x, int y)
-        {
-            X = x;
-            Y = y;
-        }
-
-        public override bool Equals(object obj)
-        {
-            return obj is Point point &&
-                   X == point.X &&
-                   Y == point.Y;
-        }
 
         public bool ApproxEquals(Point other, int allowedDelta)
         {
             return X - allowedDelta <= other.X && other.X <= X + allowedDelta &&
                    Y - allowedDelta <= other.Y && other.Y <= Y + allowedDelta;
-        }
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(X, Y);
-        }
-
-        public override string ToString()
-        {
-            return $"[{X}, {Y}]";
         }
 
         public static Point operator +(Point a, Point b)
@@ -60,16 +34,6 @@ namespace ChiselDebug.Utilities
         public static Point operator /(Point a, float b)
         {
             return new Point((int)(a.X / b), (int)(a.Y / b));
-        }
-
-        public static bool operator ==(Point left, Point right)
-        {
-            return left.X == right.X && left.Y == right.Y;
-        }
-
-        public static bool operator !=(Point left, Point right)
-        {
-            return !(left == right);
         }
 
         public static Point Max(Point a, Point b)

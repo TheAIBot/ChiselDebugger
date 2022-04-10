@@ -1,8 +1,4 @@
 ﻿namespace ChiselDebuggerRazor.Code
 {
-    public class ElemResizes
-    {
-        public string[] IDs { get; set; }
-        public ElemWH[] Sizes { get; set; }
-    }
+    public record ElemResizes(string[] IDs, ElemWH[] Sizes);
 }
