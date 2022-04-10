@@ -7,7 +7,7 @@ namespace ChiselDebuggerRazor.Code
         private static int IDCounter = 0;
         public static string UniqueHTMLID()
         {
-            return "unique--" + Interlocked.Increment(ref IDCounter);
+            return $"u-{Interlocked.Increment(ref IDCounter)}";
         }
     }
 }
