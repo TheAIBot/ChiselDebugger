@@ -208,19 +208,19 @@ namespace ChiselDebug.Routing
                     }
                     else if (scorePath.DirFrom == MoveDirs.Up)
                     {
-                        sBuilder.Append("↑");
+                        sBuilder.Append('↑');
                     }
                     else if (scorePath.DirFrom == MoveDirs.Down)
                     {
-                        sBuilder.Append("↓");
+                        sBuilder.Append('↓');
                     }
                     else if (scorePath.DirFrom == MoveDirs.Left)
                     {
-                        sBuilder.Append("←");
+                        sBuilder.Append('←');
                     }
                     else if (scorePath.DirFrom == MoveDirs.Right)
                     {
-                        sBuilder.Append("→");
+                        sBuilder.Append('→');
                     }
                     else if (scorePath.DirFrom == MoveDirs.None)
                     {
