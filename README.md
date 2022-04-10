@@ -13,9 +13,11 @@ This a debugger made for FIRRTL generated from Chisel. It's currently capable of
 
 ### Webpage version
 1. Open https://theaibot.github.io/ChiselDebuggerWeb
-2. Top left corner of the webpage has a button called "Load circuit" click on it and select a ```.fir```, ```.lo.fir``` and ```.vcd``` file in the file menu. A ```.lo.fir``` file is not always necessary. Without a ```.vcd``` it will not be possible to show the state of the circuit.
-3. Wait for it to place and route everything. UI will not be responsive while this is happening.
-4. The circuit and VCD timeline should now be visible.
+    * **An exception will occur when loading the webpage version for the first time. It will disappear when the webpage has loaded which may take up to 10 seconds.**
+    * **This version is single threaded. This means the webpage may become unresponsive while it draws large circuits.**
+3. Top left corner of the webpage has a button called "Load circuit" click on it and select a ```.fir```, ```.lo.fir``` and ```.vcd``` file in the file menu. A ```.lo.fir``` file is not always necessary. Without a ```.vcd``` it will not be possible to show the state of the circuit.
+4. Wait for it to place and route everything. UI will not be responsive while this is happening.
+5. The circuit and VCD timeline should now be visible.
 
 ## Projects
 Description of what the individual projects do
