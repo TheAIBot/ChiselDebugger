@@ -4,14 +4,13 @@ using ChiselDebug.Placing;
 using ChiselDebug.Routing;
 using ChiselDebug.Utilities;
 using ChiselDebuggerRazor.Pages.FIRRTLUI;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Code.Controllers
 {
-    public class ModuleLayout : FIRLayout
+    public sealed class ModuleLayout : FIRLayout
     {
         private readonly DebugController DebugCtrl;
         private readonly Module Mod;

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace ChiselDebuggerRazor.Code.Templates
 {
-    public class PlaceTemplate
+    public sealed class PlaceTemplate
     {
         public readonly PlacementInfo PlaceInfo;
         public readonly Positioned<FIRRTLNode>?[] NodeOrder;

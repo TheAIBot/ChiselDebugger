@@ -8,7 +8,7 @@ using System.Text;
 
 namespace ChiselDebug.Routing
 {
-    public class WirePath
+    public sealed class WirePath
     {
         internal readonly IOInfo StartIO;
         internal readonly IOInfo EndIO;

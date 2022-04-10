@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Code
 {
-    public class SeqWorkOverrideOld<T>
+    public sealed class SeqWorkOverrideOld<T>
     {
         private T WorkItem;
         private readonly object Locker = new object();

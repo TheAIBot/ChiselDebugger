@@ -12,7 +12,7 @@ using VCDReader;
 namespace ChiselDebug.GraphFIR.Circuit
 {
 
-    public class CircuitGraph
+    public sealed class CircuitGraph
     {
         public readonly string Name;
         public readonly Module MainModule;

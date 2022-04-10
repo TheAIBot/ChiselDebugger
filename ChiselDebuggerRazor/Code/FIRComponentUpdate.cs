@@ -4,5 +4,5 @@ using ChiselDebug.Utilities;
 
 namespace ChiselDebuggerRazor.Code
 {
-    public record FIRComponentUpdate(FIRRTLNode Node, Point Size, DirectedIO[] InputOffsets, DirectedIO[] OutputOffsets);
+    public sealed record FIRComponentUpdate(FIRRTLNode Node, Point Size, DirectedIO[] InputOffsets, DirectedIO[] OutputOffsets);
 }

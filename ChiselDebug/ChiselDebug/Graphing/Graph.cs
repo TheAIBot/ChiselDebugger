@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace ChiselDebug.Graphing
 {
-    internal class Graph<T>
+    internal sealed class Graph<T>
     {
         public readonly List<Node<T>> Nodes = new List<Node<T>>();
 

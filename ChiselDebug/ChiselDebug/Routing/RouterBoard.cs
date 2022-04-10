@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ChiselDebug.Routing
 {
-    internal class RouterBoard
+    internal sealed class RouterBoard
     {
         public readonly int CellsWide;
         public readonly int CellsHigh;

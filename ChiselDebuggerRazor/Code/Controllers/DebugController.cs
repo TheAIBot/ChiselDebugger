@@ -14,7 +14,7 @@ using VCDReader;
 
 namespace ChiselDebuggerRazor.Code.Controllers
 {
-    public class DebugController : IDisposable
+    public sealed class DebugController : IDisposable
     {
         public readonly CircuitGraph Graph;
         public VCDTimeline Timeline { get; set; } = null;

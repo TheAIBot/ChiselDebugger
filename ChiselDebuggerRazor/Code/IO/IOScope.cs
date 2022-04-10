@@ -1,6 +1,6 @@
 ﻿namespace ChiselDebuggerRazor.Code.IO
 {
-    internal class IOScope
+    internal sealed class IOScope
     {
         internal readonly string ScopeColor;
         internal readonly int XStart;

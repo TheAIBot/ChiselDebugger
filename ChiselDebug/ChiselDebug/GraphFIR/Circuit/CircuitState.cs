@@ -5,7 +5,7 @@ using VCDReader;
 
 namespace ChiselDebug.GraphFIR.Circuit
 {
-    public class CircuitState
+    public sealed class CircuitState
     {
         public readonly Dictionary<string, BinaryVarValue> VariableValues;
         public ulong Time { get; private set; }

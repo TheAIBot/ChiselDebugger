@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace ChiselDebuggerRazor.Code
 {
-    internal class PlaceAndRouteStats
+    internal sealed class PlaceAndRouteStats
     {
         private int TotalPlaceCount = 0;
         private int CurrentPlaceCount = 0;

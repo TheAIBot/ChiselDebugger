@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace ChiselDebug.CombGraph
 {
-    public class CombComputeOrder<T> where T : ICompute
+    public sealed class CombComputeOrder<T> where T : ICompute
     {
         private readonly Source[] StartOutputs;
         private T[] ComputeOrder;

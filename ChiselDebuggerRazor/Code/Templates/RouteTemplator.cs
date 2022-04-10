@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Code.Templates
 {
-    public class RouteTemplator
+    public sealed class RouteTemplator
     {
         private readonly Dictionary<string, RouteTemplate> Templates = new Dictionary<string, RouteTemplate>();
         private readonly Dictionary<string, List<RouteTemplateConversion>> Converters = new Dictionary<string, List<RouteTemplateConversion>>();

@@ -2,7 +2,7 @@
 
 namespace ChiselDebug.Graphing
 {
-    internal class Node<T>
+    internal sealed class Node<T>
     {
         public HashSet<Node<T>> Incomming { get; private set; } = new HashSet<Node<T>>();
         public HashSet<Node<T>> Outgoing { get; private set; } = new HashSet<Node<T>>();

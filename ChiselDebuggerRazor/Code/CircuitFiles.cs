@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Code
 {
-    public class CircuitFiles
+    public sealed class CircuitFiles
     {
         private Stream HiFirrtlStream;
         private Stream LoFirrtlStream;

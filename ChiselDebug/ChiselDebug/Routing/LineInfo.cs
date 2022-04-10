@@ -1,6 +1,6 @@
 ﻿namespace ChiselDebug.Routing
 {
-    internal record LineInfo(IOInfo Start, IOInfo End)
+    internal sealed record LineInfo(IOInfo Start, IOInfo End)
     {
         public int GetScore()
         {

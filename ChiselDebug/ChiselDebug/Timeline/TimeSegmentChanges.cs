@@ -5,7 +5,7 @@ using VCDReader;
 
 namespace ChiselDebug.Timeline
 {
-    internal class TimeSegmentChanges
+    internal sealed class TimeSegmentChanges
     {
         public readonly TimeSpan TimeInterval;
         private readonly CircuitState StartState;

@@ -5,7 +5,7 @@ using Rubjerg.Graphviz;
 
 namespace ChiselDebug.Placing.GraphViz
 {
-    internal class GraphVizPlacer : PlacingBase
+    internal sealed class GraphVizPlacer : PlacingBase
     {
         public GraphVizPlacer(Module mod) : base(mod)
         { }

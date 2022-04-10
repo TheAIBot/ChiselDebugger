@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Code.Templates
 {
-    public class PlacementTemplator
+    public sealed class PlacementTemplator
     {
         private readonly Dictionary<string, PlaceTemplate> Templates = new Dictionary<string, PlaceTemplate>();
         private readonly Dictionary<string, List<PlaceTemplateConversion>> Converters = new Dictionary<string, List<PlaceTemplateConversion>>();

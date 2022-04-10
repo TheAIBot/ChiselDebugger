@@ -3,7 +3,7 @@ using ChiselDebug.Utilities;
 
 namespace ChiselDebuggerRazor.Code.IO
 {
-    public class ScopedDirIO
+    public sealed class ScopedDirIO
     {
         internal DirectedIO DirIO { get; private set; }
         internal readonly int ScopeXOffset;

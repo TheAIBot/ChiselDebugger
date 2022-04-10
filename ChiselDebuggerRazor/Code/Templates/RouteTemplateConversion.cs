@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Code.Templates
 {
-    public class RouteTemplateConversion
+    public sealed class RouteTemplateConversion
     {
         public readonly ModuleLayout Ctrl;
         private readonly FIRRTLNode[] NodeOrder;

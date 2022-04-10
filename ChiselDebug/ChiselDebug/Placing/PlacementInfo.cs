@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace ChiselDebug.Placing
 {
-    public class PlacementInfo
+    public sealed class PlacementInfo
     {
         public readonly List<Positioned<FIRRTLNode>> NodePositions;
         public readonly Dictionary<FIRRTLNode, Rectangle> UsedSpace;
@@ -139,7 +139,7 @@ namespace ChiselDebug.Placing
             SpaceNeeded += padding * 2;
         }
 
-        private class RankWidth
+        private sealed class RankWidth
         {
             public int StartX { get; private set; }
             public int EndX { get; private set; }

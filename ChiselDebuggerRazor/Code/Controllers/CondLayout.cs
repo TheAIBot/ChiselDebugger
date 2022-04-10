@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Code.Controllers
 {
-    public class CondLayout : FIRLayout
+    public sealed class CondLayout : FIRLayout
     {
         private readonly Conditional Cond;
         private readonly Dictionary<FIRRTLNode, Point> ModuleSizes = new Dictionary<FIRRTLNode, Point>();

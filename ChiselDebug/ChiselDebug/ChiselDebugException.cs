@@ -2,7 +2,7 @@
 
 namespace ChiselDebug
 {
-    public class ChiselDebugException : Exception
+    public sealed class ChiselDebugException : Exception
     {
         public ChiselDebugException(string message) : base(message)
         { }

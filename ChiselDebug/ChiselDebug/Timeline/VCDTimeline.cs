@@ -6,7 +6,7 @@ using VCDReader;
 
 namespace ChiselDebug.Timeline
 {
-    public class VCDTimeline
+    public sealed class VCDTimeline
     {
         public readonly TimeScale TimeScale;
         public readonly TimeSpan TimeInterval;

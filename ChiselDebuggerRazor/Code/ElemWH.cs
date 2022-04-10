@@ -3,7 +3,7 @@ using System;
 
 namespace ChiselDebuggerRazor.Code
 {
-    public record ElemWH(double Width, double Height)
+    public sealed record ElemWH(double Width, double Height)
     {
         public Point ToPoint()
         {

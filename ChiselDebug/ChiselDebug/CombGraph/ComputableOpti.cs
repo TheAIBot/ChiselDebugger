@@ -3,7 +3,7 @@ using ChiselDebug.GraphFIR.IO;
 
 namespace ChiselDebug.CombGraph
 {
-    public struct ComputableOpti : ICompute
+    public readonly struct ComputableOpti : ICompute
     {
         private readonly FIRRTLNode Node;
         private readonly Source Con;

@@ -10,7 +10,7 @@ using System.Threading;
 
 namespace ChiselDebug.Routing
 {
-    public class SimpleRouter
+    public sealed class SimpleRouter
     {
         private readonly ConnectionsHandler Connections;
         private readonly HashSet<FIRRTLNode> MissingNodeIO;

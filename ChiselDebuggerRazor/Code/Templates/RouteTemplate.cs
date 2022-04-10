@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace ChiselDebuggerRazor.Code.Templates
 {
-    public class RouteTemplate
+    public sealed class RouteTemplate
     {
         public readonly List<WirePath> Wires;
         public readonly Dictionary<FIRRTLNode, int> NodeOrderIndex = new Dictionary<FIRRTLNode, int>();

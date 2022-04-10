@@ -2,7 +2,7 @@
 
 namespace ChiselDebug.Routing
 {
-    internal class IOInfo
+    internal sealed class IOInfo
     {
         internal readonly FIRRTLNode Node;
         internal readonly DirectedIO DirIO;

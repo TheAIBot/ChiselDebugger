@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace ChiselDebuggerRazor.Code.IO
 {
-    public class ScopedNodeIO
+    public sealed class ScopedNodeIO
     {
         internal readonly List<ScopedDirIO> SinkOffsets;
         internal readonly List<ScopedDirIO> SourceOffsets;

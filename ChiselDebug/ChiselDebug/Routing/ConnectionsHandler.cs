@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace ChiselDebug.Routing
 {
-    public class ConnectionsHandler
+    public sealed class ConnectionsHandler
     {
 
         private readonly Module Mod;

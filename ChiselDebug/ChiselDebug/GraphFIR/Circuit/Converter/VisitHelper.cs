@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace ChiselDebug.GraphFIR.Circuit.Converter
 {
-    internal class VisitHelper
+    internal sealed class VisitHelper
     {
         public readonly Module Mod;
         private readonly CircuitGraph LowFirGraph;
