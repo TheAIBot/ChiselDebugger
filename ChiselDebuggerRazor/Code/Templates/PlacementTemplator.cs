@@ -1,6 +1,7 @@
 ﻿using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.Placing;
 using ChiselDebuggerRazor.Code.Controllers;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -10,7 +11,7 @@ namespace ChiselDebuggerRazor.Code.Templates
 {
     public sealed class PlacementTemplator
     {
-        private readonly Dictionary<string, PlaceTemplate> Templates = new Dictionary<string, PlaceTemplate>();
+        private readonly ConcurrentDictionary<string, PlaceTemplate> Templates = new ConcurrentDictionary<string, PlaceTemplate>();
         private readonly Dictionary<string, List<PlaceTemplateConversion>> Converters = new Dictionary<string, List<PlaceTemplateConversion>>();
         private readonly HashSet<string> TemplateGenerating = new HashSet<string>();
         private readonly IWorkLimiter WorkLimiter;
@@ -35,12 +36,9 @@ namespace ChiselDebuggerRazor.Code.Templates
                 }
             }
 
-            lock (Templates)
+            if (Templates.TryGetValue(moduleName, out var template))
             {
-                if (Templates.TryGetValue(moduleName, out var template))
-                {
-                    return conversion.TemplateUpdated(template);
-                }
+                return conversion.TemplateUpdated(template);
             }
 
             return Task.CompletedTask;
@@ -73,10 +71,7 @@ namespace ChiselDebuggerRazor.Code.Templates
         private Task AddTemplate(string moduleName, PlacementInfo placeInfo, FIRRTLNode[] nodeOrder)
         {
             PlaceTemplate template = new PlaceTemplate(placeInfo, nodeOrder);
-            lock (Templates)
-            {
-                Templates.Add(moduleName, template);
-            }
+            Templates.AddOrUpdate(moduleName, template, (_, _) => template);
 
             lock (Converters)
             {
@@ -92,13 +87,10 @@ namespace ChiselDebuggerRazor.Code.Templates
         public bool TryGetTemplate(string moduleName, ModuleLayout modLayout, out PlacementInfo placement)
         {
             PlaceTemplate modTemplate;
-            lock (Templates)
+            if (!Templates.TryGetValue(moduleName, out modTemplate))
             {
-                if (!Templates.TryGetValue(moduleName, out modTemplate))
-                {
-                    placement = null;
-                    return false;
-                }
+                placement = null;
+                return false;
             }
 
             lock (Converters)

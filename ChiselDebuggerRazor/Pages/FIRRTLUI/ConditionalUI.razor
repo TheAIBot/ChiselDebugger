@@ -31,12 +31,12 @@
         return base.OnFirstParametersSetAsync();
     }
 
-    private void UpdateLayout(List<Positioned<Module>> positions, FIRComponentUpdate componentInfo)
+    private async Task UpdateLayout(List<Positioned<Module>> positions, FIRComponentUpdate componentInfo)
     {
         CondModules = positions;
 
         SetCurrentSize(componentInfo.Size);
-        ParentLayoutCtrl?.UpdateComponentInfo(componentInfo);
+        await ParentLayoutCtrl?.UpdateComponentInfo(componentInfo);
         StateHasChanged();
     }
 

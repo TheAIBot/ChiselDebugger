@@ -8,11 +8,11 @@ namespace ChiselDebuggerWebUI.Code
 {
     public sealed class WorkLimiter : IWorkLimiter
     {
-        private static readonly ActionBlock<Func<Task>> Worker = new ActionBlock<Func<Task>>(x =>
+        private static readonly ActionBlock<Func<Task>> Worker = new ActionBlock<Func<Task>>(async x =>
         {
             try
             {
-                x();
+                await x();
             }
             catch (Exception e)
             {

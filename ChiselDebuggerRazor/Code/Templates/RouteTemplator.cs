@@ -3,6 +3,7 @@ using ChiselDebug.GraphFIR.IO;
 using ChiselDebug.Placing;
 using ChiselDebug.Routing;
 using ChiselDebuggerRazor.Code.Controllers;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -12,7 +13,7 @@ namespace ChiselDebuggerRazor.Code.Templates
 {
     public sealed class RouteTemplator
     {
-        private readonly Dictionary<string, RouteTemplate> Templates = new Dictionary<string, RouteTemplate>();
+        private readonly ConcurrentDictionary<string, RouteTemplate> Templates = new ConcurrentDictionary<string, RouteTemplate>();
         private readonly Dictionary<string, List<RouteTemplateConversion>> Converters = new Dictionary<string, List<RouteTemplateConversion>>();
         private readonly HashSet<string> TemplateGenerating = new HashSet<string>();
         private readonly IWorkLimiter WorkLimiter;
@@ -37,12 +38,9 @@ namespace ChiselDebuggerRazor.Code.Templates
                 }
             }
 
-            lock (Templates)
+            if (Templates.TryGetValue(moduleName, out var template))
             {
-                if (Templates.TryGetValue(moduleName, out var template))
-                {
-                    return conversion.TemplateUpdated(template);
-                }
+                return conversion.TemplateUpdated(template);
             }
 
             return Task.CompletedTask;
@@ -79,10 +77,7 @@ namespace ChiselDebuggerRazor.Code.Templates
         private Task AddTemplate(string moduleName, List<WirePath> wires, FIRRTLNode[] nodeOrder, FIRIO[] ioOrder)
         {
             RouteTemplate template = new RouteTemplate(wires, nodeOrder, ioOrder);
-            lock (Templates)
-            {
-                Templates.Add(moduleName, template);
-            }
+            Templates.AddOrUpdate(moduleName, template, (_, _) => template);
 
             lock (Converters)
             {
@@ -98,13 +93,10 @@ namespace ChiselDebuggerRazor.Code.Templates
         public bool TryGetTemplate(string moduleName, ModuleLayout modLayout, out List<WirePath> wires)
         {
             RouteTemplate modTemplate;
-            lock (Templates)
+            if (!Templates.TryGetValue(moduleName, out modTemplate))
             {
-                if (!Templates.TryGetValue(moduleName, out modTemplate))
-                {
-                    wires = null;
-                    return false;
-                }
+                wires = null;
+                return false;
             }
 
             lock (Converters)
