@@ -157,7 +157,7 @@
         return Task.CompletedTask;
     }
 
-    private Point UpdateParentAboutExteriorIO(Point moduleSize)
+    private async Task<Point> UpdateParentAboutExteriorIO(Point moduleSize)
     {
         ExternalIO = IOPositionCalc.VerticalScopedIO(Operation.GetIO().ToArray(), moduleSize.X, MarginForIO, MarginForIO, IgnoreUnusedIO);
 
@@ -192,7 +192,7 @@
         }
         else
         {
-            ParentLayoutCtrl.UpdateComponentInfo(new FIRComponentUpdate(Operation, moduleSize, ExternalIO.GetSinkDirIO(), ExternalIO.GetSourceDirIO()));
+            await ParentLayoutCtrl.UpdateComponentInfo(new FIRComponentUpdate(Operation, moduleSize, ExternalIO.GetSinkDirIO(), ExternalIO.GetSourceDirIO()));
         }
 
         return moduleSize;
@@ -216,7 +216,7 @@
 
         //With new module size, the io positions need to be updated
         await OnResize(moduleSize.X, moduleSize.Y);
-        moduleSize = UpdateParentAboutExteriorIO(moduleSize);
+        moduleSize = await UpdateParentAboutExteriorIO(moduleSize);
 
         await CurrModLayout.RouteWires(placements);
 
