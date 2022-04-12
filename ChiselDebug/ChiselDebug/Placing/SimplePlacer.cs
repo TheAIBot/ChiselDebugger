@@ -143,9 +143,9 @@ namespace ChiselDebug.Placing
                 }
             }
 
-            Point borderPadding = new Point(100, 200);
+            Point borderPadding = new Point(20, 20);
             placments.AutoSpacePlacementRanks(mod);
-            placments.AddBorderPadding(borderPadding);
+            placments.SetBorderPadding(borderPadding);
             return placments;
         }
 
