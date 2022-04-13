@@ -64,17 +64,8 @@ namespace ChiselDebug.Routing
                 }
 
                 LineInfo line = linesPriority.Dequeue();
-
-                Rectangle? startRect = null;
-                Rectangle? endRect = null;
-                if (placements.UsedSpace.ContainsKey(line.Start.Node))
-                {
-                    startRect = placements.UsedSpace[line.Start.Node];
-                }
-                if (placements.UsedSpace.ContainsKey(line.End.Node))
-                {
-                    endRect = placements.UsedSpace[line.End.Node];
-                }
+                Rectangle? startRect = placements.UsedSpace.GetValueOrDefault(line.Start.Node);
+                Rectangle? endRect = placements.UsedSpace.GetValueOrDefault(line.End.Node);
 
                 WirePath path;
                 if (!TryPathLine(board, line.Start, line.End, startRect, endRect, paths, out path))

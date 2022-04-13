@@ -93,13 +93,11 @@ namespace ChiselDebug.Placing
 
         private static int SpaceForWire(IEnumerable<ScalarIO> io)
         {
-            Dictionary<AggregateIO, bool> aggConnectionHasBeenHit = new Dictionary<AggregateIO, bool>();
             Dictionary<ScalarIO, AggregateIO> scalarToAggregateIO = new Dictionary<ScalarIO, AggregateIO>();
             foreach (var aggIO in IOHelper.GetAllAggregateIOs(io).OrderByDescending(x => x.GetScalarsCount()))
             {
                 if (aggIO.IsPassive() && aggIO.OnlyConnectedWithAggregateConnections())
                 {
-                    aggConnectionHasBeenHit.Add(aggIO, false);
                     foreach (var scalar in aggIO.Flatten())
                     {
                         scalarToAggregateIO.TryAdd(scalar, aggIO);
@@ -108,13 +106,13 @@ namespace ChiselDebug.Placing
             }
 
             int spaceCounter = 0;
+            HashSet<AggregateIO> alreadySpacedForAggIo = new HashSet<AggregateIO>();
             foreach (var scalar in io)
             {
                 if (scalarToAggregateIO.TryGetValue(scalar, out var aggIO))
                 {
-                    if (!aggConnectionHasBeenHit[aggIO])
+                    if (alreadySpacedForAggIo.Add(aggIO))
                     {
-                        aggConnectionHasBeenHit[aggIO] = true;
                         spaceCounter++;
                     }
                 }
