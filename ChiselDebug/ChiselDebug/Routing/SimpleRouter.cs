@@ -48,7 +48,7 @@ namespace ChiselDebug.Routing
                 repathCounter.Add(line.GetLine(), 0);
             }
 
-            Queue<LineInfo> linesPriority = new Queue<LineInfo>(sortedLines.OrderBy(x => x.GetScore()));
+            Queue<LineInfo> linesPriority = new Queue<LineInfo>(SortLineInfosByPathingOrder(sortedLines));
 
             RouterBoard board = new RouterBoard(placements.SpaceNeeded);
             board.PrepareBoard(placements.UsedSpace.Values.ToList());
@@ -85,25 +85,30 @@ namespace ChiselDebug.Routing
                 }
 
                 Debug.Assert(path.StartIO == line.Start && path.EndIO == line.End);
-                List<WirePath> needsRepathing = new List<WirePath>();
+                List<WirePath> repathCandidates = new List<WirePath>();
                 foreach (var oldPath in paths)
                 {
                     if (!path.CanCoexist(oldPath))
                     {
-                        needsRepathing.Add(oldPath);
+                        repathCandidates.Add(oldPath);
                     }
                 }
-                foreach (var repath in needsRepathing)
+                
+                var needsRepathing = new List<LineInfo>();
+                foreach (var repathCandidate in repathCandidates)
                 {
-                    LineInfo repathline = new LineInfo(repath.StartIO, repath.EndIO);
+                    LineInfo repathline = new LineInfo(repathCandidate.StartIO, repathCandidate.EndIO);
                     if (repathCounter[repathline.GetLine()]++ >= 20)
                     {
                         continue;
                     }
 
-                    paths.Remove(repath);
-
-                    linesPriority.Enqueue(repathline);
+                    paths.Remove(repathCandidate);
+                    needsRepathing.Add(repathline);
+                }
+                foreach (var repath in SortLineInfosByPathingOrder(needsRepathing))
+                {
+                    linesPriority.Enqueue(repath);
                 }
                 paths.Add(path);
             }
@@ -111,6 +116,13 @@ namespace ChiselDebug.Routing
             RefineWirePaths(board, paths);
             wiresPaths = paths;
             return true;
+        }
+
+        private static IEnumerable<LineInfo> SortLineInfosByPathingOrder(IEnumerable<LineInfo> lines)
+        {
+            return lines.GroupBy(x => x.Start.DirIO.IO)
+                        .OrderBy(x => x.First().Start.DirIO.Position.X)
+                        .SelectMany(x => x.OrderBy(x => x.GetScore()));
         }
 
         private readonly struct MoveData

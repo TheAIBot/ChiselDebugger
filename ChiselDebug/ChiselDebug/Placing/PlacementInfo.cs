@@ -138,7 +138,7 @@ namespace ChiselDebug.Placing
             }
 
             Point offset = padding - minPos;
-            offset.X = 0;
+            offset.X = padding.X;
 
             NodePositions.Clear();
             foreach (var nodeRect in UsedSpace.ToArray())
@@ -147,7 +147,7 @@ namespace ChiselDebug.Placing
                 UsedSpace[nodeRect.Key] = new Rectangle(nodeRect.Value.Pos + offset, nodeRect.Value.Size);
             }
 
-            SpaceNeeded = new Point(SpaceNeeded.X, maxPos.Y + offset.Y + padding.Y * 2);
+            SpaceNeeded = new Point(SpaceNeeded.X + offset.X * 2, maxPos.Y + offset.Y + padding.Y * 2);
         }
 
         private sealed class RankWidth
