@@ -1,5 +1,7 @@
 using ChiselDebug.Placing;
+#if Windows
 using ChiselDebug.Placing.GraphViz;
+#endif
 using ChiselDebuggerRazor.Code;
 using ChiselDebuggerWebUI.Code;
 using Microsoft.AspNetCore.Builder;
@@ -27,7 +29,11 @@ namespace ChiselDebuggerWebUI
             services.AddServerSideBlazor();
             services.AddSingleton<IWorkLimiter, WorkLimiter>();
             ChiselDebuggerServices.AddServices(services);
+            #if Windows
             services.AddSingleton<INodePlacerFactory, GraphVizPlacerFactory>();
+            #else
+            services.AddSingleton<INodePlacerFactory, SimplePlacerFactory>();
+            #endif
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

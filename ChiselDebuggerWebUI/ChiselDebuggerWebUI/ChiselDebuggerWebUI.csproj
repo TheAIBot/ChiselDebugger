@@ -7,9 +7,18 @@
     <PublishTrimmed>true</PublishTrimmed>
     <TrimMode>link</TrimMode>
   </PropertyGroup>
+  <Choose>
+  <When Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <ItemGroup>
+      <ProjectReference Include="..\..\ChiselDebug.Placing.GraphViz\ChiselDebug.Placing.GraphViz.csproj" />
+    </ItemGroup>
+    <PropertyGroup>
+      <DefineConstants>Windows</DefineConstants>
+    </PropertyGroup>
+  </When>
+  </Choose>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\ChiselDebug.Placing.GraphViz\ChiselDebug.Placing.GraphViz.csproj" />
     <ProjectReference Include="..\..\ChiselDebuggerRazor\ChiselDebuggerRazor.csproj" />
     <ProjectReference Include="..\..\ChiselDebug\ChiselDebug\ChiselDebug.csproj" />
     <ProjectReference Include="..\..\FIRRTL\FIRRTL.csproj" />
