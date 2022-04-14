@@ -11,9 +11,9 @@ namespace ChiselDebuggerRazor.Code.Templates
 {
     public sealed class PlacementTemplator
     {
-        private readonly ConcurrentDictionary<string, PlaceTemplate> Templates = new ConcurrentDictionary<string, PlaceTemplate>();
-        private readonly Dictionary<string, List<PlaceTemplateConversion>> Converters = new Dictionary<string, List<PlaceTemplateConversion>>();
-        private readonly HashSet<string> TemplateGenerating = new HashSet<string>();
+        private readonly ConcurrentDictionary<string, PlaceTemplate> Templates = new();
+        private readonly ConcurrentDictionary<string, ConcurrentBag<PlaceTemplateConversion>> Converters = new();
+        private readonly ConcurrentDictionary<string, bool> TemplateGenerating = new();
         private readonly IWorkLimiter WorkLimiter;
 
         public PlacementTemplator(IWorkLimiter workLimiter)
@@ -23,18 +23,14 @@ namespace ChiselDebuggerRazor.Code.Templates
 
         public Task SubscribeToTemplate(string moduleName, ModuleLayout ctrl, FIRRTLNode[] nodeOrder)
         {
-            PlaceTemplateConversion conversion = new PlaceTemplateConversion(ctrl, nodeOrder);
-            lock (Converters)
-            {
-                if (Converters.TryGetValue(moduleName, out var convs))
-                {
-                    convs.Add(conversion);
-                }
-                else
-                {
-                    Converters.Add(moduleName, new List<PlaceTemplateConversion>() { conversion });
-                }
-            }
+            var conversion = new PlaceTemplateConversion(ctrl, nodeOrder);
+            var converterList = new ConcurrentBag<PlaceTemplateConversion>() {
+                conversion
+            };
+            Converters.AddOrUpdate(moduleName, converterList, (_, converters) => {
+                converters.Add(conversion);
+                return converters;
+            });
 
             if (Templates.TryGetValue(moduleName, out var template))
             {
@@ -46,14 +42,11 @@ namespace ChiselDebuggerRazor.Code.Templates
 
         public Task AddTemplateParameters(string moduleName, INodePlacer placer, FIRRTLNode[] nodeOrder, CancellationToken cancelToken)
         {
-            lock (TemplateGenerating)
+            //If template is already generating or generated then
+            //no need to generate again
+            if (!TemplateGenerating.TryAdd(moduleName, true))
             {
-                //If template is already generating or generated then
-                //no need to generate again
-                if (!TemplateGenerating.Add(moduleName))
-                {
-                    return Task.CompletedTask;
-                }
+                return Task.CompletedTask;
             }
 
             return WorkLimiter.AddWork(() =>
@@ -73,12 +66,9 @@ namespace ChiselDebuggerRazor.Code.Templates
             PlaceTemplate template = new PlaceTemplate(placeInfo, nodeOrder);
             Templates.AddOrUpdate(moduleName, template, (_, _) => template);
 
-            lock (Converters)
+            if (Converters.TryGetValue(moduleName, out var convs))
             {
-                if (Converters.TryGetValue(moduleName, out var convs))
-                {
-                    return Task.WhenAll(convs.Select(x => x.TemplateUpdated(template)));
-                }
+                return Task.WhenAll(convs.Select(x => x.TemplateUpdated(template)));
             }
 
             return Task.CompletedTask;
@@ -93,13 +83,10 @@ namespace ChiselDebuggerRazor.Code.Templates
                 return false;
             }
 
-            lock (Converters)
+            if (Converters.TryGetValue(moduleName, out var cons))
             {
-                if (Converters.TryGetValue(moduleName, out var cons))
-                {
-                    placement = cons.First(x => x.Ctrl == modLayout).Convert(modTemplate);
-                    return true;
-                }
+                placement = cons.First(x => x.Ctrl == modLayout).Convert(modTemplate);
+                return true;
             }
 
             placement = null;

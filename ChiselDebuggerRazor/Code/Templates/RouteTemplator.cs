@@ -13,9 +13,9 @@ namespace ChiselDebuggerRazor.Code.Templates
 {
     public sealed class RouteTemplator
     {
-        private readonly ConcurrentDictionary<string, RouteTemplate> Templates = new ConcurrentDictionary<string, RouteTemplate>();
-        private readonly Dictionary<string, List<RouteTemplateConversion>> Converters = new Dictionary<string, List<RouteTemplateConversion>>();
-        private readonly HashSet<string> TemplateGenerating = new HashSet<string>();
+        private readonly ConcurrentDictionary<string, RouteTemplate> Templates = new();
+        private readonly ConcurrentDictionary<string, ConcurrentBag<RouteTemplateConversion>> Converters = new();
+        private readonly ConcurrentDictionary<string, bool> TemplateGenerating = new();
         private readonly IWorkLimiter WorkLimiter;
 
         public RouteTemplator(IWorkLimiter workLimiter)
@@ -26,17 +26,13 @@ namespace ChiselDebuggerRazor.Code.Templates
         public Task SubscribeToTemplate(string moduleName, ModuleLayout ctrl, FIRRTLNode[] nodeOrder, FIRIO[] ioOrder)
         {
             RouteTemplateConversion conversion = new RouteTemplateConversion(ctrl, nodeOrder, ioOrder);
-            lock (Converters)
-            {
-                if (Converters.TryGetValue(moduleName, out var convs))
-                {
-                    convs.Add(conversion);
-                }
-                else
-                {
-                    Converters.Add(moduleName, new List<RouteTemplateConversion>() { conversion });
-                }
-            }
+            var converterList = new ConcurrentBag<RouteTemplateConversion>() {
+                conversion
+            };
+            Converters.AddOrUpdate(moduleName, converterList, (_, converters) => {
+                converters.Add(conversion);
+                return converters;
+            });
 
             if (Templates.TryGetValue(moduleName, out var template))
             {
@@ -48,14 +44,11 @@ namespace ChiselDebuggerRazor.Code.Templates
 
         public Task AddTemplateParameters(string moduleName, SimpleRouter router, PlacementInfo placeInfo, FIRRTLNode[] nodeOrder, FIRIO[] ioOrder, CancellationToken cancelToken)
         {
-            lock (TemplateGenerating)
+            //If template is already generating or generated then
+            //no need to generate again
+            if (!TemplateGenerating.TryAdd(moduleName, true))
             {
-                //If template is already generating or generated then
-                //no need to generate again
-                if (!TemplateGenerating.Add(moduleName))
-                {
-                    return Task.CompletedTask;
-                }
+                return Task.CompletedTask;
             }
 
             return WorkLimiter.AddWork(() =>
@@ -79,12 +72,9 @@ namespace ChiselDebuggerRazor.Code.Templates
             RouteTemplate template = new RouteTemplate(wires, nodeOrder, ioOrder);
             Templates.AddOrUpdate(moduleName, template, (_, _) => template);
 
-            lock (Converters)
+            if (Converters.TryGetValue(moduleName, out var convs))
             {
-                if (Converters.TryGetValue(moduleName, out var convs))
-                {
-                    return Task.WhenAll(convs.Select(x => x.TemplateUpdated(template)));
-                }
+                return Task.WhenAll(convs.Select(x => x.TemplateUpdated(template)));
             }
 
             return Task.CompletedTask;
@@ -99,13 +89,10 @@ namespace ChiselDebuggerRazor.Code.Templates
                 return false;
             }
 
-            lock (Converters)
+            if (Converters.TryGetValue(moduleName, out var cons))
             {
-                if (Converters.TryGetValue(moduleName, out var cons))
-                {
-                    wires = cons.First(x => x.Ctrl == modLayout).Convert(modTemplate);
-                    return true;
-                }
+                wires = cons.First(x => x.Ctrl == modLayout).Convert(modTemplate);
+                return true;
             }
 
             wires = null;
