@@ -7,6 +7,7 @@ using ChiselDebug.Timeline;
 using ChiselDebug.Utilities;
 using ChiselDebuggerRazor.Code.Templates;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,8 +19,7 @@ namespace ChiselDebuggerRazor.Code.Controllers
     {
         public readonly CircuitGraph Graph;
         public VCDTimeline Timeline { get; set; } = null;
-        private readonly Dictionary<FIRRTLNode, ModuleLayout> FIRNodeToModCtrl = new Dictionary<FIRRTLNode, ModuleLayout>();
-        private readonly List<ModuleLayout> ModControllers = new List<ModuleLayout>();
+        private readonly ConcurrentBag<ModuleLayout> ModControllers = new ConcurrentBag<ModuleLayout>();
         private readonly PlacementTemplator PlacementTemplates;
         private readonly RouteTemplator RouteTemplates;
         private readonly SeqWorkOverrideOld<ulong> StateLimiter;
@@ -49,14 +49,7 @@ namespace ChiselDebuggerRazor.Code.Controllers
 
         public async Task AddModCtrl(string moduleName, ModuleLayout modCtrl, FIRRTLNode[] modNodes, FIRRTLNode[] modNodesIncludeMod, FIRIO[] modIO)
         {
-            lock (FIRNodeToModCtrl)
-            {
-                ModControllers.Add(modCtrl);
-                foreach (var node in modNodes)
-                {
-                    FIRNodeToModCtrl.Add(node, modCtrl);
-                }
-            }
+            ModControllers.Add(modCtrl);
 
             await PlacementTemplates.SubscribeToTemplate(moduleName, modCtrl, modNodes);
             await RouteTemplates.SubscribeToTemplate(moduleName, modCtrl, modNodesIncludeMod, modIO);
