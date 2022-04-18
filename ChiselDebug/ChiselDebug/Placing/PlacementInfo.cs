@@ -127,6 +127,107 @@ namespace ChiselDebug.Placing
             return spaceCounter;
         }
 
+        private IEnumerable<(FIRIO start, FIRIO end)> GetAllNodeConnections(List<FIRRTLNode> nodes) {
+            Dictionary<ScalarIO, AggregateIO> scalarToAggregateIO = new Dictionary<ScalarIO, AggregateIO>();
+            var allScalarIO = nodes.SelectMany(x => x.GetIO().FlattenMany()).ToArray();
+            foreach (var aggIO in IOHelper.GetAllAggregateIOs(allScalarIO).OrderByDescending(x => x.GetScalarsCount()))
+            {
+                if (aggIO.IsPassive() && aggIO.OnlyConnectedWithAggregateConnections())
+                {
+                    foreach (var scalar in aggIO.Flatten())
+                    {
+                        scalarToAggregateIO.TryAdd(scalar, aggIO);
+                    }
+                }
+            }
+
+            HashSet<AggregateIO> aggConnectionHasBeenHit = new HashSet<AggregateIO>();
+            Dictionary<Source, HashSet<Sink>> foundConnections = new Dictionary<Source, HashSet<Sink>>();
+            foreach (var scalar in allScalarIO)
+            {
+                if (scalarToAggregateIO.TryGetValue(scalar, out var aggIO))
+                {
+                    if (aggConnectionHasBeenHit.Add(aggIO))
+                    {
+                        foreach (var otherSideAggIO in aggIO.GetConnections())
+                        {
+                            if (aggConnectionHasBeenHit.Add(otherSideAggIO.To))
+                            {
+                                if (aggIO.IsPassiveOfType<Source>())
+                                {
+                                    yield return (aggIO, otherSideAggIO.To);
+                                }
+                                else
+                                {
+                                    yield return (otherSideAggIO.To, aggIO);
+                                }
+                                
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if (scalar is Source) 
+                    {
+                        Source source = (Source)scalar;
+                        foreach (var sink in source.GetConnectedInputs())
+                        {
+                            HashSet<Sink> sinks;
+                            if (!foundConnections.TryGetValue(source, out sinks))
+                            {
+                                sinks = new HashSet<Sink>();
+                                foundConnections.Add(source, sinks);
+                            }
+
+                            if (sinks.Add(sink))
+                            {
+                                yield return (source, sink);
+                            }
+                        }
+                    }
+                    else if (scalar is Sink sink) 
+                    {
+                        foreach (var source in sink.GetConnections().Select(x => x.From))
+                        {
+                            HashSet<Sink> sinks;
+                            if (!foundConnections.TryGetValue(source, out sinks))
+                            {
+                                sinks = new HashSet<Sink>();
+                                foundConnections.Add(source, sinks);
+                            }
+                            else
+                            {
+                                yield return (source, sink);
+                            }
+
+                            sinks.Add(sink);
+                        }
+                    }
+                }
+            }
+        }
+
+        private int[] Magic(RankWidth[] ranks) {
+            int[] ySpaceNeeded = new int[ranks.Length];
+
+            List<FIRRTLNode> allNodes = new List<FIRRTLNode>();
+            Dictionary<FIRRTLNode, int> nodeToRankIndex = new Dictionary<FIRRTLNode, int>();
+            for (int i = 0; i < ranks.Length; i++)
+            {
+                foreach (var node in ranks[i].Nodes)
+                {
+                    nodeToRankIndex.Add(node, i);
+                    allNodes.Add(node);
+                }
+            }
+
+            foreach (var SourceToSink in GetAllNodeConnections(allNodes))
+            {
+                
+            }
+        }
+
         public void SetBorderPadding(Point padding)
         {
             Point minPos = new Point(int.MaxValue, int.MaxValue);
