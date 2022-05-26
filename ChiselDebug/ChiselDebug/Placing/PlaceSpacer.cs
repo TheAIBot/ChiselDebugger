@@ -1,4 +1,6 @@
-﻿using ChiselDebug.Routing;
+﻿using ChiselDebug.GraphFIR.Components;
+using ChiselDebug.Graphing;
+using ChiselDebug.Routing;
 using ChiselDebug.Utilities;
 using System;
 using System.Collections.Generic;
@@ -6,14 +8,27 @@ using System.Linq;
 
 namespace ChiselDebug.Placing
 {
+    internal sealed class RectangleGraph
+    {
+        private readonly Graph<FIRRTLNode> Graph;
+        private readonly Dictionary<FIRRTLNode, Node<FIRRTLNode>> FIRRTLNodeToGraphNode;
+
+        public RectangleGraph(Graph<FIRRTLNode> graph, Dictionary<FIRRTLNode, Node<FIRRTLNode>> firrtlNodeToGraphNode)
+        {
+            Graph = graph;
+            FIRRTLNodeToGraphNode = firrtlNodeToGraphNode;
+        }
+    }
+
     public sealed class PlaceSpacer
     {
         public void lol(PlacementInfo placement)
         {
-            HashSet<Point> rectangleEdgePoints = GetRactangleEdgePoints(placement);
+            HashSet<Point> rectangleEdgePoints = GetRactangleEdgePoints(placement.UsedSpace.Values);
 
             List<Vector> expandVectors = GetRectangleExpandVectors(placement);
-            ExpandVectors(rectangleEdgePoints, expandVectors);
+            Rectangle boardLimits = GetBoardSize(expandVectors);
+            ExpandVectors(rectangleEdgePoints, expandVectors, boardLimits);
 
             List<Point> corners = GetRectangleCorners(rectangleEdgePoints);
 
@@ -24,13 +39,69 @@ namespace ChiselDebug.Placing
             Dictionary<int, List<Line>> verticalLines = CreateVerticalLines(verticalLineMaker);
 
             List<Rectangle> rectanglesOnBoard = CreateRectanglesFromHorizontalAndVerticalLines(horizontalLines, verticalLines);
-
             List<Rectangle> nonOccupiedRectangles = rectanglesOnBoard.Except(placement.UsedSpace.Values).ToList();
 
-            // Create graph
+            Graph<FIRRTLNode> rectangleGraph = new Graph<FIRRTLNode>();
+            Dictionary<Rectangle, Node<FIRRTLNode>> rectangleToNode = new Dictionary<Rectangle, Node<FIRRTLNode>>();
+            foreach (var nodeWithRectangle in placement.UsedSpace)
+            {
+                var node = new Node<FIRRTLNode>(nodeWithRectangle.Key);
+                rectangleToNode.Add(nodeWithRectangle.Value, node);
+                rectangleGraph.AddNode(node);
+            }
+            foreach (var nonOccupiedRectangle in nonOccupiedRectangles)
+            {
+                var node = new Node<FIRRTLNode>(null);
+                rectangleToNode.Add(nonOccupiedRectangle, node);
+                rectangleGraph.AddNode(node);
+            }
+
+            CreateEdgesBetweenRectangleNodes(boardLimits, rectangleToNode);
+
+            Dictionary<FIRRTLNode, Node<FIRRTLNode>> firrtlNodeToGraphNode = new Dictionary<FIRRTLNode, Node<FIRRTLNode>>();
+            foreach (var node in rectangleGraph.Nodes)
+            {
+                if (node.Value == null)
+                {
+                    continue;
+                }
+
+                firrtlNodeToGraphNode.Add(node.Value, node);
+            }
+
+            var graph = new RectangleGraph(rectangleGraph, firrtlNodeToGraphNode);
+
+
+            // Create graph -- Done
             // Get all lines
             // Path in graph
             // Space rectangles so there is space for wires
+        }
+
+        private static void CreateEdgesBetweenRectangleNodes(Rectangle boardLimits, Dictionary<Rectangle, Node<FIRRTLNode>> rectangleToNode)
+        {
+            Dictionary<Point, Node<FIRRTLNode>> pointToNode = new Dictionary<Point, Node<FIRRTLNode>>();
+            foreach (var rectangleWithNode in rectangleToNode)
+            {
+                foreach (var rectanglePoint in GetPointsInsideRectangle(rectangleWithNode.Key, 0))
+                {
+                    pointToNode.Add(rectanglePoint, rectangleWithNode.Value);
+                }
+            }
+
+            foreach (var rectangleWithNode in rectangleToNode)
+            {
+                foreach (var rectanglePoint in GetPointsInsideRectangle(rectangleWithNode.Key, 1))
+                {
+                    if (!boardLimits.Within(rectanglePoint))
+                    {
+                        continue;
+                    }
+
+                    Node<FIRRTLNode> adjacantNode = pointToNode[rectanglePoint];
+                    rectangleWithNode.Value.AddEdgeTo(adjacantNode);
+                }
+            }
         }
 
         private static List<Rectangle> CreateRectanglesFromHorizontalAndVerticalLines(Dictionary<int, List<Line>> horizontalLines, Dictionary<int, List<Line>> verticalLines)
@@ -137,9 +208,9 @@ namespace ChiselDebug.Placing
             return corners;
         }
 
-        private static void ExpandVectors(HashSet<Point> rectangleEdgePoints, List<Vector> expandVectors)
+        private static void ExpandVectors(HashSet<Point> rectangleEdgePoints, List<Vector> expandVectors, Rectangle boardLimits)
         {
-            Rectangle boardLimits = GetBoardSize(expandVectors);
+
 
             List<Vector> nextRoundVectors = new List<Vector>();
             while (expandVectors.Count > 0)
@@ -198,25 +269,34 @@ namespace ChiselDebug.Placing
             return expandVectors;
         }
 
-        private static HashSet<Point> GetRactangleEdgePoints(PlacementInfo placement)
+        private static HashSet<Point> GetRactangleEdgePoints(IEnumerable<Rectangle> rectangles)
         {
             HashSet<Point> rectangleEdgePoints = new HashSet<Point>();
-            foreach (var rectangle in placement.UsedSpace.Values)
+            foreach (var rectangle in rectangles)
             {
-                for (int x = 0; x < rectangle.Width; x++)
-                {
-                    rectangleEdgePoints.Add(rectangle.Pos + new Point(x, 0));
-                    rectangleEdgePoints.Add(rectangle.Pos + new Point(x, rectangle.Height - 1));
-                }
-
-                for (int y = 0; y < rectangle.Height; y++)
-                {
-                    rectangleEdgePoints.Add(rectangle.Pos + new Point(0, y));
-                    rectangleEdgePoints.Add(rectangle.Pos + new Point(rectangle.Width - 1, y));
-                }
+                rectangleEdgePoints.IntersectWith(GetPointsInsideRectangle(rectangle, 0));
             }
 
             return rectangleEdgePoints;
+        }
+
+        private static IEnumerable<Point> GetPointsInsideRectangle(Rectangle rectangle, int extraDistanceFromCenter)
+        {
+            for (int x = 0; x < rectangle.Width; x++)
+            {
+                // Top horizontal
+                yield return rectangle.Pos + new Point(x, -extraDistanceFromCenter);
+                // Bottom horizontal
+                yield return rectangle.Pos + new Point(x, rectangle.Height - 1 + extraDistanceFromCenter);
+            }
+
+            for (int y = 0; y < rectangle.Height; y++)
+            {
+                // Left vertical
+                yield return rectangle.Pos + new Point(-extraDistanceFromCenter, y);
+                // Right vertical
+                yield return rectangle.Pos + new Point(rectangle.Width - 1 + extraDistanceFromCenter, y);
+            }
         }
 
         private sealed record Vector(Point Position, Point Direction)
