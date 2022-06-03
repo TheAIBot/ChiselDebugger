@@ -2,53 +2,74 @@
 using ChiselDebug.Graphing;
 using ChiselDebug.Routing;
 using ChiselDebug.Utilities;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace ChiselDebug.Placing
 {
-    internal sealed class RectangleGraph
+    internal sealed class AxisLineContainer
     {
-        private readonly Graph<FIRRTLNode> Graph;
-        private readonly Dictionary<FIRRTLNode, Node<FIRRTLNode>> FIRRTLNodeToGraphNode;
-        private readonly Rectangle BoardArea;
+        private readonly Dictionary<int, List<Line>> AxisPointLines;
 
-        public RectangleGraph(Graph<FIRRTLNode> graph, Dictionary<FIRRTLNode, Node<FIRRTLNode>> firrtlNodeToGraphNode, Rectangle boardArea)
+        public AxisLineContainer(Dictionary<int, List<Line>> axisPointLines)
         {
-            Graph = graph;
-            FIRRTLNodeToGraphNode = firrtlNodeToGraphNode;
-            BoardArea = boardArea;
+            AxisPointLines = axisPointLines;
         }
 
-        public void SpaceNodesByLinesBetweenThem(List<LineInfo> lines)
+        public IEnumerable<List<Line>> GetAxisLinesOrderedByAxisPosition()
         {
-            PriorityQueue<Node<FIRRTLNode>, int> bestNodes = new PriorityQueue<Node<FIRRTLNode>, int>();
-        }
-
-        private List<Node<FIRRTLNode>> GetPath(IOInfo from, IOInfo to)
-        {
-
-        }
-
-        private void AddToNodeSizes(List<Node<FIRRTLNode>> path)
-        {
-
-        }
-
-        private static Point GetRectanglesClosestPointToOtherPoint(Point distanceFrom, Rectangle rectangle)
-        {
-
-        }
-
-        private sealed class RectangleContainedLines
-        {
-            public int HorizontalLines;
-            public int VerticalLines;
+            return AxisPointLines.OrderBy(x => x.Key).Select(x => x.Value);
         }
     }
 
-    public sealed class PlaceSpacer
+    internal sealed class RectangleBoard
+    {
+
+    }
+
+    internal sealed class RectangleBoardCreator
+    {
+        private readonly AxisLineContainer HorizontalLines;
+        private readonly AxisLineContainer VerticalLines;
+
+        public RectangleBoardCreator(AxisLineContainer horizontalLines, AxisLineContainer verticalLines)
+        {
+            HorizontalLines = horizontalLines;
+            VerticalLines = verticalLines;
+        }
+
+        public RectangleBoard Create()
+        {
+            List<Rectangle> rectanglesOnBoard = new List<Rectangle>();
+            foreach (var axisPositionLines in HorizontalLines.GetAxisLinesOrderedByAxisPosition())
+        }
+
+        private RectangleBoard CreateRectanglesFromHorizontalAndVerticalLines()
+        {
+            List<Rectangle> rectanglesOnBoard = new List<Rectangle>();
+            foreach (var topHorizontal in horizontalLines.Values.SelectMany(x => x))
+            {
+                Point topLeftPoint = topHorizontal.Start;
+                if (!verticalLines.TryGetValue(topHorizontal.End.X, out List<Line> xVerticalLines))
+                {
+                    continue;
+                }
+
+                Line rightVertical = xVerticalLines.SingleOrDefault(x => x.Start == topHorizontal.End);
+                if (rightVertical == default)
+                {
+                    continue;
+                }
+
+                Point bottomRight = rightVertical.End;
+                rectanglesOnBoard.Add(new Rectangle(topLeftPoint, bottomRight - topLeftPoint));
+            }
+
+            return rectanglesOnBoard;
+        }
+    }
+
+    internal sealed class PlaceSpacer
     {
         public void lol(PlacementInfo placement)
         {
@@ -130,88 +151,6 @@ namespace ChiselDebug.Placing
                     rectangleWithNode.Value.AddEdgeTo(adjacantNode);
                 }
             }
-        }
-
-        private static List<Rectangle> CreateRectanglesFromHorizontalAndVerticalLines(Dictionary<int, List<Line>> horizontalLines, Dictionary<int, List<Line>> verticalLines)
-        {
-            List<Rectangle> rectanglesOnBoard = new List<Rectangle>();
-            foreach (var topHorizontal in horizontalLines.Values.SelectMany(x => x))
-            {
-                Point topLeftPoint = topHorizontal.Start;
-                if (!verticalLines.TryGetValue(topHorizontal.End.X, out List<Line> xVerticalLines))
-                {
-                    continue;
-                }
-
-                Line rightVertical = xVerticalLines.SingleOrDefault(x => x.Start == topHorizontal.End);
-                if (rightVertical == default)
-                {
-                    continue;
-                }
-
-                Point bottomRight = rightVertical.End;
-                rectanglesOnBoard.Add(new Rectangle(topLeftPoint, bottomRight - topLeftPoint));
-            }
-
-            return rectanglesOnBoard;
-        }
-
-        private static Dictionary<int, List<Line>> CreateHorizontalLines(Dictionary<int, List<int>> lineMaker)
-        {
-            return CreateLines(lineMaker, (x, y) => new Point(x, y));
-        }
-
-        private static Dictionary<int, List<Line>> CreateVerticalLines(Dictionary<int, List<int>> lineMaker)
-        {
-            return CreateLines(lineMaker, (x, y) => new Point(y, x));
-        }
-
-        private static Dictionary<int, List<Line>> CreateLines(Dictionary<int, List<int>> lineMaker, Func<int, int, Point> valuesToPoint)
-        {
-            Dictionary<int, List<Line>> axisLines = new Dictionary<int, List<Line>>();
-            foreach (var horizontal in lineMaker)
-            {
-                Func<int, Point> axisValueToPoint = x => valuesToPoint(horizontal.Key, x);
-                var startLinePoints = horizontal.Value.Skip(1).Select(x => axisValueToPoint(x));
-                var endLinePoints = horizontal.Value.SkipLast(1).Select(x => axisValueToPoint(x));
-                var lines = startLinePoints.Zip(endLinePoints).Select(x => new Line(x.First, x.Second)).ToList();
-                axisLines.Add(horizontal.Key, lines);
-            }
-
-            return axisLines;
-        }
-
-        private static Dictionary<int, List<int>> CreateHorizontalLineMaker(List<Point> corners)
-        {
-            return CreateLineMaker(corners, x => x.Y, x => x.X);
-        }
-
-        private static Dictionary<int, List<int>> CreateVerticalLineMaker(List<Point> corners)
-        {
-            return CreateLineMaker(corners, x => x.X, x => x.Y);
-        }
-
-        private static Dictionary<int, List<int>> CreateLineMaker(List<Point> corners, Func<Point, int> groupOnAxis, Func<Point, int> axis)
-        {
-            Dictionary<int, List<int>> lineMaker = new Dictionary<int, List<int>>();
-            foreach (var corner in corners)
-            {
-                List<int> axisGroup;
-                if (!lineMaker.TryGetValue(groupOnAxis(corner), out axisGroup))
-                {
-                    axisGroup = new List<int>();
-                    lineMaker.Add(groupOnAxis(corner), axisGroup);
-                }
-
-                axisGroup.Add(axis(corner));
-            }
-
-            foreach (var horizontal in lineMaker.Values)
-            {
-                horizontal.Sort();
-            }
-
-            return lineMaker;
         }
 
         private static List<Point> GetRectangleCorners(HashSet<Point> rectangleEdgePoints)
