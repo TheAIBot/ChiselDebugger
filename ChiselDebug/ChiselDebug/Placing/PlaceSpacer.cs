@@ -20,6 +20,11 @@ namespace ChiselDebug.Placing
         {
             return AxisPointLines.OrderBy(x => x.Key).Select(x => x.Value);
         }
+
+        public bool TryGetLinesPerpendicularToAxisPosition(int position, out List<Line> axisPoisitionLines)
+        {
+            return AxisPointLines.TryGetValue(position, out axisPoisitionLines);
+        }
     }
 
     internal sealed class RectangleBoard
@@ -42,7 +47,14 @@ namespace ChiselDebug.Placing
         {
             List<Rectangle> rectanglesOnBoard = new List<Rectangle>();
             foreach (var axisPositionLines in HorizontalLines.GetAxisLinesOrderedByAxisPosition())
+            {
+
+            }
         }
+
+        private List<Line> CombineLinesIntoRectangleLines(List<Line> axisLines, )
+
+
 
         private RectangleBoard CreateRectanglesFromHorizontalAndVerticalLines()
         {
