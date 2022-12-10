@@ -1,13 +1,10 @@
 ﻿using ChiselDebug.GraphFIR.Circuit;
 using ChiselDebug.GraphFIR.Circuit.Converter;
-using ChiselDebug.GraphFIR.IO;
 using ChiselDebug.Timeline;
 using FIRRTL;
 using System;
-using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 using VCDReader;
 
 namespace Benchmarker
@@ -19,7 +16,7 @@ namespace Benchmarker
             const string TestDir = @"...";
             Stopwatch timer = new Stopwatch();
 
-            if (true)
+            if (false)
             {
                 timer.Start();
                 VerifyComputeGraph("TileTester_4", "lo.fir", true, TestDir);
@@ -27,8 +24,8 @@ namespace Benchmarker
             }
             else
             {
-                using VCD vcd = VCDReader.Parse.FromFile(Path.Combine(TestDir, "TileTester_6.vcd"));
-                //using VCD vcd = VCDReader.Parse.FromFile(Path.Combine(TestDir, "TileTester_8.vcd"));
+                //using VCD vcd = VCDReader.Parse.FromFile(Path.Combine(TestDir, "TileTester_1.vcd"));
+                using VCD vcd = VCDReader.Parse.FromFile(Path.Combine(TestDir, "dump.vcd"));
                 //using VCD vcd = VCDReader.Parse.FromFile(Path.Combine(TestDir, "TileTester_4.vcd"));
                 //using VCD vcd = VCDReader.Parse.FromFile(Path.Combine(TestDir, "TileTester_5.vcd"));
 
