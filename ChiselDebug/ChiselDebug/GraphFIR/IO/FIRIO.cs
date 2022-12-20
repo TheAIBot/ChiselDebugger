@@ -1,24 +1,26 @@
 ﻿using ChiselDebug.GraphFIR.Components;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.IO
 {
     public abstract class FIRIO : IContainerIO
     {
-        public readonly FIRRTLNode Node;
-        public string Name { get; private set; }
+        public readonly FIRRTLNode? Node;
+        public string? Name { get; private set; }
         public bool IsAnonymous => Name == null;
-        public AggregateIO ParentIO { get; private set; } = null;
+        public AggregateIO? ParentIO { get; private set; } = null;
         public bool IsPartOfAggregateIO => ParentIO != null;
 
-        public FIRIO(FIRRTLNode node, string name)
+        public FIRIO(FIRRTLNode? node, string? name)
         {
             this.Node = node;
             this.Name = name;
         }
 
-        public void SetName(string name)
+        public void SetName(string? name)
         {
             Name = name;
         }
@@ -30,6 +32,11 @@ namespace ChiselDebug.GraphFIR.IO
 
         public Module GetModResideIn()
         {
+            if (Node == null)
+            {
+                throw new InvalidOperationException("The IO has no attached node.");
+            }
+
             if (Node is Module mod)
             {
                 return mod;
@@ -50,7 +57,7 @@ namespace ChiselDebug.GraphFIR.IO
             while (node.ParentIO != null)
             {
                 node = node.ParentIO;
-                if (Name != null)
+                if (node.Name != null)
                 {
                     pathToRoot.Add(node.Name);
                 }
@@ -79,13 +86,13 @@ namespace ChiselDebug.GraphFIR.IO
             };
         }
 
-        public abstract void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source condition = null);
-        public abstract FIRIO ToFlow(FlowChange flow, FIRRTLNode node);
-        public FIRIO Flip(FIRRTLNode node = null)
+        public abstract void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source? condition = null);
+        public abstract FIRIO ToFlow(FlowChange flow, FIRRTLNode? node);
+        public FIRIO Flip(FIRRTLNode? node = null)
         {
             return ToFlow(FlowChange.Flipped, node ?? Node);
         }
-        public FIRIO Copy(FIRRTLNode node = null)
+        public FIRIO Copy(FIRRTLNode? node = null)
         {
             return ToFlow(FlowChange.Preserve, node ?? Node);
         }
@@ -119,7 +126,7 @@ namespace ChiselDebug.GraphFIR.IO
         {
             return IsPassiveOfType<Sink>() || IsPassiveOfType<Source>();
         }
-        public abstract bool TryGetIO(string ioName, out IContainerIO container);
+        public abstract bool TryGetIO(string ioName, [NotNullWhen(true)] out IContainerIO? container);
 
         public IContainerIO GetIO(string ioName)
         {

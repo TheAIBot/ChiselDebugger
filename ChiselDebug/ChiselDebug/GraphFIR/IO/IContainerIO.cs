@@ -1,14 +1,16 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.IO
 {
     public interface IContainerIO
     {
-        public bool TryGetIO(string ioName, out IContainerIO container);
+        public bool TryGetIO(string ioName, [NotNullWhen(true)] out IContainerIO? container);
         public IContainerIO GetIO(string ioName);
 
 
-        public bool TryGetIO(ReadOnlySpan<string> names, out IContainerIO container)
+        public bool TryGetIO(ReadOnlySpan<string> names, [NotNullWhen(true)] out IContainerIO? container)
         {
             if (names.Length == 0)
             {

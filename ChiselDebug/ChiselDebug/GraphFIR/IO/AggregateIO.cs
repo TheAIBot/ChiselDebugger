@@ -1,16 +1,20 @@
 ﻿using ChiselDebug.GraphFIR.Components;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.IO
 {
-    public sealed record AggregateConnection(AggregateIO To, Source Condition);
+    public sealed record AggregateConnection(AggregateIO To, Source? Condition);
     public abstract class AggregateIO : FIRIO
     {
-        private HashSet<AggregateConnection> Connections = null;
+        private HashSet<AggregateConnection>? Connections = null;
+
+        [MemberNotNullWhen(true, nameof(Connections))]
         public bool HasAggregateConnections => Connections?.Count > 0;
-        public AggregateIO(FIRRTLNode node, string name) : base(node, name) { }
+        public AggregateIO(FIRRTLNode? node, string? name) : base(node, name) { }
 
         public override FIRIO GetSink()
         {
@@ -24,14 +28,14 @@ namespace ChiselDebug.GraphFIR.IO
 
         public abstract FIRIO[] GetIOInOrder();
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source condition = null)
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source? condition = null)
         {
-            var aggIO = input as AggregateIO;
+            var aggIO = (AggregateIO)input;
             AddConnection(aggIO, condition);
             aggIO.AddConnection(this, condition);
         }
 
-        public void AddConnection(AggregateIO aggIO, Source condition)
+        public void AddConnection(AggregateIO aggIO, Source? condition)
         {
             if (Connections == null)
             {

@@ -2,17 +2,19 @@
 using FIRRTL;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using VCDReader;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.IO
 {
     public abstract class ScalarIO : FIRIO
     {
-        public GroundType Type { get; private set; }
+        public GroundType? Type { get; private set; }
         private bool IsInferingTypeNow = false;
-        public ValueType Value;
+        public ValueType? Value;
 
-        public ScalarIO(FIRRTLNode node, string name, IFIRType type) : base(node, name)
+        public ScalarIO(FIRRTLNode? node, string? name, IFIRType? type) : base(node, name)
         {
             if (type is GroundType ground && ground.IsTypeFullyKnown())
             {
@@ -55,7 +57,7 @@ namespace ChiselDebug.GraphFIR.IO
             return this is T ? 1 : 0;
         }
 
-        public override bool TryGetIO(string ioName, out IContainerIO container)
+        public override bool TryGetIO(string ioName, [NotNullWhen(true)] out IContainerIO? container)
         {
             container = null;
             return false;
@@ -98,6 +100,11 @@ namespace ChiselDebug.GraphFIR.IO
 
         public ref BinaryVarValue GetValue()
         {
+            if (Value == null)
+            {
+                throw new InvalidOperationException("Value was not set.");
+            }
+
             return ref Value.Value;
         }
 
@@ -140,7 +147,7 @@ namespace ChiselDebug.GraphFIR.IO
             return Value != null;
         }
 
-        public abstract ScalarIO GetPaired();
+        public abstract ScalarIO? GetPaired();
         public abstract void SetPaired(ScalarIO paired);
     }
 }

@@ -1,6 +1,8 @@
 ﻿using ChiselDebug.GraphFIR.Components;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.IO
 {
@@ -9,13 +11,13 @@ namespace ChiselDebug.GraphFIR.IO
         private readonly FIRIO InIO;
         private readonly FIRIO OutIO;
 
-        public DuplexIO(FIRRTLNode node, string name, FIRIO inIO, FIRIO outIO) : base(node, name)
+        public DuplexIO(FIRRTLNode? node, string? name, FIRIO inIO, FIRIO outIO) : base(node, name)
         {
             this.InIO = inIO;
             this.OutIO = outIO;
         }
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source condition = null)
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source? condition = null)
         {
             throw new Exception("Duplex can't be connected to anything.");
         }
@@ -70,7 +72,7 @@ namespace ChiselDebug.GraphFIR.IO
             return false;
         }
 
-        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)
+        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode? node)
         {
             return flow switch
             {
@@ -82,7 +84,7 @@ namespace ChiselDebug.GraphFIR.IO
             };
         }
 
-        public override bool TryGetIO(string ioName, out IContainerIO container)
+        public override bool TryGetIO(string ioName, [NotNullWhen(true)] out IContainerIO? container)
         {
             if (InIO.Name == ioName)
             {

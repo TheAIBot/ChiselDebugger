@@ -1,6 +1,7 @@
 ﻿using ChiselDebug.GraphFIR.Components;
 using System.Collections.Generic;
 using System.Linq;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.IO
 {
@@ -10,17 +11,17 @@ namespace ChiselDebug.GraphFIR.IO
         private readonly FIRIO InputType;
         private readonly int AddressWidth;
 
-        public MemoryIO(FIRRTLNode node, string name, List<FIRIO> io, FIRIO inputType, int addressWidth) : this(node, name, io, inputType, addressWidth, new List<MemPort>())
+        public MemoryIO(FIRRTLNode? node, string? name, List<FIRIO> io, FIRIO inputType, int addressWidth) : this(node, name, io, inputType, addressWidth, new List<MemPort>())
         { }
 
-        private MemoryIO(FIRRTLNode node, string name, List<FIRIO> io, FIRIO inputType, int addressWidth, List<MemPort> ports) : base(node, name, io)
+        private MemoryIO(FIRRTLNode? node, string? name, List<FIRIO> io, FIRIO inputType, int addressWidth, List<MemPort> ports) : base(node, name, io)
         {
             this.Ports = ports;
             this.InputType = inputType.Copy(null);
             this.AddressWidth = addressWidth;
         }
 
-        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)
+        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode? node)
         {
             return new MemoryIO(node, Name, GetIOInOrder().Select(x => x.ToFlow(flow, node)).ToList(), InputType.ToFlow(flow, node), AddressWidth, Ports.Select(x => (MemPort)x.ToFlow(flow, node)).ToList());
         }

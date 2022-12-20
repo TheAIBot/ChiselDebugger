@@ -5,16 +5,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using VCDReader;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.IO
 {
     public sealed class Source : ScalarIO
     {
-        private List<Sink> To = null;
-        private Sink Paired = null;
+        private List<Sink>? To = null;
+        private Sink? Paired = null;
 
 
-        public Source(FIRRTLNode node, string name, IFIRType type) : base(node, name, type)
+        public Source(FIRRTLNode? node, string? name, IFIRType? type) : base(node, name, type)
         { }
 
         public override bool IsConnectedToAnything()
@@ -32,7 +33,7 @@ namespace ChiselDebug.GraphFIR.IO
             return this;
         }
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source condition = null)
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source? condition = null)
         {
             if (input is Sink ioIn)
             {
@@ -45,7 +46,7 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)
+        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode? node)
         {
             return flow switch
             {

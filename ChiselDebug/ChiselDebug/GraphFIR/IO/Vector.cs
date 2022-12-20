@@ -1,7 +1,9 @@
 ﻿using ChiselDebug.GraphFIR.Components;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.IO
 {
@@ -10,7 +12,7 @@ namespace ChiselDebug.GraphFIR.IO
         private readonly FIRIO[] IO;
         public int Length => IO.Length;
 
-        public Vector(FIRRTLNode node, string name, int length, FIRIO firIO) : base(node, name)
+        public Vector(FIRRTLNode? node, string? name, int length, FIRIO firIO) : base(node, name)
         {
             if (!firIO.IsPassive())
             {
@@ -47,7 +49,7 @@ namespace ChiselDebug.GraphFIR.IO
             return IO.ToArray();
         }
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source condition = null)
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source? condition = null)
         {
             if (input is not Vector)
             {
@@ -81,7 +83,7 @@ namespace ChiselDebug.GraphFIR.IO
             base.ConnectToInput(input, allowPartial, asPassive, condition);
         }
 
-        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)
+        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode? node)
         {
             return new Vector(node, Name, Length, IO[0].ToFlow(flow, node));
         }
@@ -137,7 +139,7 @@ namespace ChiselDebug.GraphFIR.IO
             return IO[0].IsPassiveOfType<T>();
         }
 
-        public override bool TryGetIO(string ioName, out IContainerIO container)
+        public override bool TryGetIO(string ioName, [NotNullWhen(true)] out IContainerIO? container)
         {
             if (int.TryParse(ioName, out int index))
             {

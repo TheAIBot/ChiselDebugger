@@ -2,7 +2,9 @@
 using FIRRTL;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.IO
 {
@@ -10,15 +12,16 @@ namespace ChiselDebug.GraphFIR.IO
     {
         internal readonly FIRIO DataOut;
 
-        public MemReadPort(FIRRTLNode node, FIRIO inputType, int addressWidth, string name) : this(node, name, CreateIO(inputType, addressWidth, node))
+        public MemReadPort(FIRRTLNode? node, FIRIO inputType, int addressWidth, string name) : this(node, name, CreateIO(inputType, addressWidth, node))
         { }
 
-        public MemReadPort(FIRRTLNode node, string name, List<FIRIO> io) : base(node, name, io)
+        public MemReadPort(FIRRTLNode? node, string name, List<FIRIO> io) : base(node, name, io)
         {
+            ArgumentNullException.ThrowIfNull(name);
             this.DataOut = (FIRIO)GetIO("data");
         }
 
-        private static List<FIRIO> CreateIO(FIRIO inputType, int addressWidth, FIRRTLNode node)
+        private static List<FIRIO> CreateIO(FIRIO inputType, int addressWidth, FIRRTLNode? node)
         {
             FIRIO dataOut = inputType.Flip(node);
             dataOut.SetName("data");
@@ -42,12 +45,12 @@ namespace ChiselDebug.GraphFIR.IO
             return DataOut;
         }
 
-        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)
+        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode? node)
         {
-            return new MemReadPort(node, Name, GetIOInOrder().Select(x => x.ToFlow(flow, node)).ToList());
+            return new MemReadPort(node, Name!, GetIOInOrder().Select(x => x.ToFlow(flow, node)).ToList());
         }
 
-        public override bool TryGetIO(string ioName, out IContainerIO container)
+        public override bool TryGetIO(string ioName, [NotNullWhen(true)] out IContainerIO? container)
         {
             if (base.TryGetIO(ioName, out container))
             {

@@ -1,6 +1,8 @@
 ﻿using ChiselDebug.GraphFIR.Components;
 using FIRRTL;
+using System;
 using System.Collections.Generic;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.IO
 {
@@ -10,10 +12,11 @@ namespace ChiselDebug.GraphFIR.IO
         internal readonly FIRIO Enabled;
         internal readonly FIRIO Clock;
         internal bool FromHighLevelFIRRTL = false;
-        private Dictionary<Sink, Sink> DataToMask;
+        private Dictionary<Sink, Sink>? DataToMask;
 
-        public MemPort(FIRRTLNode node, string name, List<FIRIO> io) : base(node, name, io)
+        public MemPort(FIRRTLNode? node, string name, List<FIRIO> io) : base(node, name, io)
         {
+            ArgumentNullException.ThrowIfNull(name);
             this.Address = (FIRIO)GetIO("addr");
             this.Enabled = (FIRIO)GetIO("en");
             this.Clock = (FIRIO)GetIO("clk");
@@ -44,6 +47,11 @@ namespace ChiselDebug.GraphFIR.IO
 
         internal Sink GetMaskFromDataInput(Sink input)
         {
+            if (DataToMask == null)
+            {
+                throw new InvalidOperationException($"{nameof(MemPort)} has not been inititalized.");
+            }
+
             return DataToMask[input];
         }
     }

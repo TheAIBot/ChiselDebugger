@@ -1,7 +1,10 @@
 ﻿using ChiselDebug.GraphFIR.Components;
 using FIRRTL;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.IO
 {
@@ -12,11 +15,12 @@ namespace ChiselDebug.GraphFIR.IO
         internal readonly FIRIO Mask;
         internal readonly FIRIO WriteMode;
 
-        public MemRWPort(FIRRTLNode node, FIRIO inputType, int addressWidth, string name) : this(node, name, CreateIO(inputType, addressWidth, node))
+        public MemRWPort(FIRRTLNode? node, FIRIO inputType, int addressWidth, string name) : this(node, name, CreateIO(inputType, addressWidth, node))
         { }
 
-        public MemRWPort(FIRRTLNode node, string name, List<FIRIO> io) : base(node, name, io)
+        public MemRWPort(FIRRTLNode? node, string name, List<FIRIO> io) : base(node, name, io)
         {
+            ArgumentNullException.ThrowIfNull(name);
             this.DataOut = (FIRIO)GetIO("rdata");
             this.DataIn = (FIRIO)GetIO("wdata");
             this.Mask = (FIRIO)GetIO("wmask");
@@ -25,7 +29,7 @@ namespace ChiselDebug.GraphFIR.IO
             InitDataToMask();
         }
 
-        private static List<FIRIO> CreateIO(FIRIO inputType, int addressWidth, FIRRTLNode node)
+        private static List<FIRIO> CreateIO(FIRIO inputType, int addressWidth, FIRRTLNode? node)
         {
             FIRIO dataOut = inputType.Flip(node);
             dataOut.SetName("rdata");
@@ -59,12 +63,12 @@ namespace ChiselDebug.GraphFIR.IO
             return DataOut;
         }
 
-        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)
+        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode? node)
         {
-            return new MemRWPort(node, Name, GetIOInOrder().Select(x => x.ToFlow(flow, node)).ToList());
+            return new MemRWPort(node, Name!, GetIOInOrder().Select(x => x.ToFlow(flow, node)).ToList());
         }
 
-        public override bool TryGetIO(string ioName, out IContainerIO container)
+        public override bool TryGetIO(string ioName, [NotNullWhen(true)] out IContainerIO? container)
         {
             if (base.TryGetIO(ioName, out container))
             {
@@ -102,7 +106,7 @@ namespace ChiselDebug.GraphFIR.IO
             names.Add("en");
             names.Add("clk");
 
-            return new IOBundle(Node, Name, io, names, false);
+            return new IOBundle(Node, Name!, io, names, false);
         }
 
         internal IOBundle GetAWritePortBundle()
@@ -123,7 +127,7 @@ namespace ChiselDebug.GraphFIR.IO
             names.Add("mask");
             names.Add("valid");
 
-            return new IOBundle(Node, Name, io, names, false);
+            return new IOBundle(Node, Name!, io, names, false);
         }
     }
 }

@@ -1,7 +1,9 @@
 ﻿using ChiselDebug.GraphFIR.Components;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.IO
 {
@@ -10,18 +12,22 @@ namespace ChiselDebug.GraphFIR.IO
         private readonly List<FIRIO> OrderedIO;
         private readonly Dictionary<string, FIRIO> IO = new Dictionary<string, FIRIO>();
 
-        public IOBundle(FIRRTLNode node, string name, List<FIRIO> io) : base(node, name)
+        public IOBundle(FIRRTLNode? node, string? name, List<FIRIO> io) : base(node, name)
         {
             this.OrderedIO = io.ToList();
 
             foreach (var firIO in io)
             {
+                if (firIO.Name == null)
+                {
+                    throw new InvalidOperationException("IO must have a name when connected to a bundle.");
+                }
                 IO.Add(firIO.Name, firIO);
                 firIO.SetParentIO(this);
             }
         }
 
-        public IOBundle(FIRRTLNode node, string name, List<FIRIO> io, List<string> ioNames, bool twoWayRelationship = true) : base(node, name)
+        public IOBundle(FIRRTLNode? node, string name, List<FIRIO> io, List<string> ioNames, bool twoWayRelationship = true) : base(node, name)
         {
             this.OrderedIO = io.ToList();
 
@@ -44,7 +50,7 @@ namespace ChiselDebug.GraphFIR.IO
             return OrderedIO.ToArray();
         }
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source condition = null)
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source? condition = null)
         {
             if (input is not IOBundle)
             {
@@ -103,7 +109,7 @@ namespace ChiselDebug.GraphFIR.IO
             base.ConnectToInput(input, allowPartial, asPassive, condition);
         }
 
-        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)
+        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode? node)
         {
             List<FIRIO> changedFlow = OrderedIO.Select(x => x.ToFlow(flow, node)).ToList();
             return new IOBundle(node, Name, changedFlow);
@@ -170,9 +176,9 @@ namespace ChiselDebug.GraphFIR.IO
             return true;
         }
 
-        public override bool TryGetIO(string ioName, out IContainerIO container)
+        public override bool TryGetIO(string ioName, [NotNullWhen(true)] out IContainerIO? container)
         {
-            if (IO.TryGetValue(ioName, out FIRIO innerIO))
+            if (IO.TryGetValue(ioName, out FIRIO? innerIO))
             {
                 container = innerIO;
                 return true;
@@ -182,8 +188,10 @@ namespace ChiselDebug.GraphFIR.IO
             return false;
         }
 
-        protected void AddIO(string name, FIRIO io)
+        protected void AddIO(string? name, FIRIO io)
         {
+            ArgumentNullException.ThrowIfNull(name);
+
             io.SetParentIO(this);
             OrderedIO.Add(io);
             IO.Add(name, io);

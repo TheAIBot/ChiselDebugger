@@ -6,19 +6,20 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using VCDReader;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.IO
 {
     public sealed class Sink : ScalarIO
     {
-        private Source Con;
+        private Source? Con;
         private RefEnabledList<Connection> CondCons = new RefEnabledList<Connection>();
-        private Source Paired = null;
+        private Source? Paired = null;
 
         public Sink(FIRRTLNode node, IFIRType type) : this(node, null, type)
         { }
 
-        public Sink(FIRRTLNode node, string name, IFIRType type) : base(node, name, type)
+        public Sink(FIRRTLNode? node, string? name, IFIRType? type) : base(node, name, type)
         { }
 
         public void ReplaceConnection(Connection replace, Source replaceWith)
@@ -138,7 +139,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         public void Disconnect(Connection toDisconnect)
         {
-            if (new Connection(Con) == toDisconnect)
+            if (Con != null && new Connection(Con) == toDisconnect)
             {
                 Con.DisconnectOnlyOutputSide(this);
                 Con = null;
@@ -231,12 +232,12 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source condition = null)
+        public override void ConnectToInput(FIRIO input, bool allowPartial = false, bool asPassive = false, Source? condition = null)
         {
             throw new Exception("Input can't be connected to output. Flow is reversed.");
         }
 
-        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode node)
+        public override FIRIO ToFlow(FlowChange flow, FIRRTLNode? node)
         {
             return flow switch
             {
@@ -253,7 +254,7 @@ namespace ChiselDebug.GraphFIR.IO
             return this is T;
         }
 
-        public Source GetEnabledSource()
+        public Source? GetEnabledSource()
         {
             for (int i = CondCons.Count - 1; i >= 0; i--)
             {
@@ -277,6 +278,10 @@ namespace ChiselDebug.GraphFIR.IO
             ValueType enabledValue = FetchValueFromSourceFast();
             if (enabledValue != Value)
             {
+                if (Value == null)
+                {
+                    throw new InvalidOperationException("Value was not initialized.");
+                }
                 Value.UpdateFrom(enabledValue);
             }
         }
@@ -288,21 +293,38 @@ namespace ChiselDebug.GraphFIR.IO
                 ref readonly var condCon = ref CondCons[i];
                 if (condCon.IsEnabled())
                 {
+                    if (condCon.From.Value == null)
+                    {
+                        throw new InvalidOperationException("Value was not initialized.");
+                    }
                     return condCon.From.Value;
                 }
             }
 
             if (Con != null)
             {
+                if (Con.Value == null)
+                {
+                    throw new InvalidOperationException("Value was not initialized.");
+                }
                 return Con.Value;
             }
 
+            if (Value == null)
+            {
+                throw new InvalidOperationException("Value was not initialized.");
+            }
             Value.Value.SetAllUnknown();
             return Value;
         }
 
         public ref BinaryVarValue UpdateValueFromSourceFast()
         {
+            if (Value == null)
+            {
+                throw new InvalidOperationException("Value was not initialized.");
+            }
+
             ValueType enabledValue = FetchValueFromSourceFast();
             if (enabledValue.Value.Length != Value.Value.Length)
             {
@@ -338,7 +360,7 @@ namespace ChiselDebug.GraphFIR.IO
             return ref UpdateValueFromSourceFast();
         }
 
-        public override Source GetPaired()
+        public override Source? GetPaired()
         {
             return Paired;
         }
