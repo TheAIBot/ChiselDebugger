@@ -2,6 +2,8 @@
 using FIRRTL;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.Components
 {
@@ -97,9 +99,9 @@ namespace ChiselDebug.GraphFIR.Components
             }
         }
 
-        public bool TryGetIO(string ioName, out IContainerIO container)
+        public bool TryGetIO(string ioName, [NotNullWhen(true)] out IContainerIO? container)
         {
-            if (MemIO.TryGetIO(ioName, out IContainerIO innerIO))
+            if (MemIO.TryGetIO(ioName, out IContainerIO? innerIO))
             {
                 container = innerIO;
                 return true;

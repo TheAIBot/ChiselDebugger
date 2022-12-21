@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 using VCDReader;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.Components
 {
@@ -48,7 +49,7 @@ namespace ChiselDebug.GraphFIR.Components
 
             Result.SetType(BiArgInferType());
         }
-        protected abstract IFIRType BiArgInferType();
+        protected abstract IFIRType? BiArgInferType();
     }
 
     public abstract class BiArgPrimOpAlwaysPropUnknown : BiArgMonoResPrimOp
@@ -58,6 +59,11 @@ namespace ChiselDebug.GraphFIR.Components
 
         public override void Compute()
         {
+            if (Result.Value == null)
+            {
+                throw new InvalidOperationException($"{nameof(Result)} value not initialized.");
+            }
+
             ValueType a = A.FetchValueFromSourceFast();
             ValueType b = B.FetchValueFromSourceFast();
             if (!a.Value.IsValidBinary || !b.Value.IsValidBinary)
@@ -67,10 +73,10 @@ namespace ChiselDebug.GraphFIR.Components
             }
 
             Result.Value.Value.IsValidBinary = true;
-            BiArgCompute(a, b);
+            BiArgCompute(a, b, Result.Value);
         }
 
-        protected abstract void BiArgCompute(ValueType a, ValueType b);
+        protected abstract void BiArgCompute(ValueType a, ValueType b, ValueType result);
     }
 
     public abstract class BiArgPrimOpCheckPropUnknown : BiArgMonoResPrimOp
@@ -100,12 +106,12 @@ namespace ChiselDebug.GraphFIR.Components
     {
         public FIRAdd(Source aIn, Source bIn, IFIRType outType, FirrtlNode defNode) : base("+", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(ValueType a, ValueType b)
+        protected override void BiArgCompute(ValueType a, ValueType b, ValueType result)
         {
-            Result.SetFromBigInt(a.GetAsBigInt() + b.GetAsBigInt());
+            result.SetFromBigInt(a.GetAsBigInt() + b.GetAsBigInt());
         }
 
-        protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
+        protected override IFIRType? BiArgInferType() => (A.Type, B.Type) switch
         {
             (UIntType a, UIntType b) => new UIntType(Math.Max(a.Width, b.Width) + 1),
             (UIntType a, SIntType b) => new SIntType(Math.Max(a.Width, b.Width) + 1),
@@ -119,12 +125,12 @@ namespace ChiselDebug.GraphFIR.Components
     {
         public FIRSub(Source aIn, Source bIn, IFIRType outType, FirrtlNode defNode) : base("-", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(ValueType a, ValueType b)
+        protected override void BiArgCompute(ValueType a, ValueType b, ValueType result)
         {
-            Result.SetFromBigInt(a.GetAsBigInt() - b.GetAsBigInt());
+            result.SetFromBigInt(a.GetAsBigInt() - b.GetAsBigInt());
         }
 
-        protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
+        protected override IFIRType? BiArgInferType() => (A.Type, B.Type) switch
         {
             (UIntType a, UIntType b) => new SIntType(Math.Max(a.Width, b.Width) + 1),
             (UIntType a, SIntType b) => new SIntType(Math.Max(a.Width, b.Width) + 1),
@@ -138,12 +144,12 @@ namespace ChiselDebug.GraphFIR.Components
     {
         public FIRMul(Source aIn, Source bIn, IFIRType outType, FirrtlNode defNode) : base("*", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(ValueType a, ValueType b)
+        protected override void BiArgCompute(ValueType a, ValueType b, ValueType result)
         {
-            Result.SetFromBigInt(a.GetAsBigInt() * b.GetAsBigInt());
+            result.SetFromBigInt(a.GetAsBigInt() * b.GetAsBigInt());
         }
 
-        protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
+        protected override IFIRType? BiArgInferType() => (A.Type, B.Type) switch
         {
             (UIntType a, UIntType b) => new UIntType(a.Width + b.Width),
             (UIntType a, SIntType b) => new SIntType(a.Width + b.Width),
@@ -157,22 +163,22 @@ namespace ChiselDebug.GraphFIR.Components
     {
         public FIRDiv(Source aIn, Source bIn, IFIRType outType, FirrtlNode defNode) : base("/", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(ValueType a, ValueType b)
+        protected override void BiArgCompute(ValueType a, ValueType b, ValueType result)
         {
             BigInteger aVal = a.GetAsBigInt();
             BigInteger bVal = b.GetAsBigInt();
             //Handle divide by zero
             if (bVal == 0)
             {
-                Result.Value.Value.SetAllUnknown();
+                result.Value.SetAllUnknown();
             }
             else
             {
-                Result.SetFromBigInt(aVal / bVal);
+                result.SetFromBigInt(aVal / bVal);
             }
         }
 
-        protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
+        protected override IFIRType? BiArgInferType() => (A.Type, B.Type) switch
         {
             (UIntType a, UIntType b) => new UIntType(a.Width),
             (UIntType a, SIntType b) => new SIntType(a.Width + 1),
@@ -186,22 +192,22 @@ namespace ChiselDebug.GraphFIR.Components
     {
         public FIRRem(Source aIn, Source bIn, IFIRType outType, FirrtlNode defNode) : base("%", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(ValueType a, ValueType b)
+        protected override void BiArgCompute(ValueType a, ValueType b, ValueType result)
         {
             BigInteger aVal = a.GetAsBigInt();
             BigInteger bVal = b.GetAsBigInt();
             //Handle divide by zero
             if (bVal == 0)
             {
-                Result.Value.Value.SetAllUnknown();
+                result.Value.SetAllUnknown();
             }
             else
             {
-                Result.SetFromBigInt(aVal % bVal);
+                result.SetFromBigInt(aVal % bVal);
             }
         }
 
-        protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
+        protected override IFIRType? BiArgInferType() => (A.Type, B.Type) switch
         {
             (UIntType a, UIntType b) => new UIntType(Math.Min(a.Width, b.Width)),
             (UIntType a, SIntType b) => new UIntType(Math.Min(a.Width, b.Width)),
@@ -223,6 +229,11 @@ namespace ChiselDebug.GraphFIR.Components
                 return;
             }
 
+            if (A.Value == null)
+            {
+                throw new InvalidOperationException("Value not initialized.");
+            }
+
             int shift = b.AsInt();
             result.Bits.Slice(0, shift).Fill(BitState.Zero);
 
@@ -238,7 +249,7 @@ namespace ChiselDebug.GraphFIR.Components
             }
         }
 
-        protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
+        protected override IFIRType? BiArgInferType() => (A.Type, B.Type) switch
         {
             (UIntType a, UIntType b) => new UIntType(a.Width + (1 << b.Width) - 1),
             (SIntType a, UIntType b) => new SIntType(a.Width + (1 << b.Width) - 1),
@@ -258,6 +269,11 @@ namespace ChiselDebug.GraphFIR.Components
                 return;
             }
 
+            if (A.Value == null)
+            {
+                throw new InvalidOperationException("Value not initialized.");
+            }
+
             int shift = b.AsInt();
             result.Bits.Fill(A.Value.IsSigned ? a.Bits[^1] : BitState.Zero);
             a.Bits.Slice(Math.Min(a.Bits.Length - 1, shift), Math.Max(0, a.Bits.Length - shift)).CopyTo(result.Bits);
@@ -268,7 +284,7 @@ namespace ChiselDebug.GraphFIR.Components
             }
         }
 
-        protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
+        protected override IFIRType? BiArgInferType() => (A.Type, B.Type) switch
         {
             (UIntType a, UIntType b) => new UIntType(a.Width),
             (SIntType a, UIntType b) => new SIntType(a.Width),
@@ -291,7 +307,7 @@ namespace ChiselDebug.GraphFIR.Components
             result.IsValidBinary = a.IsValidBinary & b.IsValidBinary;
         }
 
-        protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
+        protected override IFIRType? BiArgInferType() => (A.Type, B.Type) switch
         {
             (UIntType a, UIntType b) => new UIntType(a.Width + b.Width),
             (UIntType a, SIntType b) => new UIntType(a.Width + b.Width),
@@ -305,7 +321,7 @@ namespace ChiselDebug.GraphFIR.Components
     {
         public FIRCompOp(string opName, Source aIn, Source bIn, IFIRType outType, FirrtlNode defNode) : base(opName, aIn, bIn, outType, defNode) { }
 
-        protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
+        protected override IFIRType? BiArgInferType() => (A.Type, B.Type) switch
         {
             (UIntType a, UIntType b) => new UIntType(1),
             (UIntType a, SIntType b) => new UIntType(1),
@@ -319,10 +335,10 @@ namespace ChiselDebug.GraphFIR.Components
     {
         public FIREq(Source aIn, Source bIn, IFIRType outType, FirrtlNode defNode) : base("=", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(ValueType a, ValueType b)
+        protected override void BiArgCompute(ValueType a, ValueType b, ValueType result)
         {
             bool value = a.SameValueAs(b);
-            Result.Value.Value.Bits[0] = value ? BitState.One : BitState.Zero;
+            result.Value.Bits[0] = value ? BitState.One : BitState.Zero;
         }
     }
 
@@ -330,10 +346,10 @@ namespace ChiselDebug.GraphFIR.Components
     {
         public FIRNeq(Source aIn, Source bIn, IFIRType outType, FirrtlNode defNode) : base("≠", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(ValueType a, ValueType b)
+        protected override void BiArgCompute(ValueType a, ValueType b, ValueType result)
         {
             bool value = a.SameValueAs(b);
-            Result.Value.Value.Bits[0] = !value ? BitState.One : BitState.Zero;
+            result.Value.Bits[0] = !value ? BitState.One : BitState.Zero;
         }
     }
 
@@ -341,11 +357,11 @@ namespace ChiselDebug.GraphFIR.Components
     {
         public FIRGeq(Source aIn, Source bIn, IFIRType outType, FirrtlNode defNode) : base("≥", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(ValueType a, ValueType b)
+        protected override void BiArgCompute(ValueType a, ValueType b, ValueType result)
         {
             BigInteger aVal = a.GetAsBigInt();
             BigInteger bVal = b.GetAsBigInt();
-            Result.Value.Value.SetBits(aVal >= bVal ? 1 : 0);
+            result.Value.SetBits(aVal >= bVal ? 1 : 0);
         }
     }
 
@@ -353,11 +369,11 @@ namespace ChiselDebug.GraphFIR.Components
     {
         public FIRLeq(Source aIn, Source bIn, IFIRType outType, FirrtlNode defNode) : base("≤", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(ValueType a, ValueType b)
+        protected override void BiArgCompute(ValueType a, ValueType b, ValueType result)
         {
             BigInteger aVal = a.GetAsBigInt();
             BigInteger bVal = b.GetAsBigInt();
-            Result.Value.Value.SetBits(aVal <= bVal ? 1 : 0);
+            result.Value.SetBits(aVal <= bVal ? 1 : 0);
         }
     }
 
@@ -365,11 +381,11 @@ namespace ChiselDebug.GraphFIR.Components
     {
         public FIRGt(Source aIn, Source bIn, IFIRType outType, FirrtlNode defNode) : base(">", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(ValueType a, ValueType b)
+        protected override void BiArgCompute(ValueType a, ValueType b, ValueType result)
         {
             BigInteger aVal = a.GetAsBigInt();
             BigInteger bVal = b.GetAsBigInt();
-            Result.Value.Value.SetBits(aVal > bVal ? 1 : 0);
+            result.Value.SetBits(aVal > bVal ? 1 : 0);
         }
     }
 
@@ -377,11 +393,11 @@ namespace ChiselDebug.GraphFIR.Components
     {
         public FIRLt(Source aIn, Source bIn, IFIRType outType, FirrtlNode defNode) : base("<", aIn, bIn, outType, defNode) { }
 
-        protected override void BiArgCompute(ValueType a, ValueType b)
+        protected override void BiArgCompute(ValueType a, ValueType b, ValueType result)
         {
             BigInteger aVal = a.GetAsBigInt();
             BigInteger bVal = b.GetAsBigInt();
-            Result.Value.Value.SetBits(aVal < bVal ? 1 : 0);
+            result.Value.SetBits(aVal < bVal ? 1 : 0);
         }
     }
 
@@ -389,7 +405,7 @@ namespace ChiselDebug.GraphFIR.Components
     {
         public FIRBitwise(string opName, Source aIn, Source bIn, IFIRType outType, FirrtlNode defNode) : base(opName, aIn, bIn, outType, defNode) { }
 
-        protected override IFIRType BiArgInferType() => (A.Type, B.Type) switch
+        protected override IFIRType? BiArgInferType() => (A.Type, B.Type) switch
         {
             (UIntType a, UIntType b) => new UIntType(Math.Max(a.Width, b.Width)),
             (UIntType a, SIntType b) => new UIntType(Math.Max(a.Width, b.Width)),
@@ -416,8 +432,13 @@ namespace ChiselDebug.GraphFIR.Components
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
-            void ExtendedBitwise(int length, Sink shorter, Span<BitState> shorterBits, Span<BitState> longerBits, Span<BitState> resultBits)
+            static void ExtendedBitwise(int length, Sink shorter, Span<BitState> shorterBits, Span<BitState> longerBits, Span<BitState> resultBits)
             {
+                if (shorter.Value == null)
+                {
+                    throw new InvalidOperationException("Value not initialized.");
+                }
+
                 BitState shorterEnd = shorter.Value.IsSigned ? shorterBits[^1] : BitState.Zero;
                 for (int i = length; i < longerBits.Length; i++)
                 {
@@ -450,8 +471,13 @@ namespace ChiselDebug.GraphFIR.Components
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
-            void ExtendedBitwise(int length, Sink shorter, Span<BitState> shorterBits, Span<BitState> longerBits, Span<BitState> resultBits)
+            static void ExtendedBitwise(int length, Sink shorter, Span<BitState> shorterBits, Span<BitState> longerBits, Span<BitState> resultBits)
             {
+                if (shorter.Value == null)
+                {
+                    throw new InvalidOperationException("Value not initialized.");
+                }
+
                 BitState shorterEnd = shorter.Value.IsSigned ? shorterBits[^1] : BitState.Zero;
                 for (int i = length; i < longerBits.Length; i++)
                 {
@@ -484,8 +510,13 @@ namespace ChiselDebug.GraphFIR.Components
 
         protected override void BiArgCompute(ref BinaryVarValue a, ref BinaryVarValue b, ref BinaryVarValue result)
         {
-            void ExtendedBitwise(int length, Sink shorter, Span<BitState> shorterBits, Span<BitState> longerBits, Span<BitState> resultBits)
+            static void ExtendedBitwise(int length, Sink shorter, Span<BitState> shorterBits, Span<BitState> longerBits, Span<BitState> resultBits)
             {
+                if (shorter.Value == null)
+                {
+                    throw new InvalidOperationException("Value not initialized.");
+                }
+
                 BitState shorterEnd = shorter.Value.IsSigned ? shorterBits[^1] : BitState.Zero;
                 for (int i = length; i < longerBits.Length; i++)
                 {
@@ -517,6 +548,11 @@ namespace ChiselDebug.GraphFIR.Components
         private readonly int ShiftBy;
         public FIRShl(Source aIn, Source bIn, IFIRType outType, FirrtlNode defNode) : base("<<", aIn, bIn, outType, defNode)
         {
+            if (bIn.Node == null)
+            {
+                throw new InvalidOperationException("Node not set.");
+            }
+
             ShiftBy = (int)((ConstValue)bIn.Node).Value.Value;
         }
 
@@ -534,7 +570,7 @@ namespace ChiselDebug.GraphFIR.Components
             }
         }
 
-        protected override IFIRType BiArgInferType() => A.Type switch
+        protected override IFIRType? BiArgInferType() => A.Type switch
         {
             UIntType a => new UIntType(a.Width + ShiftBy),
             SIntType a => new SIntType(a.Width + ShiftBy),
@@ -547,6 +583,11 @@ namespace ChiselDebug.GraphFIR.Components
         private readonly int ShiftBy;
         public FIRShr(Source aIn, Source bIn, IFIRType outType, FirrtlNode defNode) : base(">>", aIn, bIn, outType, defNode)
         {
+            if (bIn.Node == null)
+            {
+                throw new InvalidOperationException("Node not set.");
+            }
+
             ShiftBy = (int)((ConstValue)bIn.Node).Value.Value;
         }
 
@@ -557,6 +598,11 @@ namespace ChiselDebug.GraphFIR.Components
             //equal to sign bit if signed.
             if (ShiftBy >= a.Bits.Length)
             {
+                if (A.Value == null)
+                {
+                    throw new InvalidOperationException("Value not initialized.");
+                }
+
                 if (!A.Value.IsSigned)
                 {
                     result.Bits[0] = BitState.Zero;
@@ -580,7 +626,7 @@ namespace ChiselDebug.GraphFIR.Components
             }
         }
 
-        protected override IFIRType BiArgInferType() => A.Type switch
+        protected override IFIRType? BiArgInferType() => A.Type switch
         {
             UIntType a => new UIntType(Math.Max(a.Width - ShiftBy, 1)),
             SIntType a => new SIntType(Math.Max(a.Width - ShiftBy, 1)),

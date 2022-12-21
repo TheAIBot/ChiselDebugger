@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using VCDReader;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.Components
 {
@@ -51,14 +52,20 @@ namespace ChiselDebug.GraphFIR.Components
             //Copy input values to outputs
             for (int i = 0; i < VecInputs.Length; i++)
             {
+                Source vecOutput = VecOutputs[i];
+                if (vecOutput.Value == null)
+                {
+                    throw new InvalidOperationException($"{nameof(vecOutput)} value was not initialized.");
+                }
+
                 if (VecInputs[i].IsConnectedToAnything())
                 {
                     ref BinaryVarValue binValue = ref VecInputs[i].UpdateValueFromSourceFast();
-                    VecOutputs[i].Value.UpdateValue(ref binValue);
+                    vecOutput.Value.UpdateValue(ref binValue);
                 }
                 else
                 {
-                    VecOutputs[i].Value.Value.SetAllUnknown();
+                    vecOutput.Value.Value.SetAllUnknown();
                 }
             }
 
@@ -81,8 +88,14 @@ namespace ChiselDebug.GraphFIR.Components
             {
                 if (ValueInputs[i].IsConnectedToAnything())
                 {
+                    Source vecOutput = VecOutputs[index * ValueInputs.Length + i];
+                    if (vecOutput.Value == null)
+                    {
+                        throw new InvalidOperationException($"{nameof(vecOutput)} value was not initialized.");
+                    }
+
                     ref BinaryVarValue binValue = ref ValueInputs[i].UpdateValueFromSourceFast();
-                    VecOutputs[index * ValueInputs.Length + i].Value.UpdateValue(ref binValue);
+                    vecOutput.Value.UpdateValue(ref binValue);
                 }
             }
         }

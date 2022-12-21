@@ -2,8 +2,10 @@
 using FIRRTL;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using VCDReader;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.Components
 {
@@ -14,9 +16,10 @@ namespace ChiselDebug.GraphFIR.Components
         private readonly List<FIRRTLNode> Nodes = new List<FIRRTLNode>();
         private readonly Dictionary<string, FIRIO> NameToIO = new Dictionary<string, FIRIO>();
         private readonly Dictionary<Sink, Wire> DuplexOutputWires = new Dictionary<Sink, Wire>();
-        public Source EnableCon { get; private set; }
-        public bool IsConditional => EnableCon != null;
+        public Source? EnableCon { get; private set; }
 
+        [MemberNotNullWhen(true, nameof(EnableCon))]
+        public bool IsConditional => EnableCon != null;
 
         public Module(string name, string instanceName, Module parentMod, FirrtlNode defNode) : base(defNode)
         {
@@ -68,11 +71,11 @@ namespace ChiselDebug.GraphFIR.Components
         {
             if (IsConditional)
             {
-                ResideIn.AddMemoryPort(port);
+                ResideIn!.AddMemoryPort(port);
             }
             else
             {
-                NameToIO.Add(port.Name, port);
+                NameToIO.Add(port.Name!, port);
             }
         }
 
@@ -82,7 +85,7 @@ namespace ChiselDebug.GraphFIR.Components
             wire.SetModResideIn(this);
 
             DuplexIO wireIO = wire.GetAsDuplex();
-            NameToIO.Add(wireIO.Name, wireIO.GetSource());
+            NameToIO.Add(wireIO.Name!, wireIO.GetSource());
             DuplexOutputWires.Add(input, wire);
 
             return (Source)wireIO.GetSource();
@@ -95,15 +98,15 @@ namespace ChiselDebug.GraphFIR.Components
             return input.GetFullName() + "/out";
         }
 
-        public bool TryGetIOInternal(string ioName, bool lookUp, bool lookDown, out IContainerIO container)
+        public bool TryGetIOInternal(string ioName, bool lookUp, bool lookDown, [NotNullWhen(true)] out IContainerIO? container)
         {
-            if (NameToIO.TryGetValue(ioName, out FIRIO innerIO))
+            if (NameToIO.TryGetValue(ioName, out FIRIO? innerIO))
             {
                 container = innerIO;
                 return true;
             }
 
-            if (InternalIO.TryGetValue(ioName, out FIRIO io))
+            if (InternalIO.TryGetValue(ioName, out FIRIO? io))
             {
                 container = io;
                 return true;
@@ -123,7 +126,7 @@ namespace ChiselDebug.GraphFIR.Components
                 }
             }
 
-            if (lookDown && IsConditional && ResideIn.TryGetIOInternal(ioName, false, true, out container))
+            if (lookDown && IsConditional && ResideIn!.TryGetIOInternal(ioName, false, true, out container))
             {
                 return true;
             }
@@ -132,7 +135,7 @@ namespace ChiselDebug.GraphFIR.Components
             return false;
         }
 
-        public override bool TryGetIO(string ioName, out IContainerIO container)
+        public override bool TryGetIO(string ioName, [NotNullWhen(true)] out IContainerIO? container)
         {
             return TryGetIOInternal(ioName, true, true, out container);
         }

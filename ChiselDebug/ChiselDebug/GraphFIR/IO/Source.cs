@@ -2,8 +2,8 @@
 using FIRRTL;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Numerics;
 using VCDReader;
 #nullable enable
 
@@ -18,6 +18,7 @@ namespace ChiselDebug.GraphFIR.IO
         public Source(FIRRTLNode? node, string? name, IFIRType? type) : base(node, name, type)
         { }
 
+        [MemberNotNullWhen(true, nameof(To))]
         public override bool IsConnectedToAnything()
         {
             return To != null && To.Count > 0;
@@ -94,6 +95,11 @@ namespace ChiselDebug.GraphFIR.IO
 
         internal void DisconnectOnlyOutputSide(Sink input)
         {
+            if (To == null)
+            {
+                throw new InvalidOperationException($"{nameof(To)} is null");
+            }
+
             To.Remove(input);
         }
 
@@ -113,15 +119,15 @@ namespace ChiselDebug.GraphFIR.IO
 
         public override ref BinaryVarValue FetchValue()
         {
+            if (Value == null)
+            {
+                throw new InvalidOperationException("Value not initialized.");
+            }
+
             return ref Value.Value;
         }
 
-        public void SetFromBigInt(in BigInteger newValue)
-        {
-            Value.SetFromBigInt(in newValue);
-        }
-
-        public override Sink GetPaired()
+        public override Sink? GetPaired()
         {
             return Paired;
         }

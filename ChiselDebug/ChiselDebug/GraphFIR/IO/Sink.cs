@@ -16,7 +16,7 @@ namespace ChiselDebug.GraphFIR.IO
         private RefEnabledList<Connection> CondCons = new RefEnabledList<Connection>();
         private Source? Paired = null;
 
-        public Sink(FIRRTLNode node, IFIRType type) : this(node, null, type)
+        public Sink(FIRRTLNode node, IFIRType? type) : this(node, null, type)
         { }
 
         public Sink(FIRRTLNode? node, string? name, IFIRType? type) : base(node, name, type)
@@ -198,7 +198,7 @@ namespace ChiselDebug.GraphFIR.IO
             }
         }
 
-        public void Connect(Source con, Source condition)
+        public void Connect(Source con, Source? condition)
         {
             if (condition != null)
             {

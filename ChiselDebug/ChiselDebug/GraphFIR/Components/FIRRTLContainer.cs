@@ -3,7 +3,9 @@ using FIRRTL;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.Components
 {
@@ -30,6 +32,16 @@ namespace ChiselDebug.GraphFIR.Components
 
         private void AddIO(FIRIO externalIO, FIRIO internalIO)
         {
+            if (externalIO.Name == null)
+            {
+                throw new InvalidOperationException($"{nameof(externalIO)} name is null.");
+            }
+
+            if (internalIO.Name == null)
+            {
+                throw new InvalidOperationException($"{nameof(internalIO)} name is null.");
+            }
+
             Debug.Assert(externalIO.Flatten().All(x => x.Node == this));
             Debug.Assert(internalIO.Flatten().All(x => x.Node == this));
 
@@ -129,7 +141,13 @@ namespace ChiselDebug.GraphFIR.Components
                 {
                     if (flatValue is From tFlatVal)
                     {
-                        filtered.Add((To)tFlatVal.GetPaired());
+                        ScalarIO? fromPairted = tFlatVal.GetPaired();
+                        if (fromPairted == null)
+                        {
+                            throw new InvalidOperationException("IO is not paired.");
+                        }
+
+                        filtered.Add((To)fromPairted);
                     }
                 }
             }
@@ -153,7 +171,7 @@ namespace ChiselDebug.GraphFIR.Components
             throw new NotImplementedException();
         }
 
-        public abstract bool TryGetIO(string ioName, out IContainerIO container);
+        public abstract bool TryGetIO(string ioName, [NotNullWhen(true)] out IContainerIO? container);
 
         public IContainerIO GetIO(string ioName)
         {

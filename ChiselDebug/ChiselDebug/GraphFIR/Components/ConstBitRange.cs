@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using VCDReader;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.Components
 {
@@ -67,7 +68,7 @@ namespace ChiselDebug.GraphFIR.Components
         {
             In.InferType();
 
-            IFIRType type = In.Type switch
+            IFIRType? type = In.Type switch
             {
                 UIntType a => new UIntType(FromMSB),
                 SIntType a => new UIntType(FromMSB),
@@ -99,7 +100,7 @@ namespace ChiselDebug.GraphFIR.Components
         {
             In.InferType();
 
-            IFIRType type = In.Type switch
+            IFIRType? type = In.Type switch
             {
                 UIntType a => new UIntType(a.Width - FromLSB),
                 SIntType a => new UIntType(a.Width - FromLSB),
@@ -133,7 +134,7 @@ namespace ChiselDebug.GraphFIR.Components
         {
             In.InferType();
 
-            IFIRType type = In.Type switch
+            IFIRType? type = In.Type switch
             {
                 UIntType a => new UIntType(EndInclusive - StartInclusive + 1),
                 SIntType a => new UIntType(EndInclusive - StartInclusive + 1),
@@ -157,6 +158,11 @@ namespace ChiselDebug.GraphFIR.Components
 
             if (result.Bits.Length > a.Bits.Length)
             {
+                if (In.Value == null)
+                {
+                    throw new InvalidOperationException($"{nameof(In)} value was not initialized.");
+                }
+
                 BitState signExt = In.Value.IsSigned ? a.Bits[^1] : BitState.Zero;
                 result.Bits.Slice(a.Bits.Length, WidthAfterPad - a.Bits.Length).Fill(signExt);
             }
@@ -168,7 +174,7 @@ namespace ChiselDebug.GraphFIR.Components
         {
             In.InferType();
 
-            IFIRType type = In.Type switch
+            IFIRType? type = In.Type switch
             {
                 UIntType a => new UIntType(Math.Max(a.Width, WidthAfterPad)),
                 SIntType a => new SIntType(Math.Max(a.Width, WidthAfterPad)),

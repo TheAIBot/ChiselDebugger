@@ -1,5 +1,7 @@
 ﻿using ChiselDebug.GraphFIR.IO;
+using System;
 using System.Collections.Generic;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.Components
 {
@@ -34,6 +36,11 @@ namespace ChiselDebug.GraphFIR.Components
 
         public override void Compute()
         {
+            if (Result.Value == null)
+            {
+                throw new InvalidOperationException($"{nameof(Result)} value was not initialized.");
+            }
+
             Result.Value.UpdateValue(ref InIO.UpdateValueFromSourceFast());
         }
 

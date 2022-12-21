@@ -1,9 +1,11 @@
 ﻿using ChiselDebug.GraphFIR.IO;
 using FIRRTL;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 using VCDReader;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.Components
 {
@@ -56,7 +58,7 @@ namespace ChiselDebug.GraphFIR.Components
 
             Result.SetType(MonoArgInferType());
         }
-        protected abstract IFIRType MonoArgInferType();
+        protected abstract IFIRType? MonoArgInferType();
     }
 
     public sealed class FIRAsUInt : MonoArgMonoResPrimOp
@@ -70,7 +72,7 @@ namespace ChiselDebug.GraphFIR.Components
             result.IsValidBinary = a.IsValidBinary;
         }
 
-        protected override IFIRType MonoArgInferType() => A.Type switch
+        protected override IFIRType? MonoArgInferType() => A.Type switch
         {
             UIntType a => new UIntType(a.Width),
             SIntType a => new UIntType(a.Width),
@@ -90,7 +92,7 @@ namespace ChiselDebug.GraphFIR.Components
             result.IsValidBinary = a.IsValidBinary;
         }
 
-        protected override IFIRType MonoArgInferType() => A.Type switch
+        protected override IFIRType? MonoArgInferType() => A.Type switch
         {
             UIntType a => new SIntType(a.Width),
             SIntType a => new SIntType(a.Width),
@@ -110,7 +112,7 @@ namespace ChiselDebug.GraphFIR.Components
             result.IsValidBinary = result.Bits[0].IsBinary();
         }
 
-        protected override IFIRType MonoArgInferType() => A.Type switch
+        protected override IFIRType? MonoArgInferType() => A.Type switch
         {
             UIntType a => new ClockType(),
             SIntType a => new ClockType(),
@@ -125,6 +127,11 @@ namespace ChiselDebug.GraphFIR.Components
 
         protected override void MonoArgCompute(ref BinaryVarValue a, ref BinaryVarValue result)
         {
+            if (A.Value == null)
+            {
+                throw new InvalidOperationException($"{nameof(A)} was not initialized.");
+            }
+
             if (!A.Value.IsSigned)
             {
                 a.Bits.CopyTo(result.Bits);
@@ -138,7 +145,7 @@ namespace ChiselDebug.GraphFIR.Components
             result.IsValidBinary = a.IsValidBinary;
         }
 
-        protected override IFIRType MonoArgInferType() => A.Type switch
+        protected override IFIRType? MonoArgInferType() => A.Type switch
         {
             UIntType a => new SIntType(a.Width + 1),
             SIntType a => new SIntType(a.Width),
@@ -158,11 +165,16 @@ namespace ChiselDebug.GraphFIR.Components
                 return;
             }
 
+            if (A.Value == null)
+            {
+                throw new InvalidOperationException($"{nameof(A)} was not initialized.");
+            }
+
             BigInteger aVal = a.AsBigInteger(A.Value.IsSigned);
             result.SetBitsAndExtend(-aVal);
         }
 
-        protected override IFIRType MonoArgInferType() => A.Type switch
+        protected override IFIRType? MonoArgInferType() => A.Type switch
         {
             UIntType a => new SIntType(a.Width + 1),
             SIntType a => new SIntType(a.Width + 1),
@@ -184,7 +196,7 @@ namespace ChiselDebug.GraphFIR.Components
             result.IsValidBinary = a.IsValidBinary;
         }
 
-        protected override IFIRType MonoArgInferType() => A.Type switch
+        protected override IFIRType? MonoArgInferType() => A.Type switch
         {
             UIntType a => new UIntType(a.Width),
             SIntType a => new UIntType(a.Width),
@@ -213,7 +225,7 @@ namespace ChiselDebug.GraphFIR.Components
             result.Bits[0] = (BitState)value;
         }
 
-        protected override IFIRType MonoArgInferType() => A.Type switch
+        protected override IFIRType? MonoArgInferType() => A.Type switch
         {
             UIntType a => new UIntType(1),
             SIntType a => new UIntType(1),
@@ -242,7 +254,7 @@ namespace ChiselDebug.GraphFIR.Components
             result.Bits[0] = (BitState)value;
         }
 
-        protected override IFIRType MonoArgInferType() => A.Type switch
+        protected override IFIRType? MonoArgInferType() => A.Type switch
         {
             UIntType a => new UIntType(1),
             SIntType a => new UIntType(1),
@@ -271,7 +283,7 @@ namespace ChiselDebug.GraphFIR.Components
             result.Bits[0] = (BitState)value;
         }
 
-        protected override IFIRType MonoArgInferType() => A.Type switch
+        protected override IFIRType? MonoArgInferType() => A.Type switch
         {
             UIntType a => new UIntType(1),
             SIntType a => new UIntType(1),

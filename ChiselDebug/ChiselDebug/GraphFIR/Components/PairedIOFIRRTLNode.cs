@@ -3,6 +3,7 @@ using FIRRTL;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.Components
 {
@@ -10,7 +11,7 @@ namespace ChiselDebug.GraphFIR.Components
     {
         private readonly Dictionary<ScalarIO, List<ScalarIO>> OneToManyPairs = new Dictionary<ScalarIO, List<ScalarIO>>();
 
-        public PairedIOFIRRTLNode(FirrtlNode defNode) : base(defNode)
+        public PairedIOFIRRTLNode(FirrtlNode? defNode) : base(defNode)
         { }
 
         internal void AddPairedIO(FIRIO io, FIRIO ioFlipped)
@@ -41,7 +42,7 @@ namespace ChiselDebug.GraphFIR.Components
 
             for (int i = 0; i < oneIO.Length; i++)
             {
-                List<ScalarIO> pairs;
+                List<ScalarIO>? pairs;
                 if (!OneToManyPairs.TryGetValue(oneIO[i], out pairs))
                 {
                     pairs = new List<ScalarIO>();
@@ -58,9 +59,10 @@ namespace ChiselDebug.GraphFIR.Components
         public ScalarIO[] GetAllPairedIO(ScalarIO io)
         {
             List<ScalarIO> allPairs = new List<ScalarIO>();
-            if (io.GetPaired() != null)
+            ScalarIO? paried = io.GetPaired();
+            if (paried != null)
             {
-                allPairs.Add(io.GetPaired());
+                allPairs.Add(paried);
             }
             if (OneToManyPairs.TryGetValue(io, out var multiplePairs))
             {

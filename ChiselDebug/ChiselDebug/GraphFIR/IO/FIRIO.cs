@@ -10,8 +10,12 @@ namespace ChiselDebug.GraphFIR.IO
     {
         public readonly FIRRTLNode? Node;
         public string? Name { get; private set; }
+
+        [MemberNotNullWhen(false, nameof(Name))]
         public bool IsAnonymous => Name == null;
         public AggregateIO? ParentIO { get; private set; } = null;
+
+        [MemberNotNullWhen(true, nameof(ParentIO))]
         public bool IsPartOfAggregateIO => ParentIO != null;
 
         public FIRIO(FIRRTLNode? node, string? name)
@@ -30,7 +34,7 @@ namespace ChiselDebug.GraphFIR.IO
             ParentIO = aggIO;
         }
 
-        public Module GetModResideIn()
+        public Module? GetModResideIn()
         {
             if (Node == null)
             {

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.Components
 {
@@ -13,7 +14,7 @@ namespace ChiselDebug.GraphFIR.Components
         public readonly FIRIO In;
         public readonly FIRIO Result;
 
-        public Wire(string name, FIRIO inputType, FirrtlNode defNode) : base(defNode)
+        public Wire(string name, FIRIO inputType, FirrtlNode? defNode) : base(defNode)
         {
             if (!inputType.IsPassiveOfType<Sink>())
             {

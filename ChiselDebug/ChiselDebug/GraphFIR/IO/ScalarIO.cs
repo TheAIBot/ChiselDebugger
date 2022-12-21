@@ -63,7 +63,7 @@ namespace ChiselDebug.GraphFIR.IO
             return false;
         }
 
-        public void SetType(IFIRType type)
+        public void SetType(IFIRType? type)
         {
             if (type is GroundType ground && ground.IsTypeFullyKnown())
             {

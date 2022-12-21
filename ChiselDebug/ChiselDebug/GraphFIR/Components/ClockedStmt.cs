@@ -3,6 +3,7 @@ using FIRRTL;
 using System;
 using System.Collections.Generic;
 using VCDReader;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.Components
 {

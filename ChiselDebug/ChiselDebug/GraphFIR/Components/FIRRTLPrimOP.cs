@@ -1,5 +1,6 @@
 ﻿using ChiselDebug.GraphFIR.IO;
 using FIRRTL;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.Components
 {

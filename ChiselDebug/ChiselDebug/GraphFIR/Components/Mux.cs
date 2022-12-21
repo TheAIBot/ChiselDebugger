@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using VCDReader;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.Components
 {
@@ -120,17 +121,29 @@ namespace ChiselDebug.GraphFIR.Components
             {
                 for (int i = 0; i < ResultOutputs.Length; i++)
                 {
-                    ResultOutputs[i].Value.OverrideValue(ref ChosenInputs[i].UpdateValueFromSourceFast());
+                    ValueType? resultOutput = ResultOutputs[i].Value;
+                    if (resultOutput == null)
+                    {
+                        throw new InvalidOperationException($"{nameof(resultOutput)} value not initialized.");
+                    }
+
+                    resultOutput.OverrideValue(ref ChosenInputs[i].UpdateValueFromSourceFast());
                 }
             }
             else
             {
                 for (int i = 0; i < ResultOutputs.Length; i++)
                 {
+                    ValueType? chosenInput = ChosenInputs[i].Value;
+                    if (chosenInput == null)
+                    {
+                        throw new InvalidOperationException($"{nameof(chosenInput)} value not initialized.");
+                    }
+
                     ref BinaryVarValue fromBin = ref ChosenInputs[i].UpdateValueFromSourceFast();
                     ref BinaryVarValue toBin = ref ResultOutputs[i].GetValue();
 
-                    toBin.SetBitsAndExtend(ref fromBin, ChosenInputs[i].Value.IsSigned);
+                    toBin.SetBitsAndExtend(ref fromBin, chosenInput.IsSigned);
                 }
             }
         }
@@ -141,7 +154,13 @@ namespace ChiselDebug.GraphFIR.Components
             {
                 for (int i = 0; i < ResultOutputs.Length; i++)
                 {
-                    ResultOutputs[i].Value.OverrideValue(ref UnknownOutputs[i]);
+                    ValueType? resultOutput = ResultOutputs[i].Value;
+                    if (resultOutput == null)
+                    {
+                        throw new InvalidOperationException($"{nameof(resultOutput)} value not initialized.");
+                    }
+
+                    resultOutput.OverrideValue(ref UnknownOutputs[i]);
                 }
             }
             else
@@ -166,7 +185,13 @@ namespace ChiselDebug.GraphFIR.Components
 
             for (int i = 0; i < UnknownOutputs.Length; i++)
             {
-                UnknownOutputs[i] = new BinaryVarValue(ResultOutputs[i].Type.Width, false);
+                GroundType? resultOutputType = ResultOutputs[i].Type;
+                if (resultOutputType == null)
+                {
+                    throw new InvalidOperationException($"{nameof(resultOutputType)} type not initialized.");
+                }
+
+                UnknownOutputs[i] = new BinaryVarValue(resultOutputType.Width, false);
                 UnknownOutputs[i].SetAllUnknown();
             }
 
@@ -178,7 +203,19 @@ namespace ChiselDebug.GraphFIR.Components
             {
                 for (int x = 0; x < Choises.Length; x++)
                 {
-                    if (ResultOutputs[i].Type.Width != ChoiseInputs[i + x * ResultOutputs.Length].Type.Width)
+                    GroundType? resultOutputType = ResultOutputs[i].Type;
+                    if (resultOutputType == null)
+                    {
+                        throw new InvalidOperationException($"{nameof(resultOutputType)} type not initialized.");
+                    }
+
+                    GroundType? choiceInputType = ChoiseInputs[i + x * ResultOutputs.Length].Type;
+                    if (choiceInputType == null)
+                    {
+                        throw new InvalidOperationException($"{nameof(choiceInputType)} type not initialized.");
+                    }
+
+                    if (resultOutputType.Width != choiceInputType.Width)
                     {
                         noExtension = false;
                         break;

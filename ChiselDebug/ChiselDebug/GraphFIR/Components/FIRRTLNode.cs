@@ -1,20 +1,21 @@
 ﻿using ChiselDebug.GraphFIR.IO;
 using FIRRTL;
 using System.Collections.Generic;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.Components
 {
     public abstract class FIRRTLNode
     {
-        public readonly FirrtlNode FirDefNode;
-        public Module ResideIn { get; private set; }
+        public readonly FirrtlNode? FirDefNode;
+        public Module? ResideIn { get; private set; }
 
-        public FIRRTLNode(FirrtlNode defNode)
+        public FIRRTLNode(FirrtlNode? defNode)
         {
             FirDefNode = defNode;
         }
 
-        public void SetModResideIn(Module mod)
+        public void SetModResideIn(Module? mod)
         {
             ResideIn = mod;
         }

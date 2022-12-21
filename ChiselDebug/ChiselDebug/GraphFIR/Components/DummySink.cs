@@ -1,6 +1,7 @@
 ﻿using ChiselDebug.GraphFIR.IO;
 using System;
 using System.Collections.Generic;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.Components
 {

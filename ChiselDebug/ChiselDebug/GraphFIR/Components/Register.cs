@@ -1,10 +1,9 @@
-﻿#nullable enable
-
-using ChiselDebug.GraphFIR.IO;
+﻿using ChiselDebug.GraphFIR.IO;
 using FIRRTL;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.Components
 {

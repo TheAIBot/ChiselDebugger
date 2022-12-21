@@ -3,6 +3,7 @@ using FIRRTL;
 using System;
 using System.Collections.Generic;
 using VCDReader;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.Components
 {
@@ -35,6 +36,11 @@ namespace ChiselDebug.GraphFIR.Components
 
         public override void Compute()
         {
+            if (Result.Value == null)
+            {
+                throw new InvalidOperationException($"{nameof(Result)} value was not initialized.");
+            }
+
             if (FirstCompute)
             {
                 FirstCompute = false;

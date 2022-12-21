@@ -2,6 +2,8 @@
 using FIRRTL;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+#nullable enable
 
 namespace ChiselDebug.GraphFIR.Components
 {
@@ -58,7 +60,7 @@ namespace ChiselDebug.GraphFIR.Components
             }
         }
 
-        public bool TryGetIO(string ioName, out IContainerIO container)
+        public bool TryGetIO(string ioName, [NotNullWhen(true)] out IContainerIO? container)
         {
             foreach (var condMod in ConditionalModules)
             {
