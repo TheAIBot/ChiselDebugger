@@ -1,13 +1,15 @@
 ﻿using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
+using System;
+using System.Diagnostics.CodeAnalysis;
 using VCDReader;
 
 namespace ChiselDebug.CombGraph
 {
     public struct Computable : ICompute
     {
-        private readonly FIRRTLNode Node;
-        private readonly Source Con;
+        private readonly FIRRTLNode? Node;
+        private readonly Source? Con;
         public readonly bool IsBorderIO;
         private BinaryVarValue OldValue;
 
@@ -29,6 +31,11 @@ namespace ChiselDebug.CombGraph
 
         private void ComputeNode()
         {
+            if (Node == null)
+            {
+                throw new InvalidOperationException($"{nameof(Node)} is null.");
+            }
+
             Node.Compute();
         }
 
@@ -37,7 +44,17 @@ namespace ChiselDebug.CombGraph
             //Copy value from other side of module
             if (IsBorderIO)
             {
-                Sink input = Con.GetPaired();
+                if (Con == null)
+                {
+                    throw new InvalidOperationException($"{nameof(Con)} is null.");
+                }
+
+                if (Con.Value == null)
+                {
+                    throw new InvalidOperationException($"{nameof(Con)} value was not initialized.");
+                }
+
+                Sink input = Con.GetPairedThrowIfNull();
                 if (input.IsConnectedToAnything())
                 {
                     Con.Value.OverrideValue(ref input.UpdateValueFromSourceFast());
@@ -45,7 +62,7 @@ namespace ChiselDebug.CombGraph
             }
         }
 
-        public Source ComputeGetIfChanged()
+        public Source? ComputeGetIfChanged()
         {
             if (Node != null)
             {
@@ -53,6 +70,16 @@ namespace ChiselDebug.CombGraph
             }
             else
             {
+                if (Con == null)
+                {
+                    throw new InvalidOperationException($"{nameof(Con)} is null.");
+                }
+
+                if (Con.Value == null)
+                {
+                    throw new InvalidOperationException($"{nameof(Con)} value was not initialized.");
+                }
+
                 ComputeCon();
 
                 //Did connection value change?
@@ -87,7 +114,17 @@ namespace ChiselDebug.CombGraph
             }
             else
             {
+                if (Con == null)
+                {
+                    throw new InvalidOperationException($"{nameof(Con)} is null.");
+                }
+
                 Con.InferType();
+                if (Con.Type == null)
+                {
+                    throw new InvalidOperationException($"{nameof(Con)} type is null.");
+                }
+
                 Con.SetDefaultvalue();
 
                 OldValue = new BinaryVarValue(Con.Type.Width, false);
@@ -101,21 +138,29 @@ namespace ChiselDebug.CombGraph
             }
         }
 
-        public FIRRTLNode GetNode()
+        public FIRRTLNode? GetNode()
         {
             return Node;
         }
 
-        public Source GetConnection()
+        public Source? GetConnection()
         {
             return Con;
+        }
+
+        [MemberNotNullWhen(true, nameof(Node))]
+        [MemberNotNullWhen(false, nameof(Con))]
+        public bool TryGetNode([NotNullWhen(true)] out FIRRTLNode? node)
+        {
+            node = Node;
+            return Node != null;
         }
 
         public override string ToString()
         {
             if (Con != null)
             {
-                return $"Con: {Con.Node}, Module: {Con.GetModResideIn().Name}, Name: {Con.GetFullName()}";
+                return $"Con: {Con.Node}, Module: {Con.GetModResideIn()?.Name}, Name: {Con.GetFullName()}";
             }
             else
             {

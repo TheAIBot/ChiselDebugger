@@ -15,7 +15,7 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
             {
                 ref readonly var comp = ref oldOrder[i];
 
-                Source con = comp.GetConnection();
+                Source? con = comp.GetConnection();
                 if (con != null)
                 {
                     if (!comp.IsBorderIO)
@@ -23,7 +23,9 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
                         continue;
                     }
 
-                    if (!con.GetPaired().IsConnectedToAnything())
+                    Sink paired = con.GetPairedThrowIfNull();
+
+                    if (!paired.IsConnectedToAnything())
                     {
                         continue;
                     }

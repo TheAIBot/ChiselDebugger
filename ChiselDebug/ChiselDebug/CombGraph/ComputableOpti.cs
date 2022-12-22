@@ -5,8 +5,8 @@ namespace ChiselDebug.CombGraph
 {
     public readonly struct ComputableOpti : ICompute
     {
-        private readonly FIRRTLNode Node;
-        private readonly Source Con;
+        private readonly FIRRTLNode? Node;
+        private readonly Source? Con;
 
         public ComputableOpti(FIRRTLNode node)
         {
@@ -33,11 +33,11 @@ namespace ChiselDebug.CombGraph
 
         private void ComputeCon()
         {
-            Sink input = Con.GetPaired();
+            Sink input = Con.GetPairedThrowIfNull();
             Con.Value.OverrideValue(ref input.UpdateValueFromSourceFast());
         }
 
-        public Source ComputeGetIfChanged()
+        public Source? ComputeGetIfChanged()
         {
             return null;
         }

@@ -49,6 +49,17 @@ namespace ChiselDebug.GraphFIR.IO
             return Node.ResideIn;
         }
 
+        public Module GetModResideInThrowIfNull()
+        {
+            Module? module = GetModResideIn();
+            if (module == null)
+            {
+                throw new InvalidOperationException("The IO has no attached node.");
+            }
+
+            return module;
+        }
+
         public string GetFullName()
         {
             List<string> pathToRoot = new List<string>();

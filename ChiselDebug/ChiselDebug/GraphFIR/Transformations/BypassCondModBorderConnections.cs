@@ -2,6 +2,7 @@
 using ChiselDebug.GraphFIR.IO;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace ChiselDebug.GraphFIR.Transformations
@@ -51,13 +52,13 @@ namespace ChiselDebug.GraphFIR.Transformations
                     }
                     else
                     {
-                        Module condMod = connection.Condition.GetModResideIn();
+                        Module condMod = connection.Condition.GetModResideInThrowIfNull();
                         Sink extIn = (Sink)input.Copy(condMod);
                         Sink intIn = (Sink)input.Copy(condMod);
                         condMod.AddAnonymousExternalIO(extIn);
                         condMod.AddAnonymousInternalIO(intIn);
-                        Source extOut = intIn.GetPaired();
-                        Source intOut = extIn.GetPaired();
+                        Source extOut = intIn.GetPairedThrowIfNull();
+                        Source intOut = extIn.GetPairedThrowIfNull();
 
                         connection.From.ConnectToInput(extIn);
                         intOut.ConnectToInput(intIn);
@@ -111,7 +112,7 @@ namespace ChiselDebug.GraphFIR.Transformations
                                     {
                                         continue;
                                     }
-                                    if (input.GetModResideIn() == mod || containedCondMods.Contains(input.GetModResideIn()))
+                                    if (input.GetModResideIn() == mod || containedCondMods.Contains(input.GetModResideInThrowIfNull()))
                                     {
                                         continue;
                                     }
@@ -126,7 +127,7 @@ namespace ChiselDebug.GraphFIR.Transformations
 
                                         Sink flipped = (Sink)connection.From.Flip(mod);
                                         mod.AddAnonymousInternalIO(flipped);
-                                        Source extOutput = flipped.GetPaired();
+                                        Source extOutput = flipped.GetPairedThrowIfNull();
 
                                         connection.From.ConnectToInput(flipped, false, false, connection.Condition);
                                         input.ReplaceConnection(connection, extOutput);
@@ -139,7 +140,7 @@ namespace ChiselDebug.GraphFIR.Transformations
                         {
                             foreach (var connection in input.GetConnections())
                             {
-                                if (connection.From.GetModResideIn() == mod || containedCondMods.Contains(connection.From.GetModResideIn()))
+                                if (connection.From.GetModResideIn() == mod || containedCondMods.Contains(connection.From.GetModResideInThrowIfNull()))
                                 {
                                     continue;
                                 }
@@ -154,7 +155,7 @@ namespace ChiselDebug.GraphFIR.Transformations
 
                                     Sink flipped = (Sink)connection.From.Flip(mod);
                                     mod.AddAnonymousExternalIO(flipped);
-                                    Source intOutput = flipped.GetPaired();
+                                    Source intOutput = flipped.GetPairedThrowIfNull();
 
                                     connection.From.ConnectToInput(flipped, false, false, connection.Condition);
                                     input.ReplaceConnection(connection, intOutput);
@@ -181,7 +182,7 @@ namespace ChiselDebug.GraphFIR.Transformations
                     bool needToBypass = true;
                     foreach (var ioConnection in ioConnections)
                     {
-                        if (ioConnection.input.GetModResideIn() == mod || containedCondMods.Contains(ioConnection.input.GetModResideIn()))
+                        if (ioConnection.input.GetModResideIn() == mod || containedCondMods.Contains(ioConnection.input.GetModResideInThrowIfNull()))
                         {
                             needToBypass = false;
                             break;
@@ -195,7 +196,7 @@ namespace ChiselDebug.GraphFIR.Transformations
 
                     FIRIO flipped = io.Flip(mod);
                     mod.AddAnonymousInternalIO(flipped);
-                    AggregateIO extAggIO = flipped.Flatten().First().GetPaired().ParentIO;
+                    AggregateIO extAggIO = flipped.Flatten().First().GetPairedThrowIfNull().ParentIO;
 
                     io.ConnectToInput(flipped, false, false, endpointConnection.Condition);
                     endpointConnection.To.ReplaceConnection(io, extAggIO, endpointConnection.Condition);
@@ -205,7 +206,7 @@ namespace ChiselDebug.GraphFIR.Transformations
                     bool needToBypass = true;
                     foreach (var ioConnection in ioConnections)
                     {
-                        if (ioConnection.output.GetModResideIn() == mod || containedCondMods.Contains(ioConnection.output.GetModResideIn()))
+                        if (ioConnection.output.GetModResideIn() == mod || containedCondMods.Contains(ioConnection.output.GetModResideInThrowIfNull()))
                         {
                             needToBypass = false;
                             break;
@@ -225,7 +226,7 @@ namespace ChiselDebug.GraphFIR.Transformations
 
                     FIRIO flipped = io.Flip(mod);
                     mod.AddAnonymousInternalIO(flipped);
-                    AggregateIO extAggIO = flipped.Flatten().First().GetPaired().ParentIO;
+                    AggregateIO extAggIO = flipped.Flatten().First().GetPairedThrowIfNull().ParentIO;
 
                     endpointConnection.To.ConnectToInput(extAggIO, false, false, endpointConnection.Condition);
                     io.ReplaceConnection(endpointConnection.To, flipped as AggregateIO, endpointConnection.Condition);
@@ -237,7 +238,7 @@ namespace ChiselDebug.GraphFIR.Transformations
             }
         }
 
-        private static bool TryIsIOPassiveAggWithSingleAggEndpoint(FIRIO io, out AggregateConnection[] endpointConnections)
+        private static bool TryIsIOPassiveAggWithSingleAggEndpoint(FIRIO io, [NotNullWhen(true)] out AggregateConnection[]? endpointConnections)
         {
             if (io is not AggregateIO aggIO)
             {

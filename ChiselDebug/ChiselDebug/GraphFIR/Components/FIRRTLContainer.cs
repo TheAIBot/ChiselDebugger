@@ -141,11 +141,7 @@ namespace ChiselDebug.GraphFIR.Components
                 {
                     if (flatValue is From tFlatVal)
                     {
-                        ScalarIO? fromPairted = tFlatVal.GetPaired();
-                        if (fromPairted == null)
-                        {
-                            throw new InvalidOperationException("IO is not paired.");
-                        }
+                        ScalarIO fromPairted = tFlatVal.GetPairedThrowIfNull();
 
                         filtered.Add((To)fromPairted);
                     }

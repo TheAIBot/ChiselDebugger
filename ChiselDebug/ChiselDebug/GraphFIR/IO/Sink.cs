@@ -365,6 +365,16 @@ namespace ChiselDebug.GraphFIR.IO
             return Paired;
         }
 
+        public override Source GetPairedThrowIfNull()
+        {
+            if (Paired == null)
+            {
+                throw new InvalidOperationException("IO is not paired.");
+            }
+
+            return Paired;
+        }
+
         public override void SetPaired(ScalarIO paired)
         {
             Paired = (Source)paired;

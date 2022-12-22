@@ -15,7 +15,7 @@ namespace ChiselDebug.CombGraph
             {
                 foreach (var output in childMod.GetInternalSources())
                 {
-                    Sink paired = output.GetPaired();
+                    Sink paired = output.GetPairedThrowIfNull();
                     if (output.IsConnectedToAnything() && !paired.IsConnectedToAnything())
                     {
                         startingPoints.Add(output);
@@ -23,7 +23,7 @@ namespace ChiselDebug.CombGraph
                 }
                 foreach (var input in childMod.GetInternalSinks())
                 {
-                    Source paired = input.GetPaired();
+                    Source paired = input.GetPairedThrowIfNull();
                     if (paired.IsConnectedToAnything() && !input.IsConnectedToAnything())
                     {
                         startingPoints.Add(paired);
@@ -34,7 +34,7 @@ namespace ChiselDebug.CombGraph
             {
                 foreach (var output in wire.GetSources())
                 {
-                    Sink paired = output.GetPaired();
+                    Sink paired = output.GetPairedThrowIfNull();
                     if (!paired.IsConnectedToAnything())
                     {
                         startingPoints.Add(output);
@@ -229,7 +229,7 @@ namespace ChiselDebug.CombGraph
 
         protected override void AddUnblockedToSearch(Sink target, Action<Source> addSinkToSearch, List<Computable> computeOrder)
         {
-            addSinkToSearch(target.GetPaired());
+            addSinkToSearch(target.GetPairedThrowIfNull());
         }
     }
 

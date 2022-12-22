@@ -6,11 +6,11 @@ namespace ChiselDebug.CombGraph
     public interface ICompute
     {
         void Compute();
-        Source ComputeGetIfChanged();
+        Source? ComputeGetIfChanged();
         void InferType();
 
-        FIRRTLNode GetNode();
+        FIRRTLNode? GetNode();
 
-        Source GetConnection();
+        Source? GetConnection();
     }
 }

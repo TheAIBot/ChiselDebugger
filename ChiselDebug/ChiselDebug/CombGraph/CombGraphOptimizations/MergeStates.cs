@@ -2,6 +2,7 @@
 using ChiselDebug.GraphFIR.IO;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ChiselDebug.CombGraph.CombGraphOptimizations
 {
@@ -16,13 +17,12 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
             {
                 Computable comp = oldOrder[i];
 
-                FIRRTLNode node = comp.GetNode();
-                if (node != null)
+                if (comp.TryGetNode(out FIRRTLNode? node))
                 {
                     MergeNodeSinks(node);
                     newOrder.Add(comp);
                 }
-                else if (!TryMergeBorderPass(comp.GetConnection()))
+                else if (!TryMergeBorderPass(comp.GetConnection()!))
                 {
                     newOrder.Add(comp);
                 }
@@ -35,7 +35,7 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
         {
             foreach (var input in node.GetSinks())
             {
-                if (CanMergeSourceAndSink(input, out Source source))
+                if (CanMergeSourceAndSink(input, out Source? source))
                 {
                     input.Value = source.Value;
                 }
@@ -44,8 +44,8 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
 
         private static bool TryMergeBorderPass(Source passSource)
         {
-            Sink paired = passSource.GetPaired();
-            if (CanMergeSourceAndSink(paired, out Source source))
+            Sink paired = passSource.GetPairedThrowIfNull();
+            if (CanMergeSourceAndSink(paired, out Source? source))
             {
                 paired.Value = source.Value;
                 passSource.Value = source.Value;
@@ -55,7 +55,7 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
             return false;
         }
 
-        private static bool CanMergeSourceAndSink(Sink input, out Source source)
+        private static bool CanMergeSourceAndSink(Sink input, [NotNullWhen(true)] out Source? source)
         {
             Connection[] cons = input.GetConnections();
             if (cons.Length != 1)

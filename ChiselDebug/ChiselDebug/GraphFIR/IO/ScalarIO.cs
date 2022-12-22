@@ -148,6 +148,7 @@ namespace ChiselDebug.GraphFIR.IO
         }
 
         public abstract ScalarIO? GetPaired();
+        public abstract ScalarIO GetPairedThrowIfNull();
         public abstract void SetPaired(ScalarIO paired);
     }
 }
