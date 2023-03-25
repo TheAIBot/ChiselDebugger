@@ -1,13 +1,21 @@
 ﻿.register {
     position: absolute;
-    display: inline-block;
-    outline: 2px solid black;
-    outline-offset: -1px;
+    display: inline-flex;
+    flex-direction: column;
+    border-radius: 4px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
     text-align: center;
 }
 
-.registerName {
+.registerContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     padding: 5px;
+}
+
+.registerName {
     line-height: 1;
     font-weight: bold;
+    margin-bottom: 5px;
 }

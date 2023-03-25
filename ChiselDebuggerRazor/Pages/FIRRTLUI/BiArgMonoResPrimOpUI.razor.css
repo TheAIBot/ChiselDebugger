@@ -2,8 +2,6 @@
     position: absolute;
     display: inline-flex;
     flex-direction: column;
-    background-color: #f0f0f0;
-    border: 2px solid black;
     border-radius: 4px;
     font-family: monospace;
     padding: 4px;
