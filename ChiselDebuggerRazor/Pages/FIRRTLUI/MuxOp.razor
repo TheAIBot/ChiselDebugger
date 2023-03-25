@@ -1,7 +1,17 @@
 ﻿@inherits FIRBase<Mux>
 
 <div id="@SizeWatcherID" class="muxContainer" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();">
-    <div class="muxShape" style="height:@GetCurrentSize().Y.ToPixels();"></div>
+    <div class="muxShapeContainer" style="height:@GetCurrentSize().Y.ToPixels();">
+        <svg class="muxShape" viewBox="0 0 @WIDTH @GetCurrentSize().Y" preserveAspectRatio="xMidYMid meet">
+            <defs>
+                <linearGradient id="muxGradient" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
+                    <stop offset="0%" style="stop-color:#4c4c4c; stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#8c8c8c; stop-opacity:1" />
+                </linearGradient>
+            </defs>
+            <polygon points="0,0 @WIDTH,@INDENT @WIDTH,@(GetCurrentSize().Y - INDENT) 0,@GetCurrentSize().Y" fill="url(#muxGradient)" />
+        </svg>
+    </div>
 
     @if (DeciderIO != null)
     {
@@ -10,9 +20,6 @@
     <ScopedIOUI NodeIO="@ChoiseIO"></ScopedIOUI>
     <ScopedIOUI NodeIO="@ResultIO"></ScopedIOUI>
 </div>
-
-
-
 
 @code
 {
@@ -32,6 +39,17 @@
 
         return base.OnFirstParametersSetAsync();
     }
+
+    //protected override Task OnAfterRenderAsync(bool firstRender)
+    //{
+    //    if (firstRender)
+    //    {
+    //        StateHasChanged();
+    //        InvokestateHasChanged();
+    //    }
+
+    //    return base.OnAfterRenderAsync(firstRender);
+    //}
 
     protected override DirectedIO[] OnMakeSinks(int width, int height)
     {
