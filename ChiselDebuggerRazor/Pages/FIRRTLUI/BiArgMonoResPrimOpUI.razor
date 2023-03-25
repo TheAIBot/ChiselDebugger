@@ -1,19 +1,15 @@
 ﻿@inherits FIRBase<BiArgMonoResPrimOp>
 
 <div id="@SizeWatcherID" class="primOp" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();">
-    <div style="padding:@ContentPadding.ToPixels();">
-        <table>
-            <tr>
-                <td class="primOpSymbol" rowspan="2" colspan="2">@Operation.OpName</td>
-                <td>@Operation.A.UpdateValueFromSourceFast().BitsToString()</td>
-            </tr>
-            <tr>
-                <td>@Operation.B.UpdateValueFromSourceFast().BitsToString()</td>
-            </tr>
-            <tr>
-                <td colspan="3">@Operation.Result.Value.ToBinaryString()</td>
-            </tr>
-        </table>
+    <div class="content" style="padding:@ContentPadding.ToPixels();">
+        <div class="operation">
+            <span class="primOpSymbol">@Operation.OpName</span>
+            <div class="inputs-result">
+                <div>@Operation.A.UpdateValueFromSourceFast().BitsToString()</div>
+                <div>@Operation.B.UpdateValueFromSourceFast().BitsToString()</div>
+                <div class="result">@Operation.Result.Value.ToBinaryString()</div>
+            </div>
+        </div>
     </div>
 
     @foreach (var input in SinkOffsets)

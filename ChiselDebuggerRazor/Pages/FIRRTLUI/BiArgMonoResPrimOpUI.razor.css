@@ -1,22 +1,43 @@
 ﻿.primOp {
     position: absolute;
-    display: inline-block;
-    outline: 2px solid black;
-    outline-offset: -1px;
+    display: inline-flex;
+    flex-direction: column;
+    background-color: #f0f0f0;
+    border: 2px solid black;
+    border-radius: 4px;
     font-family: monospace;
-    line-height: 1;
+    padding: 4px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-.primOp tr {
+.content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.operation {
+    display: flex;
+    align-items: center;
+}
+
+.inputs-result {
+    display: grid;
+    grid-template-rows: repeat(3, auto);
+    align-items: center;
+    justify-items: end;
+    margin-left: 4px;
+}
+
+.result {
     text-align: right;
-}
-
-.primOp tr:last-of-type td {
     text-decoration: overline;
+    font-size: 1em;
+    grid-row: 3;
 }
 
 .primOpSymbol {
     text-align: center;
-    font-size: 2em;
-    line-height: 1;
+    font-size: 1.5em;
+    margin-right: 4px;
 }
