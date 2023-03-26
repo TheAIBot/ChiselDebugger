@@ -42,19 +42,19 @@ a, .btn-link {
     z-index: 1000;
 }
 
-#blazor-error-ui .dismiss {
-    cursor: pointer;
-    position: absolute;
-    right: 0.75rem;
-    top: 0.5rem;
-}
+    #blazor-error-ui .dismiss {
+        cursor: pointer;
+        position: absolute;
+        right: 0.75rem;
+        top: 0.5rem;
+    }
 
 .combinational {
     background-color: #cce1f5;
-    border: 2px solid #3a7bd5;
+    outline: 2px solid #3a7bd5;
 }
 
 .sequential {
     background-color: #d1ecd8;
-    border: 2px solid #555;
+    outline: 2px solid #555;
 }
