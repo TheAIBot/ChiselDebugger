@@ -1,4 +1,5 @@
-﻿@inherits FIRBase<BiArgMonoResPrimOp>
+﻿@using VCDReader;
+@inherits FIRBase<BiArgMonoResPrimOp>
 
 <div id="@SizeWatcherID" class="component primOp sequential" style="left:@Position.X.ToPixels();top:@Position.Y.ToPixels();min-width:@GetCurrentSize().X.ToPixels();min-height:@GetCurrentSize().Y.ToPixels();">
     <button id="switchBase" class="switch-base-btn" @onclick="SwitchBase">
@@ -10,17 +11,9 @@
             <span class="primOpSymbol">@Operation.OpName</span>
             <div class="inputs-result-container">
                 <div class="inputs-result">
-                    @if (ShowAsBinary)
-                    {
-                        <div>@Operation.A.UpdateValueFromSourceFast().BitsToString()</div>
-                        <div>@Operation.B.UpdateValueFromSourceFast().BitsToString()</div>
-                        <div class="result">@Operation.Result.Value.ToBinaryString()</div>
-                    } else
-                    {
-                        <div>@BinToDec(Operation.A.UpdateValueFromSourceFast().BitsToString())</div>
-                        <div>@BinToDec(Operation.B.UpdateValueFromSourceFast().BitsToString())</div>
-                        <div class="result">@BinToDec(Operation.Result.Value.ToBinaryString())</div>
-                    }
+                    <div>@ToDisplayBase(ref Operation.A.UpdateValueFromSourceFast())</div>
+                    <div>@ToDisplayBase(ref Operation.B.UpdateValueFromSourceFast())</div>
+                    <div class="result">@ToDisplayBase(ref Operation.Result.Value.GetValue())</div>
                 </div>
             </div>
         </div>
@@ -97,18 +90,25 @@
         return Task.CompletedTask;
     }
 
-    public string BinToDec(string value)
+    public string ToDisplayBase(ref BinaryVarValue value)
     {
-        // BigInteger can be found in the System.Numerics dll
-        BigInteger res = 0;
-
-        // I'm totally skipping error handling here
-        foreach (char c in value)
+        if (ShowAsBinary)
         {
-            res <<= 1;
-            res += c == '1' ? 1 : 0;
+            return value.BitsToString();
         }
 
-        return res.ToString();
+        BigInteger result = 0;
+        foreach (BitState bit in value.Bits)
+        {
+            if (!bit.IsBinary())
+            {
+                return "X";
+            }
+
+            result <<= 1;
+            result += bit == BitState.One ? 1 : 0;
+        }
+
+        return result.ToString();
     }
 }

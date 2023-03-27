@@ -61,6 +61,11 @@ namespace ChiselDebug.GraphFIR
             Value.SetBitsAndExtend(in newValue);
         }
 
+        public ref BinaryVarValue GetValue()
+        {
+            return ref Value;
+        }
+
         public string ToBinaryString()
         {
             ValueString = ValueString ?? Value.BitsToString();
