@@ -16,7 +16,9 @@
 
 .operation {
     display: flex;
+    justify-content: space-between;
     align-items: center;
+    width: 100%;
 }
 
 .inputs-result {
@@ -24,7 +26,6 @@
     grid-template-rows: repeat(3, auto);
     align-items: center;
     justify-items: end;
-    margin-left: 4px;
 }
 
 .result {
@@ -38,4 +39,39 @@
     text-align: center;
     font-size: 1.5em;
     margin-right: 4px;
+}
+
+.switch-base-btn {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    font-size: 0.8em;
+    border: 1px solid #555;
+    border-radius: 4px;
+    background-color: #f0f0f0;
+    padding: 4px;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.switch-base-btn .oi {
+    font-size: 14px;
+    color: #555;
+}
+
+.switch-base-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.switch-base-btn:active {
+    background-color: #d0d0d0;
+}
+
+.switch-base-btn:active, .switch-base-btn:focus {
+    outline: none;
+    border: none;
 }
