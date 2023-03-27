@@ -1,4 +1,5 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
+@import url('logic-circuit-component.css');
 
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -42,36 +43,9 @@ a, .btn-link {
     z-index: 1000;
 }
 
-    #blazor-error-ui .dismiss {
-        cursor: pointer;
-        position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
-    }
-
-.combinational {
-    background-color: #cce1f5;
-    outline: 2px solid #3a7bd5;
-}
-
-.sequential {
-    background-color: #d1ecd8;
-    outline: 2px solid #555;
-}
-
-.component {
+#blazor-error-ui .dismiss {
+    cursor: pointer;
     position: absolute;
-    display: inline-flex;
-    flex-direction: column;
-    outline: 2px solid black;
-    outline-offset: -1px;
-    border-radius: 4px;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
-    text-align: center;
-}
-
-.componentName {
-    line-height: 1;
-    font-weight: bold;
-    margin-bottom: 5px;
+    right: 0.75rem;
+    top: 0.5rem;
 }

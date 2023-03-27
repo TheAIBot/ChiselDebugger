@@ -1,0 +1,26 @@
+﻿.combinational {
+    background-color: #cce1f5;
+    outline: 2px solid #3a7bd5;
+}
+
+.sequential {
+    background-color: #d1ecd8;
+    outline: 2px solid #555;
+}
+
+.component {
+    position: absolute;
+    display: inline-flex;
+    flex-direction: column;
+    outline: 2px solid black;
+    outline-offset: -1px;
+    border-radius: 4px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+.componentName {
+    line-height: 1;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
