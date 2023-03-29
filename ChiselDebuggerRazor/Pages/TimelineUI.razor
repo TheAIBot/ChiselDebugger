@@ -5,24 +5,24 @@
 @inject IJSRuntime JS
 @inherits ManualRenderBase
 
-<div class="sideBySide">
-    <div class="timelineControlsContent">
-        <input class="timelineTimeInput" type="number" min="@AllTimes.First()" max="@AllTimes.Last()" value="@CurrTime" pattern="\d+" title="Positive numbers only." @oninput="TimeChanged" />
-        <div class="sideBySide">
-            <div class="timelineButton" @onclick="PreviousTime">&lt;</div>
-            <div class="timelineButton" @onclick="NextTime">&gt;</div>
+<div class="timeline-container">
+    <div class="timeline-controls">
+        <input class="timeline-time-input" type="number" min="@AllTimes.First()" max="@AllTimes.Last()" value="@CurrTime" pattern="\d+" title="Positive numbers only." @oninput="TimeChanged" />
+        <div class="timeline-buttons">
+            <button class="timeline-button" @onclick="PreviousTime">&lt;</button>
+            <button class="timeline-button" @onclick="NextTime">&gt;</button>
         </div>
     </div>
-    <div class="timelineRangeContent">
-        <div class="ticksPadding">
-            <div id="@RangeDivID" class="rangeSelect" @ref="RangeDiv" @onmousedown="RangeSelectStarted" @ondblclick="ResetRange">
-                <div class="rangeStart" style="width: @GetPixels(Math.Min(StartRangeSelect, EndRangeSelect)).ToPixels();"></div>
-                <div class="rangeStop" style="left: @GetPixels(Math.Max(StartRangeSelect, EndRangeSelect)).ToPixels();"></div>
+    <div class="timeline-range">
+        <div class="ticks-padding">
+            <div id="@RangeDivID" class="range-select" @ref="RangeDiv" @onmousedown="RangeSelectStarted" @ondblclick="ResetRange">
+                <div class="range-start" style="width: @GetPixels(Math.Min(StartRangeSelect, EndRangeSelect)).ToPixels();"></div>
+                <div class="range-stop" style="left: @GetPixels(Math.Max(StartRangeSelect, EndRangeSelect)).ToPixels();"></div>
             </div>
         </div>
-        <input class="timeline" type="range" min="@StartTime" max="@EndTime" value="@CurrTime" list="steplist" @oninput="TimeChanged" />
-        <div class="ticksPadding">
-            <div class="ticksList">
+        <input class="timeline-slider" type="range" min="@StartTime" max="@EndTime" value="@CurrTime" list="steplist" @oninput="TimeChanged" />
+        <div class="ticks-padding">
+            <div class="ticks-list">
                 @foreach (var time in TimeSteps)
                 {
                     <tick style="left: @($"{GetXPercent(time).ToPercent()}"); top: 0px;">@time.ToStringWithDots()</tick>
@@ -30,14 +30,8 @@
             </div>
         </div>
     </div>
-
-    <datalist id="steplist">
-        @foreach (var time in TimeSteps)
-        {
-            <option value="@time"></option>
-        }
-    </datalist>
 </div>
+
 
 @code {
     [Parameter]

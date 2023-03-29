@@ -1,46 +1,56 @@
-﻿.sideBySide {
+﻿.timeline-container {
     display: flex;
-    flex-direction: row;
+    align-items: center;
+    padding: 8px;
 }
 
-.timelineControlsContent {
-    flex-grow: 1;
-    width: 10%;
-    padding-left: 5px;
-    padding-right: 5px;
+.timeline-controls {
+    display: flex;
+    align-items: center;
+    margin-right: 16px;
 }
 
-.timelineRangeContent {
-    flex-grow: 1;
-    width: 90%;
-    padding-left: 5px;
-    padding-right: 5px;
-}
-
-.timelineTimeInput {
+.timeline-time-input {
     width: 100%;
-    margin-bottom: 5px;
+    margin-right: 8px;
+    padding: 4px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
 }
 
-.timelineButton {
-    flex-grow: 1;
-    cursor: pointer;
-    border: thin solid #000000;
-    border-radius: 3px;
-    background-color: #b2b2b2;
-    text-align: center;
+.timeline-buttons {
+    display: flex;
+}
+
+.timeline-button {
+    border: none;
+    background-color: #007bff;
+    color: white;
     font-size: 1.5em;
-    margin: 5px;
+    padding: 2px 8px;
+    margin-left: 4px;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
-.rangeSelect {
-    min-width: 100%;
-    max-width: 100%;
+.timeline-button:hover {
+    background-color: #0056b3;
+}
+
+.timeline-range {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.range-select {
+    width: 100%;
     height: 50px;
     position: relative;
 }
 
-.rangeStart {
+.range-start {
     height: 50px;
     position: absolute;
     top: 0px;
@@ -49,7 +59,7 @@
     border-right: thin solid #000000;
 }
 
-.rangeStop {
+.range-stop {
     height: 50px;
     position: absolute;
     top: 0px;
@@ -58,16 +68,17 @@
     border-left: thin solid #000000;
 }
 
-.timeline {
+.timeline-slider {
     width: 100%;
+    margin-bottom: 8px;
 }
 
-.ticksPadding {
+.ticks-padding {
     padding-left: 10px;
     padding-right: 10px;
 }
 
-.ticksList {
+.ticks-list {
     width: 100%;
     position: relative;
     height: 2em;
