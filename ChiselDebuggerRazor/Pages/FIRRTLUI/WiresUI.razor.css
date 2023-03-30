@@ -9,6 +9,8 @@
 
 .wire {
     stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
 }
 
 .wireHoverArea {
@@ -23,7 +25,8 @@
 }
 
 .wireElement {
-    stroke: black;
+    stroke: #212121;
+    transition: stroke 0.3s ease;
 }
 
 .wireGroup {
@@ -31,5 +34,9 @@
 }
 
 .wireGroup:hover > .wireElement {
-    stroke: orange !important;
+    stroke: #FFA726 !important;
+}
+
+.wireGroup:hover > .wireElement {
+    stroke: #FFA726 !important;
 }
