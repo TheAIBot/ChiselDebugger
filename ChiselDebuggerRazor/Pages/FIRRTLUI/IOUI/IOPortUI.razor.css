@@ -2,7 +2,8 @@
     position: absolute;
     height: 6px;
     width: 6px;
-    background-color: #aaa;
+    background-image: radial-gradient(circle at 50%, #bbb, #999);
     border-radius: 50%;
+    box-shadow: 0 0 1px rgba(0, 0, 0, 0.15);
     z-index: 1;
 }
