@@ -4,8 +4,8 @@
     <TargetFramework>net8.0</TargetFramework>
 	<PlatformTarget>x64</PlatformTarget>
     <Nullable>disable</Nullable>
-    <PublishTrimmed>true</PublishTrimmed>
-    <TrimMode>link</TrimMode>
+    <PublishTrimmed>false</PublishTrimmed>
+    <TrimMode>false</TrimMode>
   </PropertyGroup>
 
   <ItemGroup>
