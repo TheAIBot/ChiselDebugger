@@ -4,6 +4,7 @@ using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -18,7 +19,7 @@ namespace ChiselDebug.GraphFIR.Circuit
         public readonly Module MainModule;
         public readonly CombComputeOrder<Computable> ComputeGraph;
         public readonly CombComputeOrder<ComputableOpti> OptimizedComputegraph;
-        private readonly Dictionary<VarDef, ScalarIO> VarDefToCon = new Dictionary<VarDef, ScalarIO>();
+        private readonly Dictionary<VarDef, ScalarIO?> VarDefToCon = new Dictionary<VarDef, ScalarIO?>();
         private readonly HashSet<Source> ComputeAllowsUpdate = new HashSet<Source>();
         private readonly Dictionary<string, List<Source>> VarDefIDToCon = new Dictionary<string, List<Source>>();
 
@@ -39,7 +40,7 @@ namespace ChiselDebug.GraphFIR.Circuit
             }
         }
 
-        private bool TryFindVerilogMemPort(string ioName, MemoryIO memory, out IContainerIO foundIO)
+        private bool TryFindVerilogMemPort(string ioName, MemoryIO memory, [NotNullWhen(true)] out IContainerIO? foundIO)
         {
             foreach (MemPort port in memory.GetIOInOrder())
             {
@@ -75,7 +76,7 @@ namespace ChiselDebug.GraphFIR.Circuit
             return false;
         }
 
-        private bool TryFindIO(string ioName, IContainerIO container, bool isVerilogVCD, out IContainerIO foundIO)
+        private bool TryFindIO(string ioName, IContainerIO container, bool isVerilogVCD, [NotNullWhen(true)] out IContainerIO? foundIO)
         {
             string remainingName = ioName;
             string searchName = remainingName;
@@ -151,8 +152,7 @@ namespace ChiselDebug.GraphFIR.Circuit
         {
             IContainerIO rootContainer = MainModule;
 
-            IContainerIO moduleIO = null;
-            if (rootContainer.TryGetIO(modulePath, out moduleIO))
+            if (rootContainer.TryGetIO(modulePath, out IContainerIO? moduleIO))
             {
                 return moduleIO;
             }
@@ -172,23 +172,24 @@ namespace ChiselDebug.GraphFIR.Circuit
                 throw new Exception("Failed to find io.");
             }
 
-            MemRWPort rwPort = (MemRWPort)moduleIO;
-            IOBundle portBundle;
-            if (portName.EndsWith("_w"))
-            {
-                portBundle = rwPort.GetAWritePortBundle();
-            }
-            else
-            {
-                portBundle = rwPort.GetAsReadPortBundle();
-            }
+            //I can't remember why i started this commented code
+            //MemRWPort rwPort = (MemRWPort)moduleIO;
+            //IOBundle portBundle;
+            //if (portName.EndsWith("_w"))
+            //{
+            //    portBundle = rwPort.GetAWritePortBundle();
+            //}
+            //else
+            //{
+            //    portBundle = rwPort.GetAsReadPortBundle();
+            //}
 
             return moduleIO;
         }
 
-        public ScalarIO GetConnection(VarDef variable)
+        public ScalarIO? GetConnection(VarDef variable)
         {
-            if (VarDefToCon.TryGetValue(variable, out ScalarIO con))
+            if (VarDefToCon.TryGetValue(variable, out ScalarIO? con))
             {
                 return con;
             }
@@ -211,8 +212,7 @@ namespace ChiselDebug.GraphFIR.Circuit
             IContainerIO rootContainer = MainModule;
             IContainerIO moduleIO = GetModuleContainer(modulePath, isVerilogVCD);
 
-            IContainerIO ioLink = null;
-            bool foundIO = TryFindIO(variable.Reference, moduleIO, isVerilogVCD, out ioLink);
+            bool foundIO = TryFindIO(variable.Reference, moduleIO, isVerilogVCD, out IContainerIO? ioLink);
 
             if (!foundIO)
             {
@@ -265,7 +265,7 @@ namespace ChiselDebug.GraphFIR.Circuit
                 {
                     foreach (var variable in varValue.Variables)
                     {
-                        Source con = GetConnection(variable) as Source;
+                        Source? con = GetConnection(variable) as Source;
                         if (con == null)
                         {
                             continue;
@@ -284,8 +284,7 @@ namespace ChiselDebug.GraphFIR.Circuit
                         var varCopy = varValue;
                         con.Value.UpdateValue(ref varCopy);
 
-                        List<Source> idToScalars;
-                        if (!VarDefIDToCon.TryGetValue(variable.ID, out idToScalars))
+                        if (!VarDefIDToCon.TryGetValue(variable.ID, out List<Source>? idToScalars))
                         {
                             idToScalars = new List<Source>();
                             VarDefIDToCon.Add(variable.ID, idToScalars);

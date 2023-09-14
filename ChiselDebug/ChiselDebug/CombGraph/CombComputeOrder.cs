@@ -22,7 +22,7 @@ namespace ChiselDebug.CombGraph
             List<Source> updatedConnections = new List<Source>();
             for (int i = 0; i < ComputeOrder.Length; i++)
             {
-                Source updated = ComputeOrder[i].ComputeGetIfChanged();
+                Source? updated = ComputeOrder[i].ComputeGetIfChanged();
                 if (updated != null)
                 {
                     updatedConnections.Add(updated);

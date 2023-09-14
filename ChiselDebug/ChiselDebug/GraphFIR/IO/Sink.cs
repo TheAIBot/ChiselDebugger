@@ -94,7 +94,7 @@ namespace ChiselDebug.GraphFIR.IO
             return connection.Value;
         }
 
-        public bool TryGetConnection(Source from, Source condition, [NotNullWhen(true)] out Connection? connection)
+        public bool TryGetConnection(Source from, Source? condition, [NotNullWhen(true)] out Connection? connection)
         {
             if (condition == null && Con == from)
             {

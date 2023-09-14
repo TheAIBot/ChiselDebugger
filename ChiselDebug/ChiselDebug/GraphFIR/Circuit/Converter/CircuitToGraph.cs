@@ -7,7 +7,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
 {
     public static partial class CircuitToGraph
     {
-        public static CircuitGraph GetAsGraph(FIRRTL.Circuit circuit, CircuitGraph graphLowFir = null)
+        public static CircuitGraph GetAsGraph(FIRRTL.Circuit circuit, CircuitGraph? graphLowFir = null)
         {
             VisitHelper helper = new VisitHelper(null, graphLowFir);
             foreach (var moduleDef in circuit.Modules)
@@ -15,7 +15,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
                 helper.ModuleRoots.Add(moduleDef.Name, moduleDef);
             }
 
-            FIRRTL.DefModule mainModDef = circuit.Modules.SingleOrDefault(x => x.Name == circuit.Main);
+            FIRRTL.DefModule? mainModDef = circuit.Modules.SingleOrDefault(x => x.Name == circuit.Main);
             if (mainModDef == null)
             {
                 throw new ChiselDebugException("Circuit does not contain a module with the circuits name.");

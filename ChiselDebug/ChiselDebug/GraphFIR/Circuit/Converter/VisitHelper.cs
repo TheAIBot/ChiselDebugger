@@ -1,18 +1,19 @@
 ﻿using ChiselDebug.GraphFIR.Components;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace ChiselDebug.GraphFIR.Circuit.Converter
 {
     internal sealed class VisitHelper
     {
-        public readonly Module Mod;
-        private readonly CircuitGraph LowFirGraph;
+        public readonly Module? Mod;
+        private readonly CircuitGraph? LowFirGraph;
         public readonly Dictionary<string, FIRRTL.DefModule> ModuleRoots;
         public readonly bool IsConditionalModule;
-        private readonly VisitHelper ParentHelper;
-        private readonly VisitHelper RootHelper;
+        private readonly VisitHelper? ParentHelper;
+        private readonly VisitHelper? RootHelper;
 
         private readonly Stack<IO.Source> ScopeEnabledConditions = new Stack<IO.Source>();
         public IO.Source ScopeEnabledCond
@@ -31,10 +32,10 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             }
         }
 
-        public VisitHelper(Module mod, CircuitGraph lowFirGraph) : this(mod, lowFirGraph, new Dictionary<string, FIRRTL.DefModule>(), null, false, null)
+        public VisitHelper(Module? mod, CircuitGraph? lowFirGraph) : this(mod, lowFirGraph, new Dictionary<string, FIRRTL.DefModule>(), null, false, null)
         { }
 
-        private VisitHelper(Module mod, CircuitGraph lowFirGraph, Dictionary<string, FIRRTL.DefModule> roots, VisitHelper parentHelper, bool isConditional, VisitHelper rootHelper)
+        private VisitHelper(Module? mod, CircuitGraph? lowFirGraph, Dictionary<string, FIRRTL.DefModule> roots, VisitHelper? parentHelper, bool isConditional, VisitHelper? rootHelper)
         {
             Mod = mod;
             LowFirGraph = lowFirGraph;
@@ -49,7 +50,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             return new VisitHelper(new Module(moduleName, instanceName, Mod, moduleDef), LowFirGraph, ModuleRoots, this, false, RootHelper ?? this);
         }
 
-        public VisitHelper ForNewCondModule(string moduleName, FIRRTL.DefModule moduleDef)
+        public VisitHelper ForNewCondModule(string moduleName, FIRRTL.DefModule? moduleDef)
         {
             return new VisitHelper(new Module(moduleName, null, Mod, moduleDef), LowFirGraph, ModuleRoots, this, true, RootHelper ?? this);
         }
@@ -73,8 +74,8 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
         {
             List<string> path = new List<string>();
 
-            VisitHelper helper = this;
-            while (helper.Mod != null)
+            VisitHelper? helper = this;
+            while (helper?.Mod != null)
             {
                 if (!helper.IsConditionalModule)
                 {
@@ -91,6 +92,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             return path.ToArray();
         }
 
+        [MemberNotNullWhen(true, nameof(LowFirGraph))]
         public bool HasLowFirGraph()
         {
             return LowFirGraph != null;
@@ -107,7 +109,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             foreach (var pathModName in pathToModule.Skip(1))
             {
                 FIRRTLNode[] lowModNodes = lowFirMod.GetAllNodes();
-                FIRRTLNode childLowModNode = lowModNodes.FirstOrDefault(x => x is Module mod && mod.Name == pathModName);
+                FIRRTLNode? childLowModNode = lowModNodes.FirstOrDefault(x => x is Module mod && mod.Name == pathModName);
                 if (childLowModNode == null)
                 {
                     throw new Exception("High level firrtl module path didn't match low level firrtl module path.");

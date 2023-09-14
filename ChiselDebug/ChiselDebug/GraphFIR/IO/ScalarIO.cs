@@ -142,6 +142,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         public abstract ref BinaryVarValue FetchValue();
 
+        [MemberNotNullWhen(true, nameof(Value))]
         public bool HasValue()
         {
             return Value != null;

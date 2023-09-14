@@ -58,12 +58,12 @@ namespace ChiselDebug.CombGraph
         {
         }
 
-        public FIRRTLNode GetNode()
+        public FIRRTLNode? GetNode()
         {
             return Node;
         }
 
-        public Source GetConnection()
+        public Source? GetConnection()
         {
             return Con;
         }
@@ -72,7 +72,7 @@ namespace ChiselDebug.CombGraph
         {
             if (Con != null)
             {
-                return $"Con: {Con.Node}, Module: {Con.GetModResideIn().Name}, Name: {Con.GetFullName()}";
+                return $"Con: {Con.Node}, Module: {Con.GetModResideIn()?.Name}, Name: {Con.GetFullName()}";
             }
             else
             {
