@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
 	<RunAOTCompilation>true</RunAOTCompilation>
-	<PublishTrimmed>true</PublishTrimmed>
+	<PublishTrimmed>false</PublishTrimmed>
 	<BlazorEnableCompression>false</BlazorEnableCompression>
 	<BlazorCacheBootResources>false</BlazorCacheBootResources>
 	<BlazorEnableTimeZoneSupport>false</BlazorEnableTimeZoneSupport>
@@ -11,9 +11,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="7.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="7.0.1" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.AspNetCore.Server.IIS" Version="2.2.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="7.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="7.0.11" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
