@@ -13,14 +13,8 @@ using System.Text.RegularExpressions;
 
 namespace FIRRTL.Parsing
 {
-    internal class Visitor
+    internal partial class Visitor
     {
-        private const string HexPattern = "^\"*h([+-]?[a-zA-Z0-9]+)\"*$";
-        private const string OctalPattern = "^\"*o([+-]?[0-7]+)\"*$";
-        private const string BinaryPattern = "^\"*b([+-]?[01]+)\"*$";
-        private const string DecPattern = @"^([+\-]?[1-9]\d*)$";
-        private const string ZeroPattern = "^0$";
-        private const string DecimalPattern = @"^([+-]?[0-9]\d*\.[0-9]\d*)$";
         private static readonly Dictionary<string, PrimOp> StringToPrimOp;
 
         private IInfoMode InfoM;
@@ -71,11 +65,11 @@ namespace FIRRTL.Parsing
 
         private BigInteger StringToBigInteger(string str, bool asUnsigned = false)
         {
-            if (Regex.IsMatch(str, ZeroPattern, RegexOptions.Compiled))
+            if (ZeroPattern().IsMatch(str))
             {
                 return new BigInteger(0);
             }
-            else if (Regex.IsMatch(str, HexPattern, RegexOptions.Compiled))
+            else if (HexPattern().IsMatch(str))
             {
                 string withoutQuotes = RemoveSurroundingQuotes(str);
                 string withoutHexPrefix = withoutQuotes.Substring(1);
@@ -85,15 +79,15 @@ namespace FIRRTL.Parsing
                 }
                 return BigInteger.Parse(withoutHexPrefix, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
             }
-            else if (Regex.IsMatch(str, OctalPattern, RegexOptions.Compiled))
+            else if (OctalPattern().IsMatch(str))
             {
                 throw new NotImplementedException("Parsing octal numbers is not supported yet.");
             }
-            else if (Regex.IsMatch(str, BinaryPattern, RegexOptions.Compiled))
+            else if (BinaryPattern().IsMatch(str))
             {
                 throw new NotImplementedException("Parsing binary numbers is not supported yet.");
             }
-            else if (Regex.IsMatch(str, DecPattern, RegexOptions.Compiled))
+            else if (DecPattern().IsMatch(str))
             {
                 return BigInteger.Parse(str, CultureInfo.InvariantCulture);
             }
@@ -110,8 +104,7 @@ namespace FIRRTL.Parsing
 
         private bool LegalID(string id)
         {
-            const string idPattern = "[A-Za-z0-9_$]+";
-            return Regex.IsMatch(id, idPattern, RegexOptions.Compiled);
+            return IdPattern().IsMatch(id);
         }
 
         private IInfo VisitInfo(FIRRTLParser.InfoContext context, ParserRuleContext parentContext)
@@ -649,5 +642,18 @@ namespace FIRRTL.Parsing
         {
             return StringToPrimOp[context.GetText().TrimEnd('(')];
         }
+
+        [GeneratedRegex("^0$", RegexOptions.Compiled)]
+        private static partial Regex ZeroPattern();
+        [GeneratedRegex("^\"*h([+-]?[a-zA-Z0-9]+)\"*$", RegexOptions.Compiled)]
+        private static partial Regex HexPattern();
+        [GeneratedRegex("^\"*o([+-]?[0-7]+)\"*$", RegexOptions.Compiled)]
+        private static partial Regex OctalPattern();
+        [GeneratedRegex("^\"*b([+-]?[01]+)\"*$", RegexOptions.Compiled)]
+        private static partial Regex BinaryPattern();
+        [GeneratedRegex(@"^([+\-]?[1-9]\d*)$", RegexOptions.Compiled)]
+        private static partial Regex DecPattern();
+        [GeneratedRegex("[A-Za-z0-9_$]+", RegexOptions.Compiled)]
+        private static partial Regex IdPattern();
     }
 }
