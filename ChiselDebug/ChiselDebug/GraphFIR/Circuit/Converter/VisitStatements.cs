@@ -5,7 +5,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
 {
     public static partial class CircuitToGraph
     {
-        private static void VisitStatement(VisitHelper helper, FIRRTL.Statement statement)
+        private static void VisitStatement(VisitHelper helper, FIRRTL.IStatement statement)
         {
             if (statement is FIRRTL.EmptyStmt)
             {
@@ -160,7 +160,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             {
                 var nodeOut = VisitExp(helper, node.Value, IO.FlowChange.Source);
 
-                if (node.Value is not FIRRTL.RefLikeExpression)
+                if (node.Value is not FIRRTL.IRefLikeExpression)
                 {
                     nodeOut.SetName(node.Name);
                 }
@@ -197,7 +197,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
         {
             Conditional cond = new Conditional(conditional);
 
-            void AddCondModule(IO.Source ena, FIRRTL.Statement body)
+            void AddCondModule(IO.Source ena, FIRRTL.IStatement body)
             {
                 VisitHelper helper = parentHelper.ForNewCondModule(parentHelper.GetUniqueName(), null);
 

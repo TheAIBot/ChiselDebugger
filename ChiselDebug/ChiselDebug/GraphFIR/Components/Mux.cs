@@ -22,7 +22,7 @@ namespace ChiselDebug.GraphFIR.Components
         private readonly BinaryVarValue[] UnknownOutputs;
         private bool CanOverrideResult = false;
 
-        public Mux(List<FIRIO> choises, Source decider, FirrtlNode defNode, bool isVectorIndexer = false) : base(defNode)
+        public Mux(List<FIRIO> choises, Source decider, IFirrtlNode defNode, bool isVectorIndexer = false) : base(defNode)
         {
             choises = choises.Select(x => x.GetSource()).ToList();
             if (!choises.All(x => x.IsPassiveOfType<Source>()))

@@ -9,11 +9,11 @@ namespace ChiselDebug.GraphFIR.Components
 {
     public sealed class ConstValue : FIRRTLNode, INoPlaceAndRoute
     {
-        public readonly Literal Value;
+        public readonly ILiteral Value;
         public readonly Source Result;
         private bool FirstCompute = true;
 
-        public ConstValue(Literal value) : base(value)
+        public ConstValue(ILiteral value) : base(value)
         {
             Value = value;
             Result = new Source(this, null, value.GetFIRType());

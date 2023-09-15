@@ -18,7 +18,7 @@ namespace ChiselDebug.GraphFIR.Components
         private readonly Source[] VecOutputs;
         private readonly Sink[] ValueInputs;
 
-        public VectorAssign(Vector input, Source index, Source condition, FirrtlNode defNode) : base(defNode)
+        public VectorAssign(Vector input, Source index, Source condition, IFirrtlNode defNode) : base(defNode)
         {
             if (!input.IsPassiveOfType<Sink>())
             {

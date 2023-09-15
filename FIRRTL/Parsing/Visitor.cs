@@ -23,7 +23,7 @@ namespace FIRRTL.Parsing
         private const string DecimalPattern = @"^([+-]?[0-9]\d*\.[0-9]\d*)$";
         private static readonly Dictionary<string, PrimOp> StringToPrimOp;
 
-        private InfoMode InfoM;
+        private IInfoMode InfoM;
 
         static Visitor()
         {
@@ -53,7 +53,7 @@ namespace FIRRTL.Parsing
             }
         }
 
-        internal Visitor(InfoMode infoMode)
+        internal Visitor(IInfoMode infoMode)
         {
             this.InfoM = infoMode;
         }
@@ -162,20 +162,20 @@ namespace FIRRTL.Parsing
         public Circuit VisitCircuit([NotNull] FIRRTLParser.CircuitContext context)
         {
             IInfo info = VisitInfo(context.info(), context);
-            List<DefModule> modules = context.module().Select(VisitModule).ToList();
+            List<IDefModule> modules = context.module().Select(VisitModule).ToList();
             string name = context.id().GetText();
 
             return new Circuit(info, modules, name);
         }
 
-        private DefModule VisitModule([NotNull] FIRRTLParser.ModuleContext context)
+        private IDefModule VisitModule([NotNull] FIRRTLParser.ModuleContext context)
         {
             IInfo info = VisitInfo(context.info(), context);
             if (context.GetChild(0).GetText() == "module")
             {
                 string name = context.id().GetText();
                 List<Port> ports = context.port().Select(VisitPort).ToList();
-                Statement body = VisitBlock(context.moduleBlock());
+                IStatement body = VisitBlock(context.moduleBlock());
 
                 return new Module(info, name, ports, body);
             }
@@ -184,7 +184,7 @@ namespace FIRRTL.Parsing
                 string name = context.id().GetText();
                 List<Port> ports = context.port().Select(VisitPort).ToList();
                 string defName = context.defname().id().GetText() ?? name;
-                List<Param> parameters = context.parameter().Select(VisitParameter).ToList();
+                List<IParam> parameters = context.parameter().Select(VisitParameter).ToList();
 
                 return new ExtModule(info, name, ports, defName, parameters);
             }
@@ -204,7 +204,7 @@ namespace FIRRTL.Parsing
             return new Port(info, name, direction, type);
         }
 
-        private Param VisitParameter([NotNull] FIRRTLParser.ParameterContext context)
+        private IParam VisitParameter([NotNull] FIRRTLParser.ParameterContext context)
         {
             string name = context.id().GetText();
 
@@ -310,14 +310,14 @@ namespace FIRRTL.Parsing
             return new Field(name, orien, type);
         }
 
-        private Statement VisitBlock(FIRRTLParser.ModuleBlockContext context)
+        private IStatement VisitBlock(FIRRTLParser.ModuleBlockContext context)
         {
             if (context == null)
             {
                 return new EmptyStmt();
             }
 
-            List<Statement> statements = context.simple_stmt()
+            List<IStatement> statements = context.simple_stmt()
                 .Select(x => x.stmt())
                 .Where(x => x != null)
                 .Select(VisitStmt).ToList();
@@ -325,9 +325,9 @@ namespace FIRRTL.Parsing
             return new Block(statements);
         }
 
-        private Statement VisitSuite([NotNull] FIRRTLParser.SuiteContext context)
+        private IStatement VisitSuite([NotNull] FIRRTLParser.SuiteContext context)
         {
-            List<Statement> statements = context.simple_stmt()
+            List<IStatement> statements = context.simple_stmt()
                 .Select(x => x.stmt())
                 .Where(x => x != null)
                 .Select(VisitStmt).ToList();
@@ -351,7 +351,7 @@ namespace FIRRTL.Parsing
             };
         }
 
-        private Statement VisitMem([NotNull] FIRRTLParser.StmtContext context)
+        private IStatement VisitMem([NotNull] FIRRTLParser.StmtContext context)
         {
             List<string> readers = new List<string>();
             List<string> writers = new List<string>();
@@ -427,11 +427,11 @@ namespace FIRRTL.Parsing
             return new StringLit(RemoveSurroundingQuotes(node.GetText()));
         }
 
-        private Statement VisitWhen([NotNull] FIRRTLParser.WhenContext context)
+        private IStatement VisitWhen([NotNull] FIRRTLParser.WhenContext context)
         {
             IInfo info = VisitInfo(context.info(0), context);
 
-            Statement alt;
+            IStatement alt;
             if (context.when() != null)
             {
                 alt = VisitWhen(context.when());
@@ -448,7 +448,7 @@ namespace FIRRTL.Parsing
             return new Conditionally(info, VisitExp(context.exp()), VisitSuite(context.suite(0)), alt);
         }
 
-        private Statement VisitStmt([NotNull] FIRRTLParser.StmtContext context)
+        private IStatement VisitStmt([NotNull] FIRRTLParser.StmtContext context)
         {
             FIRRTLParser.ExpContext[] contextExprs = context.exp();
             IInfo info = VisitInfo(context.info(), context);
@@ -467,22 +467,22 @@ namespace FIRRTL.Parsing
                         {
                             string name = context.id(0).GetText();
                             IFIRType type = VisitType(context.type());
-                            Expression clock = VisitExp(contextExprs[0]);
+                            IExpression clock = VisitExp(contextExprs[0]);
 
                             var rb = context.reset_block();
                             if (rb != null)
                             {
                                 var sr = rb.simple_reset().simple_reset0();
                                 IInfo innerInfo = info is NoInfo ? VisitInfo(rb.info(), context) : info;
-                                Expression reset = VisitExp(sr.exp(0));
-                                Expression init = VisitExp(sr.exp(1));
+                                IExpression reset = VisitExp(sr.exp(0));
+                                IExpression init = VisitExp(sr.exp(1));
 
                                 return new DefRegister(innerInfo, name, type, clock, reset, init);
                             }
                             else
                             {
-                                Expression reset = new UIntLiteral(BigInteger.Zero, 1);
-                                Expression init = new Reference(name, type, KindType.Unknown, FlowType.Unknown);
+                                IExpression reset = new UIntLiteral(BigInteger.Zero, 1);
+                                IExpression init = new Reference(name, type, KindType.Unknown, FlowType.Unknown);
                                 return new DefRegister(info, name, type, clock, reset, init);
                             }
                         }
@@ -547,14 +547,14 @@ namespace FIRRTL.Parsing
                     case "is":
                         return new IsInvalid(info, VisitExp(contextExprs[0]));
                     case "mport":
-                        return new CDefMPort(info, context.id(0).GetText(), new UnknownType(), context.id(1).GetText(), new List<Expression>() { VisitExp(contextExprs[0]), VisitExp(contextExprs[1]) }, VisitMdir(context.mdir()));
+                        return new CDefMPort(info, context.id(0).GetText(), new UnknownType(), context.id(1).GetText(), new List<IExpression>() { VisitExp(contextExprs[0]), VisitExp(contextExprs[1]) }, VisitMdir(context.mdir()));
                     default:
                         throw new Exception($"Invalid statement: {context.GetText()}");
                 }
             }
         }
 
-        private Expression VisitExp([NotNull] FIRRTLParser.ExpContext context)
+        private IExpression VisitExp([NotNull] FIRRTLParser.ExpContext context)
         {
             FIRRTLParser.ExpContext[] contextExprs = context.exp();
 
@@ -566,7 +566,7 @@ namespace FIRRTL.Parsing
             {
                 if (context.GetChild(1).GetText() == ".")
                 {
-                    Expression expr1 = VisitExp(contextExprs[0]);
+                    IExpression expr1 = VisitExp(contextExprs[0]);
                     if (context.fieldId() == null)
                     {
                         string[] ids = context.DoubleLit().GetText().Split('.');

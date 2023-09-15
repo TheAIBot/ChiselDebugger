@@ -16,7 +16,7 @@ namespace ChiselDebug.GraphFIR.Components
         public readonly Sink? Reset;
         public readonly FIRIO? Init;
 
-        public Register(string name, FIRIO inputType, Source clock, Source? reset, FIRIO? init, FirrtlNode defNode) : base(defNode)
+        public Register(string name, FIRIO inputType, Source clock, Source? reset, FIRIO? init, IFirrtlNode defNode) : base(defNode)
         {
             if (!inputType.IsPassiveOfType<Sink>())
             {

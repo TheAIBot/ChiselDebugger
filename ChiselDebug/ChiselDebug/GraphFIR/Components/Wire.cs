@@ -14,7 +14,7 @@ namespace ChiselDebug.GraphFIR.Components
         public readonly FIRIO In;
         public readonly FIRIO Result;
 
-        public Wire(string name, FIRIO inputType, FirrtlNode? defNode) : base(defNode)
+        public Wire(string name, FIRIO inputType, IFirrtlNode? defNode) : base(defNode)
         {
             if (!inputType.IsPassiveOfType<Sink>())
             {

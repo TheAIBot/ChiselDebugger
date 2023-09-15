@@ -7,14 +7,14 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
 {
     public static partial class CircuitToGraph
     {
-        private static IO.FIRIO VisitExp(VisitHelper helper, FIRRTL.Expression exp, IO.FlowChange ioFlow)
+        private static IO.FIRIO VisitExp(VisitHelper helper, FIRRTL.IExpression exp, IO.FlowChange ioFlow)
         {
-            if (exp is FIRRTL.RefLikeExpression)
+            if (exp is FIRRTL.IRefLikeExpression)
             {
                 return (IO.FIRIO)VisitRef(helper, exp, helper.Mod, ioFlow);
             }
 
-            if (exp is FIRRTL.Literal lit)
+            if (exp is FIRRTL.ILiteral lit)
             {
                 ConstValue value = new ConstValue(lit);
 
@@ -108,7 +108,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             }
         }
 
-        private static IO.IContainerIO VisitRef(VisitHelper helper, FIRRTL.Expression exp, IO.IContainerIO currContainer, IO.FlowChange ioFlow)
+        private static IO.IContainerIO VisitRef(VisitHelper helper, FIRRTL.IExpression exp, IO.IContainerIO currContainer, IO.FlowChange ioFlow)
         {
             IO.IContainerIO refContainer;
             if (exp is FIRRTL.Reference reference)

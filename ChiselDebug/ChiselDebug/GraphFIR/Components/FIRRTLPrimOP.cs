@@ -8,7 +8,7 @@ namespace ChiselDebug.GraphFIR.Components
     {
         public readonly Source Result;
 
-        public FIRRTLPrimOP(IFIRType type, FirrtlNode defNode) : base(defNode)
+        public FIRRTLPrimOP(IFIRType type, IFirrtlNode defNode) : base(defNode)
         {
             Result = new Source(this, null, type);
         }

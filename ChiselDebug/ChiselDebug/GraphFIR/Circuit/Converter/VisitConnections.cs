@@ -4,7 +4,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
 {
     public static partial class CircuitToGraph
     {
-        private static void VisitConnect(VisitHelper helper, FIRRTL.Expression exprFrom, FIRRTL.Expression exprTo, bool isPartial)
+        private static void VisitConnect(VisitHelper helper, FIRRTL.IExpression exprFrom, FIRRTL.IExpression exprTo, bool isPartial)
         {
             IO.FIRIO from = VisitExp(helper, exprFrom, IO.FlowChange.Source);
             IO.FIRIO to = (IO.FIRIO)VisitRef(helper, exprTo, helper.Mod, IO.FlowChange.Sink);

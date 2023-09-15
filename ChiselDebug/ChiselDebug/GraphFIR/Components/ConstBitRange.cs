@@ -13,7 +13,7 @@ namespace ChiselDebug.GraphFIR.Components
         public readonly string OpName;
         public readonly Sink In;
 
-        public ConstBitRange(string name, Source arg1, IFIRType outType, FirrtlNode defNode) : base(outType, defNode)
+        public ConstBitRange(string name, Source arg1, IFIRType outType, IFirrtlNode defNode) : base(outType, defNode)
         {
             OpName = name;
             In = new Sink(this, arg1.Type);
@@ -49,7 +49,7 @@ namespace ChiselDebug.GraphFIR.Components
     public sealed class Head : ConstBitRange
     {
         public readonly int FromMSB;
-        public Head(Source arg1, IFIRType outType, int fromMSB, FirrtlNode defNode) : base("head", arg1, outType, defNode)
+        public Head(Source arg1, IFIRType outType, int fromMSB, IFirrtlNode defNode) : base("head", arg1, outType, defNode)
         {
             FromMSB = fromMSB;
         }
@@ -81,7 +81,7 @@ namespace ChiselDebug.GraphFIR.Components
     public sealed class Tail : ConstBitRange
     {
         public readonly int FromLSB;
-        public Tail(Source arg1, IFIRType outType, int fromLSB, FirrtlNode defNode) : base("tail", arg1, outType, defNode)
+        public Tail(Source arg1, IFIRType outType, int fromLSB, IFirrtlNode defNode) : base("tail", arg1, outType, defNode)
         {
             FromLSB = fromLSB;
         }
@@ -114,7 +114,7 @@ namespace ChiselDebug.GraphFIR.Components
     {
         public readonly int StartInclusive;
         public readonly int EndInclusive;
-        public BitExtract(Source arg1, IFIRType outType, int startInclusive, int endInclusive, FirrtlNode defNode) : base("bits", arg1, outType, defNode)
+        public BitExtract(Source arg1, IFIRType outType, int startInclusive, int endInclusive, IFirrtlNode defNode) : base("bits", arg1, outType, defNode)
         {
             StartInclusive = startInclusive;
             EndInclusive = endInclusive;
@@ -147,7 +147,7 @@ namespace ChiselDebug.GraphFIR.Components
     public sealed class Pad : ConstBitRange
     {
         public readonly int WidthAfterPad;
-        public Pad(Source arg1, IFIRType outType, int newWidth, FirrtlNode defNode) : base("pad", arg1, outType, defNode)
+        public Pad(Source arg1, IFIRType outType, int newWidth, IFirrtlNode defNode) : base("pad", arg1, outType, defNode)
         {
             WidthAfterPad = newWidth;
         }

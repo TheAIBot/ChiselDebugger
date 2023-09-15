@@ -10,7 +10,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
     {
         public readonly Module? Mod;
         private readonly CircuitGraph? LowFirGraph;
-        public readonly Dictionary<string, FIRRTL.DefModule> ModuleRoots;
+        public readonly Dictionary<string, FIRRTL.IDefModule> ModuleRoots;
         public readonly bool IsConditionalModule;
         private readonly VisitHelper? ParentHelper;
         private readonly VisitHelper? RootHelper;
@@ -32,10 +32,10 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             }
         }
 
-        public VisitHelper(Module? mod, CircuitGraph? lowFirGraph) : this(mod, lowFirGraph, new Dictionary<string, FIRRTL.DefModule>(), null, false, null)
+        public VisitHelper(Module? mod, CircuitGraph? lowFirGraph) : this(mod, lowFirGraph, new Dictionary<string, FIRRTL.IDefModule>(), null, false, null)
         { }
 
-        private VisitHelper(Module? mod, CircuitGraph? lowFirGraph, Dictionary<string, FIRRTL.DefModule> roots, VisitHelper? parentHelper, bool isConditional, VisitHelper? rootHelper)
+        private VisitHelper(Module? mod, CircuitGraph? lowFirGraph, Dictionary<string, FIRRTL.IDefModule> roots, VisitHelper? parentHelper, bool isConditional, VisitHelper? rootHelper)
         {
             Mod = mod;
             LowFirGraph = lowFirGraph;
@@ -45,12 +45,12 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             RootHelper = rootHelper;
         }
 
-        public VisitHelper ForNewModule(string moduleName, string instanceName, FIRRTL.DefModule moduleDef)
+        public VisitHelper ForNewModule(string moduleName, string instanceName, FIRRTL.IDefModule moduleDef)
         {
             return new VisitHelper(new Module(moduleName, instanceName, Mod, moduleDef), LowFirGraph, ModuleRoots, this, false, RootHelper ?? this);
         }
 
-        public VisitHelper ForNewCondModule(string moduleName, FIRRTL.DefModule? moduleDef)
+        public VisitHelper ForNewCondModule(string moduleName, FIRRTL.IDefModule? moduleDef)
         {
             return new VisitHelper(new Module(moduleName, null, Mod, moduleDef), LowFirGraph, ModuleRoots, this, true, RootHelper ?? this);
         }
@@ -98,7 +98,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             return LowFirGraph != null;
         }
 
-        public FIRRTL.FirrtlNode GetDefNodeFromLowFirrtlGraph(string nodeName)
+        public FIRRTL.IFirrtlNode GetDefNodeFromLowFirrtlGraph(string nodeName)
         {
             Module lowFirMod = LowFirGraph.MainModule;
 

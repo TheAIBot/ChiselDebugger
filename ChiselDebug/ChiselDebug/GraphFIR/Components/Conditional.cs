@@ -12,7 +12,7 @@ namespace ChiselDebug.GraphFIR.Components
         private readonly List<Module> ConditionalModules = new List<Module>();
         public IReadOnlyList<Module> CondMods => ConditionalModules;
 
-        public Conditional(FirrtlNode defNode) : base(defNode) { }
+        public Conditional(IFirrtlNode defNode) : base(defNode) { }
 
         public void AddConditionalModule(Module mod)
         {

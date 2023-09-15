@@ -21,7 +21,7 @@ namespace ChiselDebug.GraphFIR.Components
         [MemberNotNullWhen(true, nameof(EnableCon))]
         public bool IsConditional => EnableCon != null;
 
-        public Module(string name, string instanceName, Module parentMod, FirrtlNode? defNode) : base(defNode)
+        public Module(string name, string instanceName, Module parentMod, IFirrtlNode? defNode) : base(defNode)
         {
             Name = name;
             InstanceName = instanceName;

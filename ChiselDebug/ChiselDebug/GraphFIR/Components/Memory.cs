@@ -17,7 +17,7 @@ namespace ChiselDebug.GraphFIR.Components
         public readonly ReadUnderWrite RUW;
         private readonly MemoryIO MemIO;
 
-        public Memory(string name, FIRIO inputType, ulong size, int readLatency, int writeLatency, ReadUnderWrite ruw, FirrtlNode defNode) : base(defNode)
+        public Memory(string name, FIRIO inputType, ulong size, int readLatency, int writeLatency, ReadUnderWrite ruw, IFirrtlNode defNode) : base(defNode)
         {
             if (!inputType.IsPassiveOfType<Sink>())
             {

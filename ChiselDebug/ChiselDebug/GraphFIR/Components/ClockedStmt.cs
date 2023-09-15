@@ -14,7 +14,7 @@ namespace ChiselDebug.GraphFIR.Components
         public readonly int ExitCode;
         public bool SignalStop { get; private set; }
 
-        public FirStop(Source clock, Source enable, int exitCode, FirrtlNode defNode) : base(defNode)
+        public FirStop(Source clock, Source enable, int exitCode, IFirrtlNode defNode) : base(defNode)
         {
             Clock = new Sink(this, new ClockType());
             Enable = new Sink(this, new UIntType(1));

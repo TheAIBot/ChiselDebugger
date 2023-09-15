@@ -16,7 +16,7 @@ namespace ChiselDebug.GraphFIR.Components
         public readonly Dictionary<string, FIRIO> InternalIO = new Dictionary<string, FIRIO>();
         private int UniqueNameGen = 0;
 
-        public FIRRTLContainer(FirrtlNode? defNode) : base(defNode) { }
+        public FIRRTLContainer(IFirrtlNode? defNode) : base(defNode) { }
 
         public void AddExternalIO(FIRIO io)
         {

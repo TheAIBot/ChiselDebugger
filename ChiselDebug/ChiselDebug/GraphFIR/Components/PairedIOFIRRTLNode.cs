@@ -11,7 +11,7 @@ namespace ChiselDebug.GraphFIR.Components
     {
         private readonly Dictionary<ScalarIO, List<ScalarIO>> OneToManyPairs = new Dictionary<ScalarIO, List<ScalarIO>>();
 
-        public PairedIOFIRRTLNode(FirrtlNode? defNode) : base(defNode)
+        public PairedIOFIRRTLNode(IFirrtlNode? defNode) : base(defNode)
         { }
 
         internal void AddPairedIO(FIRIO io, FIRIO ioFlipped)

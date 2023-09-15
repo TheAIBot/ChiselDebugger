@@ -7,10 +7,10 @@ namespace ChiselDebug.GraphFIR.Components
 {
     public abstract class FIRRTLNode
     {
-        public readonly FirrtlNode? FirDefNode;
+        public readonly IFirrtlNode? FirDefNode;
         public Module? ResideIn { get; private set; }
 
-        public FIRRTLNode(FirrtlNode? defNode)
+        public FIRRTLNode(IFirrtlNode? defNode)
         {
             FirDefNode = defNode;
         }

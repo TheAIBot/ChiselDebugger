@@ -3,17 +3,17 @@ using System.Numerics;
 
 namespace FIRRTL
 {
-    public interface FirrtlNode { }
+    public interface IFirrtlNode { }
     public interface IInfo { };
-    public record NoInfo() : IInfo;
-    public record FileInfo(string Info) : IInfo;
-    public record MultiInfo(List<IInfo> Infos) : IInfo;
+    public sealed record NoInfo() : IInfo;
+    public sealed record FileInfo(string Info) : IInfo;
+    public sealed record MultiInfo(List<IInfo> Infos) : IInfo;
 
-    public abstract record InfoMode;
-    public record IgnoreInfo() : InfoMode;
-    public record UseInfo() : InfoMode;
-    public record GenInfo(string Filename) : InfoMode;
-    public record AppendInfo(string Filename) : InfoMode;
+    public interface IInfoMode { }
+    public sealed record IgnoreInfo() : IInfoMode;
+    public sealed record UseInfo() : IInfoMode;
+    public sealed record GenInfo(string Filename) : IInfoMode;
+    public sealed record AppendInfo(string Filename) : IInfoMode;
 
     public enum Dir
     {
@@ -71,123 +71,128 @@ namespace FIRRTL
     }
 
     public interface IFIRType { }
-    public record UnknownType() : IFIRType;
+    public sealed record UnknownType() : IFIRType;
     public record GroundType(int Width) : IFIRType
     {
         public const int UnknownWidth = -1;
-        public bool IsWidthKnown => Width != -1;
+        public bool IsWidthKnown => Width != UnknownWidth;
 
         public bool IsTypeFullyKnown()
         {
             return IsWidthKnown;
         }
     }
-    public record UIntType(int Width) : GroundType(Width);
-    public record SIntType(int Width) : GroundType(Width);
-    public record FixedType(int Width, int Point) : GroundType(Width);
+    public sealed record UIntType(int Width) : GroundType(Width);
+    public sealed record SIntType(int Width) : GroundType(Width);
+    public sealed record FixedType(int Width, int Point) : GroundType(Width);
 
 
-    public record ClockType() : GroundType(1);
-    public record AsyncResetType() : GroundType(1);
-    public record ResetType() : GroundType(1);
-    public record AnalogType(int Width) : GroundType(Width);
+    public sealed record ClockType() : GroundType(1);
+    public sealed record AsyncResetType() : GroundType(1);
+    public sealed record ResetType() : GroundType(1);
+    public sealed record AnalogType(int Width) : GroundType(Width);
 
-    public record AggregateType() : IFIRType;
-    public record Field(string Name, Orientation Flip, IFIRType Type);
-    public record BundleType(List<Field> Fields) : AggregateType;
-    public record VectorType(IFIRType Type, int Size) : AggregateType;
+    public interface IAggregateType : IFIRType { }
+    public sealed record Field(string Name, Orientation Flip, IFIRType Type);
+    public sealed record BundleType(List<Field> Fields) : IAggregateType;
+    public sealed record VectorType(IFIRType Type, int Size) : IAggregateType;
 
-    public record StringLit(string Str) : FirrtlNode;
+    public sealed record StringLit(string Str) : IFirrtlNode;
 
-    public record Param(string Name) : FirrtlNode;
-    public record IntParam(string Name, BigInteger Value) : Param(Name);
-    public record StringParam(string Name, StringLit Value) : Param(Name);
-    public record DoubleParam(string Name, double Value) : Param(Name);
-    public record RawStringParam(string Name, string Value) : Param(Name);
+    public interface IParam : IFirrtlNode
+    {
+        string Name { get; }
+    }
+    public sealed record IntParam(string Name, BigInteger Value) : IParam;
+    public sealed record StringParam(string Name, StringLit Value) : IParam;
+    public sealed record DoubleParam(string Name, double Value) : IParam;
+    public sealed record RawStringParam(string Name, string Value) : IParam;
 
-    public record PrimOp(string Name) : FirrtlNode
+    public record PrimOp(string Name) : IFirrtlNode
     {
         public override string ToString()
         {
             return Name;
         }
     }
-    public record Add() : PrimOp("add");
-    public record Sub() : PrimOp("sub");
-    public record Mul() : PrimOp("mul");
-    public record Div() : PrimOp("div");
-    public record Rem() : PrimOp("rem");
-    public record Lt() : PrimOp("lt");
-    public record Leq() : PrimOp("leq");
-    public record Gt() : PrimOp("gt");
-    public record Geq() : PrimOp("geq");
-    public record Eq() : PrimOp("eq");
-    public record Neq() : PrimOp("neq");
-    public record Pad() : PrimOp("pad");
-    public record Shl() : PrimOp("shl");
-    public record Shr() : PrimOp("shr");
-    public record Dshl() : PrimOp("dshl");
-    public record Dshr() : PrimOp("dshr");
-    public record Cvt() : PrimOp("cvt");
-    public record Neg() : PrimOp("neg");
-    public record Not() : PrimOp("not");
-    public record And() : PrimOp("and");
-    public record Or() : PrimOp("or");
-    public record Xor() : PrimOp("xor");
-    public record Andr() : PrimOp("andr");
-    public record Orr() : PrimOp("orr");
-    public record Xorr() : PrimOp("xorr");
-    public record Cat() : PrimOp("cat");
-    public record Bits() : PrimOp("bits");
-    public record Head() : PrimOp("head");
-    public record Tail() : PrimOp("tail");
-    public record IncP() : PrimOp("incp");
-    public record DecP() : PrimOp("decp");
-    public record SetP() : PrimOp("setp");
-    public record AsUInt() : PrimOp("asUInt");
-    public record AsSInt() : PrimOp("asSInt");
-    public record AsClock() : PrimOp("asClock");
-    public record AsAsyncReset() : PrimOp("asAsyncReset");
-    public record AsFixedPoint() : PrimOp("asFixedPoint");
-    public record AsInterval() : PrimOp("asInterval");
-    public record Squeeze() : PrimOp("squz");
-    public record Wrap() : PrimOp("wrap");
-    public record Clip() : PrimOp("clip");
+    public sealed record Add() : PrimOp("add");
+    public sealed record Sub() : PrimOp("sub");
+    public sealed record Mul() : PrimOp("mul");
+    public sealed record Div() : PrimOp("div");
+    public sealed record Rem() : PrimOp("rem");
+    public sealed record Lt() : PrimOp("lt");
+    public sealed record Leq() : PrimOp("leq");
+    public sealed record Gt() : PrimOp("gt");
+    public sealed record Geq() : PrimOp("geq");
+    public sealed record Eq() : PrimOp("eq");
+    public sealed record Neq() : PrimOp("neq");
+    public sealed record Pad() : PrimOp("pad");
+    public sealed record Shl() : PrimOp("shl");
+    public sealed record Shr() : PrimOp("shr");
+    public sealed record Dshl() : PrimOp("dshl");
+    public sealed record Dshr() : PrimOp("dshr");
+    public sealed record Cvt() : PrimOp("cvt");
+    public sealed record Neg() : PrimOp("neg");
+    public sealed record Not() : PrimOp("not");
+    public sealed record And() : PrimOp("and");
+    public sealed record Or() : PrimOp("or");
+    public sealed record Xor() : PrimOp("xor");
+    public sealed record Andr() : PrimOp("andr");
+    public sealed record Orr() : PrimOp("orr");
+    public sealed record Xorr() : PrimOp("xorr");
+    public sealed record Cat() : PrimOp("cat");
+    public sealed record Bits() : PrimOp("bits");
+    public sealed record Head() : PrimOp("head");
+    public sealed record Tail() : PrimOp("tail");
+    public sealed record IncP() : PrimOp("incp");
+    public sealed record DecP() : PrimOp("decp");
+    public sealed record SetP() : PrimOp("setp");
+    public sealed record AsUInt() : PrimOp("asUInt");
+    public sealed record AsSInt() : PrimOp("asSInt");
+    public sealed record AsClock() : PrimOp("asClock");
+    public sealed record AsAsyncReset() : PrimOp("asAsyncReset");
+    public sealed record AsFixedPoint() : PrimOp("asFixedPoint");
+    public sealed record AsInterval() : PrimOp("asInterval");
+    public sealed record Squeeze() : PrimOp("squz");
+    public sealed record Wrap() : PrimOp("wrap");
+    public sealed record Clip() : PrimOp("clip");
 
-    public record Expression() : FirrtlNode;
-    public record DoPrim(PrimOp Op, List<Expression> Args, List<BigInteger> Consts, IFIRType Type) : Expression;
-    public record ValidIf(Expression Cond, Expression Value, IFIRType Type) : Expression;
-    public record Mux(Expression Cond, Expression TrueValue, Expression FalseValue, IFIRType Type) : Expression;
+    public interface IExpression : IFirrtlNode { }
+    public sealed record DoPrim(PrimOp Op, List<IExpression> Args, List<BigInteger> Consts, IFIRType Type) : IExpression;
+    public sealed record ValidIf(IExpression Cond, IExpression Value, IFIRType Type) : IExpression;
+    public sealed record Mux(IExpression Cond, IExpression TrueValue, IExpression FalseValue, IFIRType Type) : IExpression;
 
-    public interface RefLikeExpression { }
-    public record Reference(string Name, IFIRType Type, KindType Kind, FlowType Flow) : Expression, RefLikeExpression;
-    public record SubField(Expression Expr, string Name, IFIRType Type, FlowType Flow) : Expression, RefLikeExpression;
-    public record SubIndex(Expression Expr, int Value, IFIRType Type, FlowType Flow) : Expression, RefLikeExpression;
-    public record SubAccess(Expression Expr, Expression Index, IFIRType Type, FlowType Flow) : Expression, RefLikeExpression;
+    public interface IRefLikeExpression { }
+    public sealed record Reference(string Name, IFIRType Type, KindType Kind, FlowType Flow) : IExpression, IRefLikeExpression;
+    public sealed record SubField(IExpression Expr, string Name, IFIRType Type, FlowType Flow) : IExpression, IRefLikeExpression;
+    public sealed record SubIndex(IExpression Expr, int Value, IFIRType Type, FlowType Flow) : IExpression, IRefLikeExpression;
+    public sealed record SubAccess(IExpression Expr, IExpression Index, IFIRType Type, FlowType Flow) : IExpression, IRefLikeExpression;
 
-    public abstract record Literal(BigInteger Value, int Width) : Expression
+    public interface ILiteral : IExpression
     {
-        public abstract IFIRType GetFIRType();
+        BigInteger Value { get; }
+        int Width { get; }
+        IFIRType GetFIRType();
     }
-    public record UIntLiteral(BigInteger Value, int Width) : Literal(Value, Width)
+    public sealed record UIntLiteral(BigInteger Value, int Width) : ILiteral
     {
-        public override IFIRType GetFIRType()
+        public IFIRType GetFIRType()
         {
             return new UIntType(Width);
         }
     }
-    public record SIntLiteral(BigInteger Value, int Width) : Literal(Value, Width)
+    public sealed record SIntLiteral(BigInteger Value, int Width) : ILiteral
     {
-        public override IFIRType GetFIRType()
+        public IFIRType GetFIRType()
         {
             return new SIntType(Width);
         }
     }
 
-    public record Statement() : FirrtlNode;
-    public record EmptyStmt() : Statement;
-    public record Block(List<Statement> Statements) : Statement;
-    public record Conditionally(IInfo Info, Expression Pred, Statement WhenTrue, Statement Alt) : Statement
+    public interface IStatement : IFirrtlNode { }
+    public sealed record EmptyStmt() : IStatement;
+    public sealed record Block(List<IStatement> Statements) : IStatement;
+    public sealed record Conditionally(IInfo Info, IExpression Pred, IStatement WhenTrue, IStatement Alt) : IStatement
     {
         public bool HasIf()
         {
@@ -199,19 +204,19 @@ namespace FIRRTL
         }
     }
 
-    public record Stop(IInfo Info, int Ret, Expression Clk, Expression Enabled) : Statement;
-    public record Attach(IInfo Info, List<Expression> Exprs) : Statement;
-    public record Print(IInfo Info, StringLit MsgFormat, List<Expression> Args, Expression Clk, Expression Enabled) : Statement;
-    public record Verification(Formal Op, IInfo Info, Expression Clk, Expression Pred, Expression Enabled, StringLit MsgFormat) : Statement;
-    public record Connect(IInfo Info, Expression Loc, Expression Expr) : Statement;
-    public record PartialConnect(IInfo Info, Expression Loc, Expression Expr) : Statement;
-    public record IsInvalid(IInfo Info, Expression Expr) : Statement;
-    public record CDefMemory(IInfo Info, string Name, IFIRType Type, ulong Size, bool Sequence, ReadUnderWrite Ruw) : Statement;
-    public record CDefMPort(IInfo Info, string Name, IFIRType Type, string Mem, List<Expression> Exps, MPortDir Direction) : Statement;
+    public sealed record Stop(IInfo Info, int Ret, IExpression Clk, IExpression Enabled) : IStatement;
+    public sealed record Attach(IInfo Info, List<IExpression> Exprs) : IStatement;
+    public sealed record Print(IInfo Info, StringLit MsgFormat, List<IExpression> Args, IExpression Clk, IExpression Enabled) : IStatement;
+    public sealed record Verification(Formal Op, IInfo Info, IExpression Clk, IExpression Pred, IExpression Enabled, StringLit MsgFormat) : IStatement;
+    public sealed record Connect(IInfo Info, IExpression Loc, IExpression Expr) : IStatement;
+    public sealed record PartialConnect(IInfo Info, IExpression Loc, IExpression Expr) : IStatement;
+    public sealed record IsInvalid(IInfo Info, IExpression Expr) : IStatement;
+    public sealed record CDefMemory(IInfo Info, string Name, IFIRType Type, ulong Size, bool Sequence, ReadUnderWrite Ruw) : IStatement;
+    public sealed record CDefMPort(IInfo Info, string Name, IFIRType Type, string Mem, List<IExpression> Exps, MPortDir Direction) : IStatement;
 
-    public interface IsDeclaration { }
-    public record DefWire(IInfo Info, string Name, IFIRType Type) : Statement, IsDeclaration;
-    public record DefRegister(IInfo Info, string Name, IFIRType Type, Expression Clock, Expression Reset, Expression Init) : Statement, IsDeclaration
+    public interface IIsDeclaration { }
+    public sealed record DefWire(IInfo Info, string Name, IFIRType Type) : IStatement, IIsDeclaration;
+    public sealed record DefRegister(IInfo Info, string Name, IFIRType Type, IExpression Clock, IExpression Reset, IExpression Init) : IStatement, IIsDeclaration
     {
         public bool HasResetAndInit()
         {
@@ -221,9 +226,9 @@ namespace FIRRTL
             return !(hasDefaultReset && hasDefaultInit);
         }
     }
-    public record DefInstance(IInfo Info, string Name, string Module, IFIRType Type) : Statement, IsDeclaration;
-    public record DefNode(IInfo Info, string Name, Expression Value) : Statement, IsDeclaration;
-    public record DefMemory(
+    public sealed record DefInstance(IInfo Info, string Name, string Module, IFIRType Type) : IStatement, IIsDeclaration;
+    public sealed record DefNode(IInfo Info, string Name, IExpression Value) : IStatement, IIsDeclaration;
+    public sealed record DefMemory(
         IInfo Info,
         string Name,
         IFIRType Type,
@@ -233,13 +238,16 @@ namespace FIRRTL
         List<string> Readers,
         List<string> Writers,
         List<string> ReadWriters,
-        ReadUnderWrite Ruw) : Statement, IsDeclaration;
+        ReadUnderWrite Ruw) : IStatement, IIsDeclaration;
 
 
 
-    public record DefModule(string Name) : FirrtlNode, IsDeclaration;
-    public record Port(IInfo Info, string Name, Dir Direction, IFIRType Type) : FirrtlNode, IsDeclaration;
-    public record Module(IInfo Info, string Name, List<Port> Ports, Statement Body) : DefModule(Name);
-    public record ExtModule(IInfo Info, string Name, List<Port> Ports, string DefName, List<Param> Params) : DefModule(Name);
-    public record Circuit(IInfo Info, List<DefModule> Modules, string Main) : FirrtlNode;
+    public interface IDefModule : IFirrtlNode, IIsDeclaration
+    {
+        string Name { get; }
+    }
+    public sealed record Port(IInfo Info, string Name, Dir Direction, IFIRType Type) : IFirrtlNode, IIsDeclaration;
+    public sealed record Module(IInfo Info, string Name, List<Port> Ports, IStatement Body) : IDefModule;
+    public sealed record ExtModule(IInfo Info, string Name, List<Port> Ports, string DefName, List<IParam> Params) : IDefModule;
+    public sealed record Circuit(IInfo Info, List<IDefModule> Modules, string Main) : IFirrtlNode;
 }
