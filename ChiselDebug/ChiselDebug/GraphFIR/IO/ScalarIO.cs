@@ -92,10 +92,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         public void SetDefaultvalue()
         {
-            if (Value == null)
-            {
-                Value = new ValueType(Type);
-            }
+            Value ??= new ValueType(Type);
         }
 
         public ref BinaryVarValue GetValue()

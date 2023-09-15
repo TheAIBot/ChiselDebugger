@@ -58,8 +58,10 @@ namespace ChiselDebug.GraphFIR.Components
 
         public override Sink[] GetSinks()
         {
-            List<Sink> inputs = new List<Sink>();
-            inputs.Add(Decider);
+            List<Sink> inputs = new List<Sink>
+            {
+                Decider
+            };
             inputs.AddRange(ChoiseInputs);
             return inputs.ToArray();
         }

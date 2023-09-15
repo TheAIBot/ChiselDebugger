@@ -128,7 +128,7 @@ namespace ChiselDebug.Placing.GraphViz
             return placments;
         }
 
-        private void MakeIntoRecord(Node node, Sink[] inputs, Source[] outputs, Dictionary<Sink, string> inputToPort, Dictionary<Source, string> outputToPort, ref int portName)
+        private static void MakeIntoRecord(Node node, Sink[] inputs, Source[] outputs, Dictionary<Sink, string> inputToPort, Dictionary<Source, string> outputToPort, ref int portName)
         {
             Array.Reverse(inputs);
             Array.Reverse(outputs);

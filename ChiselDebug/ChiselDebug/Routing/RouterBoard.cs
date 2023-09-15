@@ -173,7 +173,7 @@ namespace ChiselDebug.Routing
                 }
                 prevDir = path.DirFrom;
                 boardPos = path.DirFrom.MovePoint(boardPos);
-                actualPos = actualPos + path.DirFrom.MovePoint(Point.Zero) * CellSize;
+                actualPos += path.DirFrom.MovePoint(Point.Zero) * CellSize;
             }
 
             allBoardPoses.Add(CellIndex(start));

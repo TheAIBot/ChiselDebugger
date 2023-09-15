@@ -11,7 +11,7 @@ namespace VCDReader
         {
             if (length > BitsPerAllocate)
             {
-                throw new Exception($"Currently only supports bit array of up to {BitsPerAllocate.ToString("N0")} bits.");
+                throw new Exception($"Currently only supports bit array of up to {BitsPerAllocate:N0} bits.");
             }
 
             if (Bits.Length < length)

@@ -12,8 +12,8 @@ namespace VCDReader.Parsing
     {
         internal static VCD VisitVcd(VCDLexer lexer)
         {
-            var declAndVarID = VisitDeclCmdStream(lexer);
-            return new VCD(declAndVarID.declarations, declAndVarID.idToVariable, lexer);
+            var (declarations, idToVariable) = VisitDeclCmdStream(lexer);
+            return new VCD(declarations, idToVariable, lexer);
         }
 
         internal static (List<IDeclCmd> declarations, IDToVarDef idToVariable) VisitDeclCmdStream(VCDLexer lexer)

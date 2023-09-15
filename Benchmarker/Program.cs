@@ -107,7 +107,7 @@ namespace Benchmarker
 
                     const int msPerSec = 1_000;
                     float remainingSeconds = totalRemainingMs / msPerSec;
-                    Console.WriteLine($"{i}/{timeline.StateCount} Remaining: {remainingSeconds.ToString("N0")} States/sec: {statesPerSecs.ToString("N0")}");
+                    Console.WriteLine($"{i}/{timeline.StateCount} Remaining: {remainingSeconds:N0} States/sec: {statesPerSecs:N0}");
                     timer.Restart();
                 }
             }

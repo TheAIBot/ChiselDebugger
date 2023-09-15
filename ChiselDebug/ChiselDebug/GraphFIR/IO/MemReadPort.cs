@@ -26,11 +26,13 @@ namespace ChiselDebug.GraphFIR.IO
             FIRIO dataOut = inputType.Flip(node);
             dataOut.SetName("data");
 
-            List<FIRIO> io = new List<FIRIO>();
-            io.Add(dataOut);
-            io.Add(new Sink(node, "addr", new UIntType(addressWidth)));
-            io.Add(new Sink(node, "en", new UIntType(1)));
-            io.Add(new Sink(node, "clk", new ClockType()));
+            List<FIRIO> io = new List<FIRIO>
+            {
+                dataOut,
+                new Sink(node, "addr", new UIntType(addressWidth)),
+                new Sink(node, "en", new UIntType(1)),
+                new Sink(node, "clk", new ClockType())
+            };
 
             return io;
         }

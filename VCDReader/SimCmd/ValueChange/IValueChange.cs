@@ -278,7 +278,7 @@ namespace VCDReader
                 ulong value = 0;
                 for (int i = Bits.Length - 1; i >= 0; i--)
                 {
-                    value = value << 1;
+                    value <<= 1;
                     value |= 1 & (ulong)Bits[i];
                 }
 
@@ -320,7 +320,7 @@ namespace VCDReader
                 var value = BigInteger.Zero;
                 for (int i = Bits.Length - 1; i >= 0; i--)
                 {
-                    value = value << 1;
+                    value <<= 1;
                     value |= 1 & (int)Bits[i];
                 }
 
@@ -337,7 +337,7 @@ namespace VCDReader
 
             for (int i = Bits.Length - 1; i >= 0; i--)
             {
-                value = value << 1;
+                value <<= 1;
                 value |= 1 & (int)Bits[i];
             }
 

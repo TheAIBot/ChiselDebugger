@@ -10,8 +10,8 @@ namespace FIRRTL.Parsing
 {
     internal abstract class LexerHelper
     {
-        private Queue<IToken> TokenBuffer = new Queue<IToken>();
-        private Stack<int> Indentations = new Stack<int>();
+        private readonly Queue<IToken> TokenBuffer = new Queue<IToken>();
+        private readonly Stack<int> Indentations = new Stack<int>();
         private bool ReachedEOF = false;
 
         private IToken EOFhandler(IToken t)

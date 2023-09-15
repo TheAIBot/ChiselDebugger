@@ -350,7 +350,7 @@ namespace ChiselDebug.GraphFIR.Circuit
 
         private void NodesStateToString(StringBuilder builder, FIRRTLNode[] nodes, string indentation)
         {
-            indentation = indentation + '\t';
+            indentation += '\t';
 
             foreach (var node in nodes)
             {

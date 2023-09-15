@@ -5,7 +5,7 @@ using VCDReader.Parsing;
 
 namespace VCDReader
 {
-    public class VCD : IDisposable
+    public sealed class VCD : IDisposable
     {
         public readonly List<IDeclCmd> Declarations;
         private readonly IDToVarDef IDToVariable;
@@ -14,7 +14,7 @@ namespace VCDReader
         public readonly TimeScale? Time;
         public readonly Version? Version;
 
-        private VCDLexer Lexer;
+        private readonly VCDLexer Lexer;
 
         public IEnumerable<List<VarDef>> Variables => IDToVariable.Values;
 

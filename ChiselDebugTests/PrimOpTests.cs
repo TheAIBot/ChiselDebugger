@@ -39,7 +39,7 @@ namespace ChiselDebugTests
         [TestMethod] public void PrimOpTail() => VerifyPrimOpMonoArgMonoConst("tail");
 
 
-        private void VerifyPrimOpBiArg(string opName, int outputSize = 8)
+        private static void VerifyPrimOpBiArg(string opName, int outputSize = 8)
         {
             string firrtl = @$"
 circuit ModA : 
@@ -53,7 +53,7 @@ circuit ModA :
             TestTools.VerifyCanCreateGraph(firrtl);
         }
 
-        private void VerifyPrimOpMonoArg(string opName, int outputSize = 8)
+        private static void VerifyPrimOpMonoArg(string opName, int outputSize = 8)
         {
             string firrtl = @$"
 circuit ModA : 
@@ -67,7 +67,7 @@ circuit ModA :
             TestTools.VerifyCanCreateGraph(firrtl);
         }
 
-        private void VerifyPrimOpMonoArgMonoConst(string opName, int outputSize = 8)
+        private static void VerifyPrimOpMonoArgMonoConst(string opName, int outputSize = 8)
         {
             string firrtl = @$"
 circuit ModA : 
@@ -81,7 +81,7 @@ circuit ModA :
             TestTools.VerifyCanCreateGraph(firrtl);
         }
 
-        private void VerifyPrimOpMonoArgBiConst(string opName, int outputSize = 8)
+        private static void VerifyPrimOpMonoArgBiConst(string opName, int outputSize = 8)
         {
             string firrtl = @$"
 circuit ModA : 

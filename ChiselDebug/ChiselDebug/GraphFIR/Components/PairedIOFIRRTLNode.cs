@@ -24,10 +24,10 @@ namespace ChiselDebug.GraphFIR.Components
                 return;
             }
 
-            foreach (var pair in io.Flatten().Zip(ioFlipped.Flatten()))
+            foreach (var (First, Second) in io.Flatten().Zip(ioFlipped.Flatten()))
             {
-                pair.First.SetPaired(pair.Second);
-                pair.Second.SetPaired(pair.First);
+                First.SetPaired(Second);
+                Second.SetPaired(First);
             }
         }
 

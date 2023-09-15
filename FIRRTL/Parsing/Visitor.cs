@@ -235,7 +235,7 @@ namespace FIRRTL.Parsing
 
         private IFIRType VisitType([NotNull] FIRRTLParser.TypeContext context)
         {
-            int GetWidth(FIRRTLParser.IntLitContext lit)
+            static int GetWidth(FIRRTLParser.IntLitContext lit)
             {
                 return int.Parse(lit.GetText(), CultureInfo.InvariantCulture);
             }
@@ -531,19 +531,14 @@ namespace FIRRTL.Parsing
             }
             else
             {
-                switch (context.GetChild(1).GetText())
+                return context.GetChild(1).GetText() switch
                 {
-                    case "<=":
-                        return new Connect(info, VisitExp(contextExprs[0]), VisitExp(contextExprs[1]));
-                    case "<-":
-                        return new PartialConnect(info, VisitExp(contextExprs[0]), VisitExp(contextExprs[1]));
-                    case "is":
-                        return new IsInvalid(info, VisitExp(contextExprs[0]));
-                    case "mport":
-                        return new CDefMPort(info, context.id(0).GetText(), new UnknownType(), context.id(1).GetText(), new List<IExpression>() { VisitExp(contextExprs[0]), VisitExp(contextExprs[1]) }, VisitMdir(context.mdir()));
-                    default:
-                        throw new Exception($"Invalid statement: {context.GetText()}");
-                }
+                    "<=" => new Connect(info, VisitExp(contextExprs[0]), VisitExp(contextExprs[1])),
+                    "<-" => new PartialConnect(info, VisitExp(contextExprs[0]), VisitExp(contextExprs[1])),
+                    "is" => new IsInvalid(info, VisitExp(contextExprs[0])),
+                    "mport" => new CDefMPort(info, context.id(0).GetText(), new UnknownType(), context.id(1).GetText(), new List<IExpression>() { VisitExp(contextExprs[0]), VisitExp(contextExprs[1]) }, VisitMdir(context.mdir())),
+                    _ => throw new Exception($"Invalid statement: {context.GetText()}"),
+                };
             }
         }
 

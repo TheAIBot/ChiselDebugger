@@ -127,7 +127,7 @@ namespace ChiselDebug.Routing
             }
         }
 
-        private bool TryPathLine(RouterBoard board, IOInfo start, IOInfo end, Rectangle? startRect, Rectangle? endRect, List<WirePath> allPaths, out WirePath wirePath)
+        private static bool TryPathLine(RouterBoard board, IOInfo start, IOInfo end, Rectangle? startRect, Rectangle? endRect, List<WirePath> allPaths, out WirePath wirePath)
         {
             board.ReloadCheckpoint();
 
@@ -255,11 +255,11 @@ namespace ChiselDebug.Routing
             return false;
         }
 
-        private void RefineWirePaths(RouterBoard board, List<WirePath> paths)
+        private static void RefineWirePaths(RouterBoard board, List<WirePath> paths)
         {
             //The start and end point of a wire path will not end at their correct
             //positions. This is because the path follows the center of the cells
-            //in the board, but the start and end may not be position in the middle
+            //in the board, but the start and end may not be positioned in the middle
             //of a cell. Therefore the start and end points are moved to their correct
             //positions and the points just before start/end are also moved so the
             //lines are only horizontal and vertical.

@@ -109,7 +109,7 @@ namespace ChiselDebug.Routing
             return lines;
         }
 
-        private LineInfo MakeLine(Dictionary<FIRRTLNode, Point> nodePoses, IOInfo outputInfo, IOInfo inputInfo)
+        private static LineInfo MakeLine(Dictionary<FIRRTLNode, Point> nodePoses, IOInfo outputInfo, IOInfo inputInfo)
         {
             Point startOffset = nodePoses[outputInfo.Node];
             Point endOffset = nodePoses[inputInfo.Node];

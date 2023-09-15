@@ -62,7 +62,7 @@ namespace ChiselDebug.Routing
 
         internal void RefineWireStartAndEnd()
         {
-            Point RefineEndPoint(Point pathBeforeEnd, Point pathEnd, Point pathEndGoal)
+            static Point RefineEndPoint(Point pathBeforeEnd, Point pathEnd, Point pathEndGoal)
             {
                 if (pathEnd.Y == pathBeforeEnd.Y)
                 {

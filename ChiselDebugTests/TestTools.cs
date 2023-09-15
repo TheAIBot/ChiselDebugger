@@ -195,7 +195,7 @@ namespace ChiselDebugTests
                     {
                         if (!expected.SameValue(ref actual))
                         {
-                            stateErrors.Add($"\nTime: {state.Time.ToString("N0")}\nName: {varCon.GetFullName()}\nExpected: {expected.BitsToString()}\nActual:   {actual.BitsToString()}\n");
+                            stateErrors.Add($"\nTime: {state.Time:N0}\nName: {varCon.GetFullName()}\nExpected: {expected.BitsToString()}\nActual:   {actual.BitsToString()}\n");
                         }
                     }
                     else
@@ -211,7 +211,7 @@ namespace ChiselDebugTests
                             if (expected.Bits[i] != actual.Bits[i])
                             {
                                 //graph.SetStateFast(state, isVerilogVCD);
-                                stateErrors.Add($"\nTime: {state.Time.ToString("N0")}\nName: {varCon.GetFullName()}\nExpected: {expected.BitsToString()}\nActual:   {actual.BitsToString()}\n");
+                                stateErrors.Add($"\nTime: {state.Time:N0}\nName: {varCon.GetFullName()}\nExpected: {expected.BitsToString()}\nActual:   {actual.BitsToString()}\n");
                                 break;
                             }
                         }

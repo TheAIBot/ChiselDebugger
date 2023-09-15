@@ -105,10 +105,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         internal void ConnectOnlyOutputSide(Sink input)
         {
-            if (To == null)
-            {
-                To = new List<Sink>();
-            }
+            To ??= new List<Sink>();
             To.Add(input);
         }
 

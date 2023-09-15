@@ -41,7 +41,7 @@ namespace ChiselDebuggerRazor.Code
             }
         }
 
-        private async Task<Stream> CopyBrowserFileToMemory(IBrowserFile file)
+        private static async Task<Stream> CopyBrowserFileToMemory(IBrowserFile file)
         {
             if (file == null)
             {

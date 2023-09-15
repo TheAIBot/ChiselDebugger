@@ -5,8 +5,8 @@ namespace VCDReader.Parsing
 {
     internal class IDToVarDef
     {
-        private Dictionary<SpanString, List<VarDef>> IDToVariable = new Dictionary<SpanString, List<VarDef>>();
-        private Dictionary<ulong, List<VarDef>> OptiIDToVariable = new Dictionary<ulong, List<VarDef>>();
+        private readonly Dictionary<SpanString, List<VarDef>> IDToVariable = new Dictionary<SpanString, List<VarDef>>();
+        private readonly Dictionary<ulong, List<VarDef>> OptiIDToVariable = new Dictionary<ulong, List<VarDef>>();
         private char[] MaxLengthID = Array.Empty<char>();
         public IEnumerable<List<VarDef>> Values => IDToVariable.Values;
 

@@ -37,11 +37,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         public void AddConnection(AggregateIO aggIO, Source? condition)
         {
-            if (Connections == null)
-            {
-                Connections = new HashSet<AggregateConnection>();
-            }
-
+            Connections ??= new HashSet<AggregateConnection>();
             Connections.Add(new AggregateConnection(aggIO, condition));
         }
 

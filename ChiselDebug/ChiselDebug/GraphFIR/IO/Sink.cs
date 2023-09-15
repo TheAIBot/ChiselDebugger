@@ -124,10 +124,7 @@ namespace ChiselDebug.GraphFIR.IO
 
         internal void TransferConnectionsTo(Sink input)
         {
-            if (Con != null)
-            {
-                Con.ConnectToInput(input);
-            }
+            Con?.ConnectToInput(input);
 
             foreach (var condCon in CondCons.ToArray())
             {
@@ -245,7 +242,7 @@ namespace ChiselDebug.GraphFIR.IO
                 FlowChange.Sink => new Sink(node, Name, Type),
                 FlowChange.Flipped => new Source(node, Name, Type),
                 FlowChange.Preserve => new Sink(node, Name, Type),
-                var error => throw new Exception($"Unknown flow. Flow: {flow}")
+                var _ => throw new Exception($"Unknown flow. Flow: {flow}")
             };
         }
 

@@ -47,19 +47,19 @@ namespace ChiselDebugTests
 
         public void WriteToConsole()
         {
-            Console.WriteLine($"Wire states: {TotalWireStates.ToString("N0")}");
-            Console.WriteLine($"Ignored W: {IgnoredBecauseUnknown.ToString("N0")}");
+            Console.WriteLine($"Wire states: {TotalWireStates:N0}");
+            Console.WriteLine($"Ignored W: {IgnoredBecauseUnknown:N0}");
 
-            Console.WriteLine($"Ignored Not exist: {IgnoredBecauseNotExist.ToString("N0")}");
+            Console.WriteLine($"Ignored Not exist: {IgnoredBecauseNotExist:N0}");
             foreach (var nameCount in IgnoreNotExistNames.OrderByDescending(x => x.Value))
             {
-                Console.WriteLine($"\t{nameCount.Value.ToString("N0").PadLeft(10)} : {nameCount.Key.RefNameWithScopes()}");
+                Console.WriteLine($"\t{nameCount.Value,10:N0} : {nameCount.Key.RefNameWithScopes()}");
             }
 
-            Console.WriteLine($"Ignored Mem read delay: {IgnoredBecauseMemReadDelay.ToString("N0")}");
+            Console.WriteLine($"Ignored Mem read delay: {IgnoredBecauseMemReadDelay:N0}");
             foreach (var nameCount in IgnoreMemReadDelayNames.OrderByDescending(x => x.Value))
             {
-                Console.WriteLine($"\t{nameCount.Value.ToString("N0").PadLeft(10)} : {nameCount.Key.RefNameWithScopes()}");
+                Console.WriteLine($"\t{nameCount.Value,10:N0} : {nameCount.Key.RefNameWithScopes()}");
             }
         }
     }

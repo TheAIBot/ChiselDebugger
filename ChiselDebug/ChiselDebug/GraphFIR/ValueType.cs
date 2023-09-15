@@ -68,7 +68,7 @@ namespace ChiselDebug.GraphFIR
 
         public string ToBinaryString()
         {
-            ValueString = ValueString ?? Value.BitsToString();
+            ValueString ??= Value.BitsToString();
             return ValueString;
         }
     }
