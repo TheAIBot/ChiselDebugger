@@ -123,7 +123,7 @@ namespace ChiselDebug.CombGraph
         }
     }
 
-    internal abstract class BaseBlockers<T>
+    internal abstract class BaseBlockers<T> where T : notnull
     {
         protected readonly Dictionary<T, HashSet<Source>> SeenButMissingSources = new Dictionary<T, HashSet<Source>>();
         protected readonly Dictionary<Source, List<T>> InputBlockers = new Dictionary<Source, List<T>>();
@@ -139,7 +139,7 @@ namespace ChiselDebug.CombGraph
 
         private HashSet<Source> GetMissingSources(HashSet<Source> seenCons, T target)
         {
-            HashSet<Source> missingCons;
+            HashSet<Source>? missingCons;
             if (!SeenButMissingSources.TryGetValue(target, out missingCons))
             {
                 missingCons = new HashSet<Source>();

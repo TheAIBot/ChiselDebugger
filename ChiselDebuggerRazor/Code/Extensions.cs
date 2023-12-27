@@ -6,17 +6,17 @@ namespace ChiselDebuggerRazor.Code
     {
         public static string ToPixels(this int value)
         {
-            return value + "px";
+            return $"{value}px";
         }
 
         public static string ToPixels(this float value)
         {
-            return value.ToHtmlNumber() + "px";
+            return string.Create(CultureInfo.InvariantCulture, $"{value}px");
         }
 
         public static string ToPercent(this float value)
         {
-            return value.ToHtmlNumber() + "%";
+            return string.Create(CultureInfo.InvariantCulture, $"{value}%");
         }
 
         public static string ToHtmlNumber(this float value)
