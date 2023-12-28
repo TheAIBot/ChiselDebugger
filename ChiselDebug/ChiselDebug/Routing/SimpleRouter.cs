@@ -37,6 +37,46 @@ namespace ChiselDebug.Routing
             return MissingNodeIO.Count == 0;
         }
 
+        private List<LineInfo> OrderLines(List<LineInfo> lines)
+        {
+            return lines.GroupBy(x => x.GetLine().GetManhattanDistance())
+                        .Select(x => (x.Key, x.GroupBy(y => y.End.DirIO.Position.X)
+                                              .Select(z => (z.Key, OrderEqualDistanceLines(z.ToList())))
+                                              .OrderByDescending(z => z.Key)
+                                              .SelectMany(z => z.Item2)))
+                        .OrderBy(x => x.Key)
+                        .SelectMany(x => x.Item2)
+                        .ToList();
+        }
+
+        private static List<LineInfo> OrderEqualDistanceLines(List<LineInfo> lines)
+        {
+            var up = new List<LineInfo>();
+            var straight = new List<LineInfo>();
+            var down = new List<LineInfo>();
+
+            foreach (var line in lines)
+            {
+                if (line.End.DirIO.Position.Y < line.Start.DirIO.Position.Y)
+                {
+                    up.Add(line);
+                }
+                else if (line.End.DirIO.Position.Y > line.Start.DirIO.Position.Y)
+                {
+                    down.Add(line);
+                }
+                else
+                {
+                    straight.Add(line);
+                }
+            }
+
+            return down.OrderByDescending(x => x.Start.DirIO.Position.Y)
+                       .Concat(straight)
+                       .Concat(up.OrderBy(x => x.Start.DirIO.Position.Y))
+                       .ToList();
+        }
+
         public bool TryPathLines(PlacementInfo placements, CancellationToken cancelToken, out List<WirePath> wiresPaths)
         {
             Dictionary<Line, int> repathCounter = new Dictionary<Line, int>();
@@ -48,7 +88,7 @@ namespace ChiselDebug.Routing
                 repathCounter.Add(line.GetLine(), 0);
             }
 
-            Queue<LineInfo> linesPriority = new Queue<LineInfo>(sortedLines.OrderBy(x => x.GetScore()));
+            Queue<LineInfo> linesPriority = new Queue<LineInfo>(OrderLines(sortedLines));
 
             RouterBoard board = new RouterBoard(placements.SpaceNeeded);
             board.PrepareBoard(placements.UsedSpace.Values.ToList());

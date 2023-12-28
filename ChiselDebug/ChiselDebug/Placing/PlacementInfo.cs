@@ -129,25 +129,14 @@ namespace ChiselDebug.Placing
 
         public void SetBorderPadding(Point padding)
         {
-            Point minPos = new Point(int.MaxValue, int.MaxValue);
-            Point maxPos = new Point(int.MinValue, int.MinValue);
-            foreach (var nodeRect in UsedSpace.Values)
-            {
-                minPos = Point.Min(minPos, nodeRect.Pos);
-                maxPos = Point.Max(maxPos, nodeRect.Pos + nodeRect.Size);
-            }
-
-            Point offset = padding - minPos;
-            offset.X = 0;
-
             NodePositions.Clear();
             foreach (var nodeRect in UsedSpace.ToArray())
             {
-                NodePositions.Add(new Positioned<FIRRTLNode>(nodeRect.Value.Pos + offset, nodeRect.Key));
-                UsedSpace[nodeRect.Key] = new Rectangle(nodeRect.Value.Pos + offset, nodeRect.Value.Size);
+                NodePositions.Add(new Positioned<FIRRTLNode>(nodeRect.Value.Pos + padding, nodeRect.Key));
+                UsedSpace[nodeRect.Key] = new Rectangle(nodeRect.Value.Pos + padding, nodeRect.Value.Size);
             }
 
-            SpaceNeeded = new Point(SpaceNeeded.X, maxPos.Y + offset.Y + padding.Y * 2);
+            SpaceNeeded = SpaceNeeded + padding * 2;
         }
 
         private sealed class RankWidth
