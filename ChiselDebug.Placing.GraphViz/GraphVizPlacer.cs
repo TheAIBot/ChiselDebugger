@@ -122,7 +122,7 @@ namespace ChiselDebug.Placing.GraphViz
                 placments.AddNodePlacement(firRect.Key, new Rectangle(offsetBy + firRect.Value.Pos, firRect.Value.Size));
             }
 
-            Point borderPadding = new Point(20, 20);
+            Point borderPadding = new Point(40, 40);
             placments.AutoSpacePlacementRanks(mod);
             placments.SetBorderPadding(borderPadding);
             return placments;
