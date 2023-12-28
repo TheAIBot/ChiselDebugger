@@ -46,9 +46,11 @@ namespace ChiselDebug.Utilities
             return new Point(Math.Min(a.X, b.X), Math.Min(a.Y, b.Y));
         }
 
-        public static int ManhattanDistance(in Point a, in Point b)
+        public static int ManhattanDistance(Point a, Point b)
         {
-            return Math.Abs(Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y));
+            // The sum of the two absolute values may overflow in which case max int
+            // is the desired value. int.CreateSaturating handles the overflow logic.
+            return int.CreateSaturating(Math.Abs((long)a.X - b.X) + Math.Abs((long)a.Y - b.Y));
         }
 
         public Point Abs()

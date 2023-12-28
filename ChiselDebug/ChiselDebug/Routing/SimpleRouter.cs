@@ -223,29 +223,33 @@ namespace ChiselDebug.Routing
                 for (int i = 0; i < moves.Length; i++)
                 {
                     ref readonly MoveData move = ref moves[i];
-                    if (allowedMoves.HasFlag(move.Dir))
+                    if (!allowedMoves.HasFlag(move.Dir))
                     {
-                        int neighborIndex = currentIndex + board.CellIndex(move.DirVec);
-                        ref ScorePath neighborScore = ref board.GetCellScorePath(neighborIndex);
-
-                        MoveDirs neighborMoves = board.GetCellMoves(neighborIndex);
-                        bool moveToEnemyWire = neighborMoves.HasFlag(MoveDirs.EnemyWire);
-                        bool moveToFriendWire = neighborMoves.HasFlag(MoveDirs.FriendWire);
-                        bool moveToWireCorner = neighborMoves.HasFlag(MoveDirs.WireCorner);
-                        bool isTurning = currentScorePath.DirFrom != MoveDirs.None && move.RevDir != currentScorePath.DirFrom;
-
-                        ScorePath neighborScoreFromCurrent = currentScorePath.Move(move.RevDir, onEnemyWire, moveToEnemyWire, moveToFriendWire, moveToWireCorner, isTurning);
-                        if (neighborScoreFromCurrent.IsBetterScoreThan(neighborScore))
-                        {
-                            Point neighborPos = board.CellFromIndex(neighborIndex);
-                            int distToGoal = Point.ManhattanDistance(in neighborPos, in relativeStart);
-                            int distToClosestFriend = Point.ManhattanDistance(in neighborPos, in closestFriend);
-                            int dist = Math.Min(distToGoal, distToClosestFriend);
-
-                            toSee.Enqueue(neighborIndex, neighborScoreFromCurrent.GetTotalScore() + dist);
-                            neighborScore = neighborScoreFromCurrent;
-                        }
+                        continue;
                     }
+
+                    int neighborIndex = currentIndex + board.CellIndex(move.DirVec);
+                    ref ScorePath neighborScore = ref board.GetCellScorePath(neighborIndex);
+
+                    MoveDirs neighborMoves = board.GetCellMoves(neighborIndex);
+                    bool moveToEnemyWire = neighborMoves.HasFlag(MoveDirs.EnemyWire);
+                    bool moveToFriendWire = neighborMoves.HasFlag(MoveDirs.FriendWire);
+                    bool moveToWireCorner = neighborMoves.HasFlag(MoveDirs.WireCorner);
+                    bool isTurning = currentScorePath.DirFrom != MoveDirs.None && move.RevDir != currentScorePath.DirFrom;
+
+                    ScorePath neighborScoreFromCurrent = currentScorePath.Move(move.RevDir, onEnemyWire, moveToEnemyWire, moveToFriendWire, moveToWireCorner, isTurning);
+                    if (!neighborScoreFromCurrent.IsBetterScoreThan(neighborScore))
+                    {
+                        continue;
+                    }
+
+                    Point neighborPos = board.CellFromIndex(neighborIndex);
+                    int distToGoal = Point.ManhattanDistance(neighborPos, relativeStart);
+                    int distToClosestFriend = Point.ManhattanDistance(neighborPos, closestFriend);
+                    int dist = Math.Min(distToGoal, distToClosestFriend);
+
+                    toSee.Enqueue(neighborIndex, neighborScoreFromCurrent.GetTotalScore() + dist);
+                    neighborScore = neighborScoreFromCurrent;
                 }
             }
 
