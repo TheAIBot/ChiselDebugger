@@ -219,7 +219,7 @@ namespace ChiselDebug.Routing
                     return true;
                 }
 
-                bool onEnemyWire = allowedMoves.HasFlag(MoveDirs.EnemyWire);
+                int onEnemyWire = allowedMoves.IsEnemyWire();
                 for (int i = 0; i < moves.Length; i++)
                 {
                     ref readonly MoveData move = ref moves[i];
@@ -232,9 +232,9 @@ namespace ChiselDebug.Routing
                     ref ScorePath neighborScore = ref board.GetCellScorePath(neighborIndex);
 
                     MoveDirs neighborMoves = board.GetCellMoves(neighborIndex);
-                    bool moveToEnemyWire = neighborMoves.HasFlag(MoveDirs.EnemyWire);
-                    bool moveToFriendWire = neighborMoves.HasFlag(MoveDirs.FriendWire);
-                    bool moveToWireCorner = neighborMoves.HasFlag(MoveDirs.WireCorner);
+                    int moveToEnemyWire = neighborMoves.IsEnemyWire();
+                    int moveToFriendWire = neighborMoves.IsFriendlyWire();
+                    int moveToWireCorner = neighborMoves.IsWireCorner();
                     bool isTurning = currentScorePath.DirFrom != MoveDirs.None && move.RevDir != currentScorePath.DirFrom;
 
                     ScorePath neighborScoreFromCurrent = currentScorePath.Move(move.RevDir, onEnemyWire, moveToEnemyWire, moveToFriendWire, moveToWireCorner, isTurning);

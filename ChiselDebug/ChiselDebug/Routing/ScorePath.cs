@@ -11,20 +11,17 @@
             this.Data = (uint)travled | ((uint)fromDir << 24);
         }
 
-        public ScorePath Move(MoveDirs revDir, bool onEnemyWire, bool moveToEnemyWire, bool moveToFriendWire, bool moveToWireCorner, bool isTurning)
+
+        public ScorePath Move(MoveDirs revDir, int onEnemyWire, int moveToEnemyWire, int moveToFriendWire, int moveToWireCorner, bool isTurning)
         {
-            int onEnemyWireInt = BoolToInt(onEnemyWire);
-            int moveToEnemyWireInt = BoolToInt(moveToEnemyWire);
-            int moveToFriendWireInt = BoolToInt(!moveToFriendWire);
-            int moveToWireCornerInt = BoolToInt(moveToWireCorner);
             int isTurningInt = BoolToInt(isTurning);
 
-            int turns = TravelDist;
+            int turns = TravelDist + 1; // +1 so not moving to friendly wire results in +1 - 0 and moving to friendly wire results in +1 - 1
             turns += isTurningInt * 5;
-            turns += moveToEnemyWireInt * 5;
-            turns += (moveToEnemyWireInt & moveToWireCornerInt) * 500;
-            turns += (isTurningInt & onEnemyWireInt) * 50;
-            turns += moveToFriendWireInt;
+            turns += (isTurningInt & onEnemyWire) * 50;
+            turns += moveToEnemyWire * 5;
+            turns += (moveToEnemyWire & moveToWireCorner) * 500;
+            turns -= moveToFriendWire;
 
             return new ScorePath(turns, revDir);
         }

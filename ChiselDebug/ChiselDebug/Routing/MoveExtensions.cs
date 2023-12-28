@@ -38,5 +38,20 @@ namespace ChiselDebug.Routing
                 _ => throw new Exception($"Can't reverse this direction: {dir}")
             };
         }
+
+        internal static int IsFriendlyWire(this MoveDirs dir)
+        {
+            return ((int)dir >> 4) & 1;
+        }
+
+        internal static int IsEnemyWire(this MoveDirs dir)
+        {
+            return ((int)dir >> 5) & 1;
+        }
+
+        internal static int IsWireCorner(this MoveDirs dir)
+        {
+            return ((int)dir >> 6) & 1;
+        }
     }
 }
