@@ -79,7 +79,7 @@
         var files = e.GetMultipleFiles();
 
         CircuitFiles circuitFiles = new CircuitFiles();
-        if (await circuitFiles.UpdateFromFiles(e.GetMultipleFiles()))
+        if (await circuitFiles.UpdateFromFilesAsync(e.GetMultipleFiles()))
         {
             OnNewCircuitFiles.Invoke(circuitFiles);
         }

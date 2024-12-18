@@ -86,10 +86,8 @@ else if (ThrownException is Exception)
         catch (Exception e)
         {
             ThrownException = e;
-            InvokestateHasChanged();
+            return InvokeStateHasChangedAsync();
         }
-
-        return Task.CompletedTask;
     }
 
     private async Task LoadFirData(Stream loFirStream, Stream hiFirStream, Stream vcdStream)
@@ -98,15 +96,15 @@ else if (ThrownException is Exception)
         ModulePosition = new Positioned<ChiselDebug.GraphFIR.Components.Module>(Point.Zero, DebugCtrl.Graph.MainModule);
         RootModLayout = new CircuitLayout();
 
-        DebugCtrl.OnCircuitSizeChanged += CircuitSizeChanged;
-        InvokestateHasChanged();
+        DebugCtrl.OnCircuitSizeChanged += CircuitSizeChangedAsync;
+        await InvokeStateHasChangedAsync();
 
         if (vcdStream != null)
         {
             using VCD vcd = VCDReader.Parse.FromStream(vcdStream);
-            await DebugCtrl.AddVCD(vcd);
+            await DebugCtrl.AddVCDAsync(vcd);
 
-            InvokestateHasChanged();
+            await InvokeStateHasChangedAsync();
         }
     }
 
@@ -114,9 +112,9 @@ else if (ThrownException is Exception)
     {
         if (firstRender)
         {
-            await JSEvents.AddDragListener(JS, DragEventID, x => InvokeAsync(() => HandleDrag(x)));
-            await JSEvents.AddResizeListener(JS, CircuitContainerID, PageResized);
-            await JSEvents.AddResizeListener(JS, DragEventID, CircuitContainerResized);
+            await JSEvents.AddDragListenerAsync(JS, DragEventID, x => InvokeAsync(() => HandleDrag(x)));
+            await JSEvents.AddResizeListenerAsync(JS, CircuitContainerID, PageResized);
+            await JSEvents.AddResizeListenerAsync(JS, DragEventID, CircuitContainerResized);
         }
 
         await base.OnAfterRenderAsync(firstRender);
@@ -137,18 +135,16 @@ else if (ThrownException is Exception)
     private Task CircuitContainerResized(ElemWH size)
     {
         CircuitContainerSize = size.ToPoint();
-        CircuitSizeChanged(Point.Zero);
-
-        return Task.CompletedTask;
+        return CircuitSizeChangedAsync(Point.Zero);
     }
 
-    private void CircuitSizeChanged(Point _)
+    private Task CircuitSizeChangedAsync(Point _)
     {
         Point circuitSize = DebugCtrl.CircuitSize;
         if (circuitSize == Point.Zero ||
             CircuitContainerSize == Point.Zero)
         {
-            return;
+            return Task.CompletedTask;
         }
 
         //Figure out how much to scale with so circuit fills whole screen
@@ -173,7 +169,7 @@ else if (ThrownException is Exception)
         CircuitOffset.Y = (int)offsetToCenterY;
 
         UpdateCircuitScale(scale);
-        InvokestateHasChanged();
+        return InvokeStateHasChangedAsync();
     }
 
     /// <summary>

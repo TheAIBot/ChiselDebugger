@@ -89,7 +89,7 @@
     {
         if (firstRender)
         {
-            await JSEvents.AddResizeListener(JS, RangeDivID, RangeResized);
+            await JSEvents.AddResizeListenerAsync(JS, RangeDivID, RangeResized);
         }
 
         await base.OnAfterRenderAsync(firstRender);
@@ -205,7 +205,7 @@
         if (CurrTime != inTimeline)
         {
             CurrTime = inTimeline;
-            await DebugCtrl.SetCircuitState(CurrTime);
+            await DebugCtrl.SetCircuitStateAsync(CurrTime);
         }
 
         StateHasChanged();
@@ -283,7 +283,7 @@
         if (CurrTime != inTimeRange)
         {
             CurrTime = inTimeRange;
-            await DebugCtrl.SetCircuitState(CurrTime);
+            await DebugCtrl.SetCircuitStateAsync(CurrTime);
         }
 
         MakeTimeTicks();

@@ -116,8 +116,8 @@
 
         ModuleOpPoses = Operation.GetAllNodes().Select(x => new Positioned<FIRRTLNode>(Point.Zero, x)).ToList();
         CurrModLayout = new ModuleLayout(DebugCtrl, Operation, this, NodePlacerFactory.Create(Operation));
-        await CurrModLayout.ConnectToDebugController();
-        await CurrModLayout.SubscribeToPlaceTemplate(x => InvokeAsync(() => UpdatePlacement(x)));
+        await CurrModLayout.ConnectToDebugControllerAsync();
+        await CurrModLayout.SubscribeToPlaceTemplateAsync(x => InvokeAsync(() => UpdatePlacement(x)));
         ParentLayoutCtrl?.AddChildLayout(CurrModLayout);
 
         //If the module contain no nodes then the module will never
@@ -127,7 +127,7 @@
         //doesn't contain any nodes.
         if (CurrModLayout.IsEmpty())
         {
-            await CurrModLayout.PlaceNodes(new PlacementInfo());
+            await CurrModLayout.PlaceNodesAsync(new PlacementInfo());
         }
     }
 
@@ -138,7 +138,7 @@
         return Math.Min(maxScalingX, maxScalingY);
     }
 
-    protected override Task OnResize(int width, int height)
+    protected override Task OnResizeAsync(int width, int height)
     {
         //Update this module with its internal io positions
         ScopedNodeIO internalIO = IOPositionCalc.VerticalScopedIO(Operation.GetInternalIO(), width, MarginForIO, MarginForIO, IgnoreUnusedIO);
@@ -157,7 +157,7 @@
         return Task.CompletedTask;
     }
 
-    private async Task<Point> UpdateParentAboutExteriorIO(Point moduleSize)
+    private async Task<Point> UpdateParentAboutExteriorIOAsync(Point moduleSize)
     {
         ExternalIO = IOPositionCalc.VerticalScopedIO(Operation.GetIO().ToArray(), moduleSize.X, MarginForIO, MarginForIO, IgnoreUnusedIO);
 
@@ -188,11 +188,11 @@
         //parent controller.
         if (ParentLayoutCtrl is CircuitLayout)
         {
-            DebugCtrl.SetCircuitSize(moduleSize, CurrModLayout);
+            await DebugCtrl.SetCircuitSizeAsync(moduleSize, CurrModLayout);
         }
         else
         {
-            await ParentLayoutCtrl.UpdateComponentInfo(new FIRComponentUpdate(Operation, moduleSize, ExternalIO.GetSinkDirIO(), ExternalIO.GetSourceDirIO()));
+            await ParentLayoutCtrl.UpdateComponentInfoAsync(new FIRComponentUpdate(Operation, moduleSize, ExternalIO.GetSinkDirIO(), ExternalIO.GetSourceDirIO()));
         }
 
         return moduleSize;
@@ -215,10 +215,10 @@
         placements.SetSpaceNeeded(moduleSize);
 
         //With new module size, the io positions need to be updated
-        await OnResize(moduleSize.X, moduleSize.Y);
-        moduleSize = await UpdateParentAboutExteriorIO(moduleSize);
+        await OnResizeAsync(moduleSize.X, moduleSize.Y);
+        moduleSize = await UpdateParentAboutExteriorIOAsync(moduleSize);
 
-        await CurrModLayout.RouteWires(placements);
+        await CurrModLayout.RouteWiresAsync(placements);
 
         CurrModLayout.PrepareToRerenderLayout();
         SetCurrentSize(moduleSize);
@@ -244,7 +244,7 @@
         if (firstRender)
         {
             AddSizeWatcher(ModNameID, SetModNameSize);
-            await JSEvents.DoBatchedResizeJS();
+            await JSEvents.DoBatchedResizeJSAsync();
         }
     }
 

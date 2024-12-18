@@ -21,7 +21,7 @@ namespace ChiselDebuggerRazor.Code.Templates
             WorkLimiter = workLimiter;
         }
 
-        public Task SubscribeToTemplate(string moduleName, ModuleLayout ctrl, FIRRTLNode[] nodeOrder)
+        public Task SubscribeToTemplateAsync(string moduleName, ModuleLayout ctrl, FIRRTLNode[] nodeOrder)
         {
             PlaceTemplateConversion conversion = new PlaceTemplateConversion(ctrl, nodeOrder);
             lock (Converters)
@@ -38,13 +38,13 @@ namespace ChiselDebuggerRazor.Code.Templates
 
             if (Templates.TryGetValue(moduleName, out var template))
             {
-                return conversion.TemplateUpdated(template);
+                return conversion.TemplateUpdatedAsync(template);
             }
 
             return Task.CompletedTask;
         }
 
-        public Task AddTemplateParameters(string moduleName, INodePlacer placer, FIRRTLNode[] nodeOrder, CancellationToken cancelToken)
+        public Task AddTemplateParametersAsync(string moduleName, INodePlacer placer, FIRRTLNode[] nodeOrder, CancellationToken cancelToken)
         {
             lock (TemplateGenerating)
             {
@@ -56,7 +56,7 @@ namespace ChiselDebuggerRazor.Code.Templates
                 }
             }
 
-            return WorkLimiter.AddWork(() =>
+            return WorkLimiter.AddWorkAsync(() =>
             {
                 var placeInfo = placer.PositionModuleComponents();
                 if (cancelToken.IsCancellationRequested)
@@ -64,11 +64,11 @@ namespace ChiselDebuggerRazor.Code.Templates
                     return Task.CompletedTask;
                 }
 
-                return AddTemplate(moduleName, placeInfo, nodeOrder);
+                return AddTemplateAsync(moduleName, placeInfo, nodeOrder);
             }, 1);
         }
 
-        private Task AddTemplate(string moduleName, PlacementInfo placeInfo, FIRRTLNode[] nodeOrder)
+        private Task AddTemplateAsync(string moduleName, PlacementInfo placeInfo, FIRRTLNode[] nodeOrder)
         {
             PlaceTemplate template = new PlaceTemplate(placeInfo, nodeOrder);
             Templates.AddOrUpdate(moduleName, template, (_, _) => template);
@@ -77,7 +77,7 @@ namespace ChiselDebuggerRazor.Code.Templates
             {
                 if (Converters.TryGetValue(moduleName, out var convs))
                 {
-                    return Task.WhenAll(convs.Select(x => x.TemplateUpdated(template)));
+                    return Task.WhenAll(convs.Select(x => x.TemplateUpdatedAsync(template)));
                 }
             }
 

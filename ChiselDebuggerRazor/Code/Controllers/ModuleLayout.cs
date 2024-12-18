@@ -45,9 +45,9 @@ namespace ChiselDebuggerRazor.Code.Controllers
             ModuleIO = allShownIO.ToArray();
         }
 
-        public Task ConnectToDebugController()
+        public Task ConnectToDebugControllerAsync()
         {
-            return DebugCtrl.AddModCtrl(Mod.Name, this, ModuleNodes, ModuleNodesWithModule, ModuleIO);
+            return DebugCtrl.AddModCtrlAsync(Mod.Name, this, ModuleNodes, ModuleNodesWithModule, ModuleIO);
         }
 
         public override void PrepareToRerenderLayout()
@@ -58,9 +58,9 @@ namespace ChiselDebuggerRazor.Code.Controllers
             WireUI?.PrepareForRender();
         }
 
-        public void Render()
+        public Task RenderAsync()
         {
-            ModUI.InvokestateHasChanged();
+            return ModUI.InvokeStateHasChangedAsync();
         }
 
         public bool IsReadyToRender()
@@ -73,62 +73,62 @@ namespace ChiselDebuggerRazor.Code.Controllers
             return !ModuleNodes.Where(x => x is not INoPlaceAndRoute).Any();
         }
 
-        public Task SubscribeToPlaceTemplate(PlacedHandler onPlaced)
+        public Task SubscribeToPlaceTemplateAsync(PlacedHandler onPlaced)
         {
             DebugCtrl.PlaceRouteStats.IncrementNeedToPlace();
             OnPlacedNodes += onPlaced;
 
             if (DebugCtrl.TryGetPlaceTemplate(Mod.Name, this, out var placement))
             {
-                return PlaceNodes(placement);
+                return PlaceNodesAsync(placement);
             }
 
             return Task.CompletedTask;
         }
 
-        public Task SubscribeToRouteTemplate(RoutedHandler onRouted)
+        public Task SubscribeToRouteTemplateAsync(RoutedHandler onRouted)
         {
             DebugCtrl.PlaceRouteStats.IncrementNeedToRoute();
             OnWiresRouted += onRouted;
 
             if (DebugCtrl.TryGetRouteTemplate(Mod.Name, this, out var wires))
             {
-                return PlaceWires(wires);
+                return PlaceWiresAsync(wires);
             }
 
             return Task.CompletedTask;
         }
 
-        public Task PlaceNodes(PlacementInfo placements)
+        public Task PlaceNodesAsync(PlacementInfo placements)
         {
             DebugCtrl.PlaceRouteStats.PlaceDone(this);
             return OnPlacedNodes?.Invoke(placements) ?? Task.CompletedTask;
         }
 
-        public Task PlaceWires(List<WirePath> wires)
+        public Task PlaceWiresAsync(List<WirePath> wires)
         {
             DebugCtrl.PlaceRouteStats.RouteDone(this);
             return OnWiresRouted?.Invoke(wires) ?? Task.CompletedTask;
         }
 
-        public Task RouteWires(PlacementInfo placements)
+        public Task RouteWiresAsync(PlacementInfo placements)
         {
             if (WireRouter.IsReadyToRoute())
             {
-                return DebugCtrl.AddRouteTemplateParameters(Mod.Name, WireRouter, placements, ModuleNodesWithModule, ModuleIO);
+                return DebugCtrl.AddRouteTemplateParametersAsync(Mod.Name, WireRouter, placements, ModuleNodesWithModule, ModuleIO);
             }
 
             return Task.CompletedTask;
         }
 
-        public override Task UpdateComponentInfo(FIRComponentUpdate updateData)
+        public override Task UpdateComponentInfoAsync(FIRComponentUpdate updateData)
         {
             WireRouter.UpdateIOFromNode(updateData.Node, updateData.InputOffsets, updateData.OutputOffsets);
             NodePlacer.SetNodeSize(updateData.Node, updateData.Size, updateData.InputOffsets, updateData.OutputOffsets);
 
             if (IsReadyToRender())
             {
-                return DebugCtrl.AddPlaceTemplateParameters(Mod.Name, NodePlacer, ModuleNodes);
+                return DebugCtrl.AddPlaceTemplateParametersAsync(Mod.Name, NodePlacer, ModuleNodes);
             }
 
             return Task.CompletedTask;

@@ -33,7 +33,7 @@ namespace ChiselDebuggerRazor.Code.Controllers
             }
         }
 
-        public abstract Task UpdateComponentInfo(FIRComponentUpdate updateData);
+        public abstract Task UpdateComponentInfoAsync(FIRComponentUpdate updateData);
         public abstract void UpdateLayoutDisplay(float scaling);
     }
 }

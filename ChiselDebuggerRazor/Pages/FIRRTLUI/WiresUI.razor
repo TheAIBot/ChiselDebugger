@@ -3,7 +3,7 @@
 <svg class="wiresContainer">
     @foreach (var wireGroup in WirePaths.GroupBy(x => x.GetStartIO()))
     {
-        <g class="wireGroup"  @onmouseover="x => WindowEvents.MouseEntersIO(wireGroup.Key, x)" @onmouseout="x => WindowEvents.MouseExitIO(wireGroup.Key, x)">
+        <g class="wireGroup"  @onmouseover="x => WindowEvents.MouseEntersIO(wireGroup.Key, x)" @onmouseout="x => WindowEvents.MouseExitIOAsync(wireGroup.Key, x)">
             @foreach (var wire in wireGroup)
             {
                 @if (wire.IsEnabled())
@@ -39,7 +39,7 @@
     protected override Task OnFirstParametersSetAsync()
     {
         ModLayout.SetWireUI(this);
-        return ModLayout.SubscribeToRouteTemplate(x => InvokeAsync(() => UpdateWires(x)));
+        return ModLayout.SubscribeToRouteTemplateAsync(x => InvokeAsync(() => UpdateWires(x)));
     }
 
     private void UpdateWires(List<WirePath> wirePaths)

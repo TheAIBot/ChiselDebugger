@@ -23,12 +23,12 @@
 
     private Task MouseUp(MouseEventArgs args)
     {
-        return PageWideEvents.InvokeOnMouseUp(args);
+        return PageWideEvents.InvokeOnMouseUpAsync(args);
     }
 
     private Task MouseMove(MouseEventArgs args)
     {
-        return PageWideEvents.InvokeOnMouseMove(args);
+        return PageWideEvents.InvokeOnMouseMoveAsync(args);
     }
 
     private void ShowCircuitFiles(CircuitFiles files)

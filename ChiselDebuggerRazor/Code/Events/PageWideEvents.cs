@@ -9,12 +9,12 @@ namespace ChiselDebuggerRazor.Code.Events
         public event MouseEventHandler OnMouseUp;
         public event MouseEventHandler OnMouseMove;
 
-        public Task InvokeOnMouseUp(MouseEventArgs args)
+        public Task InvokeOnMouseUpAsync(MouseEventArgs args)
         {
             return OnMouseUp?.Invoke(args);
         }
 
-        public Task InvokeOnMouseMove(MouseEventArgs args)
+        public Task InvokeOnMouseMoveAsync(MouseEventArgs args)
         {
             return OnMouseMove?.Invoke(args);
         }

@@ -29,7 +29,7 @@ namespace ChiselDebuggerRazor.Code.Controllers
 
         public Point CircuitSize { get; private set; } = Point.Zero;
 
-        public delegate void CircuitSizeChangedHandler(Point circuitSize);
+        public delegate Task CircuitSizeChangedHandler(Point circuitSize);
         public event CircuitSizeChangedHandler OnCircuitSizeChanged;
 
         public DebugController(CircuitGraph graph, PlacementTemplator placementTemplates, RouteTemplator routeTemplates, SeqWorkOverrideOld<ulong> stateLimiter)
@@ -40,14 +40,14 @@ namespace ChiselDebuggerRazor.Code.Controllers
             StateLimiter = stateLimiter;
         }
 
-        public Task AddVCD(VCD vcd)
+        public Task AddVCDAsync(VCD vcd)
         {
             Timeline = new VCDTimeline(vcd);
 
-            return SetCircuitState(Timeline.TimeInterval.StartInclusive);
+            return SetCircuitStateAsync(Timeline.TimeInterval.StartInclusive);
         }
 
-        public async Task AddModCtrl(string moduleName, ModuleLayout modCtrl, FIRRTLNode[] modNodes, FIRRTLNode[] modNodesIncludeMod, FIRIO[] modIO)
+        public async Task AddModCtrlAsync(string moduleName, ModuleLayout modCtrl, FIRRTLNode[] modNodes, FIRRTLNode[] modNodesIncludeMod, FIRIO[] modIO)
         {
             lock (FIRNodeToModCtrl)
             {
@@ -58,18 +58,18 @@ namespace ChiselDebuggerRazor.Code.Controllers
                 }
             }
 
-            await PlacementTemplates.SubscribeToTemplate(moduleName, modCtrl, modNodes);
-            await RouteTemplates.SubscribeToTemplate(moduleName, modCtrl, modNodesIncludeMod, modIO);
+            await PlacementTemplates.SubscribeToTemplateAsync(moduleName, modCtrl, modNodes);
+            await RouteTemplates.SubscribeToTemplateAsync(moduleName, modCtrl, modNodesIncludeMod, modIO);
         }
 
-        internal Task AddPlaceTemplateParameters(string moduleName, INodePlacer placer, FIRRTLNode[] nodeOrder)
+        internal Task AddPlaceTemplateParametersAsync(string moduleName, INodePlacer placer, FIRRTLNode[] nodeOrder)
         {
-            return PlacementTemplates.AddTemplateParameters(moduleName, placer, nodeOrder, CancelSource.Token);
+            return PlacementTemplates.AddTemplateParametersAsync(moduleName, placer, nodeOrder, CancelSource.Token);
         }
 
-        internal Task AddRouteTemplateParameters(string moduleName, SimpleRouter router, PlacementInfo placeInfo, FIRRTLNode[] nodeOrder, FIRIO[] ioOrder)
+        internal Task AddRouteTemplateParametersAsync(string moduleName, SimpleRouter router, PlacementInfo placeInfo, FIRRTLNode[] nodeOrder, FIRIO[] ioOrder)
         {
-            return RouteTemplates.AddTemplateParameters(moduleName, router, placeInfo, nodeOrder, ioOrder, CancelSource.Token);
+            return RouteTemplates.AddTemplateParametersAsync(moduleName, router, placeInfo, nodeOrder, ioOrder, CancelSource.Token);
         }
 
         internal bool TryGetPlaceTemplate(string moduleName, ModuleLayout modLayout, out PlacementInfo placement)
@@ -82,17 +82,17 @@ namespace ChiselDebuggerRazor.Code.Controllers
             return RouteTemplates.TryGetTemplate(moduleName, modLayout, out wires);
         }
 
-        public void SetCircuitSize(Point size, ModuleLayout rootModCtrl)
+        public Task SetCircuitSizeAsync(Point size, ModuleLayout rootModCtrl)
         {
             CircuitSize = size;
             RootModCtrl = rootModCtrl;
-            OnCircuitSizeChanged?.Invoke(CircuitSize);
+            return OnCircuitSizeChanged?.Invoke(CircuitSize) ?? Task.CompletedTask;
         }
 
-        public Task SetCircuitState(ulong time)
+        public Task SetCircuitStateAsync(ulong time)
         {
             CancellationToken cancelToken = CancelSource.Token;
-            return StateLimiter.AddWork(time, stateTime =>
+            return StateLimiter.AddWorkAsync(time, async stateTime =>
             {
                 Graph.SetState(Timeline.GetStateAtTime(stateTime));
                 Graph.ComputeRemainingGraph();
@@ -108,7 +108,7 @@ namespace ChiselDebuggerRazor.Code.Controllers
                         modUI.PrepareToRerenderLayout();
                     }
 
-                    RootModCtrl.Render();
+                    await RootModCtrl.RenderAsync();
                 }
             });
         }

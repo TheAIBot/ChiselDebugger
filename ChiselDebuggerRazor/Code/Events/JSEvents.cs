@@ -33,7 +33,7 @@ namespace ChiselDebuggerRazor.Code.Events
             return ValueTask.CompletedTask;
         }
 
-        public static ValueTask AddDragListener(IJSRuntime js, string elementID, DragHandler dragHandler)
+        public static ValueTask AddDragListenerAsync(IJSRuntime js, string elementID, DragHandler dragHandler)
         {
             if (DragListeners.TryAdd(elementID, dragHandler))
             {
@@ -72,18 +72,18 @@ namespace ChiselDebuggerRazor.Code.Events
             ToAddResizeIDs.Enqueue((js, elementID));
         }
 
-        public static ValueTask AddResizeListener(IJSRuntime js, string elementID, ResizeHandler resizeHandler)
+        public static ValueTask AddResizeListenerAsync(IJSRuntime js, string elementID, ResizeHandler resizeHandler)
         {
             if (ResizeListeners.TryAdd(elementID, resizeHandler))
             {
                 ToAddResizeIDs.Enqueue((js, elementID));
-                return DoBatchedResizeJS();
+                return DoBatchedResizeJSAsync();
             }
 
             return ValueTask.CompletedTask;
         }
 
-        public static async ValueTask DoBatchedResizeJS()
+        public static async ValueTask DoBatchedResizeJSAsync()
         {
             List<(IJSRuntime js, string id)> workItems = new List<(IJSRuntime js, string id)>();
             while (ToAddResizeIDs.TryDequeue(out var workItem))

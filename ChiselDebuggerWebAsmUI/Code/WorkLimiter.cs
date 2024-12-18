@@ -1,7 +1,6 @@
 ﻿using ChiselDebuggerRazor.Code;
 using Microsoft.JSInterop;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -19,10 +18,10 @@ namespace ChiselDebuggerWebAsmUI.Code
         }
 
         private static int TotalWork = 0;
-        private static readonly SortedDictionary<int, Queue<Func<Task>>> WorkQueue = new ();
+        private static readonly SortedDictionary<int, Queue<Func<Task>>> WorkQueue = new();
 
         [JSInvokable]
-        public static async Task FrameHasBeenAnimated()
+        public static async Task FrameHasBeenAnimatedAsync()
         {
             if (WorkQueue.Sum(x => x.Value.Count) == 0)
             {
@@ -44,7 +43,7 @@ namespace ChiselDebuggerWebAsmUI.Code
             await JSRuntime.InvokeVoidAsync("WorkPacing.WaitForAnimationFrame").AsTask();
         }
 
-        public Task AddWork(Func<Task> work, int priority)
+        public Task AddWorkAsync(Func<Task> work, int priority)
         {
             Queue<Func<Task>> queue;
             if (!WorkQueue.TryGetValue(priority, out queue))

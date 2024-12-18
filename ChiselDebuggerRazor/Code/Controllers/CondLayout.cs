@@ -105,7 +105,7 @@ namespace ChiselDebuggerRazor.Code.Controllers
             return (positions, inputOffsets.ToArray(), outputOffsets.ToArray());
         }
 
-        public override Task UpdateComponentInfo(FIRComponentUpdate updateData)
+        public override Task UpdateComponentInfoAsync(FIRComponentUpdate updateData)
         {
             lock (ModuleSizes)
             {

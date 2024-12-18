@@ -19,7 +19,7 @@ namespace ChiselDebuggerRazor.Code.Events
             IOWindow?.MouseEnter(io, args);
         }
 
-        public Task MouseExitIO(FIRIO io, MouseEventArgs args)
+        public Task MouseExitIOAsync(FIRIO io, MouseEventArgs args)
         {
             return IOWindow?.MouseExit(io, args);
         }

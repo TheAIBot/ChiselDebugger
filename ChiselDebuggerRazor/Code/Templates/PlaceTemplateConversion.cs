@@ -18,9 +18,9 @@ namespace ChiselDebuggerRazor.Code.Templates
             this.NodeOrder = nodeOrder;
         }
 
-        public Task TemplateUpdated(PlaceTemplate template)
+        public Task TemplateUpdatedAsync(PlaceTemplate template)
         {
-            return Ctrl.PlaceNodes(Convert(template));
+            return Ctrl.PlaceNodesAsync(Convert(template));
         }
 
         public PlacementInfo Convert(PlaceTemplate template)

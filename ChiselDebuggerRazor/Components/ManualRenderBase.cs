@@ -21,9 +21,9 @@ namespace ChiselDebuggerRazor.Components
             base.StateHasChanged();
         }
 
-        public void InvokestateHasChanged()
+        public Task InvokeStateHasChangedAsync()
         {
-            InvokeAsync(StateHasChanged);
+            return InvokeAsync(StateHasChanged);
         }
 
         protected override Task OnParametersSetAsync()
@@ -37,7 +37,7 @@ namespace ChiselDebuggerRazor.Components
             return Task.CompletedTask;
         }
 
-        protected virtual Task OnFirstParametersSetAsync() 
+        protected virtual Task OnFirstParametersSetAsync()
         {
             return Task.CompletedTask;
         }

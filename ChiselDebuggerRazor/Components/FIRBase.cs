@@ -57,7 +57,7 @@ namespace ChiselDebuggerRazor.Components
         {
             if (firstRender)
             {
-                AddSizeWatcher(SizeWatcherID, JSOnResize);
+                AddSizeWatcher(SizeWatcherID, JSOnResizeAsync);
             }
 
             return base.OnAfterRenderAsync(firstRender);
@@ -70,10 +70,10 @@ namespace ChiselDebuggerRazor.Components
             JSEvents.BatchAddResizeListener(JS, componentID, onResize);
         }
 
-        private Task JSOnResize(ElemWH size)
+        private Task JSOnResizeAsync(ElemWH size)
         {
             PreviousSize = size.ToPoint();
-            return OnResize(PreviousSize.X, PreviousSize.Y);
+            return OnResizeAsync(PreviousSize.X, PreviousSize.Y);
         }
 
         public void PrepareForRender()
@@ -81,12 +81,12 @@ namespace ChiselDebuggerRazor.Components
             HasToRender = true;
         }
 
-        protected virtual Task OnResize(int width, int height)
+        protected virtual Task OnResizeAsync(int width, int height)
         {
             SinkOffsets = OnMakeSinks(width, height);
             SourceOffsets = OnMakeSources(width, height);
 
-            return ParentLayoutCtrl?.UpdateComponentInfo(new FIRComponentUpdate(Operation, GetCurrentSize(), SinkOffsets, SourceOffsets));
+            return ParentLayoutCtrl?.UpdateComponentInfoAsync(new FIRComponentUpdate(Operation, GetCurrentSize(), SinkOffsets, SourceOffsets));
         }
 
         protected virtual bool OnMove(Point newPos)

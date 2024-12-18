@@ -4,7 +4,7 @@ namespace ChiselDebuggerRazor.Code.Controllers
 {
     public sealed class CircuitLayout : FIRLayout
     {
-        public override Task UpdateComponentInfo(FIRComponentUpdate updateData)
+        public override Task UpdateComponentInfoAsync(FIRComponentUpdate updateData)
         { 
             return Task.CompletedTask;
         }

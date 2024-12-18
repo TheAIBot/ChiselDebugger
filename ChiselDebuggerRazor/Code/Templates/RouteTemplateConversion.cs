@@ -20,9 +20,9 @@ namespace ChiselDebuggerRazor.Code.Templates
             this.IOOrder = ioOrder;
         }
 
-        public Task TemplateUpdated(RouteTemplate template)
+        public Task TemplateUpdatedAsync(RouteTemplate template)
         {
-            return Ctrl.PlaceWires(Convert(template));
+            return Ctrl.PlaceWiresAsync(Convert(template));
         }
 
         public List<WirePath> Convert(RouteTemplate template)

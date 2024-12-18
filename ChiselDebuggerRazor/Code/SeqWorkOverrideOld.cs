@@ -16,7 +16,7 @@ namespace ChiselDebuggerRazor.Code
         }
 
 
-        public Task AddWork(T workItem, Action<T> work)
+        public Task AddWorkAsync(T workItem, Func<T, Task> work)
         {
             lock (Locker)
             {
@@ -27,15 +27,11 @@ namespace ChiselDebuggerRazor.Code
                 }
 
                 QueuedWork = true;
-                return WorkLimiter.AddWork(() =>
-                {
-                    ExecuteWork(work);
-                    return Task.CompletedTask;
-                }, 3);
+                return WorkLimiter.AddWorkAsync(() => ExecuteWorkAsync(work), 3);
             }
         }
 
-        private void ExecuteWork(Action<T> work)
+        private Task ExecuteWorkAsync(Func<T, Task> work)
         {
             try
             {
@@ -45,7 +41,7 @@ namespace ChiselDebuggerRazor.Code
                     workItem = WorkItem;
                 }
 
-                work(workItem);
+                return work(workItem);
             }
             finally
             {

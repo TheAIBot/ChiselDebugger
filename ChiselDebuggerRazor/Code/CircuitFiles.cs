@@ -45,7 +45,7 @@ namespace ChiselDebuggerRazor.Code
             }
         }
 
-        private static async Task<Stream> CopyBrowserFileToMemory(IBrowserFile file)
+        private static async Task<Stream> CopyBrowserFileToMemoryAsync(IBrowserFile file)
         {
             if (file == null)
             {
@@ -60,7 +60,7 @@ namespace ChiselDebuggerRazor.Code
             return memStream;
         }
 
-        public async Task<bool> UpdateFromFiles(IReadOnlyList<IBrowserFile> files)
+        public async Task<bool> UpdateFromFilesAsync(IReadOnlyList<IBrowserFile> files)
         {
             var firFiles = files.Where(x => x.Name.EndsWith(".fir")).ToList();
             if (firFiles.Count == 0)
@@ -87,18 +87,18 @@ namespace ChiselDebuggerRazor.Code
 
             vcdFile = files.FirstOrDefault(x => x.Name.EndsWith(".vcd"));
 
-            var hiFirrtlPath = CopyBrowserFileToMemory(hiFirrtlFile);
-            var loFirrtlPath = CopyBrowserFileToMemory(loFirrtlFile);
-            var vcdPath = CopyBrowserFileToMemory(vcdFile);
+            var hiFirrtlPath = CopyBrowserFileToMemoryAsync(hiFirrtlFile);
+            var loFirrtlPath = CopyBrowserFileToMemoryAsync(loFirrtlFile);
+            var vcdPath = CopyBrowserFileToMemoryAsync(vcdFile);
             await Task.WhenAll(hiFirrtlPath, loFirrtlPath, vcdPath);
 
-            HiFirrtlStream?.Dispose();
-            LoFirrtlStream?.Dispose();
-            VCDStream?.Dispose();
+            HiFirrtlStream?.DisposeAsync();
+            LoFirrtlStream?.DisposeAsync();
+            VCDStream?.DisposeAsync();
 
-            HiFirrtlStream = hiFirrtlPath.Result;
-            LoFirrtlStream = loFirrtlPath.Result;
-            VCDStream = vcdPath.Result;
+            HiFirrtlStream = await hiFirrtlPath;
+            LoFirrtlStream = await loFirrtlPath;
+            VCDStream = await vcdPath;
 
             return true;
         }

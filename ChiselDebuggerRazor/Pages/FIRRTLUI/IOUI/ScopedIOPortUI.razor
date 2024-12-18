@@ -1,4 +1,4 @@
-﻿<div class="ioDot" style="left:@DotPosition.X.ToPixels();top:@DotPosition.Y.ToPixels();" @onmouseover="x => WindowEvents.MouseEntersIO(ScopedIO.DirIO.IO, x)" @onmouseout="x => WindowEvents.MouseExitIO(ScopedIO.DirIO.IO, x)">
+﻿<div class="ioDot" style="left:@DotPosition.X.ToPixels();top:@DotPosition.Y.ToPixels();" @onmouseover="x => WindowEvents.MouseEntersIO(ScopedIO.DirIO.IO, x)" @onmouseout="x => WindowEvents.MouseExitIOAsync(ScopedIO.DirIO.IO, x)">
     @if (AlwaysShowName)
     {
         <div class="@IONameClass" style="left:@NamePosition.X.ToPixels();top:@NamePosition.Y.ToPixels();">@ScopedIO.DirIO.IO.Name</div>

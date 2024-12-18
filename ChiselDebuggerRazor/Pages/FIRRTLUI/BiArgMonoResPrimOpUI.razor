@@ -38,7 +38,7 @@
     private bool ShowAsBinary = true;
     private bool LockSize = false;
 
-    protected override Task OnResize(int width, int height)
+    protected override Task OnResizeAsync(int width, int height)
     {
         // We do not want the component to resize after changing the base to display
         // so resizing is locked after clicking the switch base button.
@@ -48,7 +48,7 @@
             return Task.CompletedTask;
         }
 
-        return base.OnResize(width, height);
+        return base.OnResizeAsync(width, height);
     }
 
     protected override DirectedIO[] OnMakeSinks(int width, int height)
