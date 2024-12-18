@@ -11,9 +11,9 @@ namespace ChiselDebuggerWebAsmUI
 {
     public class Program
     {
-        public static Task Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            var builder = WebAssemblyHostBuilder.CreateDefault(args);
+            WebAssemblyHostBuilder builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("#app");
 
             builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
@@ -21,7 +21,8 @@ namespace ChiselDebuggerWebAsmUI
             builder.Services.AddSingleton<IWorkLimiter, WorkLimiter>();
             builder.Services.AddSingleton<INodePlacerFactory, SimplePlacerFactory>();
 
-            return builder.Build().RunAsync();
+            WebAssemblyHost host = builder.Build();
+            await host.RunAsync();
         }
     }
 }
