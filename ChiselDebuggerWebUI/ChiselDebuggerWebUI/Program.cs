@@ -1,4 +1,7 @@
+using ChiselDebuggerRazor.Code;
+using ChiselDebuggerWebUI.Code;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace ChiselDebuggerWebUI
@@ -12,14 +15,18 @@ namespace ChiselDebuggerWebUI
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .ConfigureServices(services =>
+                {
+                    services.AddSingleton<IExampleCircuits, ExampleCircuits>();
+                })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
                 });
-                //.ConfigureLogging(logging =>
-                //{
-                //    logging.AddFilter("Microsoft.AspNetCore.SignalR", LogLevel.Debug);
-                //    logging.AddFilter("Microsoft.AspNetCore.Http.Connections", LogLevel.Debug);
-                //});
+        //.ConfigureLogging(logging =>
+        //{
+        //    logging.AddFilter("Microsoft.AspNetCore.SignalR", LogLevel.Debug);
+        //    logging.AddFilter("Microsoft.AspNetCore.Http.Connections", LogLevel.Debug);
+        //});
     }
 }

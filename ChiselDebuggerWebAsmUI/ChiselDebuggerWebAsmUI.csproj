@@ -17,4 +17,16 @@
     <ProjectReference Include="..\VCDReader\VCDReader.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="wwwroot\examples\MovingAveragePow2.fir">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\examples\MovingAveragePow2.lo.fir">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\examples\MovingAveragePow2.vcd">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

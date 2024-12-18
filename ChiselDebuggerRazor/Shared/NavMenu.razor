@@ -18,9 +18,9 @@
             </label>
         </li>
         <li class="nav-item px-3">
-            @foreach (var firrtlFilename in FIRRTLFilenames)
+            @foreach (var firrtlFilename in Examples.GetExamples())
             {
-                <a class="nav-link" @onclick="_ => ShowExampleCircuit(firrtlFilename)">
+                <a class="nav-link" @onclick="_ => ShowExampleCircuitAsync(firrtlFilename)">
                     <span class="oi oi-list-rich" aria-hidden="true"></span> @firrtlFilename
                 </a>
             }
@@ -32,11 +32,12 @@
     [Parameter]
     public Action<CircuitFiles> OnNewCircuitFiles { get; set; }
 
-    private bool collapseNavMenu = true;
+    [Inject]
+    public IExampleCircuits Examples { get; set; }
 
+    private bool collapseNavMenu = true;
     private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-    private string[] FIRRTLFilenames = new string[0];
-    private const string ExamplesFolder = "Examples";
+
 
     protected override bool ShouldRender()
     {
@@ -45,14 +46,6 @@
 
     protected override Task OnInitializedAsync()
     {
-        if (!OperatingSystem.IsBrowser() && Directory.Exists(ExamplesFolder))
-        {
-            FIRRTLFilenames = Directory.GetFiles(ExamplesFolder)
-                .Select(x => Path.GetFileName(x))
-                .Where(x => x.EndsWith(".fir"))
-                .ToArray();
-        }
-
         return base.OnInitializedAsync();
     }
 
@@ -61,25 +54,15 @@
         collapseNavMenu = !collapseNavMenu;
     }
 
-    private void ShowExampleCircuit(string firrtlFilename)
+    private async Task ShowExampleCircuitAsync(string firrtlFilename)
     {
-        string loFirPath = System.IO.Path.Combine(ExamplesFolder, firrtlFilename.Replace(".fir", ".lo.fir"));
-        string hiFirPath = System.IO.Path.Combine(ExamplesFolder, firrtlFilename);
-
-        string filenameNoExtension = firrtlFilename.Split('.').First();
-        string vcdPath = System.IO.Path.Combine(ExamplesFolder, $"{filenameNoExtension}.vcd");
-
-        CircuitFiles circuitFiles = new CircuitFiles();
-        circuitFiles.UpdateFromPath(hiFirPath, loFirPath, vcdPath);
-        OnNewCircuitFiles.Invoke(circuitFiles);
+        OnNewCircuitFiles.Invoke(await Examples.GetExampleAsync(firrtlFilename));
     }
 
     private async Task LoadFiles(InputFileChangeEventArgs e)
     {
-        var files = e.GetMultipleFiles();
-
-        CircuitFiles circuitFiles = new CircuitFiles();
-        if (await circuitFiles.UpdateFromFilesAsync(e.GetMultipleFiles()))
+        CircuitFiles? circuitFiles = await CircuitFiles.FromFilesAsync(e.GetMultipleFiles());
+        if (circuitFiles != null)
         {
             OnNewCircuitFiles.Invoke(circuitFiles);
         }

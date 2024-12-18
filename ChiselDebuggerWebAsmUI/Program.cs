@@ -19,6 +19,7 @@ namespace ChiselDebuggerWebAsmUI
             builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
             ChiselDebuggerServices.AddServices(builder.Services);
             builder.Services.AddSingleton<IWorkLimiter, WorkLimiter>();
+            builder.Services.AddScoped<IExampleCircuits, ExampleCircuits>();
             builder.Services.AddSingleton<INodePlacerFactory, SimplePlacerFactory>();
 
             WebAssemblyHost host = builder.Build();

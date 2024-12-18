@@ -6,7 +6,7 @@ using System.Threading.Tasks.Dataflow;
 
 namespace ChiselDebuggerWebUI.Code
 {
-    public sealed class WorkLimiter : IWorkLimiter
+    internal sealed class WorkLimiter : IWorkLimiter
     {
         private static readonly ActionBlock<Func<Task>> Worker = new ActionBlock<Func<Task>>(async x =>
         {

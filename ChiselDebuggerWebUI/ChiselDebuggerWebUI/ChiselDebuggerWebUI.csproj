@@ -15,10 +15,6 @@
     <ProjectReference Include="..\..\VCDReader\VCDReader.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="wwwroot\" />
-  </ItemGroup>
-
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <ItemGroup>
       <ExampleFiles Include="Examples/*" />

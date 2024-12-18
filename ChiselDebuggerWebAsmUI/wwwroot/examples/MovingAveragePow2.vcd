@@ -1,0 +1,237 @@
+$date
+2021-02-03T16:04+0000
+$end
+$version
+0.2
+$end
+$comment
+
+$end
+$timescale 1ns  $end
+$scope module MovingAveragePow2 $end
+ $var wire 6 ! _T_4 $end
+ $var wire 4 " _GEN_2 $end
+ $var wire 1 # io_write $end
+ $var wire 6 $ _GEN_5 $end
+ $var wire 4 % io_din $end
+ $var wire 4 & values_0/in $end
+ $var wire 4 ' values_2/in $end
+ $var wire 4 ( values_1 $end
+ $var wire 7 ) _T_3 $end
+ $var wire 4 * _GEN_1 $end
+ $var wire 4 + _GEN_4 $end
+ $var wire 6 , sum/in $end
+ $var wire 1 - clock $end
+ $var wire 4 . values_0 $end
+ $var wire 6 / sum $end
+ $var wire 4 0 values_3/in $end
+ $var wire 4 1 io_avg $end
+ $var wire 4 2 values_1/in $end
+ $var wire 4 3 values_3 $end
+ $var wire 4 4 _T_2 $end
+ $var wire 6 5 _GEN_0 $end
+ $var wire 1 6 reset $end
+ $var wire 4 7 _GEN_3 $end
+ $var wire 4 8 values_2 $end
+ $var wire 1 9 clock/prev $end
+ $var wire 5 : _T_1 $end
+$upscope $end
+$enddefinitions $end
+$dumpvars
+b0000 '
+b0000 .
+b0000 (
+0-
+b000000 /
+b00000 :
+b000000 !
+b0000 0
+b0000 7
+b0000 "
+b0000 1
+06
+b0000000 )
+b0000 8
+b0000 2
+b000000 $
+b0000 *
+0#
+b0000 +
+b000000 ,
+09
+b0000 3
+b0000 %
+b0000 4
+b000000 5
+b0000 &
+$end
+#0
+16
+#1
+1-
+#6
+b000011 !
+0-
+b0011 %
+b0011 4
+b0011 &
+1#
+b000011 5
+b0011 *
+06
+b000011 $
+b00011 :
+b000011 ,
+b0000011 )
+#11
+b000110 !
+1-
+b0011 "
+b0011 .
+b000110 5
+b0011 2
+b000011 /
+b000110 ,
+b0000110 )
+#16
+b001010 !
+0-
+b0111 %
+b0111 4
+b0111 &
+b001010 5
+b0111 *
+b000111 $
+b00111 :
+b001010 ,
+b0001010 )
+#21
+b010001 !
+1-
+b0111 "
+b0010 1
+b0111 .
+b010001 5
+b0111 2
+b0011 '
+b0011 (
+b0011 7
+b001010 /
+b010001 ,
+b0010001 )
+#26
+b001111 !
+0-
+b0101 %
+b0101 4
+b0101 &
+b001111 5
+b0101 *
+b000101 $
+b00101 :
+b001111 ,
+b0001111 )
+#31
+1-
+b0101 .
+b010100 5
+b0111 '
+b0111 (
+b0111 7
+b001111 /
+b0010100 )
+b010100 !
+b0011 0
+b0101 "
+b0011 1
+b0011 8
+b0101 2
+b0011 +
+b010100 ,
+#36
+b011000 !
+0-
+b1001 %
+b1001 4
+b1001 &
+b011000 5
+b1001 *
+b001001 $
+b01001 :
+b011000 ,
+b0011000 )
+#41
+b0011 3
+1-
+b0110 4
+b1001 .
+b011110 5
+b0101 '
+b0101 (
+b0101 7
+b011000 /
+b0011110 )
+b011110 !
+b0111 0
+b1001 "
+b0110 1
+b0111 8
+b1001 2
+b000110 $
+b0111 +
+b00110 :
+b011110 ,
+#46
+b011101 !
+0-
+b1000 %
+b0101 4
+b1000 &
+b011101 5
+b1000 *
+b000101 $
+b00101 :
+b011101 ,
+b0011101 )
+#51
+b0111 3
+1-
+b0001 4
+b1000 .
+b011110 5
+b1001 '
+b1001 (
+b1001 7
+b011101 /
+b0011110 )
+b011110 !
+b0101 0
+b1000 "
+b0111 1
+b0101 8
+b1000 2
+b000001 $
+b0101 +
+b00001 :
+b011110 ,
+#56
+0-
+b0000 %
+b1001 4
+b011101 5
+b0101 '
+b0101 7
+b0100110 )
+b100110 !
+b0111 0
+b1001 "
+0#
+b1001 2
+b001001 $
+b0111 +
+b11001 :
+b011101 ,
+#61
+1-
+#66
+0-
