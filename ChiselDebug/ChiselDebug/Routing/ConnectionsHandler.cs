@@ -89,7 +89,7 @@ namespace ChiselDebug.Routing
             foreach (var connection in UsedModuleConnections)
             {
                 HashSet<Sink> notAllowedInputs = disallowedConnections.GetValueOrDefault(connection) ?? allAllowed;
-                if (IOInfos.TryGetValue(connection, out IOInfo outputInfo))
+                if (IOInfos.TryGetValue(connection, out IOInfo? outputInfo))
                 {
                     foreach (var input in connection.GetConnectedInputs())
                     {
@@ -98,7 +98,7 @@ namespace ChiselDebug.Routing
                             continue;
                         }
 
-                        if (IOInfos.TryGetValue(input, out IOInfo inputInfo))
+                        if (IOInfos.TryGetValue(input, out IOInfo? inputInfo))
                         {
                             lines.Add(MakeLine(nodePoses, outputInfo, inputInfo));
                         }

@@ -1,5 +1,6 @@
 ﻿using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
+using ChiselDebug.Routing;
 using ChiselDebug.Utilities;
 using Rubjerg.Graphviz;
 
@@ -10,7 +11,10 @@ namespace ChiselDebug.Placing.GraphViz
         public GraphVizPlacer(Module mod) : base(mod)
         { }
 
-        protected override PlacementInfo PositionComponents(Dictionary<FIRRTLNode, Point> nodeSizes, Module mod)
+        protected override PlacementInfo PositionComponents(Dictionary<FIRRTLNode, Point> nodeSizes,
+                                                            Module mod,
+                                                            Dictionary<FIRRTLNode, DirectedIO[]> nodeInputOffsets,
+                                                            Dictionary<FIRRTLNode, DirectedIO[]> nodeOutputOffsets)
         {
             PlacementInfo placments = new PlacementInfo();
 
@@ -123,7 +127,7 @@ namespace ChiselDebug.Placing.GraphViz
             }
 
             Point borderPadding = new Point(40, 40);
-            placments.AutoSpacePlacementRanks(mod);
+            placments.AutoSpacePlacementRanks(mod, nodeInputOffsets, nodeOutputOffsets);
             placments.SetBorderPadding(borderPadding);
             return placments;
         }

@@ -102,13 +102,13 @@ namespace ChiselDebuggerRazor.Code.Controllers
         public Task PlaceNodes(PlacementInfo placements)
         {
             DebugCtrl.PlaceRouteStats.PlaceDone(this);
-            return OnPlacedNodes?.Invoke(placements);
+            return OnPlacedNodes?.Invoke(placements) ?? Task.CompletedTask;
         }
 
         public Task PlaceWires(List<WirePath> wires)
         {
             DebugCtrl.PlaceRouteStats.RouteDone(this);
-            return OnWiresRouted?.Invoke(wires);
+            return OnWiresRouted?.Invoke(wires) ?? Task.CompletedTask;
         }
 
         public Task RouteWires(PlacementInfo placements)
@@ -124,7 +124,7 @@ namespace ChiselDebuggerRazor.Code.Controllers
         public override Task UpdateComponentInfo(FIRComponentUpdate updateData)
         {
             WireRouter.UpdateIOFromNode(updateData.Node, updateData.InputOffsets, updateData.OutputOffsets);
-            NodePlacer.SetNodeSize(updateData.Node, updateData.Size);
+            NodePlacer.SetNodeSize(updateData.Node, updateData.Size, updateData.InputOffsets, updateData.OutputOffsets);
 
             if (IsReadyToRender())
             {

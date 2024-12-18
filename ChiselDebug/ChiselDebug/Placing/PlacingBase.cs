@@ -1,4 +1,5 @@
 ﻿using ChiselDebug.GraphFIR.Components;
+using ChiselDebug.Routing;
 using ChiselDebug.Utilities;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,9 @@ namespace ChiselDebug.Placing
         private readonly Dictionary<FIRRTLNode, Point> SizeChanges = new Dictionary<FIRRTLNode, Point>();
         private readonly Dictionary<FIRRTLNode, Point> NodeSizes = new Dictionary<FIRRTLNode, Point>();
 
+        private readonly Dictionary<FIRRTLNode, DirectedIO[]> NodeInputOffsets = new Dictionary<FIRRTLNode, DirectedIO[]>();
+        private readonly Dictionary<FIRRTLNode, DirectedIO[]> NodeOutputOffsets = new Dictionary<FIRRTLNode, DirectedIO[]>();
+
         public PlacingBase(Module mod)
         {
             Mod = mod;
@@ -20,7 +24,7 @@ namespace ChiselDebug.Placing
             MissingNodeDims.RemoveWhere(x => x is INoPlaceAndRoute);
         }
 
-        public void SetNodeSize(FIRRTLNode node, Point size)
+        public void SetNodeSize(FIRRTLNode node, Point size, DirectedIO[] inputOffsets, DirectedIO[] outputOffsets)
         {
             lock (SizeChanges)
             {
@@ -33,6 +37,9 @@ namespace ChiselDebug.Placing
 
                 SizeChanges[node] = size;
                 MissingNodeDims.Remove(node);
+
+                NodeInputOffsets[node] = inputOffsets;
+                NodeOutputOffsets[node] = outputOffsets;
             }
         }
 
@@ -58,7 +65,7 @@ namespace ChiselDebug.Placing
 
                 try
                 {
-                    return PositionComponents(NodeSizes, Mod);
+                    return PositionComponents(NodeSizes, Mod, NodeInputOffsets, NodeOutputOffsets);
                 }
                 catch (Exception e)
                 {
@@ -69,6 +76,9 @@ namespace ChiselDebug.Placing
             }
         }
 
-        protected abstract PlacementInfo PositionComponents(Dictionary<FIRRTLNode, Point> nodeSizes, Module mod);
+        protected abstract PlacementInfo PositionComponents(Dictionary<FIRRTLNode, Point> nodeSizes,
+                                                            Module mod,
+                                                            Dictionary<FIRRTLNode, DirectedIO[]> nodeInputOffsets,
+                                                            Dictionary<FIRRTLNode, DirectedIO[]> nodeOutputOffsets);
     }
 }

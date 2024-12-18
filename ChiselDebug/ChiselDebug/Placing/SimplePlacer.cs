@@ -1,6 +1,7 @@
 ﻿using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
 using ChiselDebug.Graphing;
+using ChiselDebug.Routing;
 using ChiselDebug.Utilities;
 using System;
 using System.Collections.Generic;
@@ -13,7 +14,10 @@ namespace ChiselDebug.Placing
         public SimplePlacer(Module mod) : base(mod)
         { }
 
-        protected override PlacementInfo PositionComponents(Dictionary<FIRRTLNode, Point> nodeSizes, Module mod)
+        protected override PlacementInfo PositionComponents(Dictionary<FIRRTLNode, Point> nodeSizes,
+                                                            Module mod,
+                                                            Dictionary<FIRRTLNode, DirectedIO[]> nodeInputOffsets,
+                                                            Dictionary<FIRRTLNode, DirectedIO[]> nodeOutputOffsets)
         {
             PlacementInfo placments = new PlacementInfo();
 
@@ -144,7 +148,7 @@ namespace ChiselDebug.Placing
             }
 
             Point borderPadding = new Point(20, 20);
-            placments.AutoSpacePlacementRanks(mod);
+            placments.AutoSpacePlacementRanks(mod, nodeInputOffsets, nodeOutputOffsets);
             placments.SetBorderPadding(borderPadding);
             return placments;
         }

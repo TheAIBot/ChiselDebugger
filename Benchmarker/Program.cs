@@ -13,7 +13,7 @@ namespace Benchmarker
     {
         static void Main(string[] args)
         {
-            const string TestDir = @"...";
+            const string TestDir = @"C:\Users\Andreas\Documents\GitHub\ChiselDebugger\TestGenerator\TestFolders\riscv-mini-test_run_dir\TileTester\202105061708406469251142612812063";
             Stopwatch timer = new Stopwatch();
 
             if (false)
