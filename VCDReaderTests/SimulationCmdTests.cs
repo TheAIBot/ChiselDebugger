@@ -20,7 +20,7 @@ namespace VCDReaderTests
 $var wire 1 ! _T_4 $end
 $enddefinitions $end
 {bitState.ToChar()}!";
-                VCD vcd = Parse.FromString(vcdString);
+                using VCD vcd = Parse.FromString(vcdString);
 
                 Assert.AreEqual(1, vcd.Declarations.Count);
                 Assert.IsTrue(vcd.Declarations[0] is VarDef);
@@ -48,7 +48,7 @@ $enddefinitions $end
 $var wire 1 ! _T_4 $end
 $enddefinitions $end
 b{bitState.ToChar()} !";
-                VCD vcd = Parse.FromString(vcdString);
+                using VCD vcd = Parse.FromString(vcdString);
 
                 Assert.AreEqual(1, vcd.Declarations.Count);
                 Assert.IsTrue(vcd.Declarations[0] is VarDef);
@@ -82,7 +82,7 @@ b{bitState.ToChar()} !";
 $var wire 2 b1 b1 $end
 $enddefinitions $end
 b00 b1";
-            VCD vcd = Parse.FromString(vcdString);
+            using VCD vcd = Parse.FromString(vcdString);
 
             TestTools.VerifyDeclarations(expectedDecls, vcd.Declarations);
             TestTools.VerifySimCmds(expectedSimCmds, vcd.GetSimulationCommands().ToArray());
@@ -98,7 +98,7 @@ b0 b1
  
    
 ";
-            VCD vcd = Parse.FromString(vcdString);
+            using VCD vcd = Parse.FromString(vcdString);
         }
 
         [TestMethod]
@@ -110,7 +110,7 @@ b0 b1
 $var wire {expectedBits.Length} ! _T_4 $end
 $enddefinitions $end
 b{expectedBits.BitsToString()} !";
-            VCD vcd = Parse.FromString(vcdString);
+            using VCD vcd = Parse.FromString(vcdString);
 
             Assert.AreEqual(1, vcd.Declarations.Count);
             Assert.IsTrue(vcd.Declarations[0] is VarDef);
@@ -148,7 +148,7 @@ b{expectedBits.BitsToString()} !";
 $var wire {expectedBits.Length} ! _T_4 $end
 $enddefinitions $end
 b{expectedBits.BitsToString()} !";
-            VCD vcd = Parse.FromString(vcdString);
+            using VCD vcd = Parse.FromString(vcdString);
 
             Assert.AreEqual(1, vcd.Declarations.Count);
             Assert.IsTrue(vcd.Declarations[0] is VarDef);
@@ -172,7 +172,7 @@ b{expectedBits.BitsToString()} !";
 $var wire 5 ! _T_4 $end
 $enddefinitions $end
 r{expectedValue.ToString(CultureInfo.InvariantCulture)} !";
-            VCD vcd = Parse.FromString(vcdString);
+            using VCD vcd = Parse.FromString(vcdString);
 
             Assert.AreEqual(1, vcd.Declarations.Count);
             Assert.IsTrue(vcd.Declarations[0] is VarDef);
@@ -229,7 +229,7 @@ b0000 .
 b0000 (
 0-
 $end";
-            VCD vcd = Parse.FromString(vcdString);
+            using VCD vcd = Parse.FromString(vcdString);
 
             TestTools.VerifyDeclarations(expectedDecls, vcd.Declarations);
             TestTools.VerifySimCmds(expectedSimCmds, vcd.GetSimulationCommands().ToArray());
@@ -248,7 +248,7 @@ $end";
 $enddefinitions $end
 #0
 #53";
-            VCD vcd = Parse.FromString(vcdString);
+            using VCD vcd = Parse.FromString(vcdString);
 
             TestTools.VerifySimCmds(expectedSimCmds, vcd.GetSimulationCommands().ToArray());
         }

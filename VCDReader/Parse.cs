@@ -8,8 +8,7 @@ namespace VCDReader
     {
         public static VCD FromFile(string filepath)
         {
-            var fileStream = File.OpenRead(filepath);
-            return FromStream(fileStream);
+            return FromStream(File.OpenRead(filepath));
         }
 
         public static VCD FromString(string vcdString)
@@ -20,13 +19,12 @@ namespace VCDReader
 
         public static VCD FromStream(Stream stream)
         {
-            return FromStream(new BinaryReader(stream, System.Text.ASCIIEncoding.ASCII));
+            return FromStream(new BinaryReader(stream, System.Text.Encoding.ASCII));
         }
 
         public static VCD FromStream(BinaryReader stream)
         {
-            VCDLexer lexer = new VCDLexer(stream);
-            return Visitor.VisitVcd(lexer);
+            return Visitor.VisitVcd(new VCDLexer(stream));
         }
     }
 }

@@ -12,7 +12,7 @@ namespace VCDReaderTests
         [TestMethod]
         public void Parsevcd1()
         {
-            Parse.FromFile(Path.Combine(VCDFolder, "vcd1.vcd"));
+            using var _ = Parse.FromFile(Path.Combine(VCDFolder, "vcd1.vcd"));
         }
     }
 }

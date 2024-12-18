@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components.Forms;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ChiselDebuggerRazor.Code
 {
-    public sealed class CircuitFiles
+    public sealed class CircuitFiles : IDisposable
     {
         private Stream HiFirrtlStream;
         private Stream LoFirrtlStream;
@@ -29,14 +30,17 @@ namespace ChiselDebuggerRazor.Code
         {
             if (File.Exists(hiFirrtlPath))
             {
+                HiFirrtlStream?.Dispose();
                 HiFirrtlStream = File.OpenRead(hiFirrtlPath);
             }
             if (File.Exists(loFirrtlPath))
             {
+                LoFirrtlStream?.Dispose();
                 LoFirrtlStream = File.OpenRead(loFirrtlPath);
             }
             if (File.Exists(vcdPath))
             {
+                VCDStream?.Dispose();
                 VCDStream = File.OpenRead(vcdPath);
             }
         }
@@ -88,11 +92,22 @@ namespace ChiselDebuggerRazor.Code
             var vcdPath = CopyBrowserFileToMemory(vcdFile);
             await Task.WhenAll(hiFirrtlPath, loFirrtlPath, vcdPath);
 
+            HiFirrtlStream?.Dispose();
+            LoFirrtlStream?.Dispose();
+            VCDStream?.Dispose();
+
             HiFirrtlStream = hiFirrtlPath.Result;
             LoFirrtlStream = loFirrtlPath.Result;
             VCDStream = vcdPath.Result;
 
             return true;
+        }
+
+        public void Dispose()
+        {
+            HiFirrtlStream?.Dispose();
+            LoFirrtlStream?.Dispose();
+            VCDStream?.Dispose();
         }
     }
 }

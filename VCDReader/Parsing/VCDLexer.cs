@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace VCDReader.Parsing
 {
-    internal class VCDLexer : IDisposable
+    internal sealed class VCDLexer : IDisposable
     {
         private readonly BinaryReader Reader;
         private byte[] Buffer;
@@ -230,7 +230,9 @@ namespace VCDReader.Parsing
 
         public void Dispose()
         {
+#pragma warning disable IDISP007 // Don't dispose injected
             Reader.Dispose();
+#pragma warning restore IDISP007 // Don't dispose injected
         }
     }
 }

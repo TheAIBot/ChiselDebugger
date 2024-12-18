@@ -47,7 +47,9 @@ namespace VCDReader
 
         public void Dispose()
         {
+#pragma warning disable IDISP007 // Don't dispose injected
             Lexer.Dispose();
+#pragma warning restore IDISP007 // Don't dispose injected
         }
     }
 }

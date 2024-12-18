@@ -13,7 +13,7 @@ namespace VCDReaderTests
             string vcdString = @"
 $comment test $end 
 $enddefinitions $end";
-            VCD vcd = Parse.FromString(vcdString);
+            using VCD vcd = Parse.FromString(vcdString);
 
             Assert.AreEqual(1, vcd.Declarations.Count);
             Assert.IsTrue(vcd.Declarations[0] is Comment);
@@ -28,7 +28,7 @@ $enddefinitions $end";
             string vcdString = @"
 $date test $end 
 $enddefinitions $end";
-            VCD vcd = Parse.FromString(vcdString);
+            using VCD vcd = Parse.FromString(vcdString);
 
             Assert.AreEqual(1, vcd.Declarations.Count);
             Assert.IsTrue(vcd.Declarations[0] is Date);
@@ -43,7 +43,7 @@ $enddefinitions $end";
             string vcdString = @"
 $version test $lol $end 
 $enddefinitions $end";
-            VCD vcd = Parse.FromString(vcdString);
+            using VCD vcd = Parse.FromString(vcdString);
 
             Assert.AreEqual(1, vcd.Declarations.Count);
             Assert.IsTrue(vcd.Declarations[0] is VCDReader.Version);
@@ -62,7 +62,7 @@ $enddefinitions $end";
 $timescale 100 {unit.ToString().ToLower()} $end 
 $enddefinitions $end";
 
-                VCD vcd = Parse.FromString(vcdString);
+                using VCD vcd = Parse.FromString(vcdString);
 
                 Assert.AreEqual(1, vcd.Declarations.Count);
                 Assert.IsTrue(vcd.Declarations[0] is TimeScale);
@@ -82,7 +82,7 @@ $enddefinitions $end";
 $scope {scopeType.ToString().ToLower()} lol $end
 $upscope $end
 $enddefinitions $end";
-                VCD vcd = Parse.FromString(vcdString);
+                using VCD vcd = Parse.FromString(vcdString);
 
                 Assert.AreEqual(2, vcd.Declarations.Count);
                 Assert.IsTrue(vcd.Declarations[0] is Scope);
@@ -103,7 +103,7 @@ $scope module fish $end
 $upscope $end
 $upscope $end
 $enddefinitions $end";
-            VCD vcd = Parse.FromString(vcdString);
+            using VCD vcd = Parse.FromString(vcdString);
 
             Assert.AreEqual(4, vcd.Declarations.Count);
             Assert.IsTrue(vcd.Declarations[0] is Scope);
@@ -129,7 +129,7 @@ $upscope $end
 $scope module fish $end
 $upscope $end
 $enddefinitions $end";
-            VCD vcd = Parse.FromString(vcdString);
+            using VCD vcd = Parse.FromString(vcdString);
 
             Assert.AreEqual(4, vcd.Declarations.Count);
             Assert.IsTrue(vcd.Declarations[0] is Scope);
@@ -153,7 +153,7 @@ $enddefinitions $end";
             string vcdString = @"
 $scope module lol $end
 $enddefinitions $end";
-            VCD vcd = Parse.FromString(vcdString);
+            using VCD vcd = Parse.FromString(vcdString);
         }
 
         [TestMethod]
@@ -164,7 +164,7 @@ $enddefinitions $end";
 $scope module lol $end
 $scope module lol $end
 $enddefinitions $end";
-            VCD vcd = Parse.FromString(vcdString);
+            using VCD vcd = Parse.FromString(vcdString);
         }
 
         [TestMethod]
@@ -176,7 +176,7 @@ $scope module lol $end
 $upscope $end
 $scope module lol $end
 $enddefinitions $end";
-            VCD vcd = Parse.FromString(vcdString);
+            using VCD vcd = Parse.FromString(vcdString);
         }
 
         [TestMethod]
@@ -192,7 +192,7 @@ $enddefinitions $end";
                 string vcdString = @$"
 $var {varType.ToString().ToLower()} 6 ! _T_4 $end
 $enddefinitions $end";
-                VCD vcd = Parse.FromString(vcdString);
+                using VCD vcd = Parse.FromString(vcdString);
 
                 TestTools.VerifyDeclarations(expectedHeader, vcd.Declarations);
             }
