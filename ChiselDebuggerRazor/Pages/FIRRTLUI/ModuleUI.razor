@@ -78,7 +78,10 @@
         <WiresUI ModLayout="CurrModLayout"></WiresUI>
     </div>
 
-    <ScopedIOUI NodeIO="@ExternalIO"></ScopedIOUI>
+    @if (ExternalIO != null)
+    {
+        <ScopedIOUI NodeIO="@ExternalIO"></ScopedIOUI>
+    }
 </div>
 
 @code
@@ -91,7 +94,7 @@
     private Point MinContentSize;
     private List<Positioned<FIRRTLNode>> ModuleOpPoses = new List<Positioned<FIRRTLNode>>();
     private ModuleLayout CurrModLayout = null!;
-    private ScopedNodeIO ExternalIO = null;
+    private ScopedNodeIO? ExternalIO = null;
     private float ContentScale = 1.0f;
     private bool ShowModuleName = true;
     private string ModNameID = UniqueID.UniqueHTMLID();
@@ -328,7 +331,13 @@
         {
             if (operation.IsConditional)
             {
-                if (operation.EnableCon.Value.IsTrue())
+                ChiselDebug.GraphFIR.ValueType? enableConnectionValue = operation.EnableCon.Value;
+                if (enableConnectionValue == null)
+                {
+                    throw new InvalidOperationException("Enable connection was expected to have a value but it did not.");
+                }
+
+                if (enableConnectionValue.IsTrue())
                 {
                     return "linear-gradient(#9487b7aa, #7ec8a8aa)";
                 }
@@ -346,7 +355,13 @@
         {
             if (operation.IsConditional)
             {
-                if (operation.EnableCon.Value.IsTrue())
+                ChiselDebug.GraphFIR.ValueType? enableConnectionValue = operation.EnableCon.Value;
+                if (enableConnectionValue == null)
+                {
+                    throw new InvalidOperationException("Enable connection was expected to have a value but it did not.");
+                }
+
+                if (enableConnectionValue.IsTrue())
                 {
                     return "linear-gradient(#9487b7ff, #7ec8a8ff)";
                 }
@@ -370,6 +385,12 @@
             return true;
         }
 
-        return operation.EnableCon.Value.IsTrue();
+        ChiselDebug.GraphFIR.ValueType? moduleConditionValue = operation.EnableCon.Value;
+        if (moduleConditionValue == null)
+        {
+            throw new InvalidOperationException("Module condition value is null.");
+        }
+
+        return moduleConditionValue.IsTrue();
     }
 }

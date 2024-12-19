@@ -36,7 +36,7 @@
     public IExampleCircuits Examples { get; set; } = null!;
 
     private bool collapseNavMenu = true;
-    private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
 
     protected override bool ShouldRender()

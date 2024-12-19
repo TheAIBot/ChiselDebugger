@@ -13,7 +13,7 @@
 @inherits ManualRenderBase
 @implements IDisposable
 
-@if (DebugCtrl != null)
+@if (DebugCtrl != null && RootModLayout != null)
 {
     <div id="@CircuitContainerID">
         @if (DebugCtrl.Timeline != null)
@@ -58,9 +58,9 @@ else if (ThrownException is Exception)
     [Parameter]
     public CircuitFiles CircuitFiles { get; set; } = null!;
 
-    private DebugController DebugCtrl = null;
+    private DebugController? DebugCtrl = null;
     private Positioned<ChiselDebug.GraphFIR.Components.Module> ModulePosition;
-    private CircuitLayout RootModLayout = null;
+    private CircuitLayout? RootModLayout = null;
 
     private float CircuitScale = 1.0f;
     private Point CircuitOffset = Point.Zero;
@@ -77,11 +77,11 @@ else if (ThrownException is Exception)
     {
         try
         {
-            using var loFir = CircuitFiles.GetLoFirrtlStream();
             using var hiFir = CircuitFiles.GetHiFirrtlStream();
+            using var loFir = CircuitFiles.GetLoFirrtlStream();
             using var vcd = CircuitFiles.GetVCDStream();
 
-            return LoadFirData(loFir, hiFir, vcd);
+            return LoadFirData(hiFir, loFir, vcd);
         }
         catch (Exception e)
         {
@@ -90,7 +90,7 @@ else if (ThrownException is Exception)
         }
     }
 
-    private async Task LoadFirData(Stream loFirStream, Stream hiFirStream, Stream vcdStream)
+    private async Task LoadFirData(Stream hiFirStream, Stream? loFirStream, Stream? vcdStream)
     {
         DebugCtrl = DebugControllerFactory.Create(loFirStream, hiFirStream);
         ModulePosition = new Positioned<ChiselDebug.GraphFIR.Components.Module>(Point.Zero, DebugCtrl.Graph.MainModule);
@@ -134,13 +134,18 @@ else if (ThrownException is Exception)
 
     private Task CircuitContainerResized(ElemWH size)
     {
+        Point? circuitSize = DebugCtrl?.CircuitSize;
+        if (circuitSize == null)
+        {
+            throw new InvalidOperationException("Attempted to resize circuit when circuit controller was null.");
+        }
+
         CircuitContainerSize = size.ToPoint();
-        return CircuitSizeChangedAsync(Point.Zero);
+        return CircuitSizeChangedAsync(circuitSize.Value);
     }
 
-    private Task CircuitSizeChangedAsync(Point _)
+    private Task CircuitSizeChangedAsync(Point circuitSize)
     {
-        Point circuitSize = DebugCtrl.CircuitSize;
         if (circuitSize == Point.Zero ||
             CircuitContainerSize == Point.Zero)
         {
@@ -180,6 +185,12 @@ else if (ThrownException is Exception)
     /// <param name="args"></param>
     private void HandleScroll(WheelEventArgs args)
     {
+        DebugController? debugController = DebugCtrl;
+        if (debugController == null)
+        {
+            throw new InvalidOperationException("Attempted to zoom when circuit controller was null.");
+        }
+
         //No matter how much is scrolled, handle it as if it has only
         //scrolled once. This is done to prevent Accidentally zooming
         //too fast.
@@ -196,8 +207,8 @@ else if (ThrownException is Exception)
         float relMouseY = (float)args.ClientY - CircuitOffset.Y - CircuitTopLeftParent.Y;
 
 
-        float circuitSizeX = DebugCtrl.CircuitSize.X * CircuitScale;
-        float circuitSizeY = DebugCtrl.CircuitSize.Y * CircuitScale;
+        float circuitSizeX = debugController.CircuitSize.X * CircuitScale;
+        float circuitSizeY = debugController.CircuitSize.Y * CircuitScale;
 
         //These represent the position of the mouse as a percentage distance
         //to the bottom right of the circuit. Is used to know how much
@@ -217,8 +228,8 @@ else if (ThrownException is Exception)
         //is translated by however much the circuit size would increase
         //by multiplied by the mouse position relative to the circuits
         //top left position.
-        float xOffset = moveX * DebugCtrl.CircuitSize.X * scaleDelta;
-        float yOffset = moveY * DebugCtrl.CircuitSize.Y * scaleDelta;
+        float xOffset = moveX * debugController.CircuitSize.X * scaleDelta;
+        float yOffset = moveY * debugController.CircuitSize.Y * scaleDelta;
 
         CircuitOffset.X += (int)xOffset;
         CircuitOffset.Y += (int)yOffset;
@@ -229,8 +240,14 @@ else if (ThrownException is Exception)
 
     private void UpdateCircuitScale(float scale)
     {
+        CircuitLayout? rootCircuitLayout = RootModLayout;
+        if (rootCircuitLayout == null)
+        {
+            throw new InvalidOperationException("Attempted to change circuit when circuit layout was null.");
+        }
+
         CircuitScale = scale;
-        RootModLayout.UpdateLayoutDisplay(CircuitScale);
+        rootCircuitLayout.UpdateLayoutDisplay(CircuitScale);
     }
 
     private void HandleDrag(Point dragged)

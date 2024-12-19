@@ -158,7 +158,7 @@
 
     private Task TimeChanged(ChangeEventArgs args)
     {
-        if (ulong.TryParse((string)args.Value, out ulong time) &&
+        if (ulong.TryParse(args.Value as string, out ulong time) &&
             time != CurrTime)
         {
             //Limit to range of timeline
