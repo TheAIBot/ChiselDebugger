@@ -3,6 +3,7 @@ using ChiselDebug.Placing;
 using ChiselDebuggerRazor.Code.Controllers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -84,9 +85,9 @@ namespace ChiselDebuggerRazor.Code.Templates
             return Task.CompletedTask;
         }
 
-        public bool TryGetTemplate(string moduleName, ModuleLayout modLayout, out PlacementInfo placement)
+        public bool TryGetTemplate(string moduleName, ModuleLayout modLayout, [NotNullWhen(true)] out PlacementInfo? placement)
         {
-            PlaceTemplate modTemplate;
+            PlaceTemplate? modTemplate;
             if (!Templates.TryGetValue(moduleName, out modTemplate))
             {
                 placement = null;

@@ -15,9 +15,9 @@ namespace ChiselDebuggerRazor.Code.Controllers
             WorkLimiter = workLimiter;
         }
 
-        public DebugController Create(Stream loFirStream, Stream hiFirStream)
+        public DebugController Create(Stream? loFirStream, Stream hiFirStream)
         {
-            CircuitGraph loGraph = null;
+            CircuitGraph? loGraph = null;
             if (loFirStream != null)
             {
                 Circuit locircuit = Parse.FromStream(loFirStream);

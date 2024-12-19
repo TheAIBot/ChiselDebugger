@@ -10,7 +10,7 @@
 </div>
 
 @code {
-    private ScopedNodeIO NodeIO = null;
+    private ScopedNodeIO? NodeIO = null;
 
     protected override Task OnFirstParametersSetAsync()
     {
@@ -29,6 +29,12 @@
 
     protected override DirectedIO[] OnMakeSources(int width, int height)
     {
-        return NodeIO.GetSourceDirIO();
+        ScopedNodeIO? nodeIO = NodeIO;
+        if (nodeIO == null)
+        {
+            throw new InvalidOperationException($"{nameof(NodeIO)} was null. {nameof(OnMakeSinks)} must be called before {nameof(OnMakeSources)}");
+        }
+
+        return nodeIO.GetSourceDirIO();
     }
 }

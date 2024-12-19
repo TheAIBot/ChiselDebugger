@@ -7,7 +7,7 @@ namespace ChiselDebuggerRazor.Code.Events
 {
     public sealed class IOWindowEvents
     {
-        private IOWindowUI IOWindow = null;
+        private IOWindowUI? IOWindow = null;
 
         public void SetIOWindow(IOWindowUI window)
         {
@@ -21,7 +21,7 @@ namespace ChiselDebuggerRazor.Code.Events
 
         public Task MouseExitIOAsync(FIRIO io, MouseEventArgs args)
         {
-            return IOWindow?.MouseExit(io, args);
+            return IOWindow?.MouseExit(io, args) ?? Task.CompletedTask;
         }
     }
 }

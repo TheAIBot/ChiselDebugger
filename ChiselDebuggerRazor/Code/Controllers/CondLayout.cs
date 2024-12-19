@@ -16,7 +16,7 @@ namespace ChiselDebuggerRazor.Code.Controllers
         private Point CondSize = Point.Zero;
 
         public delegate Task LayoutHandler(List<Positioned<Module>> positions, FIRComponentUpdate componentInfo);
-        public event LayoutHandler OnLayoutUpdate;
+        public event LayoutHandler? OnLayoutUpdate;
 
         public CondLayout(Conditional cond)
         {
@@ -121,7 +121,7 @@ namespace ChiselDebuggerRazor.Code.Controllers
                 {
                     var layoutData = UpdateAndGetModPositions();
                     FIRComponentUpdate componentUpdate = new FIRComponentUpdate(Cond, CondSize, layoutData.inOffsets, layoutData.outOffsets);
-                    return OnLayoutUpdate?.Invoke(layoutData.modPoses, componentUpdate);
+                    return OnLayoutUpdate?.Invoke(layoutData.modPoses, componentUpdate) ?? Task.CompletedTask;
                 }
             }
 

@@ -53,10 +53,10 @@ else if (ThrownException is Exception)
 @code
 {
     [Inject]
-    private DebugControllerFactory DebugControllerFactory { get; set; }
+    private DebugControllerFactory DebugControllerFactory { get; set; } = null!;
 
     [Parameter]
-    public CircuitFiles CircuitFiles { get; set; }
+    public CircuitFiles CircuitFiles { get; set; } = null!;
 
     private DebugController DebugCtrl = null;
     private Positioned<ChiselDebug.GraphFIR.Components.Module> ModulePosition;
@@ -71,7 +71,7 @@ else if (ThrownException is Exception)
     private Point CircuitTopLeftParent = Point.Zero;
     private Point CircuitContainerSize = Point.Zero;
     private readonly string CircuitContainerID = UniqueID.UniqueHTMLID();
-    private Exception ThrownException = null;
+    private Exception? ThrownException = null;
 
     protected override Task OnInitializedAsync()
     {

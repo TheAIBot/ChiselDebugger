@@ -17,9 +17,9 @@
 
 @code {
     [Inject]
-    public PageWideEvents PageWideEvents { get; set; }
+    public PageWideEvents PageWideEvents { get; set; } = null!;
 
-    private CircuitFiles CircuitFiles;
+    private CircuitFiles? CircuitFiles = null;
 
     private Task MouseUp(MouseEventArgs args)
     {

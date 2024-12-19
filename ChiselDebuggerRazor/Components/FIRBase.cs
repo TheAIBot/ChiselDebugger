@@ -14,13 +14,13 @@ namespace ChiselDebuggerRazor.Components
     public abstract class FIRBase<T> : ManualRenderBase, IFIRUINode where T : FIRRTLNode
     {
         [Inject]
-        private IJSRuntime JS { get; set; }
+        private IJSRuntime JS { get; set; } = null!;
 
         [Parameter]
         public Positioned<T> PosOp { get; set; }
 
         [Parameter]
-        public FIRLayout ParentLayoutCtrl { get; set; }
+        public FIRLayout ParentLayoutCtrl { get; set; } = null!;
 
         protected Point Position => PosOp.Position;
         protected T Operation => PosOp.Value;
@@ -86,7 +86,7 @@ namespace ChiselDebuggerRazor.Components
             SinkOffsets = OnMakeSinks(width, height);
             SourceOffsets = OnMakeSources(width, height);
 
-            return ParentLayoutCtrl?.UpdateComponentInfoAsync(new FIRComponentUpdate(Operation, GetCurrentSize(), SinkOffsets, SourceOffsets));
+            return ParentLayoutCtrl?.UpdateComponentInfoAsync(new FIRComponentUpdate(Operation, GetCurrentSize(), SinkOffsets, SourceOffsets)) ?? Task.CompletedTask;
         }
 
         protected virtual bool OnMove(Point newPos)

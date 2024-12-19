@@ -18,7 +18,7 @@
 
 @code {
     [Inject]
-    public IOWindowEvents WindowEvents { get; set; }
+    public IOWindowEvents WindowEvents { get; set; } = null!;
 
     private readonly Dictionary<FIRIO, IOwindowData> Windows = new Dictionary<FIRIO, IOwindowData>();
 
@@ -47,8 +47,7 @@
 
     public async Task MouseExit(FIRIO io, MouseEventArgs args, bool externalFocus = true)
     {
-        IOwindowData window;
-        if (!Windows.TryGetValue(io, out window))
+        if (!Windows.TryGetValue(io, out IOwindowData? window))
         {
             return;
         }

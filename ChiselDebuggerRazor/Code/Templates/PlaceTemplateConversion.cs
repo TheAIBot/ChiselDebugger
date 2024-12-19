@@ -30,16 +30,16 @@ namespace ChiselDebuggerRazor.Code.Templates
 
             for (int i = 0; i < template.NodeOrder.Length; i++)
             {
-                if (template.NodeOrder[i] == null)
+                Positioned<FIRRTLNode>? from = template.NodeOrder[i];
+                if (from == null)
                 {
                     continue;
                 }
 
-                Positioned<FIRRTLNode> from = template.NodeOrder[i].Value;
                 FIRRTLNode to = NodeOrder[i];
 
-                convertedNodePos.Add(new Positioned<FIRRTLNode>(from.Position, to));
-                convertedSpace.Add(to, template.PlaceInfo.UsedSpace[from.Value]);
+                convertedNodePos.Add(new Positioned<FIRRTLNode>(from.Value.Position, to));
+                convertedSpace.Add(to, template.PlaceInfo.UsedSpace[from.Value.Value]);
             }
 
             return new PlacementInfo(convertedNodePos, convertedSpace, template.PlaceInfo.SpaceNeeded);

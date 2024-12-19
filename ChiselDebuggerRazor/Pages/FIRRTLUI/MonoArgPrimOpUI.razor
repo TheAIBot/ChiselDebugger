@@ -8,7 +8,7 @@
                 <td>@Operation.A.UpdateValueFromSourceFast().BitsToString()</td>
             </tr>
             <tr>
-                <td colspan="3">@Operation.Result.Value.ToBinaryString()</td>
+                <td colspan="3">@ResultValue.ToBinaryString()</td>
             </tr>
         </table>
     </div>
@@ -27,6 +27,17 @@
 @code
 {
     private const int ContentPadding = 5;
+    private ChiselDebug.GraphFIR.ValueType ResultValue = null!;
+
+    protected override async Task OnFirstParametersSetAsync() {
+        await base.OnFirstParametersSetAsync();
+
+        ResultValue = Operation.Result.Value!;
+        if (ResultValue == null)
+        {
+            throw new InvalidOperationException("Operation did not contains a result value.");
+        }
+    }
 
     protected override DirectedIO[] OnMakeSinks(int width, int height)
     {

@@ -30,7 +30,7 @@ namespace ChiselDebuggerWebUI.Code
         private static string[] GetExamplesFromFiles()
         {
             return Directory.GetFiles(ExamplesFolder)
-                            .Select(Path.GetFileName)
+                            .Select(x => Path.GetFileName(x)!)
                             .Where(x => x.EndsWith(".fir"))
                             .ToArray();
         }

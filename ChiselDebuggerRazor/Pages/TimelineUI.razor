@@ -35,10 +35,10 @@
 
 @code {
     [Parameter]
-    public DebugController DebugCtrl { get; set; }
+    public DebugController DebugCtrl { get; set; } = null!;
 
     [Inject]
-    public PageWideEvents PageWideEvents { get; set; }
+    public PageWideEvents PageWideEvents { get; set; } = null!;
 
 
     private double RangeParentStartX;
@@ -51,7 +51,7 @@
     private ulong CurrTime;
     private ulong StartTime;
     private ulong EndTime;
-    private ulong[] AllTimes;
+    private ulong[] AllTimes = null!;
     private List<ulong> TimeSteps = new List<ulong>();
 
     public float GetXPercent(ulong time)
@@ -75,7 +75,11 @@
 
     protected override Task OnFirstParametersSetAsync()
     {
-        VCDTimeline timeline = DebugCtrl.Timeline;
+        VCDTimeline? timeline = DebugCtrl.Timeline;
+        if (timeline == null) {
+            throw new InvalidOperationException("Attempted to create a timeline ui with a null timeline.");
+        }
+
         StartTime = timeline.TimeInterval.StartInclusive;
         EndTime = timeline.TimeInterval.InclusiveEnd();
         CurrTime = StartTime;

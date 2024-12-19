@@ -9,10 +9,10 @@
 
 @code {
     [Parameter]
-    public DebugController DebugCtrl { get; set; }
+    public DebugController DebugCtrl { get; set; } = null!;
 
     private List<Positioned<Module>> CondModules = new List<Positioned<Module>>();
-    private CondLayout CurrLayout;
+    private CondLayout CurrLayout = null!;
 
     public new void StateHasChanged()
     {
@@ -36,7 +36,7 @@
         CondModules = positions;
 
         SetCurrentSize(componentInfo.Size);
-        await ParentLayoutCtrl?.UpdateComponentInfoAsync(componentInfo);
+        await ParentLayoutCtrl.UpdateComponentInfoAsync(componentInfo);
         StateHasChanged();
     }
 

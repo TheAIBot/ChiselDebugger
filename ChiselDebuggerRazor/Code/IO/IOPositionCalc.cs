@@ -59,7 +59,7 @@ namespace ChiselDebuggerRazor.Code.IO
             return new ScopedNodeIO(inputIO, outputIO, startYPadding, endYPadding);
         }
 
-        private static bool MakeScopedIO(List<ScopedDirIO> inputIO, List<ScopedDirIO> outputIO, FIRIO[] io, int fixedX, ref int inputYOffset, ref int outputYOffset, int scopeDepth, bool ignoreDisconnectedIO, AggregateIO parentIO)
+        private static bool MakeScopedIO(List<ScopedDirIO> inputIO, List<ScopedDirIO> outputIO, FIRIO[] io, int fixedX, ref int inputYOffset, ref int outputYOffset, int scopeDepth, bool ignoreDisconnectedIO, AggregateIO? parentIO)
         {
             FIRIO[] allIO = io.FlattenMany().ToArray();
             if (allIO.Any(x => x is Sink) && allIO.Any(x => x is Source))

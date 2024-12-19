@@ -6,17 +6,17 @@ namespace ChiselDebuggerRazor.Code.Events
     public sealed class PageWideEvents
     {
         public delegate Task MouseEventHandler(MouseEventArgs args);
-        public event MouseEventHandler OnMouseUp;
-        public event MouseEventHandler OnMouseMove;
+        public event MouseEventHandler? OnMouseUp;
+        public event MouseEventHandler? OnMouseMove;
 
         public Task InvokeOnMouseUpAsync(MouseEventArgs args)
         {
-            return OnMouseUp?.Invoke(args);
+            return OnMouseUp?.Invoke(args) ?? Task.CompletedTask;
         }
 
         public Task InvokeOnMouseMoveAsync(MouseEventArgs args)
         {
-            return OnMouseMove?.Invoke(args);
+            return OnMouseMove?.Invoke(args) ?? Task.CompletedTask;
         }
     }
 }

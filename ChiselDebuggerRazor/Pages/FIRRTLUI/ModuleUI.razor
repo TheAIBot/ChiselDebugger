@@ -90,7 +90,7 @@
 
     private Point MinContentSize;
     private List<Positioned<FIRRTLNode>> ModuleOpPoses = new List<Positioned<FIRRTLNode>>();
-    private ModuleLayout CurrModLayout;
+    private ModuleLayout CurrModLayout = null!;
     private ScopedNodeIO ExternalIO = null;
     private float ContentScale = 1.0f;
     private bool ShowModuleName = true;
@@ -100,13 +100,13 @@
     private bool HasLayout = false;
 
     [Parameter]
-    public DebugController DebugCtrl { get; set; }
+    public DebugController DebugCtrl { get; set; } = null!;
 
     [Parameter]
     public bool IgnoreUnusedIO { get; set; } = false;
 
     [Inject]
-    public INodePlacerFactory NodePlacerFactory { get; set; }
+    public INodePlacerFactory NodePlacerFactory { get; set; } = null!;
 
     protected override async Task OnFirstParametersSetAsync()
     {
@@ -323,11 +323,12 @@
 
     private string GetBackgroundGradient()
     {
+        Module operation = Operation;
         if (ShowModuleContent())
         {
-            if (Operation.IsConditional)
+            if (operation.IsConditional)
             {
-                if (Operation.EnableCon.Value.IsTrue())
+                if (operation.EnableCon.Value.IsTrue())
                 {
                     return "linear-gradient(#9487b7aa, #7ec8a8aa)";
                 }
@@ -343,9 +344,9 @@
         }
         else
         {
-            if (Operation.IsConditional)
+            if (operation.IsConditional)
             {
-                if (Operation.EnableCon.Value.IsTrue())
+                if (operation.EnableCon.Value.IsTrue())
                 {
                     return "linear-gradient(#9487b7ff, #7ec8a8ff)";
                 }
@@ -363,11 +364,12 @@
 
     private bool IsModuleEnabled()
     {
-        if (!Operation.IsConditional)
+        Module operation = Operation;
+        if (!operation.IsConditional)
         {
             return true;
         }
 
-        return Operation.EnableCon.Value.IsTrue();
+        return operation.EnableCon.Value.IsTrue();
     }
 }

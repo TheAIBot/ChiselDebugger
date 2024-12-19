@@ -5,7 +5,7 @@ namespace ChiselDebuggerRazor.Code
 {
     public sealed class SeqWorkOverrideOld<T>
     {
-        private T WorkItem;
+        private T? WorkItem;
         private readonly object Locker = new object();
         private bool QueuedWork = false;
         private readonly IWorkLimiter WorkLimiter;
@@ -35,10 +35,15 @@ namespace ChiselDebuggerRazor.Code
         {
             try
             {
-                T workItem;
+                T? workItem;
                 lock (Locker)
                 {
                     workItem = WorkItem;
+                }
+
+                if (workItem == null)
+                {
+                    throw new InvalidOperationException("Work was scheduled but work item was null.");
                 }
 
                 return work(workItem);

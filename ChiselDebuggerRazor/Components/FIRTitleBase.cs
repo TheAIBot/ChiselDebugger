@@ -18,7 +18,7 @@ namespace ChiselDebuggerRazor.Components
                 SinkOffsets = OnMakeSinks(width, height);
                 SourceOffsets = OnMakeSources(width, height);
 
-                return ParentLayoutCtrl?.UpdateComponentInfoAsync(new FIRComponentUpdate(Operation, GetCurrentSize(), SinkOffsets, SourceOffsets));
+                return ParentLayoutCtrl?.UpdateComponentInfoAsync(new FIRComponentUpdate(Operation, GetCurrentSize(), SinkOffsets, SourceOffsets)) ?? Task.CompletedTask;
             }
 
             return Task.CompletedTask;

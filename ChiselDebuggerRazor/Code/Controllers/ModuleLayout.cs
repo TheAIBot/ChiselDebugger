@@ -17,17 +17,17 @@ namespace ChiselDebuggerRazor.Code.Controllers
         private readonly ModuleUI ModUI;
         private readonly INodePlacer NodePlacer;
         private readonly SimpleRouter WireRouter;
-        private WiresUI WireUI;
+        private WiresUI? WireUI;
 
         private readonly FIRRTLNode[] ModuleNodes;
         private readonly FIRRTLNode[] ModuleNodesWithModule;
         private readonly FIRIO[] ModuleIO;
 
         public delegate Task PlacedHandler(PlacementInfo placements);
-        private event PlacedHandler OnPlacedNodes;
+        private event PlacedHandler? OnPlacedNodes;
 
         public delegate Task RoutedHandler(List<WirePath> wirePaths);
-        private event RoutedHandler OnWiresRouted;
+        private event RoutedHandler? OnWiresRouted;
 
         public ModuleLayout(DebugController debugCtrl, Module mod, ModuleUI modUI, INodePlacer nodePlacer)
         {
@@ -41,7 +41,7 @@ namespace ChiselDebuggerRazor.Code.Controllers
 
             List<FIRIO> allShownIO = new List<FIRIO>();
             allShownIO.AddRange(Mod.GetAllIOOrdered());
-            allShownIO.AddRange(allShownIO.Select(x => x.ParentIO).Where(x => x != null).Distinct().ToArray());
+            allShownIO.AddRange(allShownIO.Select(x => x.ParentIO!).Where(x => x != null).Distinct().ToArray());
             ModuleIO = allShownIO.ToArray();
         }
 

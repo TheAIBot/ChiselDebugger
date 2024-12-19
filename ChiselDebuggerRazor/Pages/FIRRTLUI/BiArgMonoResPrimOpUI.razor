@@ -13,7 +13,7 @@
                 <div class="inputs-result">
                     <div>@ToDisplayBase(ref Operation.A.UpdateValueFromSourceFast())</div>
                     <div>@ToDisplayBase(ref Operation.B.UpdateValueFromSourceFast())</div>
-                    <div class="result">@ToDisplayBase(ref Operation.Result.Value.GetValue())</div>
+                    <div class="result">@ToDisplayBase(ref ResultValue.GetValue())</div>
                 </div>
             </div>
         </div>
@@ -37,6 +37,16 @@
     private const int ContentPadding = 5;
     private bool ShowAsBinary = true;
     private bool LockSize = false;
+    private ChiselDebug.GraphFIR.ValueType ResultValue = null!;
+
+    protected override async Task OnFirstParametersSetAsync() {
+        await base.OnFirstParametersSetAsync();
+
+        ResultValue = Operation.Result.Value!;
+        if (ResultValue == null) {
+            throw new InvalidOperationException("Operation did not contains a result value.");
+        }
+    }
 
     protected override Task OnResizeAsync(int width, int height)
     {

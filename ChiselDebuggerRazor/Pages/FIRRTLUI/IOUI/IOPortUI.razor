@@ -5,10 +5,10 @@
     public Point Position { get; set; }
 
     [Parameter]
-    public FIRIO IO { get; set; }
+    public FIRIO IO { get; set; } = null!;
 
     [Inject]
-    public IOWindowEvents WindowEvents { get; set; }
+    public IOWindowEvents WindowEvents { get; set; } = null!;
 
     private const int DOT_RADIUS = 3;
 

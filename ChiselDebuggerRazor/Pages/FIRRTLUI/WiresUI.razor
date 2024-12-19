@@ -29,10 +29,10 @@
 @code
 {
     [Parameter]
-    public ModuleLayout ModLayout { get; set; }
+    public ModuleLayout ModLayout { get; set; } = null!;
 
     [Inject]
-    public IOWindowEvents WindowEvents { get; set; }
+    public IOWindowEvents WindowEvents { get; set; } = null!;
 
     private List<WirePath> WirePaths = new List<WirePath>();
 

@@ -8,6 +8,7 @@ using ChiselDebug.Utilities;
 using ChiselDebuggerRazor.Code.Templates;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using VCDReader;
@@ -17,7 +18,7 @@ namespace ChiselDebuggerRazor.Code.Controllers
     public sealed class DebugController : IDisposable
     {
         public readonly CircuitGraph Graph;
-        public VCDTimeline Timeline { get; set; } = null;
+        public VCDTimeline? Timeline { get; set; } = null;
         private readonly Dictionary<FIRRTLNode, ModuleLayout> FIRNodeToModCtrl = new Dictionary<FIRRTLNode, ModuleLayout>();
         private readonly List<ModuleLayout> ModControllers = new List<ModuleLayout>();
         private readonly PlacementTemplator PlacementTemplates;
@@ -25,12 +26,12 @@ namespace ChiselDebuggerRazor.Code.Controllers
         private readonly SeqWorkOverrideOld<ulong> StateLimiter;
         private readonly CancellationTokenSource CancelSource = new CancellationTokenSource();
         internal readonly PlaceAndRouteStats PlaceRouteStats = new PlaceAndRouteStats();
-        private ModuleLayout RootModCtrl = null;
+        private ModuleLayout? RootModCtrl = null;
 
         public Point CircuitSize { get; private set; } = Point.Zero;
 
         public delegate Task CircuitSizeChangedHandler(Point circuitSize);
-        public event CircuitSizeChangedHandler OnCircuitSizeChanged;
+        public event CircuitSizeChangedHandler? OnCircuitSizeChanged;
 
         public DebugController(CircuitGraph graph, PlacementTemplator placementTemplates, RouteTemplator routeTemplates, SeqWorkOverrideOld<ulong> stateLimiter)
         {
@@ -72,12 +73,12 @@ namespace ChiselDebuggerRazor.Code.Controllers
             return RouteTemplates.AddTemplateParametersAsync(moduleName, router, placeInfo, nodeOrder, ioOrder, CancelSource.Token);
         }
 
-        internal bool TryGetPlaceTemplate(string moduleName, ModuleLayout modLayout, out PlacementInfo placement)
+        internal bool TryGetPlaceTemplate(string moduleName, ModuleLayout modLayout, [NotNullWhen(true)] out PlacementInfo? placement)
         {
             return PlacementTemplates.TryGetTemplate(moduleName, modLayout, out placement);
         }
 
-        internal bool TryGetRouteTemplate(string moduleName, ModuleLayout modLayout, out List<WirePath> wires)
+        internal bool TryGetRouteTemplate(string moduleName, ModuleLayout modLayout, [NotNullWhen(true)] out List<WirePath>? wires)
         {
             return RouteTemplates.TryGetTemplate(moduleName, modLayout, out wires);
         }
@@ -91,10 +92,16 @@ namespace ChiselDebuggerRazor.Code.Controllers
 
         public Task SetCircuitStateAsync(ulong time)
         {
+            var timeline = Timeline;
+            if (timeline == null)
+            {
+                throw new InvalidOperationException("Attempting to set time of a null timeline");
+            }
+
             CancellationToken cancelToken = CancelSource.Token;
             return StateLimiter.AddWorkAsync(time, async stateTime =>
             {
-                Graph.SetState(Timeline.GetStateAtTime(stateTime));
+                Graph.SetState(timeline.GetStateAtTime(stateTime));
                 Graph.ComputeRemainingGraph();
                 if (cancelToken.IsCancellationRequested)
                 {
