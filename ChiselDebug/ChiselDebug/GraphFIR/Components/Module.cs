@@ -12,7 +12,7 @@ namespace ChiselDebug.GraphFIR.Components
     public sealed class Module : FIRRTLContainer
     {
         public readonly string Name;
-        public readonly string InstanceName;
+        public readonly string? InstanceName;
         private readonly List<FIRRTLNode> Nodes = new List<FIRRTLNode>();
         private readonly Dictionary<string, FIRIO> NameToIO = new Dictionary<string, FIRIO>();
         private readonly Dictionary<Sink, Wire> DuplexOutputWires = new Dictionary<Sink, Wire>();
@@ -21,7 +21,7 @@ namespace ChiselDebug.GraphFIR.Components
         [MemberNotNullWhen(true, nameof(EnableCon))]
         public bool IsConditional => EnableCon != null;
 
-        public Module(string name, string instanceName, Module parentMod, IFirrtlNode? defNode) : base(defNode)
+        public Module(string name, string? instanceName, Module parentMod, IFirrtlNode? defNode) : base(defNode)
         {
             Name = name;
             InstanceName = instanceName;

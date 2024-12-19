@@ -1,5 +1,6 @@
 ﻿using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -87,14 +88,15 @@ namespace ChiselDebug.GraphFIR.Transformations
 
         private static bool IsAllConnectionsGoingFurtherIn(Module mod)
         {
-            HashSet<Module> currentAndNestedMods = new HashSet<Module>(mod.GetAllNestedNodesOfType<Module>());
-            List<FIRRTLNode> modNode = mod.GetAllNodes().Where(x => x is not Conditional).ToList();
-            List<Source> allNodeOutputs = modNode.SelectMany(x => x.GetSources()).ToList();
+            HashSet<Module> currentAndNestedMods = new(mod.GetAllNestedNodesOfType<Module>());
+            IEnumerable<Source> allNodeOutputs = mod.GetAllNodes()
+                                                    .Where(x => x is not Conditional)
+                                                    .SelectMany(x => x.GetSources());
             foreach (var output in allNodeOutputs)
             {
                 foreach (var input in output.GetConnectedInputs())
                 {
-                    if (!currentAndNestedMods.Contains(input.GetModResideIn()))
+                    if (!currentAndNestedMods.Contains(input.GetModResideIn() ?? throw new InvalidOperationException("A node was not part of a module.")))
                     {
                         return false;
                     }

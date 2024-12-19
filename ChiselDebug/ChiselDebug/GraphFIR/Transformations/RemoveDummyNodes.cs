@@ -30,7 +30,7 @@ namespace ChiselDebug.GraphFIR.Transformations
             Debug.Assert(dummyNode.InIO.GetConnections().Length == 1);
 
             var dummyNodesSourceSinks = mod.EnableCon.GetConnectedInputs().ToArray();
-            var dummyNodeSinksSourceConnection = (mod.EnableCon.Node as DummyPassthrough).InIO.GetConnections().Single();
+            var dummyNodeSinksSourceConnection = dummyNode.InIO.GetConnections().Single();
 
 
             foreach (var conditionalSinks in dummyNodesSourceSinks)

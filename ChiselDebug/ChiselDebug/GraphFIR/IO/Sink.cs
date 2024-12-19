@@ -84,7 +84,7 @@ namespace ChiselDebug.GraphFIR.IO
             return cons.ToArray();
         }
 
-        public Connection GetConnection(Source from, Source condition)
+        public Connection GetConnection(Source from, Source? condition)
         {
             if (!TryGetConnection(from, condition, out var connection))
             {

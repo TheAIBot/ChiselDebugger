@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace ChiselDebug.GraphFIR.IO
@@ -60,7 +61,7 @@ namespace ChiselDebug.GraphFIR.IO
             return allAggIO;
         }
 
-        public static bool TryGetParentMemPort(FIRIO io, out MemPort port)
+        public static bool TryGetParentMemPort(FIRIO io, [NotNullWhen(true)] out MemPort? port)
         {
             FIRIO node = io.Flatten().First();
             while (node.IsPartOfAggregateIO)

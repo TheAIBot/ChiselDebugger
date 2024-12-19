@@ -5,6 +5,7 @@ using ChiselDebug.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 
@@ -77,7 +78,7 @@ namespace ChiselDebug.Routing
                        .ToList();
         }
 
-        public bool TryPathLines(PlacementInfo placements, CancellationToken cancelToken, out List<WirePath> wiresPaths)
+        public bool TryPathLines(PlacementInfo placements, CancellationToken cancelToken, [NotNullWhen(true)] out List<WirePath>? wiresPaths)
         {
             Dictionary<Line, int> repathCounter = new Dictionary<Line, int>();
 
@@ -116,8 +117,7 @@ namespace ChiselDebug.Routing
                     endRect = placements.UsedSpace[line.End.Node];
                 }
 
-                WirePath path;
-                if (!TryPathLine(board, line.Start, line.End, startRect, endRect, paths, out path))
+                if (!TryPathLine(board, line.Start, line.End, startRect, endRect, paths, out WirePath? path))
                 {
                     Debug.WriteLine("Failed to find a path:");
                     wiresPaths = null;
@@ -167,7 +167,7 @@ namespace ChiselDebug.Routing
             }
         }
 
-        private static bool TryPathLine(RouterBoard board, IOInfo start, IOInfo end, Rectangle? startRect, Rectangle? endRect, List<WirePath> allPaths, out WirePath wirePath)
+        private static bool TryPathLine(RouterBoard board, IOInfo start, IOInfo end, Rectangle? startRect, Rectangle? endRect, List<WirePath> allPaths, [NotNullWhen(true)] out WirePath? wirePath)
         {
             board.ReloadCheckpoint();
 

@@ -9,7 +9,7 @@ namespace ChiselDebug.GraphFIR
     {
         public readonly bool IsSigned;
         internal BinaryVarValue Value;
-        private string ValueString;
+        private string? ValueString;
 
         public ValueType(GroundType type)
         {

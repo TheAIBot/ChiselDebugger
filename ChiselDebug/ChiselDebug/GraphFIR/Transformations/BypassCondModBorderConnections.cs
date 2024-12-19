@@ -196,7 +196,11 @@ namespace ChiselDebug.GraphFIR.Transformations
 
                     FIRIO flipped = io.Flip(mod);
                     mod.AddAnonymousInternalIO(flipped);
-                    AggregateIO extAggIO = flipped.Flatten().First().GetPairedThrowIfNull().ParentIO;
+                    AggregateIO? extAggIO = flipped.Flatten().First().GetPairedThrowIfNull().ParentIO;
+                    if (extAggIO == null)
+                    {
+                        throw new InvalidOperationException("Flipped scalar IO has no parent aggregate IO which it should.");
+                    }
 
                     io.ConnectToInput(flipped, false, false, endpointConnection.Condition);
                     endpointConnection.To.ReplaceConnection(io, extAggIO, endpointConnection.Condition);
@@ -226,10 +230,14 @@ namespace ChiselDebug.GraphFIR.Transformations
 
                     FIRIO flipped = io.Flip(mod);
                     mod.AddAnonymousInternalIO(flipped);
-                    AggregateIO extAggIO = flipped.Flatten().First().GetPairedThrowIfNull().ParentIO;
+                    AggregateIO? extAggIO = flipped.Flatten().First().GetPairedThrowIfNull().ParentIO;
+                    if (extAggIO == null)
+                    {
+                        throw new InvalidOperationException("Flipped scalar IO has no parent aggregate IO which it should.");
+                    }
 
                     endpointConnection.To.ConnectToInput(extAggIO, false, false, endpointConnection.Condition);
-                    io.ReplaceConnection(endpointConnection.To, flipped as AggregateIO, endpointConnection.Condition);
+                    io.ReplaceConnection(endpointConnection.To, (AggregateIO)flipped, endpointConnection.Condition);
                 }
                 else
                 {

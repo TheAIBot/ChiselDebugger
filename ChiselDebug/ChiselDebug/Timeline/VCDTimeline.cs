@@ -8,15 +8,12 @@ namespace ChiselDebug.Timeline
 {
     public sealed class VCDTimeline
     {
-        public readonly TimeScale TimeScale;
         public readonly TimeSpan TimeInterval;
         private readonly List<TimeSegmentChanges> SegmentChanges = new List<TimeSegmentChanges>();
         public int StateCount { get; private set; } = 0;
 
         public VCDTimeline(VCD vcd)
         {
-            this.TimeScale = vcd.Time;
-
             var simCommands = vcd.GetSimulationCommands();
             SimPass firstCmd = simCommands.First();
             CircuitState segmentStartState;

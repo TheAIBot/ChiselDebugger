@@ -41,7 +41,7 @@ namespace ChiselDebug.GraphFIR.IO
             Connections.Add(new AggregateConnection(aggIO, condition));
         }
 
-        public void RemoveConnection(AggregateIO aggIO, Source condition)
+        public void RemoveConnection(AggregateIO aggIO, Source? condition)
         {
             if (Connections == null)
             {
@@ -51,7 +51,7 @@ namespace ChiselDebug.GraphFIR.IO
             Connections.Remove(new AggregateConnection(aggIO, condition));
         }
 
-        public void ReplaceConnection(AggregateIO replace, AggregateIO replaceWith, Source condition)
+        public void ReplaceConnection(AggregateIO replace, AggregateIO replaceWith, Source? condition)
         {
             if (!replace.IsPassiveOfType<Source>())
             {
@@ -75,7 +75,7 @@ namespace ChiselDebug.GraphFIR.IO
 
             if (replace.GetType() != replaceWith.GetType())
             {
-                throw new ArgumentException(nameof(replaceWith), "The io being replaced and what it's being replaced with must be ofthe same type.");
+                throw new ArgumentException(nameof(replaceWith), "The io being replaced and what it's being replaced with must be of the same type.");
             }
 
             Sink[] currentScalars = FlattenTo<Sink>();
