@@ -9,12 +9,12 @@ namespace ChiselDebug.GraphFIR
 {
     internal static class TypeHelper
     {
-        public static GroundType InferMaxWidthType(Source output, PairedIOFIRRTLNode pairNode)
+        public static GroundType? InferMaxWidthType(Source output, PairedIOFIRRTLNode pairNode)
         {
             return InferMaxWidthType(pairNode.GetAllPairedIO(output));
         }
 
-        public static GroundType InferMaxWidthType(ScalarIO[] ioEndPoints)
+        public static GroundType? InferMaxWidthType(ScalarIO[] ioEndPoints)
         {
             List<GroundType> inputTypes = new List<GroundType>();
             foreach (FIRIO endPoint in ioEndPoints)

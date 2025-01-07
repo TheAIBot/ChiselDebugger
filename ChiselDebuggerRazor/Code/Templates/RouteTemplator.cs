@@ -61,8 +61,7 @@ namespace ChiselDebuggerRazor.Code.Templates
 
             return WorkLimiter.AddWorkAsync(() =>
             {
-                List<WirePath> wires;
-                if (!router.TryPathLines(placeInfo, cancelToken, out wires))
+                if (!router.TryPathLines(placeInfo, cancelToken, out List<WirePath>? wires))
                 {
                     return Task.CompletedTask;
                 }

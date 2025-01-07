@@ -19,7 +19,7 @@ namespace ChiselDebug.GraphFIR.Circuit
         public CircuitState(DumpVars initVarValues)
         {
             VariableValues = new Dictionary<string, BinaryVarValue>(initVarValues.InitialValues.Count);
-            foreach (var initValue in initVarValues.InitialValues)
+            foreach (VarValue initValue in initVarValues.InitialValues)
             {
                 var variable = initValue.Variables[0];
                 VariableValues.Add(variable.ID, (BinaryVarValue)initValue);
@@ -31,7 +31,7 @@ namespace ChiselDebug.GraphFIR.Circuit
         public CircuitState(List<List<VarDef>> varDefs)
         {
             VariableValues = new Dictionary<string, BinaryVarValue>(varDefs.Count);
-            foreach (var variables in varDefs)
+            foreach (List<VarDef> variables in varDefs)
             {
                 var variable = variables[0];
                 BitState[] bits = new BitState[variable.Size];

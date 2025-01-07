@@ -69,8 +69,13 @@ namespace ChiselDebug.CombGraph
             BorderBlockers borderBlockers = new BorderBlockers();
             NodeBlockers nodeBlockers = new NodeBlockers();
 
-            foreach (var computeFirst in outputs.Where(x => x.Node is not Module && (x.Node is not IStatePreserving)).Select(x => x.Node).Distinct())
+            foreach (FIRRTLNode? computeFirst in outputs.Where(x => x.Node is not Module && (x.Node is not IStatePreserving)).Select(x => x.Node).Distinct())
             {
+                if (computeFirst == null)
+                {
+                    throw new InvalidOperationException("Output was not attached to any node which is not legal.");
+                }
+
                 computeOrder.Add(new Computable(computeFirst));
             }
 
@@ -100,6 +105,11 @@ namespace ChiselDebug.CombGraph
                     var conInput = toTraverse.Pop();
                     borderBlockers.TryUnblockWithSource(conInput.Source, AddSinkToSearch, computeOrder);
                     nodeBlockers.TryUnblockWithSource(conInput.Source, AddSinkToSearch, computeOrder);
+
+                    if (conInput.Sink.Node == null)
+                    {
+                        throw new InvalidOperationException("Sink was not connected to any node.");
+                    }
 
                     //Punch through module border to continue search on the other side
                     if (conInput.Sink.Node is Module || conInput.Sink.Node is Wire)

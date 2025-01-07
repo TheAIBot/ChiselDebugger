@@ -16,9 +16,8 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
             for (int i = 0; i < oldOrder.Length; i++)
             {
                 ref readonly var comp = ref oldOrder[i];
-                var firNode = comp.GetNode();
 
-                if (firNode != null)
+                if (comp.TryGetNodeOrConnection(out FIRRTLNode? firNode, out Source? connection))
                 {
                     if (firNode is ConstValue constNode)
                     {
@@ -64,7 +63,6 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
                 }
                 else
                 {
-                    var connection = comp.GetConnection();
                     if (!constOutput.Contains(connection))
                     {
                         newOrder.Add(comp);

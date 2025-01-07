@@ -9,7 +9,7 @@ namespace VCDReader
 {
     public interface VarValue : ISimCmd
     {
-        public List<VarDef>? Variables { get; }
+        public IReadOnlyList<VarDef> Variables { get; }
 
         public bool SameValue(VarValue other);
     }
@@ -17,14 +17,14 @@ namespace VCDReader
     public struct BinaryVarValue : VarValue
     {
         private readonly UnsafeMemory<BitState> BitSlice;
-        private readonly List<VarDef>? Vars;
+        private readonly IReadOnlyList<VarDef> Vars;
         public bool IsValidBinary;
 
         public Span<BitState> Bits => BitSlice.Span;
         public int Length => BitSlice.Length;
-        public List<VarDef>? Variables => Vars;
+        public IReadOnlyList<VarDef> Variables => Vars;
 
-        public BinaryVarValue(UnsafeMemory<BitState> bits, List<VarDef>? variables, bool isValidBinary)
+        public BinaryVarValue(UnsafeMemory<BitState> bits, IReadOnlyList<VarDef> variables, bool isValidBinary)
         {
             Debug.Assert(isValidBinary == bits.Span.IsAllBinary());
             this.BitSlice = bits;
@@ -35,7 +35,7 @@ namespace VCDReader
         public BinaryVarValue(int bitCount, bool isValidBinary)
         {
             this.BitSlice = new BitState[bitCount];
-            this.Vars = null;
+            this.Vars = [];
             this.IsValidBinary = isValidBinary;
         }
 
@@ -347,10 +347,10 @@ namespace VCDReader
     public readonly struct RealVarValue : VarValue
     {
         public readonly double Value;
-        private readonly List<VarDef>? Vars;
-        public List<VarDef>? Variables => Vars;
+        private readonly IReadOnlyList<VarDef> Vars;
+        public IReadOnlyList<VarDef> Variables => Vars;
 
-        public RealVarValue(double value, List<VarDef>? variables)
+        public RealVarValue(double value, IReadOnlyList<VarDef> variables)
         {
             this.Value = value;
             this.Vars = variables;

@@ -150,9 +150,10 @@ namespace ChiselDebug.CombGraph
 
         [MemberNotNullWhen(true, nameof(Node))]
         [MemberNotNullWhen(false, nameof(Con))]
-        public bool TryGetNode([NotNullWhen(true)] out FIRRTLNode? node)
+        public bool TryGetNodeOrConnection([NotNullWhen(true)] out FIRRTLNode? node, [NotNullWhen(false)] out Source? connection)
         {
             node = Node;
+            connection = Con;
             return Node != null;
         }
 

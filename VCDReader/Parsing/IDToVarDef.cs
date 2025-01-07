@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace VCDReader.Parsing
 {
@@ -64,7 +65,7 @@ namespace VCDReader.Parsing
             return key;
         }
 
-        public bool TryGetValue(ReadOnlyMemory<byte> bytes, out List<VarDef>? variables)
+        public bool TryGetValue(ReadOnlyMemory<byte> bytes, [NotNullWhen(true)] out List<VarDef>? variables)
         {
             if (bytes.Length <= sizeof(ulong))
             {

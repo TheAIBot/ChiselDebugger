@@ -88,7 +88,7 @@ namespace ChiselDebug.GraphFIR.Transformations
 
         private static bool IsAllConnectionsGoingFurtherIn(Module mod)
         {
-            HashSet<Module> currentAndNestedMods = new(mod.GetAllNestedNodesOfType<Module>());
+            var currentAndNestedMods = new HashSet<Module>(mod.GetAllNestedNodesOfType<Module>());
             IEnumerable<Source> allNodeOutputs = mod.GetAllNodes()
                                                     .Where(x => x is not Conditional)
                                                     .SelectMany(x => x.GetSources());

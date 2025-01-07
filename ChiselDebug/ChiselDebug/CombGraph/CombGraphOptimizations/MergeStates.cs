@@ -17,12 +17,12 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
             {
                 Computable comp = oldOrder[i];
 
-                if (comp.TryGetNode(out FIRRTLNode? node))
+                if (comp.TryGetNodeOrConnection(out FIRRTLNode? node, out Source? connection))
                 {
                     MergeNodeSinks(node);
                     newOrder.Add(comp);
                 }
-                else if (!TryMergeBorderPass(comp.GetConnection()!))
+                else if (!TryMergeBorderPass(connection))
                 {
                     newOrder.Add(comp);
                 }
@@ -57,6 +57,11 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
 
         private static bool CanMergeSourceAndSink(Sink input, [NotNullWhen(true)] out Source? source)
         {
+            if (input.Type == null)
+            {
+                throw new InvalidOperationException("Input is missing type.");
+            }
+
             Connection[] cons = input.GetConnections();
             if (cons.Length != 1)
             {
@@ -72,6 +77,10 @@ namespace ChiselDebug.CombGraph.CombGraphOptimizations
             }
 
             Source conSource = con.From;
+            if (conSource.Type == null)
+            {
+                throw new InvalidOperationException("Source is missing type.");
+            }
             if (conSource.Type.Width != input.Type.Width)
             {
                 source = null;

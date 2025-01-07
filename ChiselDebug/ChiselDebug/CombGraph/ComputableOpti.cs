@@ -1,5 +1,6 @@
 ﻿using ChiselDebug.GraphFIR.Components;
 using ChiselDebug.GraphFIR.IO;
+using System;
 
 namespace ChiselDebug.CombGraph
 {
@@ -28,11 +29,26 @@ namespace ChiselDebug.CombGraph
 
         private void ComputeNode()
         {
+            if (Node == null)
+            {
+                throw new InvalidOperationException("Attempted to compute a null node.");
+            }
+
             Node.Compute();
         }
 
         private void ComputeCon()
         {
+            if (Con == null)
+            {
+                throw new InvalidOperationException("Attempted to compute a null connection.");
+            }
+
+            if (Con.Value == null)
+            {
+                throw new InvalidOperationException("Attempted to compute with a connection with null value.");
+            }
+
             Sink input = Con.GetPairedThrowIfNull();
             Con.Value.OverrideValue(ref input.UpdateValueFromSourceFast());
         }
