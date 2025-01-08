@@ -43,27 +43,25 @@ namespace VCDReader.Parsing
         internal static IDeclCmd? VisitDeclCmd(VCDLexer lexer, IDToVarDef idToVariable, Stack<Scope> scopes)
         {
             ReadOnlySpan<byte> declWord = lexer.NextWord();
-            Span<char> chars = stackalloc char[declWord.Length];
-            declWord.CopyToCharArray(chars);
 
-            ReadOnlySpan<byte> endToken = new byte[] { (byte)'$', (byte)'e', (byte)'n', (byte)'d' };
-            ReadOnlySpan<byte> dollarSign = new byte[] { (byte)'$' };
+            ReadOnlySpan<byte> endToken = "$end"u8; ;
+            ReadOnlySpan<byte> dollarSign = "$"u8; ;
 
-            if (chars.SequenceEqual("$comment"))
+            if (declWord.SequenceEqual("$comment"u8))
             {
                 string text = lexer.NextUntil(endToken).ToCharString();
 
                 lexer.ExpectNextWord(endToken);
                 return new Comment(text);
             }
-            else if (chars.SequenceEqual("$date"))
+            else if (declWord.SequenceEqual("$date"u8))
             {
                 string text = lexer.NextUntil(endToken).ToCharString();
 
                 lexer.ExpectNextWord(endToken);
                 return new Date(text);
             }
-            else if (chars.SequenceEqual("$scope"))
+            else if (declWord.SequenceEqual("$scope"u8))
             {
                 ScopeType type = VisitScopeType(lexer);
                 string id = lexer.NextWord().ToCharString();
@@ -74,7 +72,7 @@ namespace VCDReader.Parsing
                 lexer.ExpectNextWord(endToken);
                 return scope;
             }
-            else if (chars.SequenceEqual("$timescale"))
+            else if (declWord.SequenceEqual("$timescale"u8))
             {
                 int scale = VisitTimeNumber(lexer);
                 TimeUnit unit = VisitTimeUnit(lexer);
@@ -82,14 +80,14 @@ namespace VCDReader.Parsing
                 lexer.ExpectNextWord(endToken);
                 return new TimeScale(scale, unit);
             }
-            else if (chars.SequenceEqual("$upscope"))
+            else if (declWord.SequenceEqual("$upscope"u8))
             {
                 scopes.Pop();
 
                 lexer.ExpectNextWord(endToken);
                 return new UpScope();
             }
-            else if (chars.SequenceEqual("$var"))
+            else if (declWord.SequenceEqual("$var"u8))
             {
                 VarType type = VisitVarType(lexer);
                 int size = VisitSize(lexer);
@@ -111,7 +109,7 @@ namespace VCDReader.Parsing
                 lexer.ExpectNextWord(endToken);
                 return variable;
             }
-            else if (chars.SequenceEqual("$version"))
+            else if (declWord.SequenceEqual("$version"u8))
             {
                 string versionTxt = lexer.NextUntil(dollarSign).ToCharString();
                 string systemTaskString = string.Empty;
@@ -126,7 +124,7 @@ namespace VCDReader.Parsing
                 lexer.ExpectNextWord(endToken);
                 return new Version(versionTxt, systemTaskString);
             }
-            else if (chars.SequenceEqual("$enddefinitions"))
+            else if (declWord.SequenceEqual("$enddefinitions"u8))
             {
                 lexer.ExpectNextWord(endToken);
                 return null;
