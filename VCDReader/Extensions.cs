@@ -8,7 +8,7 @@ namespace VCDReader
     {
         public static char ToChar(this BitState bit)
         {
-            ReadOnlySpan<byte> bitAsChar = new byte[] { (byte)'0', (byte)'1', (byte)'X', (byte)'Z' };
+            ReadOnlySpan<byte> bitAsChar = "01XZ"u8;
             return (char)bitAsChar[(int)bit & 0b11];
         }
 
@@ -57,25 +57,9 @@ namespace VCDReader
             return cmds.ToArray();
         }
 
-        public static void CopyToCharArray(this ReadOnlySpan<byte> bytes, Span<char> chars)
-        {
-            if (bytes.Length > chars.Length)
-            {
-                throw new Exception("Failed to copy from byte array to char array as char array is not long enough.");
-            }
-
-            for (int i = 0; i < bytes.Length; i++)
-            {
-                chars[i] = (char)bytes[i];
-            }
-        }
-
         public static string ToCharString(this ReadOnlySpan<byte> bytes)
         {
-            Span<char> chars = stackalloc char[bytes.Length];
-            bytes.CopyToCharArray(chars);
-
-            return chars.ToString();
+            return Encoding.UTF8.GetString(bytes);
         }
     }
 }

@@ -272,10 +272,7 @@ namespace VCDReader.Parsing
 
         internal static void VisitRealVectorValueChange(VCDLexer lexer, ReadOnlySpan<byte> valueText, IDToVarDef idToVariable, SimPass pass, BitAllocator bitAlloc)
         {
-            Span<char> chars = stackalloc char[valueText.Length];
-            valueText.CopyToCharArray(chars);
-
-            double value = double.Parse(chars, NumberStyles.Float, CultureInfo.InvariantCulture);
+            double value = double.Parse(valueText, NumberStyles.Float, CultureInfo.InvariantCulture);
             var id = lexer.NextWord();
 
             if (idToVariable.TryGetValue(id, out List<VarDef>? variable))
@@ -387,10 +384,7 @@ namespace VCDReader.Parsing
 
         private static ulong ParseULong(ReadOnlySpan<byte> text)
         {
-            Span<char> chars = stackalloc char[text.Length];
-            text.CopyToCharArray(chars);
-
-            if (ulong.TryParse(chars, NumberStyles.Integer, CultureInfo.InvariantCulture, out ulong result))
+            if (ulong.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out ulong result))
             {
                 return result;
             }
@@ -402,10 +396,7 @@ namespace VCDReader.Parsing
 
         private static int ParseInt(ReadOnlySpan<byte> text)
         {
-            Span<char> chars = stackalloc char[text.Length];
-            text.CopyToCharArray(chars);
-
-            if (int.TryParse(chars, NumberStyles.Integer, CultureInfo.InvariantCulture, out int result))
+            if (int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out int result))
             {
                 return result;
             }
@@ -423,18 +414,16 @@ namespace VCDReader.Parsing
         internal static int VisitTimeNumber(VCDLexer lexer)
         {
             ReadOnlySpan<byte> text = lexer.NextInteger();
-            Span<char> chars = stackalloc char[text.Length];
-            text.CopyToCharArray(chars);
 
-            if (chars.SequenceEqual("1"))
+            if (text.SequenceEqual("1"u8))
             {
                 return 1;
             }
-            else if (chars.SequenceEqual("10"))
+            else if (text.SequenceEqual("10"u8))
             {
                 return 10;
             }
-            else if (chars.SequenceEqual("100"))
+            else if (text.SequenceEqual("100"u8))
             {
                 return 100;
             }
