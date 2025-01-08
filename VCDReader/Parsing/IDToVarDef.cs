@@ -17,16 +17,16 @@ namespace VCDReader.Parsing
             OptimizedShortIDToVariable = optimizedShortIDToVariable;
         }
 
-        public bool TryGetValue(ReadOnlyMemory<byte> bytes, [NotNullWhen(true)] out List<VarDef>? variables)
+        public bool TryGetValue(ReadOnlySpan<byte> bytes, [NotNullWhen(true)] out List<VarDef>? variables)
         {
             if (bytes.Length <= sizeof(ulong))
             {
-                ulong key = IDCollection.SpanToULong(bytes.Span);
+                ulong key = IDCollection.SpanToULong(bytes);
                 return OptimizedShortIDToVariable.TryGetValue(key, out variables);
             }
             else
             {
-                return IDToVariable.TryGetValue(bytes.Span, out variables);
+                return IDToVariable.TryGetValue(bytes, out variables);
             }
         }
     }
