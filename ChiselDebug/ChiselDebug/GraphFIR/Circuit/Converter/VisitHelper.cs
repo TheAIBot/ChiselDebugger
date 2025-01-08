@@ -6,16 +6,16 @@ using System.Linq;
 
 namespace ChiselDebug.GraphFIR.Circuit.Converter
 {
-    internal sealed class VisitHelper
+    internal sealed class VisitHelper : IVisitHelper
     {
-        public readonly Module? Mod;
         private readonly CircuitGraph? LowFirGraph;
-        public readonly Dictionary<string, FIRRTL.IDefModule> ModuleRoots;
-        public readonly bool IsConditionalModule;
-        private readonly VisitHelper? ParentHelper;
-        private readonly VisitHelper? RootHelper;
+        private readonly IVisitHelper ParentHelper;
+        private readonly RootVisitHelper RootHelper;
 
         private readonly Stack<IO.Source> ScopeEnabledConditions = new Stack<IO.Source>();
+
+        public Module Mod { get; }
+        public bool IsConditionalModule { get; }
         public IO.Source ScopeEnabledCond
         {
             get
@@ -31,11 +31,9 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
                 return ScopeEnabledConditions.Peek();
             }
         }
+        public Dictionary<string, FIRRTL.IDefModule> ModuleRoots { get; }
 
-        public VisitHelper(Module? mod, CircuitGraph? lowFirGraph) : this(mod, lowFirGraph, new Dictionary<string, FIRRTL.IDefModule>(), null, false, null)
-        { }
-
-        private VisitHelper(Module? mod, CircuitGraph? lowFirGraph, Dictionary<string, FIRRTL.IDefModule> roots, VisitHelper? parentHelper, bool isConditional, VisitHelper? rootHelper)
+        public VisitHelper(Module mod, CircuitGraph? lowFirGraph, Dictionary<string, FIRRTL.IDefModule> roots, IVisitHelper parentHelper, bool isConditional, RootVisitHelper rootHelper)
         {
             Mod = mod;
             LowFirGraph = lowFirGraph;
@@ -45,14 +43,14 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             RootHelper = rootHelper;
         }
 
-        public VisitHelper ForNewModule(string moduleName, string instanceName, FIRRTL.IDefModule moduleDef)
+        public IVisitHelper ForNewModule(string moduleName, string instanceName, FIRRTL.IDefModule moduleDef)
         {
-            return new VisitHelper(new Module(moduleName, instanceName, Mod, moduleDef), LowFirGraph, ModuleRoots, this, false, RootHelper ?? this);
+            return new VisitHelper(new Module(moduleName, instanceName, Mod, moduleDef), LowFirGraph, ModuleRoots, this, false, RootHelper);
         }
 
-        public VisitHelper ForNewCondModule(string moduleName, FIRRTL.IDefModule? moduleDef)
+        public IVisitHelper ForNewCondModule(string moduleName, FIRRTL.IDefModule? moduleDef)
         {
-            return new VisitHelper(new Module(moduleName, null, Mod, moduleDef), LowFirGraph, ModuleRoots, this, true, RootHelper ?? this);
+            return new VisitHelper(new Module(moduleName, null, Mod, moduleDef), LowFirGraph, ModuleRoots, this, true, RootHelper);
         }
 
         public void AddNodeToModule(FIRRTLNode node)
@@ -74,15 +72,15 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
         {
             List<string> path = new List<string>();
 
-            VisitHelper? helper = this;
-            while (helper?.Mod != null)
+            IVisitHelper helper = this;
+            while (helper is VisitHelper visitHelper)
             {
-                if (!helper.IsConditionalModule)
+                if (!visitHelper.IsConditionalModule)
                 {
-                    path.Add(helper.Mod.Name);
+                    path.Add(visitHelper.Mod.Name);
                 }
 
-                helper = helper.ParentHelper;
+                helper = visitHelper.ParentHelper;
             }
 
             //Path is from node to root but want from root to node
@@ -125,18 +123,9 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             return nodeIO.Flatten().First().Node.FirDefNode;
         }
 
-        private long UniqueNumber = 0;
-
-        internal string GetUniqueName()
+        public string GetUniqueName()
         {
-            if (RootHelper != null)
-            {
-                return RootHelper.GetUniqueName();
-            }
-            else
-            {
-                return $"~{UniqueNumber++}";
-            }
+            return RootHelper.GetUniqueName();
         }
     }
 }

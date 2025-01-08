@@ -5,7 +5,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
 {
     public static partial class CircuitToGraph
     {
-        private static void VisitStatement(VisitHelper helper, FIRRTL.IStatement statement)
+        private static void VisitStatement(IVisitHelper helper, FIRRTL.IStatement statement)
         {
             if (statement is FIRRTL.EmptyStmt)
             {
@@ -193,13 +193,13 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             }
         }
 
-        private static void VisitConditional(VisitHelper parentHelper, FIRRTL.Conditionally conditional)
+        private static void VisitConditional(IVisitHelper parentHelper, FIRRTL.Conditionally conditional)
         {
             Conditional cond = new Conditional(conditional);
 
             void AddCondModule(IO.Source ena, FIRRTL.IStatement body)
             {
-                VisitHelper helper = parentHelper.ForNewCondModule(parentHelper.GetUniqueName(), null);
+                IVisitHelper helper = parentHelper.ForNewCondModule(parentHelper.GetUniqueName(), null);
 
                 var internalEnaDummy = new DummyPassthrough(ena);
                 var internalUseEna = new DummySink(internalEnaDummy.Result);

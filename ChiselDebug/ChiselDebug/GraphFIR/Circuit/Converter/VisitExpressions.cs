@@ -7,7 +7,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
 {
     public static partial class CircuitToGraph
     {
-        private static IO.FIRIO VisitExp(VisitHelper helper, FIRRTL.IExpression exp, IO.FlowChange ioFlow)
+        private static IO.FIRIO VisitExp(IVisitHelper helper, FIRRTL.IExpression exp, IO.FlowChange ioFlow)
         {
             if (exp is FIRRTL.IRefLikeExpression)
             {
@@ -108,7 +108,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             }
         }
 
-        private static IO.IContainerIO VisitRef(VisitHelper helper, FIRRTL.IExpression exp, IO.IContainerIO currContainer, IO.FlowChange ioFlow)
+        private static IO.IContainerIO VisitRef(IVisitHelper helper, FIRRTL.IExpression exp, IO.IContainerIO currContainer, IO.FlowChange ioFlow)
         {
             IO.IContainerIO refContainer;
             if (exp is FIRRTL.Reference reference)
@@ -179,7 +179,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             return refContainer;
         }
 
-        private static IO.FIRIO GetIOGender(VisitHelper helper, IO.FIRIO io, IO.FlowChange ioFlow)
+        private static IO.FIRIO GetIOGender(IVisitHelper helper, IO.FIRIO io, IO.FlowChange ioFlow)
         {
             if (io is IO.Sink input && ioFlow == IO.FlowChange.Source)
             {

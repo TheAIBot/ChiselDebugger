@@ -6,18 +6,18 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
 {
     public static partial class CircuitToGraph
     {
-        private static void VisitPort(VisitHelper helper, Port port)
+        private static void VisitPort(IVisitHelper helper, Port port)
         {
             var io = VisitType(helper, port.Direction, port.Name, port.Type, false);
             helper.Mod.AddExternalIO(io.Copy(helper.Mod));
         }
 
-        private static IO.FIRIO VisitTypeAsPassive(VisitHelper helper, Dir direction, string? name, IFIRType type)
+        private static IO.FIRIO VisitTypeAsPassive(IVisitHelper helper, Dir direction, string? name, IFIRType type)
         {
             return VisitType(helper, direction, name, type, true);
         }
 
-        private static IO.FIRIO VisitType(VisitHelper helper, Dir direction, string? name, IFIRType type, bool forcePassive) => (direction, type) switch
+        private static IO.FIRIO VisitType(IVisitHelper helper, Dir direction, string? name, IFIRType type, bool forcePassive) => (direction, type) switch
         {
             (_, BundleType bundle) => VisitBundle(helper, direction, name, bundle, forcePassive),
             (_, VectorType vec) => VisitVector(helper, direction, name, vec, forcePassive),
@@ -26,7 +26,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             _ => throw new NotImplementedException()
         };
 
-        private static IO.FIRIO VisitBundle(VisitHelper helper, Dir direction, string? bundleName, BundleType bundle, bool forcePassive)
+        private static IO.FIRIO VisitBundle(IVisitHelper helper, Dir direction, string? bundleName, BundleType bundle, bool forcePassive)
         {
             List<IO.FIRIO> io = new List<IO.FIRIO>();
             foreach (var field in bundle.Fields)
@@ -39,7 +39,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             return new IO.IOBundle(null, bundleName, io);
         }
 
-        private static IO.FIRIO VisitVector(VisitHelper helper, Dir direction, string? vectorName, VectorType vec, bool forcePassive)
+        private static IO.FIRIO VisitVector(IVisitHelper helper, Dir direction, string? vectorName, VectorType vec, bool forcePassive)
         {
             var type = VisitType(helper, direction, null, vec.Type, forcePassive);
             return new IO.Vector(null, vectorName, vec.Size, type);

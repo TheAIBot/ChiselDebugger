@@ -9,7 +9,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
     {
         public static CircuitGraph GetAsGraph(FIRRTL.Circuit circuit, CircuitGraph? graphLowFir = null)
         {
-            VisitHelper helper = new VisitHelper(null, graphLowFir);
+            var helper = new RootVisitHelper(graphLowFir);
             foreach (var moduleDef in circuit.Modules)
             {
                 helper.ModuleRoots.Add(moduleDef.Name, moduleDef);
@@ -34,11 +34,11 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             return new CircuitGraph(circuit.Main, mainModule);
         }
 
-        private static Module VisitModule(VisitHelper parentHelper, string moduleInstanceName, FIRRTL.IDefModule moduleDef)
+        private static Module VisitModule(IVisitHelper parentHelper, string moduleInstanceName, FIRRTL.IDefModule moduleDef)
         {
             if (moduleDef is FIRRTL.Module mod)
             {
-                VisitHelper helper = parentHelper.ForNewModule(mod.Name, moduleInstanceName, mod);
+                IVisitHelper helper = parentHelper.ForNewModule(mod.Name, moduleInstanceName, mod);
                 foreach (var port in mod.Ports)
                 {
                     VisitPort(helper, port);
@@ -50,7 +50,7 @@ namespace ChiselDebug.GraphFIR.Circuit.Converter
             }
             else if (moduleDef is FIRRTL.ExtModule extMod)
             {
-                VisitHelper helper = parentHelper.ForNewModule(extMod.Name, moduleInstanceName, extMod);
+                IVisitHelper helper = parentHelper.ForNewModule(extMod.Name, moduleInstanceName, extMod);
                 foreach (var port in extMod.Ports)
                 {
                     VisitPort(helper, port);
