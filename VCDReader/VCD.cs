@@ -20,14 +20,13 @@ namespace VCDReader
 
         internal VCD(List<IDeclCmd> declarations, IDToVarDef idToVariable, VCDLexer lexer)
         {
-            this.Declarations = declarations;
-            this.IDToVariable = idToVariable;
-            IDToVariable.OptimizeVarDefAccess();
-            this.Lexer = lexer;
+            Declarations = declarations;
+            IDToVariable = idToVariable;
+            Lexer = lexer;
 
-            this.Date = Declarations.FirstOrDefault(x => x is Date) as Date;
-            this.Time = Declarations.FirstOrDefault(x => x is TimeScale) as TimeScale;
-            this.Version = Declarations.FirstOrDefault(x => x is Version) as Version;
+            Date = Declarations.FirstOrDefault(x => x is Date) as Date;
+            Time = Declarations.FirstOrDefault(x => x is TimeScale) as TimeScale;
+            Version = Declarations.FirstOrDefault(x => x is Version) as Version;
         }
 
         public IEnumerable<SimPass> GetSimulationCommands()

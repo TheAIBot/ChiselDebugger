@@ -13,18 +13,19 @@ namespace VCDReader.Parsing
         internal static VCD VisitVcd(VCDLexer lexer)
         {
             var (declarations, idToVariable) = VisitDeclCmdStream(lexer);
-            return new VCD(declarations, idToVariable, lexer);
+
+            return new VCD(declarations, idToVariable.GetIdToVarDef(), lexer);
         }
 
-        internal static (List<IDeclCmd> declarations, IDToVarDef idToVariable) VisitDeclCmdStream(VCDLexer lexer)
+        internal static (List<IDeclCmd> declarations, IDCollection idCollection) VisitDeclCmdStream(VCDLexer lexer)
         {
             List<IDeclCmd> declarations = new List<IDeclCmd>();
-            IDToVarDef idToVariable = new IDToVarDef();
+            IDCollection idCollection = new IDCollection();
             Stack<Scope> scopes = new Stack<Scope>();
 
             while (!lexer.IsEmpty())
             {
-                IDeclCmd? decl = VisitDeclCmd(lexer, idToVariable, scopes);
+                IDeclCmd? decl = VisitDeclCmd(lexer, idCollection, scopes);
                 if (decl == null)
                 {
                     break;
@@ -37,10 +38,10 @@ namespace VCDReader.Parsing
                 throw new Exception("Not all declaration scopes were closed.");
             }
 
-            return (declarations, idToVariable);
+            return (declarations, idCollection);
         }
 
-        internal static IDeclCmd? VisitDeclCmd(VCDLexer lexer, IDToVarDef idToVariable, Stack<Scope> scopes)
+        internal static IDeclCmd? VisitDeclCmd(VCDLexer lexer, IDCollection idCollection, Stack<Scope> scopes)
         {
             ReadOnlySpan<byte> declWord = lexer.NextWord();
 
@@ -95,7 +96,7 @@ namespace VCDReader.Parsing
                 string reference = lexer.NextWord().ToCharString();
 
                 VarDef variable = new VarDef(type, size, id, reference, scopes.Reverse().ToArray());
-                idToVariable.AddVariable(variable);
+                idCollection.AddVariable(variable);
 
                 //Skip this stuff because it's not currently supported
                 char nextChar = lexer.PeekNextChar();
