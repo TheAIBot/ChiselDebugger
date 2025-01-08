@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 
 namespace VCDReader.Parsing
 {
@@ -30,7 +29,7 @@ namespace VCDReader.Parsing
             int wordLength = 0;
             while (!IsEmpty() && wordLength < AvailableChars.Length)
             {
-                if (!char.IsDigit((char)AvailableChars.Span[wordLength]))
+                if (!char.IsAsciiDigit((char)AvailableChars.Span[wordLength]))
                 {
                     break;
                 }
@@ -51,29 +50,30 @@ namespace VCDReader.Parsing
         {
             SkipStart();
 
-            int wordLength = 0;
             ReadOnlySpan<byte> chars = AvailableChars.Span;
-            while (!IsEmpty() && wordLength < chars.Length)
+            if (IsEmpty())
             {
-                while (wordLength < chars.Length)
-                {
-                    if (!IsWordChar((char)chars[wordLength]))
-                    {
-                        goto skipStop;
-                    }
+                return chars;
+            }
 
-                    wordLength++;
+            while (true)
+            {
+                int firstNonWordCharacterIndex = chars.IndexOfAnyExceptInRange((byte)'!', (byte)'~');
+                if (firstNonWordCharacterIndex != -1)
+                {
+                    return chars.Slice(0, firstNonWordCharacterIndex);
                 }
 
-                if (AvailableChars.Length == wordLength && !ReachedEOF)
+                if (!ReachedEOF)
                 {
                     FillBuffer(false);
                     chars = AvailableChars.Span;
                 }
+                else
+                {
+                    return chars;
+                }
             }
-
-        skipStop:
-            return chars.Slice(0, wordLength);
         }
 
         public char PeekNextChar()
@@ -114,7 +114,7 @@ namespace VCDReader.Parsing
                 {
                     if (ReachedEOF)
                     {
-                        throw new Exception($"Failed to find pattern before EOF. Pattern: {new string(stopAt.ToString())}");
+                        throw new Exception($"Failed to find pattern before EOF. Pattern: {stopAt.ToCharString()}");
                     }
                     FillBuffer(false);
                 }
@@ -131,13 +131,8 @@ namespace VCDReader.Parsing
             ReadOnlySpan<byte> actualword = NextWord();
             if (!expectedWord.SequenceEqual(actualword))
             {
-                throw new Exception($"Expected next word to be {expectedWord.ToString()} but got {actualword.ToString()}");
+                throw new Exception($"Expected next word to be {expectedWord.ToCharString()} but got {actualword.ToCharString()}");
             }
-        }
-
-        private bool IsWordChar(char value)
-        {
-            return value >= '!' && value <= '~';
         }
 
         private void SkipStart()
