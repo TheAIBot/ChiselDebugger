@@ -1,28 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 
 namespace VCDReader.Parsing
 {
     internal class IDToVarDef
     {
-        private readonly Dictionary<SpanString, List<VarDef>> IDToVariable = new Dictionary<SpanString, List<VarDef>>();
+        private readonly Dictionary<byte[], List<VarDef>> IDToVariable = new Dictionary<byte[], List<VarDef>>(BytesComparer.Default);
         private readonly Dictionary<ulong, List<VarDef>> OptiIDToVariable = new Dictionary<ulong, List<VarDef>>();
-        private char[] MaxLengthID = Array.Empty<char>();
         public IEnumerable<List<VarDef>> Values => IDToVariable.Values;
 
         public void AddVariable(VarDef variable)
         {
             List<VarDef> varDefs;
-            SpanString spanStr = new SpanString(variable.ID);
-            if (IDToVariable.TryGetValue(spanStr, out var currDefs))
+            byte[] variableUTF8Excoded = Encoding.UTF8.GetBytes(variable.ID);
+            if (IDToVariable.TryGetValue(variableUTF8Excoded, out var currDefs))
             {
                 varDefs = currDefs;
             }
             else
             {
                 varDefs = new List<VarDef>();
-                IDToVariable.Add(spanStr, varDefs);
+                IDToVariable.Add(variableUTF8Excoded, varDefs);
             }
             varDefs.Add(variable);
         }
@@ -32,29 +32,16 @@ namespace VCDReader.Parsing
             int maxLength = 0;
             foreach (var keyVal in IDToVariable)
             {
-                maxLength = Math.Max(maxLength, keyVal.Key.Span.Length);
-                if (keyVal.Key.Span.Length <= sizeof(ulong))
+                maxLength = Math.Max(maxLength, keyVal.Key.Length);
+                if (keyVal.Key.Length <= sizeof(ulong))
                 {
-                    ulong key = SpanToULong(keyVal.Key.Span);
+                    ulong key = SpanToULong(keyVal.Key);
                     OptiIDToVariable.Add(key, keyVal.Value);
                 }
             }
-
-            MaxLengthID = new char[maxLength];
         }
 
         private ulong SpanToULong(ReadOnlySpan<byte> chars)
-        {
-            ulong key = 0;
-            for (int i = 0; i < chars.Length; i++)
-            {
-                key |= (ulong)chars[i] << (i * 8);
-            }
-
-            return key;
-        }
-
-        private ulong SpanToULong(ReadOnlySpan<char> chars)
         {
             ulong key = 0;
             for (int i = 0; i < chars.Length; i++)
@@ -74,9 +61,8 @@ namespace VCDReader.Parsing
             }
             else
             {
-                bytes.Span.CopyToCharArray(MaxLengthID);
-                ReadOnlyMemory<char> charsMem = new ReadOnlyMemory<char>(MaxLengthID, 0, bytes.Span.Length);
-                return IDToVariable.TryGetValue(new SpanString(charsMem), out variables);
+                Dictionary<byte[], List<VarDef>>.AlternateLookup<ReadOnlySpan<byte>> spanLookup = IDToVariable.GetAlternateLookup<ReadOnlySpan<byte>>();
+                return spanLookup.TryGetValue(bytes.Span, out variables);
             }
         }
     }
