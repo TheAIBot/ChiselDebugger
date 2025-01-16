@@ -255,7 +255,7 @@ namespace VCDReader.Parsing
 
         internal static void VisitBinaryVectorValueChange(VCDLexer lexer, ReadOnlySpan<byte> valueText, IDToVarDef idToVariable, SimPass pass, BitAllocator bitAlloc)
         {
-            UnsafeMemory<BitState> bits = bitAlloc.GetBits(valueText.Length);
+            Memory<BitState> bits = bitAlloc.GetBits(valueText.Length);
             bool isValidBinary = ToBitStates(valueText, in bits);
             var id = lexer.NextWord();
 
@@ -287,7 +287,7 @@ namespace VCDReader.Parsing
 
         internal static void VisitScalarValueChange(ReadOnlySpan<byte> text, IDToVarDef idToVariable, SimPass pass, BitAllocator bitAlloc)
         {
-            UnsafeMemory<BitState> bits = bitAlloc.GetBits(1);
+            Memory<BitState> bits = bitAlloc.GetBits(1);
             BitState bit = ToBitState(text[0]);
             var id = text.Slice(1);
 
@@ -304,7 +304,7 @@ namespace VCDReader.Parsing
             }
         }
 
-        internal static unsafe bool ToBitStates(ReadOnlySpan<byte> valueText, in UnsafeMemory<BitState> bitsMem)
+        internal static unsafe bool ToBitStates(ReadOnlySpan<byte> valueText, in Memory<BitState> bitsMem)
         {
             Span<BitState> bits = bitsMem.Span;
 

@@ -16,7 +16,7 @@ namespace VCDReader
 
     public struct BinaryVarValue : VarValue
     {
-        private readonly UnsafeMemory<BitState> BitSlice;
+        private readonly Memory<BitState> BitSlice;
         private readonly IReadOnlyList<VarDef> Vars;
         public bool IsValidBinary;
 
@@ -24,7 +24,7 @@ namespace VCDReader
         public int Length => BitSlice.Length;
         public IReadOnlyList<VarDef> Variables => Vars;
 
-        public BinaryVarValue(UnsafeMemory<BitState> bits, IReadOnlyList<VarDef> variables, bool isValidBinary)
+        public BinaryVarValue(Memory<BitState> bits, IReadOnlyList<VarDef> variables, bool isValidBinary)
         {
             Debug.Assert(isValidBinary == bits.Span.IsAllBinary());
             this.BitSlice = bits;
