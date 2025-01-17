@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using VCDReader;
 
 namespace ChiselDebug.GraphFIR.Circuit
@@ -49,18 +48,16 @@ namespace ChiselDebug.GraphFIR.Circuit
             {
                 ref readonly var change = ref changes[i];
                 var variable = change.Variables[0];
-                ref var dictStoreLocation = ref CollectionsMarshal.GetValueRefOrAddDefault(VariableValues, variable.ID, out bool _);
-                dictStoreLocation = change;
+                VariableValues[variable.ID] = change;
             }
 
             Time = time;
         }
 
-        internal void AddChange(ref BinaryVarValue value)
+        internal void AddChange(BinaryVarValue value)
         {
             var variable = value.Variables[0];
-            ref var dictStoreLocation = ref CollectionsMarshal.GetValueRefOrAddDefault(VariableValues, variable.ID, out bool _);
-            dictStoreLocation = value;
+            VariableValues[variable.ID] = value;
         }
 
         public CircuitState Copy()

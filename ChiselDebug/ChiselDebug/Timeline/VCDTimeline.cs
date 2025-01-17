@@ -71,7 +71,7 @@ namespace ChiselDebug.Timeline
                 }
                 else if (simCmd.HasBinValue)
                 {
-                    followState.AddChange(ref simCmd.BinValue);
+                    followState.AddChange(simCmd.BinValue);
                     binChanges.Add(simCmd.BinValue);
                     currTimeStepLength++;
                 }
